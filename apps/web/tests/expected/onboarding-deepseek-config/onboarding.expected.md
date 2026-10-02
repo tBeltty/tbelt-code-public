@@ -1,0 +1,8 @@
+- dialog "选择一个模型提供方开始使用":
+  - heading "选择一个模型提供方开始使用" [level=2]
+  - paragraph: 连接本地模型服务器，或添加任意提供方即可开始使用。
+  - button "Ollama"
+  - button "LM Studio"
+  - button "KoboldCpp"
+  - button "添加自定义提供方"
+  - button "稍后配置"

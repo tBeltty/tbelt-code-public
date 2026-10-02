@@ -1,0 +1,20 @@
+{
+  "extends": "../../../tsconfig.base.json",
+  "compilerOptions": {
+    "rootDir": "src",
+    "outDir": "lib/types"
+  },
+  "references": [
+    { "path": "../../storage/storage" },
+    { "path": "../../storage/storage-domain" },
+    { "path": "../../util/brand" },
+    { "path": "../../util/project-root" },
+    { "path": "../../util/atomic-write" },
+    { "path": "../../util/home-paths" },
+    { "path": "../memory-redact" },
+    { "path": "../../fs/fs" }
+  ],
+  "include": [
+    "src"
+  ]
+}

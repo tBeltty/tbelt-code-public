@@ -1,0 +1,12 @@
+# Real-transport smoke (`dsh web`, apps/web/tests/smoke-real.e2e.ts) prompts
+# through a local mock server shaped as DeepSeek's Messages endpoint, with no
+# Models-page setup step in the flow it drives. The shipped Web composition no
+# longer pre-registers a default provider (Settings > Models opens empty until
+# a user adds one), so this scenario re-enables the native DeepSeek adapter
+# its mock impersonates and starts the default there.
+- id: llm-deepseek
+  disabled: false
+- id: agent-default-model
+  config:
+    provider: deepseek-official
+    model: deepseek-flash

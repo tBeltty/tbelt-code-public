@@ -1,0 +1,156 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>tBelt Code, a coding agent for your desktop</title>
+  <meta name="description" content="tBelt Code reads your project, edits files and runs commands in a sandbox. For Windows, macOS and Linux.">
+  <meta name="theme-color" content="#101010">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="tBelt Code">
+  <meta property="og:description" content="A coding agent for your desktop. For Windows, macOS and Linux.">
+  <meta property="og:url" content="https://tbelt.online/">
+  <meta property="og:image" content="https://tbelt.online/assets/app-inicio.png">
+  <link rel="canonical" href="https://tbelt.online/">
+  <link rel="icon" type="image/png" sizes="32x32" href="/assets/favicon-32.png">
+  <link rel="apple-touch-icon" href="/assets/apple-touch-icon.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500&family=Roboto+Mono:wght@400;500&display=swap">
+  <link rel="stylesheet" href="/styles.css">
+  <script src="/app.js" defer></script>
+</head>
+<body>
+  <a class="skip" href="#download">Skip to downloads</a>
+
+  <header class="top">
+    <a class="wordmark" href="/">
+      <img src="/assets/logo.png" alt="" width="26" height="28">
+      <span>tBelt <span class="accent">Code</span></span>
+    </a>
+    <a class="top-link" href="#download">Download</a>
+  </header>
+
+  <main>
+    <section class="hero">
+      <div class="hero-copy">
+        <img class="hero-logo" src="/assets/logo.png" alt="tBelt logo" width="96" height="105">
+        <h1>A coding agent that works inside your projects</h1>
+        <p class="lead">tBelt Code reads your code, edits files and runs commands in a sandbox on your own machine, with the model you choose. You decide what each session is allowed to touch.</p>
+        <div class="actions">
+          <a class="button button-primary" id="hero-download" href="#download" data-hero-label>Download tBelt Code</a>
+          <a class="button button-secondary" href="#download">All platforms</a>
+        </div>
+        <p class="hero-note" data-hero-note>Free for Windows, macOS and Linux.</p>
+      </div>
+
+      <figure class="session" aria-label="Example tBelt Code session">
+        <div class="session-scroll">
+          <p class="msg-user" data-step>The login form accepts an empty password. Find out why and fix it.</p>
+          <ol class="steps">
+            <li data-step><span class="tool">grep</span><code>password src/auth</code><span class="result">4 matches</span></li>
+            <li data-step><span class="tool">read</span><code>src/auth/validate.ts</code></li>
+            <li data-step><span class="tool">edit</span><code>src/auth/validate.ts</code><span class="result"><span class="add">+3</span> <span class="del">-1</span></span></li>
+            <li data-step><span class="tool">bash</span><code>npm test -- auth</code><span class="result ok">12 passed</span></li>
+          </ol>
+          <p class="msg-agent" data-step><code>validate.ts</code> checked that the field existed, so an empty string got through. It now rejects blank passwords, and there is a test for that case.</p>
+        </div>
+        <div class="composer" aria-hidden="true">
+          <span class="composer-placeholder">Ask a follow-up</span>
+          <div class="composer-bar">
+            <span class="chip">~/projects/shop</span>
+            <span class="chip">Workspace Write</span>
+            <span class="send"><svg viewBox="0 0 24 24"><path d="M12 19V5M6 11l6-6 6 6"/></svg></span>
+          </div>
+        </div>
+      </figure>
+    </section>
+
+    <section class="features" aria-labelledby="features-title">
+      <h2 id="features-title">What it does</h2>
+      <dl class="feature-list">
+        <div>
+          <dt>Use any model</dt>
+          <dd>Connect a hosted provider with an API key, or run a model locally with Ollama or LM Studio. tBelt Code doesn't pick a provider for you.</dd>
+        </div>
+        <div>
+          <dt>Works through the task</dt>
+          <dd>It searches and reads your code, edits files with targeted search and replace, then runs your tests or build to check the change. Each step shows up in the session as it happens.</dd>
+        </div>
+        <div>
+          <dt>Undo the last turn</dt>
+          <dd>Before it edits a file, tBelt Code saves a git checkpoint. Type <code>/undo</code> to put the files back the way they were. Checkpoints are kept under their own ref, so your branches, index and stash are left alone.</dd>
+        </div>
+        <div>
+          <dt>Remembers what you tell it</dt>
+          <dd>Type <code>/remember</code> followed by a fact, and later sessions will recall it, in this project or in all of them. Anything that looks like a key or password is redacted before it is saved.</dd>
+        </div>
+        <div>
+          <dt>Starts with a map of your repo</dt>
+          <dd>At the start of a session it lists your files and the classes, functions and imports in each, and gives that map to the model.</dd>
+        </div>
+        <div>
+          <dt>Runs commands in a sandbox</dt>
+          <dd>Commands run inside the operating system's sandbox. Pick Read Only, Workspace Write or Full access for each session. Commands such as <code>rm -rf</code>, <code>git reset --hard</code> or a force push wait for your confirmation before they run.</dd>
+        </div>
+        <div>
+          <dt>Keeps your sessions on your machine</dt>
+          <dd>Sessions are saved per workspace on your computer. tBelt Code doesn't upload them anywhere; only the requests to your model provider leave the machine. Open an old one to continue, search through them, or archive the ones you are done with.</dd>
+        </div>
+        <div>
+          <dt>Splits up large jobs</dt>
+          <dd>Hand parts of a task to the Inspector, Coder and Tester subagents, and save agent presets for the kinds of work you repeat.</dd>
+        </div>
+        <div>
+          <dt>Connects to your tools</dt>
+          <dd>Add MCP servers, skills and plugins from the settings.</dd>
+        </div>
+        <div>
+          <dt>Stays up to date</dt>
+          <dd>On Windows and Linux the app checks for new versions and tells you when one is out. One click downloads it and restarts into the new version. On macOS, download the new version from this page.</dd>
+        </div>
+      </dl>
+      <img class="screenshot" src="/assets/app-inicio.png" alt="The tBelt Code start screen, with the workspace picker and the message box" width="1280" height="800" loading="lazy" decoding="async">
+    </section>
+
+    <section class="download" id="download" aria-labelledby="download-title">
+      <h2 id="download-title">Download</h2>
+      <p class="notice" data-pending hidden></p>
+      <ul class="platforms">
+        <li class="platform" data-platform="windows">
+          <div class="platform-name">
+            <h3>Windows</h3>
+            <p>Windows 10 or 11, 64-bit</p>
+          </div>
+          <p class="platform-version" data-version>Checking for the latest version</p>
+          <a class="button button-primary" href="/download/windows" data-download>Download .exe</a>
+          <p class="platform-help">If Windows shows "Windows protected your PC", choose <em>More info</em>, then <em>Run anyway</em>.</p>
+        </li>
+        <li class="platform" data-platform="mac">
+          <div class="platform-name">
+            <h3>macOS</h3>
+            <p>macOS 12 or later, Apple silicon (M1 or newer). It does not run on Macs with an Intel chip.</p>
+          </div>
+          <p class="platform-version" data-version>Checking for the latest version</p>
+          <a class="button button-primary" href="/download/mac" data-download>Download .dmg</a>
+          <p class="platform-help">Open the disk image and drag tBelt Code into Applications. The first time you open it, macOS blocks it: go to System Settings, then Privacy &amp; Security, and choose <em>Open Anyway</em>.</p>
+        </li>
+        <li class="platform" data-platform="linux">
+          <div class="platform-name">
+            <h3>Linux</h3>
+            <p>AppImage, x86-64. Runs on Ubuntu, Debian, Fedora, Arch and most other distributions.</p>
+          </div>
+          <p class="platform-version" data-version>Checking for the latest version</p>
+          <a class="button button-primary" href="/download/linux" data-download>Download AppImage</a>
+          <p class="platform-help">Make it executable, then run it: <code>chmod +x tbelt-code-*.AppImage &amp;&amp; ./tbelt-code-*.AppImage</code></p>
+        </li>
+      </ul>
+      <p class="requirement">To start, add a model under Settings, then Models. Use an API key from a hosted provider, or the address of a local Ollama or LM Studio server.</p>
+    </section>
+  </main>
+
+  <footer class="bottom">
+    <span>© <span data-year>2026</span> tBelt</span>
+  </footer>
+</body>
+</html>

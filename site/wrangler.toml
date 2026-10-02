@@ -1,0 +1,10 @@
+# Cloudflare Pages project for https://tbelt.online, deployed by
+# .github/workflows/site-deploy.yml. `public/` is served as static files and
+# `functions/` adds the /download and /api routes.
+name = "tbelt-online"
+pages_build_output_dir = "public"
+compatibility_date = "2026-09-01"
+
+[vars]
+# Origin of the R2 bucket that apps/desktop/scripts/upload-target.ts publishes to.
+DOWNLOAD_ORIGIN = "https://bucket.tbelt.online"

@@ -1,0 +1,41 @@
+.description {
+  margin: 0 0 24px;
+  font-size: 14px;
+  line-height: 24px;
+  color: var(--dsw-alias-label-secondary);
+}
+
+.editor {
+  margin-top: 24px;
+}
+
+.catalog {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.alternatives {
+  margin: 24px 0 12px;
+  font-size: 14px;
+  line-height: 22px;
+  color: var(--dsw-alias-label-secondary);
+}
+
+.later {
+  margin-top: 24px;
+}
+
+@media (max-width: 560px) {
+  .description {
+    margin-bottom: 20px;
+  }
+
+  .editor {
+    margin-top: 20px;
+  }
+
+  .later {
+    margin-top: 20px;
+  }
+}

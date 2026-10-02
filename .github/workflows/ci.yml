@@ -1,0 +1,65 @@
+name: CI
+
+# The full quality gate needs more than a standard GitHub-hosted runner, so it
+# only runs when started by hand (Actions > CI > Run workflow). Pushes and pull
+# requests run the light checks, which need no dependency install.
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  light:
+    name: Light checks
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+
+      # On a pull request HEAD is the merge commit, so HEAD~1 is the base branch.
+      - name: Whitespace in the change
+        run: git diff --check HEAD~1 HEAD
+
+      - name: Shell script syntax
+        run: for f in scripts/*.sh; do bash -n "$f"; done
+
+      - name: Filenames
+        run: scripts/check-expected-filenames.sh
+
+  primary:
+    name: Quality gate (Linux)
+    if: github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install bubblewrap
+        run: sudo apt-get update && sudo apt-get install -y bubblewrap
+
+      - name: Allow unprivileged user namespaces (bubblewrap sandboxing)
+        run: sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Dependency security audit
+        run: pnpm run security:audit
+
+      - name: Quality gate
+        run: pnpm run check:ci:linux-primary

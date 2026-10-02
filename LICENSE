@@ -1,0 +1,41 @@
+tBelt Code Audit-Only License
+Version 1.0
+
+Copyright (c) 2026 tBeltty. All rights reserved.
+
+This repository contains tBelt Code. tBelt Code is built on DeepSeek Harness and on vendored third-party libraries, which keep their own licenses (see "Third-party code" below). Everything else in this repository, including tBelt Code's changes to the third-party code, is "the Software" and is licensed under the terms below.
+
+1. Permitted use
+
+You may view, download and read the Software, and build and run it on your own computer, only to inspect, review or audit it, for example to check its security, privacy or behavior. You may discuss the Software and publish the results of your review, quoting short excerpts where needed to explain a finding. You may report issues and vulnerabilities to the copyright holder.
+
+2. Restrictions
+
+Except as allowed in section 1, you may not:
+
+a. use the Software, or any part of it, for any other purpose, personal or commercial, including running it for real work;
+b. copy, modify, merge, translate or create derivative works of the Software, except temporary local changes needed for an audit, which you may not keep using or distribute;
+c. distribute, publish, sublicense, sell, rent, host or otherwise make the Software or a derivative work available to anyone else;
+d. remove or change this license or any copyright notice.
+
+Forking this repository on GitHub, as GitHub's Terms of Service allow, does not grant any right beyond section 1.
+
+3. Third-party code
+
+Code from DeepSeek Harness (https://github.com/deepseek-ai/deepseek-harness) remains licensed under the MIT License, reproduced in LICENSES/DeepSeek-Harness-MIT.txt. The vendored libraries in vendor/ remain licensed under the licenses in their own directories, and dependencies are listed in THIRD_PARTY_NOTICES.md. This license does not restrict any right those licenses give you for that code as published by its authors. The "license" fields in package manifests and the license files in vendor/ describe that third-party code; they do not grant rights to tBelt Code's changes and additions.
+
+4. Contributions
+
+If you submit a contribution, such as a pull request or patch, you grant the copyright holder a perpetual, worldwide, royalty-free, irrevocable license to use, modify and distribute it under any terms, and you confirm that you have the right to grant it.
+
+5. Termination
+
+Your rights under this license end automatically if you break any of its terms. When they end, you must stop using the Software and delete any copies you have.
+
+6. No warranty
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE COPYRIGHT HOLDER BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+7. Other permissions
+
+For any use not allowed here, contact the copyright holder through https://github.com/tBeltty.

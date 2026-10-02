@@ -1,0 +1,54 @@
+{
+  "darwin:en-US": {
+    "menu": [
+      { "label": "About tBelt Code", "role": "about" },
+      { "type": "separator" }
+    ],
+    "options": {
+      "applicationName": "tBelt Code",
+      "applicationVersion": "1.0.0",
+      "version": "",
+      "copyright": "",
+      "iconPath": "<app icon>"
+    }
+  },
+  "darwin:zh-CN": {
+    "menu": [
+      { "label": "关于 tBelt Code", "role": "about" },
+      { "type": "separator" }
+    ],
+    "options": {
+      "applicationName": "tBelt Code",
+      "applicationVersion": "1.0.0",
+      "version": "",
+      "copyright": "",
+      "iconPath": "<app icon>"
+    }
+  },
+  "win32:zh-CN": {
+    "menu": [
+      { "label": "关于 tBelt Code" },
+      { "type": "separator" }
+    ],
+    "options": {
+      "applicationName": "tBelt Code",
+      "applicationVersion": "1.0.0",
+      "version": "",
+      "copyright": "",
+      "iconPath": "<app icon>"
+    }
+  },
+  "win32:en-US": {
+    "menu": [
+      { "label": "About tBelt Code" },
+      { "type": "separator" }
+    ],
+    "options": {
+      "applicationName": "tBelt Code",
+      "applicationVersion": "1.0.0",
+      "version": "",
+      "copyright": "",
+      "iconPath": "<app icon>"
+    }
+  }
+}

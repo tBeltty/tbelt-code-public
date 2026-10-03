@@ -3,6 +3,7 @@
     - text: Settings
     - button "General"
     - button "Models"
+    - button "Spending"
     - button "Built-in plugins"
     - button "Agent presets"
   - button "Open configuration file"
@@ -11,10 +12,6 @@
   - button "Workspace Write"
   - text: Language
   - button "English"
-  - text: Appearance
-  - button "Light"
-  - button "Dark"
-  - button "System" [pressed]
   - text: Font size Only affects conversation content 14
   - button "Increase font size"
   - button "Decrease font size"

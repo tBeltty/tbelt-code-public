@@ -149,7 +149,8 @@ describe('web e2e: code-card layout', () => {
       for (const row of result.fills) {
         expect(row.width).toBeGreaterThanOrEqual(result.scrollWidth - 1)
         expect(row.right).toBeGreaterThanOrEqual(result.right - 1)
-        expect(row.fill).toMatch(dark ? /0\.12\)$/ : /0\.08\)$/)
+        // The tBelt palette is dark whatever the theme attribute says.
+        expect(row.fill).toMatch(/0\.12\)$/)
         expect(row.marker).toContain('inset')
       }
     }

@@ -189,7 +189,7 @@ describe.skipIf(webSnapshotMode() === 'record').each([
         await scrollToGroup(viewport, 0)
         await assertPinned(page, viewport, 0)
         const material = await headingMaterial(viewport)
-        expect(material.map(style => style.fill)).toEqual(['rgba(248, 249, 250, 0.94)', 'rgba(48, 49, 54, 0.94)'])
+        expect(material.map(style => style.fill)).toEqual(['rgba(48, 49, 54, 0.94)', 'rgba(48, 49, 54, 0.94)'])
         for (const style of material) {
           expect(style).toMatchObject({ position: 'sticky', font: '11px', weight: '500', padding: '4px 7px 2px' })
         }

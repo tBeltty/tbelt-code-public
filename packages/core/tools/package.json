@@ -1,6 +1,6 @@
 {
   "name": "@deepseek-ai/dsh-tools",
-  "description": "Tool registry and execution pipeline for the DeepSeek Harness",
+  "description": "Tool registry and execution pipeline for tBelt Code",
   "version": "0.2.0-rc.2",
   "publishConfig": {
     "access": "public"

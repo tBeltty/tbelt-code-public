@@ -17,7 +17,7 @@ maybe('TavilySearchProvider real API', () => {
       includeAnswer: false,
     })
     await provider.checkKey(apiKey!)
-    const result = await provider.search({ query: 'DeepSeek Harness', maxResults: 5 })
+    const result = await provider.search({ query: 'tBelt Code', maxResults: 5 })
     expect(result.sources.length).toBeGreaterThan(0)
     for (const source of result.sources) expect(source.url).toMatch(/^https?:\/\//)
   }, 30_000)

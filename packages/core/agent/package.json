@@ -1,6 +1,6 @@
 {
   "name": "@deepseek-ai/dsh-agent",
-  "description": "Agent interface, registry, initiator scope, and event vocabulary for the DeepSeek Harness",
+  "description": "Agent interface, registry, initiator scope, and event vocabulary for tBelt Code",
   "version": "0.2.0-rc.2",
   "publishConfig": {
     "access": "public"

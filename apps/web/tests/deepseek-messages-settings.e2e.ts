@@ -38,7 +38,8 @@ describe.skipIf(webSnapshotMode() === 'record')('web e2e: DeepSeek Messages sett
     onTestFailed(() => saveFailureShot(page, 'web-e2e-deepseek-messages-settings'))
     expect(scaffold.ctx.llm.listProviders()).toContainEqual({ id: 'deepseek-official', name: 'DeepSeek' })
     expect(scaffold.ctx.llm.listProviders().filter(provider => provider.id === 'deepseek-official')).toHaveLength(1)
-    expect(scaffold.ctx.agentDefaultModel.currentSelection()).toEqual({ provider: 'deepseek-official', model: 'deepseek-flash' })
+    // The shipped composition names no default model until the user picks one.
+    expect(scaffold.ctx.agentDefaultModel.currentSelection()).toEqual({ provider: 'unconfigured', model: 'none' })
     // The first-run step is model-agnostic (never names DeepSeek); configuring
     // DeepSeek's key happens through the ordinary Models surface instead.
     const onboarding = page.getByRole('dialog', { name: '选择一个模型提供方开始使用' })
@@ -77,9 +78,11 @@ describe.skipIf(webSnapshotMode() === 'record')('web e2e: DeepSeek Messages sett
     expect(credentials).not.toContain('DEEPSEEK_MESSAGES_API_KEY')
     expect(await page.locator('body').innerText()).not.toContain('sk-e2e-')
     await page.keyboard.press('Escape')
+    // The shipped composition names no default model, so pick the saved route as one.
+    await scaffold.ctx.agentDefaultModel.saveSelection({ provider: 'deepseek-official', model: 'deepseek-flash' })
     await connectFreshWorkspaceZh(page, scaffold.workspaceCwd, 'messages-settings-e2e')
     await page.getByRole('button', { name: /^选择模型/ }).click()
-    await page.getByRole('menuitem', { name: /模型/ }).click()
+    await page.getByRole('menuitem', { name: /^模型/ }).click()
     await page.getByRole('menuitemradio', { name: 'Messages Flash', exact: true }).waitFor()
     await compareOrRefreshGolden(join(EXPECTED, 'picker.expected.md'),
       await captureStableAria(page, '[role="group"][aria-label="模型与推理等级"]', scaffold.workspaceCwd), webSnapshotMode())
@@ -102,7 +105,7 @@ describe.skipIf(webSnapshotMode() === 'record')('web e2e: DeepSeek Messages sett
     await trigger.waitFor()
     await expect.poll(() => input.getAttribute('contenteditable')).toBe('true')
     await trigger.click()
-    await page.getByRole('menuitem', { name: /模型/ }).click()
+    await page.getByRole('menuitem', { name: /^模型/ }).click()
     await page.getByRole('menuitemradio', { name: 'Messages Flash', exact: true }).click()
     await expect.poll(() => input.getAttribute('contenteditable')).toBe('true')
     await expect.poll(() => scaffold.ctx.agentDefaultModel.currentSelection().provider).toBe('deepseek-official')

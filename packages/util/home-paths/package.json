@@ -1,6 +1,6 @@
 {
   "name": "@deepseek-ai/dsh-home-paths",
-  "description": "Shared filesystem path helpers for the DeepSeek Harness",
+  "description": "Shared filesystem path helpers for tBelt Code",
   "version": "0.2.0-rc.2",
   "publishConfig": {
     "access": "public"

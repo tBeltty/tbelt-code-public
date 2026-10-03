@@ -1,6 +1,6 @@
 {
   "name": "@deepseek-ai/dsh-webhook",
-  "description": "Fire-and-forget webhook rule runtime that creates Workspace-backed DeepSeek Harness Sessions",
+  "description": "Fire-and-forget webhook rule runtime that creates Workspace-backed tBelt Code Sessions",
   "version": "0.2.0-rc.2",
   "publishConfig": {
     "access": "public"

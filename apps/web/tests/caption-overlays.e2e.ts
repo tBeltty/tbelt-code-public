@@ -13,7 +13,8 @@ it('keeps settings and expanded plugin dialogs clear of the Windows caption acro
   try {
     const browser = await chromium.launch()
     try {
-      const page = await browser.newPage({ viewport: { width: 520, height: 600 }, locale: ZH_BROWSER_LOCALE })
+      // 640px keeps Settings in its windowed layout; below 600px it becomes a full-screen sheet.
+      const page = await browser.newPage({ viewport: { width: 640, height: 600 }, locale: ZH_BROWSER_LOCALE })
       const console = watchConsole(page)
       await page.goto(scaffold.authenticatedUrl)
       await page.waitForSelector('[class*="frame"]')

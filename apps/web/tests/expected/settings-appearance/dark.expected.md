@@ -3,13 +3,13 @@
     "radius": "20px",
     "border": "1px",
     "stroke": "rgba(255, 255, 255, 0.2)",
-    "fill": "rgb(44, 44, 46)"
+    "fill": "rgb(28, 28, 28)"
   },
   "selector": {
     "radius": "12px",
     "border": "0px",
-    "stroke": "rgb(249, 250, 251)",
-    "fill": "rgb(53, 54, 56)",
+    "stroke": "rgb(242, 242, 242)",
+    "fill": "rgb(38, 38, 38)",
     "height": 36
   },
   "usage": {
@@ -23,14 +23,14 @@
     "radius": "12px",
     "border": "1px",
     "stroke": "rgba(0, 0, 0, 0)",
-    "fill": "rgb(249, 250, 251)",
+    "fill": "rgb(242, 242, 242)",
     "height": 36
   },
   "save": {
     "radius": "12px",
     "border": "0px",
-    "stroke": "rgb(15, 17, 21)",
-    "fill": "rgb(249, 250, 251)",
+    "stroke": "rgb(11, 11, 11)",
+    "fill": "rgb(242, 242, 242)",
     "height": 36
   }
 }

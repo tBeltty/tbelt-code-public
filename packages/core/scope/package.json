@@ -1,6 +1,6 @@
 {
   "name": "@deepseek-ai/dsh-scope",
-  "description": "Scoped-context registration primitive (scope tags, scope-filtered event dispatch) for the DeepSeek Harness",
+  "description": "Scoped-context registration primitive (scope tags, scope-filtered event dispatch) for tBelt Code",
   "version": "0.2.0-rc.2",
   "publishConfig": {
     "access": "public"

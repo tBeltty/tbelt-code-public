@@ -1,6 +1,6 @@
 {
   "name": "@deepseek-ai/dsh-agent-loop",
-  "description": "The concrete agent loop plugin for the DeepSeek Harness",
+  "description": "The concrete agent loop plugin for tBelt Code",
   "version": "0.2.0-rc.2",
   "publishConfig": {
     "access": "public"

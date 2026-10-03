@@ -1,6 +1,6 @@
 {
   "name": "@deepseek-ai/dsh-memory-storage",
-  "description": "Durable, schema-validated storage domain for typed cross-session memory entries (ctx.memoryStorage) for the DeepSeek Harness",
+  "description": "Durable, schema-validated storage domain for typed cross-session memory entries (ctx.memoryStorage) for tBelt Code",
   "version": "0.2.0-rc.2",
   "publishConfig": {
     "access": "public"

@@ -48,7 +48,7 @@ export function PlanCards({ turn, usePlans, openPlan, t }: PropsRuntime<'convers
       {plans.map(plan => <button key={plan.callId} type="button" className={css.card} data-plan-card={plan.callId}
         aria-label={t('preview.openNamed', { title: plan.title })}
         onClick={() => { openPlan(plan.callId) }}>
-        <span className={css.cardIcon}><FileTypeIcon kind="markdown" size={20} /></span>
+        <span className={css.cardIcon}><FileTypeIcon kind="plan" size={20} /></span>
         <span className={css.cardDetails}>
           <span className={css.cardTitle}>{plan.title}</span>
           <span className={css.cardDescription}>{t('preview.document')}</span>

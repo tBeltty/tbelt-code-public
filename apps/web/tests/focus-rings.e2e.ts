@@ -6,6 +6,9 @@ import { beforeAll, describe, expect, it, onTestFinished } from 'vitest'
 import { launchWebScaffold, watchConsole } from './scaffold.ts'
 import { connectFreshWorkspace, newEnglishPage, REPO_ROOT } from './support.ts'
 
+/** Focus rings paint the tBelt cyan accent (`--tbelt-accent-cyan`) in every palette. */
+const TBELT_CYAN = 'rgb(62, 166, 240)'
+
 /** Read rendered paint and browser focus, not just the modality publisher's attribute. */
 async function paint(target: Locator) {
   return target.evaluate((element) => {
@@ -102,9 +105,10 @@ it.each(['light', 'dark'] as const)('assembled app (%s): pointer keys stay silen
   await page.emulateMedia({ colorScheme: theme })
   await page.goto(scaffold.authenticatedUrl)
   await connectFreshWorkspace(page, scaffold.workspaceCwd)
-  await expect.poll(() => page.locator('body').getAttribute('data-ds-dark-theme')).toBe(theme === 'dark' ? '' : null)
+  // tBelt Code paints its dark palette whatever the OS color scheme.
+  await expect.poll(() => page.locator('body').getAttribute('data-ds-dark-theme')).toBe('')
   const trigger = page.getByRole('button', { name: /^Access mode, current:/ })
-  expect((await paint(trigger)).focusColor).toBe(theme === 'dark' ? 'rgb(122, 170, 255)' : 'rgb(65, 118, 230)')
+  expect((await paint(trigger)).focusColor).toBe(TBELT_CYAN)
 
   await trigger.click()
   await page.getByRole('menu').waitFor()
@@ -505,7 +509,7 @@ describe('source-compiled supplementary focus paint', () => {
     const light = await ringReport(button)
     expect(light.style).not.toBe('none')
     expect(light.width).toBe('2px')
-    expect(light.color).toBe('rgb(65, 118, 230)')
+    expect(light.color).toBe(TBELT_CYAN)
     expect(light.contrast).not.toBeNull()
     expect(light.contrast!).toBeGreaterThanOrEqual(3)
 
@@ -514,7 +518,7 @@ describe('source-compiled supplementary focus paint', () => {
     await button.focus()
     const dark = await ringReport(button)
     expect(dark.width).toBe('2px')
-    expect(dark.color).toBe('rgb(122, 170, 255)')
+    expect(dark.color).toBe(TBELT_CYAN)
     expect(dark.contrast).not.toBeNull()
     expect(dark.contrast!).toBeGreaterThanOrEqual(3)
 

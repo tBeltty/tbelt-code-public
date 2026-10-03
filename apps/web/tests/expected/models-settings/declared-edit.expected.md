@@ -3,6 +3,7 @@
     - text: 设置
     - button "通用设置"
     - button "模型"
+    - button "花费"
     - button "内置插件"
     - button "Agent 预设"
   - button "打开配置文件"
@@ -53,6 +54,16 @@
           - text: 最大输出 token 数
           - textbox "最大输出 token 数 1":
             - /placeholder: 32K
+          - group "每百万 token 价格（美元）":
+            - text: 每百万 token 价格（美元） 输入
+            - textbox "输入 1":
+              - /placeholder: 无价格
+            - text: 输出
+            - textbox "输出 1":
+              - /placeholder: 无价格
+            - text: 缓存读取
+            - textbox "缓存读取 1":
+              - /placeholder: 同输入
           - group "输入类型 1":
             - text: 输入类型
             - checkbox "文本" [checked]
@@ -63,12 +74,6 @@
       - button "取消"
       - button "保存"
   - button "添加模型提供商"
-  - button "Ollama":
-    - img
-    - text: Ollama
-  - button "LM Studio":
-    - img
-    - text: LM Studio
-  - button "KoboldCpp":
-    - img
-    - text: KoboldCpp
+  - button "Ollama"
+  - button "LM Studio"
+  - button "KoboldCpp"

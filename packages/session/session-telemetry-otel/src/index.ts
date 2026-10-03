@@ -1,5 +1,5 @@
 /**
- * OpenTelemetry Service Provider for the DeepSeek Harness telemetry capability.
+ * OpenTelemetry Service Provider for the tBelt Code telemetry capability.
  *
  * Authorizes feedback-bounded capture and hands complete event strings to the
  * Session-log reporter. This plugin owns resource identity and an outer

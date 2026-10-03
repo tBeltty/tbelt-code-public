@@ -9,5 +9,8 @@
   - option "权限 permission 切换权限预设（沙箱模式与审批策略）"
   - option "模型 model 选择本会话使用的模型"
   - option "下载日志 export 将当前会话内容导出为 ZIP"
+  - option "budget Show model spend for this session and month, or set a spend limit"
   - option "clear Reset the conversation to empty context"
   - option "cleared View what the last /clear removed (read-only, does not clear)"
+  - option "remember Durably remember a fact, preference, or pointer across sessions"
+  - option "undo Revert the current turn's file edits, restoring their pre-edit content"

@@ -1,5 +1,5 @@
 ---
-description: "The TypeScript SDK client for callers that spawn a DeepSeek Harness runtime subprocess and drive agent turns over stdio JSON-RPC: the DeepSeekHarness run API and the lower-level HarnessClient."
+description: "The TypeScript SDK client for callers that spawn a tBelt Code runtime subprocess and drive agent turns over stdio JSON-RPC: the DeepSeekHarness run API and the lower-level HarnessClient."
 kind: "package-library"
 ---
 
@@ -7,7 +7,7 @@ kind: "package-library"
 
 ## Summary
 
-`dsh-sdk-client` lets TypeScript programs start and drive a complete DeepSeek Harness runtime over stdio JSON-RPC. Use `DeepSeekHarness` to open sessions, send text or image prompts, collect event and notification streams, and obtain the last committed assistant response when the runtime becomes idle; use `HarnessClient` for direct protocol requests and subscriptions. Callers may provide `dshBin`; otherwise the client resolves the same-version `@deepseek-ai/dsh` executable. The client owns the subprocess across runs, exposes typed transport and protocol failures, and reaps it on `close()` or `await using`. It is suitable when the caller can choose the runtime profile and launch settings.
+`dsh-sdk-client` lets TypeScript programs start and drive a complete tBelt Code runtime over stdio JSON-RPC. Use `DeepSeekHarness` to open sessions, send text or image prompts, collect event and notification streams, and obtain the last committed assistant response when the runtime becomes idle; use `HarnessClient` for direct protocol requests and subscriptions. Callers may provide `dshBin`; otherwise the client resolves the same-version `@deepseek-ai/dsh` executable. The client owns the subprocess across runs, exposes typed transport and protocol failures, and reaps it on `close()` or `await using`. It is suitable when the caller can choose the runtime profile and launch settings.
 
 ## Table of Contents
 

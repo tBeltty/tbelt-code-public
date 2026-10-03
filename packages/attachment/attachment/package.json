@@ -1,6 +1,6 @@
 {
   "name": "@deepseek-ai/dsh-attachment",
-  "description": "Durable immutable attachment storage seam for the DeepSeek Harness",
+  "description": "Durable immutable attachment storage seam for tBelt Code",
   "version": "0.2.0-rc.2",
   "publishConfig": {
     "access": "public"

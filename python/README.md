@@ -1,6 +1,6 @@
-# DeepSeek Harness Python SDK
+# tBelt Code Python SDK
 
-Python packages for driving DeepSeek Harness as a subprocess. The client SDK communicates with the bundled runtime over newline-delimited JSON-RPC on stdio.
+Python packages for driving tBelt Code as a subprocess. The client SDK communicates with the bundled runtime over newline-delimited JSON-RPC on stdio.
 
 ## Packages
 

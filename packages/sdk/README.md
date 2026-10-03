@@ -7,7 +7,7 @@ kind: "package-group"
 
 ## Summary
 
-The SDK family lets another process drive a complete DeepSeek Harness runtime over newline-delimited JSON-RPC. Its protocol package defines the public messages, the TypeScript client launches `dsh` with a named profile and ordered patches, and the server accepts SDK requests over stdio. Clients can open sessions, send prompts, and observe session events, agent status changes, and subagent completions. The TypeScript client and [Python SDK](../../python/README.md) use the same protocol, and these packages do not create developer projects or define another application.
+The SDK family lets another process drive a complete tBelt Code runtime over newline-delimited JSON-RPC. Its protocol package defines the public messages, the TypeScript client launches `dsh` with a named profile and ordered patches, and the server accepts SDK requests over stdio. Clients can open sessions, send prompts, and observe session events, agent status changes, and subagent completions. The TypeScript client and [Python SDK](../../python/README.md) use the same protocol, and these packages do not create developer projects or define another application.
 
 ## Table of Contents
 

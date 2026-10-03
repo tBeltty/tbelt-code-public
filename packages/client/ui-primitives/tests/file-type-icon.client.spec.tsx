@@ -49,6 +49,10 @@ describe('classifyFileType', () => {
     ['README', 'markdown'],
     ['.env', 'env'],
     ['settings.env', 'env'],
+    ['notes/todo.TXT', 'text'],
+    ['logs/server.log', 'text'],
+    ['docs/guide.rst', 'text'],
+    ['LICENSE', 'text'],
     ['.hidden', 'other'],
     ['notes.unknownext', 'other'],
     ['extensionless', 'other'],
@@ -60,7 +64,7 @@ describe('classifyFileType', () => {
 
 describe('FileTypeIcon', () => {
   const types: FileTypeKind[] = [
-    'code', 'excel', 'folder', 'html', 'image', 'markdown', 'other', 'pdf', 'ppt', 'video', 'word',
+    'code', 'excel', 'folder', 'html', 'image', 'markdown', 'other', 'pdf', 'plan', 'ppt', 'text', 'video', 'word',
   ]
 
   it.each(types)('%s renders a distinct aria-hidden svg without literal colors', (type) => {
@@ -88,7 +92,7 @@ describe('FileTypeIcon', () => {
     expect(sheet.getAttribute('fill-opacity')).toBeNull()
   })
 
-  it('uses white marks and fold for coloured sheets, with a darker grey fold for other', () => {
+  it('uses white marks and fold for coloured sheets, with a contrasting grey fold for other', () => {
     const coloured = render(<FileTypeIcon kind="pdf" />).container
     expect(coloured.querySelector('[data-file-type-mark]')?.getAttribute('color'))
       .toBe('var(--dsw-static-neutral-00)')
@@ -108,7 +112,7 @@ describe('FileTypeIcon', () => {
     expect(new Set(paths).size).toBe(types.length)
   })
 
-  it.each(['folder', 'html', 'image', 'video'] as const)(
+  it.each(['folder', 'html', 'image', 'plan', 'text', 'video'] as const)(
     'enlarges the %s center mark without scaling the file shell',
     (type) => {
       const { container } = render(<FileTypeIcon kind={type} />)

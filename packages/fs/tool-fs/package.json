@@ -1,6 +1,6 @@
 {
   "name": "@deepseek-ai/dsh-tool-fs",
-  "description": "Model-facing filesystem tools (read, write, edit) over the DeepSeek Harness filesystem seam (ctx.fs)",
+  "description": "Model-facing filesystem tools (read, write, edit) over the tBelt Code filesystem seam (ctx.fs)",
   "version": "0.2.0-rc.2",
   "publishConfig": {
     "access": "public"

@@ -1,6 +1,6 @@
 {
   "name": "@deepseek-ai/dsh-session-title-all-prompts-llm",
-  "description": "All-user-messages LLM provider plugin for DeepSeek Harness session titles",
+  "description": "All-user-messages LLM provider plugin for tBelt Code session titles",
   "version": "0.2.0-rc.2",
   "publishConfig": {
     "access": "public"

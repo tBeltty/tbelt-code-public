@@ -19,20 +19,17 @@
   - listitem:
     - button "tool-subagent, tool-subagent-inspector, 已启用":
       - strong: tool-subagent
-      - text: 已启用
-      - img
+      - text: Model-facing subagent delegation tool over the ctx.subagents seam
       - code: tool-subagent-inspector
   - listitem:
     - button "tool-subagent, tool-subagent-coder, 已启用":
       - strong: tool-subagent
-      - text: 已启用
-      - img
+      - text: Model-facing subagent delegation tool over the ctx.subagents seam
       - code: tool-subagent-coder
   - listitem:
     - button "tool-subagent, tool-subagent-tester, 已启用":
       - strong: tool-subagent
-      - text: 已启用
-      - img
+      - text: Model-facing subagent delegation tool over the ctx.subagents seam
       - code: tool-subagent-tester
   - listitem:
     - button "tool-subagent, tool-subagent-codex, 已停用":

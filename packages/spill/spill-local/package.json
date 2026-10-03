@@ -1,6 +1,6 @@
 {
   "name": "@deepseek-ai/dsh-spill-local",
-  "description": "Local-filesystem implementation of the DeepSeek Harness spill storage seam (private session-scoped files)",
+  "description": "Local-filesystem implementation of the tBelt Code spill storage seam (private session-scoped files)",
   "version": "0.2.0-rc.2",
   "publishConfig": {
     "access": "public"

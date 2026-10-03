@@ -34,6 +34,7 @@ import { DESKTOP_IPC, SCHEME, assertDesktopSender, type DesktopUpdateState } fro
 import { readDeviceInfo } from './device-info.ts'
 import { desktopUpdateReadyConfirmation, formatDesktopMessage, resolveDesktopLocale, resolveDesktopStartupLocale } from './locale.ts'
 import { claimDesktopSingleInstance } from './single-instance.ts'
+import { legacyAppDirectoryMoves, relocateLegacyAppDirectories } from './legacy-app-directories.ts'
 import { DesktopUpdateCoordinator } from './update-coordinator.ts'
 import { DesktopCommandManager } from './command-management.ts'
 import { serveWebDocument, authenticateWebHost, forwardWebRequest } from './web-document.ts'
@@ -78,6 +79,12 @@ let windowsLanguage: string | undefined
 let backendReady = false
 /** Error-level console output of the primary window, attached to crash reports. */
 const rendererConsole = new RendererConsoleTail()
+
+// Before Electron opens userData or the logs directory, take over the ones earlier builds created under the old package name.
+if (app.isPackaged) {
+  relocateLegacyAppDirectories(legacyAppDirectoryMoves({ platform: process.platform, home: homedir(),
+    appData: app.getPath('appData'), userData: app.getPath('userData') }), (message, error) => { console.warn(message, error) })
+}
 
 // Platform-conventional logs directory (macOS ~/Library/Logs/<name>, otherwise under userData);
 // set before ready so the first fatal report already resolves under it.
@@ -316,6 +323,8 @@ function createWindow(preload: string, show = false, primary = false): BrowserWi
 
 /** Home of the installed app, separate from `~/.dsh` used by source checkouts and the dsh CLI. */
 const INSTALLED_APP_HOME_DIR_NAME = '.tbelt-code'
+/** URL scheme the installed app registers; matches `PRODUCT_URL_SCHEME` in the packaging configuration. */
+const OPEN_URL_SCHEME = 'tbelt-code'
 
 async function main(): Promise<void> {
   // The host process inherits this environment, so sessions, workspaces and credentials all live in the app's own home.
@@ -1232,10 +1241,10 @@ async function main(): Promise<void> {
     window.focus()
   }
 
-  if (app.isPackaged || process.env.DSH_DESKTOP_DEV_APP === '1') app.setAsDefaultProtocolClient('dsh')
+  if (app.isPackaged || process.env.DSH_DESKTOP_DEV_APP === '1') app.setAsDefaultProtocolClient(OPEN_URL_SCHEME)
   app.on('open-url', (event, url) => {
     event.preventDefault()
-    if (url === 'dsh://open' || url === 'dsh://open/') focusPrimaryWindow()
+    if (url === `${OPEN_URL_SCHEME}://open` || url === `${OPEN_URL_SCHEME}://open/`) focusPrimaryWindow()
   })
 
   app.on('activate', (_event, hasVisibleWindows) => {

@@ -23,7 +23,7 @@ function appearance(element: Locator) {
   })
 }
 
-it('shares settings card materials and control sizes in both palettes', async () => {
+it('shares settings card materials and control sizes in the dark palette', async () => {
   const scaffold = await launchWebScaffold({})
   onTestFinished(() => scaffold.close())
   await scaffold.ctx.settings.mutate('ui-settings-account', [
@@ -60,52 +60,50 @@ it('shares settings card materials and control sizes in both palettes', async ()
   await openSettings(page, 'zh')
   const dialog = page.getByRole('dialog', { name: '设置', exact: true })
 
-  for (const [palette, label] of [['light', '浅色'], ['dark', '深色']] as const) {
-    await dialog.getByRole('button', { name: '通用设置', exact: true }).click()
-    await dialog.getByRole('button', { name: label, exact: true }).click()
-    await expect.poll(() => page.evaluate(() => document.body.hasAttribute('data-ds-dark-theme'))).toBe(palette === 'dark')
-    const selector = await appearance(dialog.getByRole('button', { name: '工作区内修改', exact: true }))
-    expect(selector.radius).toBe('12px')
-    expect((await appearance(dialog)).radius).toBe('28px')
+  // tBelt Code ships one dark palette, so Settings offers no theme choice.
+  await dialog.getByRole('button', { name: '通用设置', exact: true }).click()
+  await expect.poll(() => page.evaluate(() => document.body.hasAttribute('data-ds-dark-theme'))).toBe(true)
+  const selector = await appearance(dialog.getByRole('button', { name: '工作区内修改', exact: true }))
+  expect(selector.radius).toBe('12px')
+  expect((await appearance(dialog)).radius).toBe('28px')
 
-    await dialog.getByRole('button', { name: '账号与余额', exact: true }).click()
-    const section = dialog.getByRole('region', { name: '账号与余额', exact: true })
-    await expect.poll(() => section.innerText()).toContain('¥128.50')
-    const cards = section.locator(':scope > div')
-    expect(await cards.count()).toBe(2)
-    const profile = await appearance(cards.nth(0))
-    const balance = await appearance(cards.nth(1))
-    const material = { radius: profile.radius, border: profile.border, stroke: profile.stroke, fill: profile.fill }
-    expect(material.radius).toBe('20px')
-    expect(material.fill).not.toBe('rgba(0, 0, 0, 0)')
-    expect(balance).toMatchObject(material)
-    const usage = await appearance(section.getByRole('link', { name: '查询用量', exact: true }))
-    const topUp = await appearance(section.getByRole('link', { name: '充值', exact: true }))
-    expect(usage).toMatchObject({ radius: '12px', height: 36 })
-    expect(topUp).toMatchObject({ radius: '12px', height: 36 })
-    await compareOrRefreshGolden(join(EXPECTED, 'account.expected.md'),
-      await captureStableAria(page, 'section[aria-label="账号与余额"]', scaffold.workspaceCwd), webSnapshotMode())
+  await dialog.getByRole('button', { name: '账号与余额', exact: true }).click()
+  const section = dialog.getByRole('region', { name: '账号与余额', exact: true })
+  await expect.poll(() => section.innerText()).toContain('¥128.50')
+  const cards = section.locator(':scope > div')
+  expect(await cards.count()).toBe(2)
+  const profile = await appearance(cards.nth(0))
+  const balance = await appearance(cards.nth(1))
+  const material = { radius: profile.radius, border: profile.border, stroke: profile.stroke, fill: profile.fill }
+  expect(material.radius).toBe('20px')
+  expect(material.fill).not.toBe('rgba(0, 0, 0, 0)')
+  expect(balance).toMatchObject(material)
+  const usage = await appearance(section.getByRole('link', { name: '查询用量', exact: true }))
+  const topUp = await appearance(section.getByRole('link', { name: '充值', exact: true }))
+  expect(usage).toMatchObject({ radius: '12px', height: 36 })
+  expect(topUp).toMatchObject({ radius: '12px', height: 36 })
+  await compareOrRefreshGolden(join(EXPECTED, 'account.expected.md'),
+    await captureStableAria(page, 'section[aria-label="账号与余额"]', scaffold.workspaceCwd), webSnapshotMode())
 
-    await dialog.getByRole('button', { name: '内置插件', exact: true }).click()
-    await dialog.getByRole('button', { name: /^全局/ }).click()
-    const plugin = dialog.locator('[data-plugin-scope="global"] [data-plugin-entry]').first()
-    await plugin.waitFor()
-    expect(await appearance(plugin)).toMatchObject(material)
+  await dialog.getByRole('button', { name: '内置插件', exact: true }).click()
+  await dialog.getByRole('button', { name: /^全局/ }).click()
+  const plugin = dialog.locator('[data-plugin-scope="global"] [data-plugin-entry]').first()
+  await plugin.waitFor()
+  expect(await appearance(plugin)).toMatchObject(material)
 
-    await dialog.getByRole('button', { name: 'Agent 预设', exact: true }).click()
-    const preset = dialog.locator('li').first()
-    await preset.waitFor()
-    expect((await appearance(preset)).radius).toBe('20px')
+  await dialog.getByRole('button', { name: 'Agent 预设', exact: true }).click()
+  const preset = dialog.locator('li').first()
+  await preset.waitFor()
+  expect((await appearance(preset)).radius).toBe('20px')
 
-    await dialog.getByRole('button', { name: '模型', exact: true }).click()
-    await dialog.getByRole('button', { name: '添加模型提供商', exact: true }).click()
-    const field = dialog.getByLabel('提供商', { exact: true })
-    await field.waitFor()
-    expect(await appearance(field)).toMatchObject({ radius: '12px', height: 32 })
-    const save = await appearance(dialog.getByRole('button', { name: '保存', exact: true }))
-    expect(save).toMatchObject({ radius: '12px', height: 36 })
-    await compareOrRefreshGolden(join(EXPECTED, `${palette}.expected.md`),
-      JSON.stringify({ card: material, selector, usage, topUp, save }, null, 2), webSnapshotMode())
-    await dialog.getByRole('button', { name: '取消', exact: true }).click()
-  }
+  await dialog.getByRole('button', { name: '模型', exact: true }).click()
+  await dialog.getByRole('button', { name: '添加模型提供商', exact: true }).click()
+  const field = dialog.getByLabel('提供商', { exact: true })
+  await field.waitFor()
+  expect(await appearance(field)).toMatchObject({ radius: '12px', height: 32 })
+  const save = await appearance(dialog.getByRole('button', { name: '保存', exact: true }))
+  expect(save).toMatchObject({ radius: '12px', height: 36 })
+  await compareOrRefreshGolden(join(EXPECTED, 'dark.expected.md'),
+    JSON.stringify({ card: material, selector, usage, topUp, save }, null, 2), webSnapshotMode())
+  await dialog.getByRole('button', { name: '取消', exact: true }).click()
 })

@@ -1,6 +1,6 @@
 {
   "name": "@deepseek-ai/dsh-skill",
-  "description": "Agent skill provider registry for the DeepSeek Harness",
+  "description": "Agent skill provider registry for tBelt Code",
   "version": "0.2.0-rc.2",
   "publishConfig": {
     "access": "public"

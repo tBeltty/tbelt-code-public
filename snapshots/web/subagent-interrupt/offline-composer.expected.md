@@ -25,3 +25,4 @@
 - 'button "Access mode, current: Custom" [disabled]': Custom
 - button "Stop generating"
 - button "Send message" [disabled]
+- button "This session $0.00 · This month $0.00 · 1 calls used a model with no price and are not counted": $0.00

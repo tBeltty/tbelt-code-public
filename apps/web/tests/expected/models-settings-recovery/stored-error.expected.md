@@ -3,6 +3,7 @@
     - text: 设置
     - button "通用设置"
     - button "模型"
+    - button "花费"
     - button "内置插件"
     - button "Agent 预设"
   - button "打开配置文件"
@@ -25,12 +26,6 @@
       - button "删除 acme-gateway": 删除
       - alert: "llm-pi-ai: provider \"acme-gateway\" model \"custom-model\" needs an api; the installed catalog does not describe it, so set the route's api to the wire protocol its endpoint speaks"
   - button "添加模型提供商"
-  - button "Ollama":
-    - img
-    - text: Ollama
-  - button "LM Studio":
-    - img
-    - text: LM Studio
-  - button "KoboldCpp":
-    - img
-    - text: KoboldCpp
+  - button "Ollama"
+  - button "LM Studio"
+  - button "KoboldCpp"

@@ -1,6 +1,6 @@
 {
   "name": "@deepseek-ai/dsh-llm",
-  "description": "Provider-neutral LLM service interface for the DeepSeek Harness",
+  "description": "Provider-neutral LLM service interface for tBelt Code",
   "version": "0.2.0-rc.2",
   "publishConfig": {
     "access": "public"

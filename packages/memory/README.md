@@ -1,5 +1,5 @@
 ---
-description: "The memory group map: persistent cross-session recall for the DeepSeek Harness, for users and maintainers navigating the group."
+description: "The memory group map: persistent cross-session recall for tBelt Code, for users and maintainers navigating the group."
 kind: "package-group"
 ---
 

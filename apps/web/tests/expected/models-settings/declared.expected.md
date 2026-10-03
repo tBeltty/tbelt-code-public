@@ -3,6 +3,7 @@
     - text: 设置
     - button "通用设置"
     - button "模型"
+    - button "花费"
     - button "内置插件"
     - button "Agent 预设"
   - button "打开配置文件"
@@ -20,12 +21,6 @@
       - button "编辑 Acme Gateway (acme-gateway)": 编辑
       - button "删除 Acme Gateway (acme-gateway)": 删除
   - button "添加模型提供商"
-  - button "Ollama":
-    - img
-    - text: Ollama
-  - button "LM Studio":
-    - img
-    - text: LM Studio
-  - button "KoboldCpp":
-    - img
-    - text: KoboldCpp
+  - button "Ollama"
+  - button "LM Studio"
+  - button "KoboldCpp"

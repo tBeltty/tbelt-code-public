@@ -101,9 +101,9 @@ export function PlanPreview(
 }
 
 /**
- * Display a plain file icon and the heading in its tab after resource recovery.
+ * Display the plan file icon and the heading in its tab after resource recovery.
  * @param props - Framework-bound tab identity and resource reader.
- * @returns a decorative file icon followed by the recovered title or initial localized label.
+ * @returns a decorative plan icon followed by the recovered title or initial localized label.
  */
 export function PlanTitle({ useTabInfo, useResource }: PropsRuntime<'sidebar.right.pane.tab.title'>) {
   const tab = useTabInfo()
@@ -111,5 +111,5 @@ export function PlanTitle({ useTabInfo, useResource }: PropsRuntime<'sidebar.rig
   const params = tab.tab.navigation.params
   const plan = isReviewPreviewAddress(tab.tab.navigation.address)
     ? (params !== undefined && 'planReview' in params ? params.planReview : undefined) : resource.value
-  return <><FileTypeIcon kind="other" size={16} className={css.titleIcon} />{plan?.title ?? tab.tab.title}</>
+  return <><FileTypeIcon kind="plan" size={16} className={css.titleIcon} />{plan?.title ?? tab.tab.title}</>
 }

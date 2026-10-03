@@ -1,6 +1,6 @@
 {
   "name": "@deepseek-ai/dsh-ptc-runtime",
-  "description": "Abstract PTC execution seam (ctx.ptcRuntime) for the DeepSeek Harness",
+  "description": "Abstract PTC execution seam (ctx.ptcRuntime) for tBelt Code",
   "version": "0.2.0-rc.2",
   "publishConfig": {
     "access": "public"

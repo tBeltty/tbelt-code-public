@@ -1,6 +1,6 @@
 {
   "name": "@deepseek-ai/dsh-terminal-bash",
-  "description": "Persistent shell PTY backend over the DeepSeek Harness subprocess terminal primitive",
+  "description": "Persistent shell PTY backend over the tBelt Code subprocess terminal primitive",
   "version": "0.2.0-rc.2",
   "publishConfig": {
     "access": "public"

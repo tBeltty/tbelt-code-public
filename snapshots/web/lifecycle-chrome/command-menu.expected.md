@@ -9,5 +9,8 @@
   - option "Permission Switch the permission preset (sandbox mode + approval policy)"
   - option "Model Select the model for this conversation"
   - option "Export Download this Session log as a ZIP archive"
+  - option "budget Show model spend for this session and month, or set a spend limit"
   - option "clear Reset the conversation to empty context"
   - option "cleared View what the last /clear removed (read-only, does not clear)"
+  - option "remember Durably remember a fact, preference, or pointer across sessions"
+  - option "undo Revert the current turn's file edits, restoring their pre-edit content"

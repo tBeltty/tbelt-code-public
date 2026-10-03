@@ -45,6 +45,7 @@ export function classifyLinkPath(path: string): LinkIconKind {
     case 'word': return 'document'
     case 'markdown':
     case 'other':
+    case 'text':
     case 'video': return 'other'
     /* v8 ignore next -- classifyFileType returns a closed union exhausted above */
     default: return assertNever(type)

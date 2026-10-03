@@ -1,6 +1,6 @@
 {
   "name": "@deepseek-ai/dsh-session-title-llm",
-  "description": "Shared LLM generation policy for DeepSeek Harness session-title providers",
+  "description": "Shared LLM generation policy for tBelt Code session-title providers",
   "version": "0.2.0-rc.2",
   "publishConfig": {
     "access": "public"

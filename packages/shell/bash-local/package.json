@@ -1,6 +1,6 @@
 {
   "name": "@deepseek-ai/dsh-bash-local",
-  "description": "Local-subprocess implementation of the DeepSeek Harness bash executor seam",
+  "description": "Local-subprocess implementation of the tBelt Code bash executor seam",
   "version": "0.2.0-rc.2",
   "publishConfig": {
     "access": "public"

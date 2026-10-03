@@ -1,6 +1,6 @@
 {
   "name": "@deepseek-ai/dsh-storage-sqlite",
-  "description": "SQLite storage backend (kv facet) for the DeepSeek Harness storage hub",
+  "description": "SQLite storage backend (kv facet) for the tBelt Code storage hub",
   "version": "0.2.0-rc.2",
   "publishConfig": {
     "access": "public"

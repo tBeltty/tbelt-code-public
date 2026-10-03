@@ -27,4 +27,5 @@
 - button "Send message" [disabled]
 - button "1 turns 2 steps · {{throughput}} tok/s": 1 turns 2 steps{{throughput}} tok/s
 - button "7.9K tok · Cache hit 0%": 7.9K tokCache hit 0%
+- button "This session $0.00 · This month $0.00 · 1 calls used a model with no price and are not counted": $0.00
 - button "6% of context used": 6%

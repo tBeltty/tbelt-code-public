@@ -14,11 +14,10 @@ it('ships install metadata with the built web application', async () => {
   // so only an absent `id`, which defaults to the resolved `start_url`, gives
   // each mount its own identity. `public-mount.e2e.ts` reads the resolved form.
   expect(manifest).toEqual({
-    id: '/',
     name: 'tBelt Code',
     short_name: 'tBelt Code',
-    start_url: '/',
-    scope: '/',
+    start_url: './',
+    scope: './',
     display: 'fullscreen',
     icons: [{
       src: 'favicon.svg',

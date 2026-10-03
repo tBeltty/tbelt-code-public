@@ -1,6 +1,6 @@
 {
   "name": "@deepseek-ai/dsh-skill-badge",
-  "description": "Bundled dsh badge skill provider for DeepSeek Harness",
+  "description": "Bundled dsh badge skill provider for tBelt Code",
   "version": "0.2.0-rc.2",
   "publishConfig": {
     "access": "public"

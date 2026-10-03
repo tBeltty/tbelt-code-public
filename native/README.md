@@ -1,6 +1,6 @@
 # native/
 
-Native source and public packages maintained with DeepSeek Harness. The [`system/` workspace](system/README.md) owns the Landlock launcher and POSIX flock binding, their platform packages, and the [release procedure](system/docs/release.md).
+Native source and public packages maintained with tBelt Code. The [`system/` workspace](system/README.md) owns the Landlock launcher and POSIX flock binding, their platform packages, and the [release procedure](system/docs/release.md).
 
 ## Workspace and release boundary
 

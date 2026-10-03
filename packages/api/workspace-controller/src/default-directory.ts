@@ -5,6 +5,9 @@ import { posix, win32 } from 'node:path'
 import { runNativeCommand, type NativeCommandRunner } from '@deepseek-ai/dsh-native-command'
 import { DEFAULT_WORKSPACE_DIRECTORY } from './default-workspace.ts'
 
+/** Product directory under Documents that holds the first-use Workspace. */
+export const DEFAULT_WORKSPACE_PARENT_DIRECTORY = 'tbelt-code'
+
 /** Platform observations replaceable in directory-resolution tests. */
 interface DocumentsDirectoryInternals {
   readonly platform?: NodeJS.Platform
@@ -74,5 +77,5 @@ export async function defaultWorkspaceDirectory(
   }
   directory = validateDocumentsDirectory(directory, platform)
   signal.throwIfAborted()
-  return paths.join(directory, 'deepseek-harness', DEFAULT_WORKSPACE_DIRECTORY)
+  return paths.join(directory, DEFAULT_WORKSPACE_PARENT_DIRECTORY, DEFAULT_WORKSPACE_DIRECTORY)
 }

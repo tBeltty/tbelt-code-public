@@ -28,7 +28,7 @@ import { installWindowsDirectoryInstaller } from './windows-directory-installer.
 import { preserveWindowsRuntimeSignature, signWindowsCode } from './windows-runtime-signature.mjs'
 import { prepareWindowsAsarUnpack, verifyWindowsAsarUnpack } from './windows-asar-unpack.mjs'
 import { recordPackagingEvent } from './packaging-run.mjs'
-import { PRODUCT_ARTIFACT_SLUG, PRODUCT_NAME } from './desktop-product.mjs'
+import { PRODUCT_ARTIFACT_SLUG, PRODUCT_NAME, PRODUCT_URL_SCHEME } from './desktop-product.mjs'
 import {
   resolveMacOSAppUpdateFeed,
   verifyMacOSAppUpdateConfig,
@@ -107,8 +107,11 @@ export function createElectronBuilderConfig(
   const packaged = resolveDesktopBuildCommit(env)
   return {
     appId,
-    protocols: [{ name: PRODUCT_NAME, schemes: ['dsh'] }],
+    protocols: [{ name: PRODUCT_NAME, schemes: [PRODUCT_URL_SCHEME] }],
     extraMetadata: {
+      // Electron names userData, logs and the updater cache after these fields, not after electron-builder's productName.
+      name: PRODUCT_ARTIFACT_SLUG,
+      productName: PRODUCT_NAME,
       dshDesktopAppId: appId,
       dshMandatoryUpdatePolicy: policy,
       ...buildVersion === productVersion ? {} : { version: buildVersion },

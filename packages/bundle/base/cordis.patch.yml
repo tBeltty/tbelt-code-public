@@ -577,7 +577,7 @@
 
     # The deployment persona is a deployment choice; plan-mode and tool plugins own
     # their own prompt sections. tBelt Code replaces the harness-owned identity
-    # line with its own persona rather than leaving the DeepSeek Harness wording in
+    # line with its own persona rather than leaving the tBelt Code wording in
     # a model-visible section.
     - id: system-prompt
       name: '@deepseek-ai/dsh-system-prompt'

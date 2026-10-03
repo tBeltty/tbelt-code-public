@@ -44,6 +44,15 @@ export const remoteDefaultResponses: RemoteTable = {
     // ui-settings-account bonus notice read and acknowledgement at signing in.
     'account/getUnnotifiedBonuses': ok(null),
     'account/ackBonusNotified': ok(true),
+    // ui-settings-web-search card controller constructor: no search provider is installed.
+    'web/searchProviders': ok([]),
+    // ui-model-selection spend reading under the composer once a Session is in view: nothing spent, no limits.
+    'spendBudget/summary': ok({
+      budgetSession: 'session',
+      session: { spentUsd: 0, unpricedCalls: 0 },
+      month: '2026-01',
+      monthly: { spentUsd: 0, unpricedCalls: 0 },
+    }),
   },
   // Stream endpoints the roster opens later than boot; declared so a spec that forgets the script gets a stream miss.
   streams: [

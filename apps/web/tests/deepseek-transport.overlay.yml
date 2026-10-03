@@ -1,4 +1,4 @@
-# Real-transport smoke (`dsh web`, apps/web/tests/smoke-real.e2e.ts) prompts
+# Real-transport scenarios (`dsh web`: smoke-real.e2e.ts, server-restart.e2e.ts) prompt
 # through a local mock server shaped as DeepSeek's Messages endpoint, with no
 # Models-page setup step in the flow it drives. The shipped Web composition no
 # longer pre-registers a default provider (Settings > Models opens empty until

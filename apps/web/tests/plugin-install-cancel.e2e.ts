@@ -14,7 +14,7 @@ async function invalidInputStyles(page: Page, input: Locator) {
   try {
     for (const colorScheme of ['light', 'dark'] as const) {
       await page.emulateMedia({ colorScheme })
-      await expect.poll(() => page.locator('body').getAttribute('data-ds-dark-theme')).toBe(colorScheme === 'dark' ? '' : null)
+      await expect.poll(() => page.locator('body').getAttribute('data-ds-dark-theme')).toBe('')
       await input.focus()
       await expect.poll(() => input.evaluate(element => document.activeElement === element)).toBe(true)
       expect(await input.getAttribute('aria-invalid')).toBe('true')
@@ -233,7 +233,7 @@ it('cancels installation, retries and highlights the enabled plugin at 40% alpha
         const styles = []
         for (const colorScheme of ['light', 'dark'] as const) {
           await page.emulateMedia({ colorScheme })
-          await expect.poll(() => page.locator('body').getAttribute('data-ds-dark-theme')).toBe(colorScheme === 'dark' ? '' : null)
+          await expect.poll(() => page.locator('body').getAttribute('data-ds-dark-theme')).toBe('')
           for (const reducedMotion of ['no-preference', 'reduce'] as const) {
             await page.emulateMedia({ reducedMotion })
             const style = await card.evaluate((element) => {

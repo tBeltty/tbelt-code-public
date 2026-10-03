@@ -52,8 +52,8 @@ import type { RepoMapFileResult } from './types.ts'
 import { orderFilesByRecency, renderRepoMap, type RankedFile } from './render.ts'
 import { DEFAULT_MIN_REPO_MAP_BYTES, DEFAULT_REPO_MAP_CONTEXT_FRACTION, RepoMapError, type Config } from './config.ts'
 
-export { Config, RepoMapError } from './config.ts'
-export type { RepoMapErrorCode } from './config.ts'
+export { RepoMapError } from './config.ts'
+export type { Config, RepoMapErrorCode } from './config.ts'
 
 declare module '@deepseek-ai/cordis' {
   interface Context {

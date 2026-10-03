@@ -4,7 +4,7 @@ import type { Browser, Page } from 'playwright'
 import { chromium } from 'playwright'
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 import {
-  launchWebScaffold, watchConsole, webSnapshotMode, WELCOME_NOTICE_COPY,
+  launchWebScaffold, watchConsole, webSnapshotMode,
   type WebConsoleTripwire, type WebScaffold,
 } from './scaffold.ts'
 import { ZH_BROWSER_LOCALE } from './support.ts'
@@ -21,10 +21,7 @@ describe.skipIf(MODE === 'record')('web e2e: public mount through a prefix-strip
   const muxFrames: string[] = []
 
   beforeAll(async () => {
-    scaffold = await launchWebScaffold({
-      publicMount: { prefix: MOUNT },
-      welcomeNoticePending: true,
-    })
+    scaffold = await launchWebScaffold({ publicMount: { prefix: MOUNT } })
     browser = await chromium.launch()
     page = await browser.newPage({
       viewport: { width: 1440, height: 960 },
@@ -50,8 +47,7 @@ describe.skipIf(MODE === 'record')('web e2e: public mount through a prefix-strip
   const offMountRequests = (): string[] => requestUrls.filter(url => !url.startsWith(scaffold.baseUrl))
 
   it('loads the shell, its plugin bundles, and the Gateway WebSocket under the mount', async () => {
-    const welcome = page.getByRole('dialog', { name: WELCOME_NOTICE_COPY.zh.title })
-    await welcome.waitFor({ timeout: 15_000 })
+    await page.getByRole('button', { name: '新建会话', exact: true }).first().waitFor({ timeout: 15_000 })
     expect(new URL(page.url()).pathname).toBe(MOUNT)
 
     // Every resource the page requested — bundles, manifest, icon, and whatever
@@ -67,9 +63,6 @@ describe.skipIf(MODE === 'record')('web e2e: public mount through a prefix-strip
       manifest?: { id?: string; scope?: string; startUrl?: string }
     }
     expect([manifest?.id, manifest?.scope, manifest?.startUrl]).toEqual([scaffold.baseUrl, scaffold.baseUrl, scaffold.baseUrl])
-
-    await welcome.getByRole('button', { name: WELCOME_NOTICE_COPY.zh.continueLabel }).click()
-    await welcome.waitFor({ state: 'detached', timeout: 15_000 })
 
     // The forward must be a live two-way pipe, not just a handshake: the page's
     // opens reach the Host and its items come back over the same mounted socket.

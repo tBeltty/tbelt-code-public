@@ -1,6 +1,6 @@
 {
   "name": "@deepseek-ai/dsh-llm-retry",
-  "description": "Provider-routed LLM request retry policy for the DeepSeek Harness",
+  "description": "Provider-routed LLM request retry policy for tBelt Code",
   "version": "0.2.0-rc.2",
   "publishConfig": {
     "access": "public"

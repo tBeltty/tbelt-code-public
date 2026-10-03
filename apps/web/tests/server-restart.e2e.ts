@@ -26,6 +26,8 @@ class RestartableServer {
       join(REPO_ROOT, 'apps/cli/lib/bin.js'), '--profile', 'web',
       '--patch', fileURLToPath(new URL('./pin-browse-picker.overlay.yml', import.meta.url)),
       '--patch', fileURLToPath(new URL('./fixtures/restart-startup.overlay.yml', import.meta.url)),
+      // The shipped composition registers no provider; this restores the DeepSeek route the model fixture serves.
+      '--patch', fileURLToPath(new URL('./deepseek-transport.overlay.yml', import.meta.url)),
       '--no-open', '--port', String(port),
     ], {
       cwd: this.world,
@@ -171,8 +173,6 @@ it.each([false, true])('keeps the same revision, Session and page across a serve
   })
   await page.goto(url, { waitUntil: 'load' })
   await page.locator('[data-slot="root"]').waitFor({ state: 'attached', timeout: 20_000 })
-  const notice = page.getByRole('button', { name: 'Continue', exact: true })
-  await notice.click({ timeout: 15_000 })
   const composer = page.locator('[data-composer-input][contenteditable="true"]')
   await writeComposerDraft(page, composer, 'Create a completed turn for the server restart test.')
   await composer.press('Enter')

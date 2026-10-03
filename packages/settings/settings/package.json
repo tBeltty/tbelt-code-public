@@ -1,6 +1,6 @@
 {
   "name": "@deepseek-ai/dsh-settings",
-  "description": "Abstract user-settings seam (ctx.settings) for the DeepSeek Harness",
+  "description": "Abstract user-settings seam (ctx.settings) for tBelt Code",
   "version": "0.2.0-rc.2",
   "publishConfig": {
     "access": "public"

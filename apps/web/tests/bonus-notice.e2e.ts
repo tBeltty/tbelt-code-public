@@ -363,7 +363,7 @@ describe.skipIf(MODE === 'record')('web e2e: bonus notice', () => {
     expect(platform.acks).toHaveLength(2)
 
     // Closing settings repeats no acknowledgement and leaves the card on the sidebar.
-    const launcher = page.getByRole('button', { name: '账号菜单', exact: true })
+    const launcher = page.getByRole('button', { name: '设置', exact: true })
     await page.keyboard.press('Escape')
     await settings.waitFor({ state: 'detached', timeout: 30_000 })
     // The shell restores focus to the launcher once the close commits.
@@ -424,7 +424,7 @@ describe.skipIf(MODE === 'record')('web e2e: bonus notice', () => {
     observations.push(`topup.open gets=${String(platform.gets.length - topUpGetsBefore)} summaries=${String(platform.summaries.length - topUpSummariesBefore)}`)
     const callsBefore = (await platformCalls(page)).length
     await topUpSettings.getByRole('link', { name: '充值', exact: true }).click()
-    const topUpOverlay = page.getByRole('dialog', { name: '返回 DeepSeek Harness', exact: true })
+    const topUpOverlay = page.getByRole('dialog', { name: '返回 tBelt Code', exact: true })
     await topUpOverlay.waitFor()
     // Opening the native view reads nothing by itself.
     expect(platform.gets.length).toBe(topUpGetsBefore + 1)
@@ -436,7 +436,7 @@ describe.skipIf(MODE === 'record')('web e2e: bonus notice', () => {
     platform.grant(ORDER_TOPUP, '11.00')
     // Holding the notice read proves the return does not wait for the refresh it starts.
     platform.holdNextGet()
-    await topUpOverlay.getByRole('button', { name: '返回 DeepSeek Harness', exact: true }).click()
+    await topUpOverlay.getByRole('button', { name: '返回 tBelt Code', exact: true }).click()
     await topUpOverlay.waitFor({ state: 'detached', timeout: 30_000 })
     const topUpCalls = (await platformCalls(page)).slice(callsBefore).join(',')
     observations.push(`topup.returned bridge=${topUpCalls} cards=${String(await noticeCards(page).count())}`)
@@ -540,9 +540,9 @@ describe.skipIf(MODE === 'record')('web e2e: bonus notice', () => {
     // Returning from usage refreshes nothing, because only a payment changes the account.
     for (const index of [0, 1]) {
       await failedLinks.nth(index).click()
-      const usageOverlay = page.getByRole('dialog', { name: '返回 DeepSeek Harness', exact: true })
+      const usageOverlay = page.getByRole('dialog', { name: '返回 tBelt Code', exact: true })
       await usageOverlay.waitFor()
-      await usageOverlay.getByRole('button', { name: '返回 DeepSeek Harness', exact: true }).click()
+      await usageOverlay.getByRole('button', { name: '返回 tBelt Code', exact: true }).click()
       await usageOverlay.waitFor({ state: 'detached', timeout: 30_000 })
     }
     const failedUsages = (await platformCalls(page)).filter(call => call === 'open:usage').length - failedUsagesBefore

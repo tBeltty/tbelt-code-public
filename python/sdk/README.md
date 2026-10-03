@@ -1,6 +1,6 @@
-# DeepSeek Harness Python SDK
+# tBelt Code Python SDK
 
-Python subprocess SDK for driving DeepSeek Harness over newline-delimited JSON-RPC on stdio. Install `deepseek-harness-sdk`; it installs the exact same-version `deepseek-harness-runtime-bin` wheel for the current platform.
+Python subprocess SDK for driving tBelt Code over newline-delimited JSON-RPC on stdio. Install `deepseek-harness-sdk`; it installs the exact same-version `deepseek-harness-runtime-bin` wheel for the current platform.
 
 ```sh
 python -m pip install deepseek-harness-sdk

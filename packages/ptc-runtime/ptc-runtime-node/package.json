@@ -1,6 +1,6 @@
 {
   "name": "@deepseek-ai/dsh-ptc-runtime-node",
-  "description": "Sandboxed Node process implementation of the DeepSeek Harness PTC execution capability",
+  "description": "Sandboxed Node process implementation of the tBelt Code PTC execution capability",
   "version": "0.2.0-rc.2",
   "publishConfig": {
     "access": "public"

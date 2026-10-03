@@ -1,8 +1,96 @@
 - dialog "选择一个模型提供方开始使用":
   - heading "选择一个模型提供方开始使用" [level=2]
-  - paragraph: 连接本地模型服务器，或添加任意提供方即可开始使用。
-  - button "Ollama"
-  - button "LM Studio"
-  - button "KoboldCpp"
-  - button "添加自定义提供方"
+  - paragraph: 选择提供方，填写 API 密钥并选择模型。
+  - searchbox "搜索提供方"
+  - list "提供商":
+    - listitem:
+      - button "amazon-bedrock": amazon-bedrock amazon-bedrock
+    - listitem:
+      - button "ant-ling": ant-ling ant-ling
+    - listitem:
+      - button "anthropic": anthropic anthropic
+    - listitem:
+      - button "azure-openai-responses": azure-openai-responses azure-openai-responses
+    - listitem:
+      - button "baseten": baseten baseten
+    - listitem:
+      - button "cerebras": cerebras cerebras
+    - listitem:
+      - button "cloudflare-ai-gateway": cloudflare-ai-gateway cloudflare-ai-gateway
+    - listitem:
+      - button "cloudflare-workers-ai": cloudflare-workers-ai cloudflare-workers-ai
+    - listitem:
+      - button "deepseek": deepseek deepseek
+    - listitem:
+      - button "fireworks": fireworks fireworks
+    - listitem:
+      - button "github-copilot": github-copilot github-copilot
+    - listitem:
+      - button "google": google google
+    - listitem:
+      - button "google-vertex": google-vertex google-vertex
+    - listitem:
+      - button "groq": groq groq
+    - listitem:
+      - button "huggingface": huggingface huggingface
+    - listitem:
+      - button "kimi-coding": kimi-coding kimi-coding
+    - listitem:
+      - button "meta": meta meta
+    - listitem:
+      - button "minimax": minimax minimax
+    - listitem:
+      - button "minimax-cn": minimax-cn minimax-cn
+    - listitem:
+      - button "mistral": mistral mistral
+    - listitem:
+      - button "moonshotai": moonshotai moonshotai
+    - listitem:
+      - button "moonshotai-cn": moonshotai-cn moonshotai-cn
+    - listitem:
+      - button "nvidia": nvidia nvidia
+    - listitem:
+      - button "openai": openai openai
+    - listitem:
+      - button "openai-codex": openai-codex openai-codex
+    - listitem:
+      - button "opencode": opencode opencode
+    - listitem:
+      - button "opencode-go": opencode-go opencode-go
+    - listitem:
+      - button "openrouter": openrouter openrouter
+    - listitem:
+      - button "qwen-token-plan": qwen-token-plan qwen-token-plan
+    - listitem:
+      - button "qwen-token-plan-cn": qwen-token-plan-cn qwen-token-plan-cn
+    - listitem:
+      - button "qwen-token-plan-individual": qwen-token-plan-individual qwen-token-plan-individual
+    - listitem:
+      - button "radius": radius radius
+    - listitem:
+      - button "together": together together
+    - listitem:
+      - button "vercel-ai-gateway": vercel-ai-gateway vercel-ai-gateway
+    - listitem:
+      - button "xai": xai xai
+    - listitem:
+      - button "xiaomi": xiaomi xiaomi
+    - listitem:
+      - button "xiaomi-token-plan-ams": xiaomi-token-plan-ams xiaomi-token-plan-ams
+    - listitem:
+      - button "xiaomi-token-plan-cn": xiaomi-token-plan-cn xiaomi-token-plan-cn
+    - listitem:
+      - button "xiaomi-token-plan-sgp": xiaomi-token-plan-sgp xiaomi-token-plan-sgp
+    - listitem:
+      - button "zai": zai zai
+    - listitem:
+      - button "zai-coding-cn": zai-coding-cn zai-coding-cn
+    - listitem:
+      - button "Ollama": Ollama 在本机运行
+    - listitem:
+      - button "LM Studio": LM Studio 在本机运行
+    - listitem:
+      - button "KoboldCpp": KoboldCpp 在本机运行
+    - listitem:
+      - button "自定义模型 API": 自定义模型 API 任何兼容的 API
   - button "稍后配置"

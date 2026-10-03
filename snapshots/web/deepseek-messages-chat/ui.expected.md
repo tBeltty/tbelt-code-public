@@ -24,4 +24,5 @@
 - button "发送消息" [disabled]
 - button "1 轮 1 步 · {{throughput}} tok/s": 1 轮 1 步{{throughput}} tok/s
 - button "8.2K tok · 缓存命中 16%": 8.2K tok缓存命中 16%
+- button "本会话 $0.00 · 本月 $0.00 · 1 次调用的模型没有价格，未计入": $0.00
 - button "上下文已用 1%": 1%

@@ -3,6 +3,7 @@
     - text: 设置
     - button "通用设置"
     - button "模型"
+    - button "花费"
     - button "内置插件"
     - button "Agent 预设"
   - button "打开配置文件"
@@ -46,6 +47,16 @@
           - textbox "最大输出 token 数 1":
             - /placeholder: 32K
             - text: 128K
+          - group "每百万 token 价格（美元）":
+            - text: 每百万 token 价格（美元） 输入
+            - textbox "输入 1":
+              - /placeholder: "10"
+            - text: 输出
+            - textbox "输出 1":
+              - /placeholder: "50"
+            - text: 缓存读取
+            - textbox "缓存读取 1":
+              - /placeholder: "1"
           - group "输入类型 1":
             - text: 输入类型
             - checkbox "文本" [checked]
@@ -60,3 +71,6 @@
       - button "编辑 Acme 网关 (acme-gateway)": 编辑
       - button "删除 Acme 网关 (acme-gateway)": 删除
   - button "添加模型提供商"
+  - button "Ollama"
+  - button "LM Studio"
+  - button "KoboldCpp"

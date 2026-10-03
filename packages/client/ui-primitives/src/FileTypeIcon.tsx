@@ -18,14 +18,16 @@ export type FileType =
   | 'markdown'
   | 'other'
   | 'pdf'
+  | 'plan'
   | 'ppt'
+  | 'text'
   | 'video'
   | 'word'
 
 /** Compatibility name for consumers that pass an already resolved category. */
 export type FileTypeKind = FileType
 
-type ClassifiedFileType = Exclude<FileType, 'folder'>
+type ClassifiedFileType = Exclude<FileType, 'folder' | 'plan'>
 type TraditionalFileType = Exclude<FileType, CodeFileType>
 
 export type { CodeFileType, FileTypeProjectContext } from './code-file-types.ts'
@@ -73,6 +75,12 @@ const EXTENSION_TYPES: Readonly<Record<string, ClassifiedFileType>> = {
   md: 'markdown',
   mdx: 'markdown',
   markdown: 'markdown',
+  txt: 'text',
+  text: 'text',
+  log: 'text',
+  rst: 'text',
+  adoc: 'text',
+  asciidoc: 'text',
   pdf: 'pdf',
   ppt: 'ppt',
   pptx: 'ppt',
@@ -106,6 +114,7 @@ const EXTENSION_TYPES: Readonly<Record<string, ClassifiedFileType>> = {
 const NAME_TYPES: Readonly<Record<string, ClassifiedFileType>> = {
   changelog: 'markdown',
   contributing: 'markdown',
+  license: 'text',
   readme: 'markdown',
 }
 
@@ -237,10 +246,27 @@ function glyph(type: TraditionalFileType, size: number, className: string | unde
           <path d="M6.80616 19.5V14.6H9.04616C9.49416 14.6 9.87916 14.6723 10.2012 14.817C10.5278 14.9617 10.7798 15.1717 10.9572 15.447C11.1345 15.7177 11.2232 16.0397 11.2232 16.413C11.2232 16.7817 11.1345 17.1013 10.9572 17.372C10.7798 17.6427 10.5278 17.8527 10.2012 18.002C9.87916 18.1467 9.49416 18.219 9.04616 18.219H7.57616L8.19216 17.617V19.5H6.80616ZM8.19216 17.764L7.57616 17.127H8.96216C9.2515 17.127 9.46616 17.064 9.60616 16.938C9.75083 16.812 9.82316 16.637 9.82316 16.413C9.82316 16.1843 9.75083 16.007 9.60616 15.881C9.46616 15.755 9.2515 15.692 8.96216 15.692H7.57616L8.19216 15.055V17.764ZM11.8989 19.5V14.6H14.2159C14.7573 14.6 15.2333 14.7003 15.6439 14.901C16.0546 15.1017 16.3743 15.384 16.6029 15.748C16.8363 16.112 16.9529 16.546 16.9529 17.05C16.9529 17.5493 16.8363 17.9833 16.6029 18.352C16.3743 18.716 16.0546 18.9983 15.6439 19.199C15.2333 19.3997 14.7573 19.5 14.2159 19.5H11.8989ZM13.2849 18.394H14.1599C14.4399 18.394 14.6826 18.3427 14.8879 18.24C15.0979 18.1327 15.2613 17.9787 15.3779 17.778C15.4946 17.5727 15.5529 17.33 15.5529 17.05C15.5529 16.7653 15.4946 16.5227 15.3779 16.322C15.2613 16.1213 15.0979 15.9697 14.8879 15.867C14.6826 15.7597 14.4399 15.706 14.1599 15.706H13.2849V18.394ZM17.6821 19.5V14.6H21.5251V15.671H19.0681V19.5H17.6821ZM18.9701 17.82V16.749H21.2311V17.82H18.9701Z" fill="currentColor" />
         </FileGlyph>
       )
+    case 'plan':
+      return (
+        <FileGlyph size={size} className={className} markTransform={FILE_MARK_TRANSFORM}>
+          <path d="M8.6 12.9L10 14.3L12.4 11.7" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+          <path d="M14.4 13H19.4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+          <path d="M8.6 18.6L10 20L12.4 17.4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+          <path d="M14.4 18.7H19.4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+        </FileGlyph>
+      )
     case 'ppt':
       return (
         <FileGlyph size={size} className={className} markTransform={LARGE_FILE_MARK_TRANSFORM}>
           <path d="M11.0132 20.5V13.5H14.2132C14.8532 13.5 15.4032 13.6033 15.8632 13.81C16.3299 14.0167 16.6899 14.3167 16.9432 14.71C17.1966 15.0967 17.3232 15.5567 17.3232 16.09C17.3232 16.6167 17.1966 17.0733 16.9432 17.46C16.6899 17.8467 16.3299 18.1467 15.8632 18.36C15.4032 18.5667 14.8532 18.67 14.2132 18.67H12.1132L12.9932 17.81V20.5H11.0132ZM12.9932 18.02L12.1132 17.11H14.0932C14.5066 17.11 14.8132 17.02 15.0132 16.84C15.2199 16.66 15.3232 16.41 15.3232 16.09C15.3232 15.7633 15.2199 15.51 15.0132 15.33C14.8132 15.15 14.5066 15.06 14.0932 15.06H12.1132L12.9932 14.15V18.02Z" fill="currentColor" />
+        </FileGlyph>
+      )
+    case 'text':
+      return (
+        <FileGlyph size={size} className={className} markTransform={FILE_MARK_TRANSFORM}>
+          <path d="M8.8 12.2H19.2" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+          <path d="M8.8 15.9H19.2" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+          <path d="M8.8 19.6H15.2" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
         </FileGlyph>
       )
     case 'video':

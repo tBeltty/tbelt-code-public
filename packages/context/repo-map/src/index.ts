@@ -25,9 +25,9 @@ export type {
 } from './types.ts'
 export { orderFilesByRecency, renderRepoMap } from './render.ts'
 export type { RankedFile } from './render.ts'
-export { RepoMap, RepoMapError, Config } from './plugin.ts'
+export { RepoMap, RepoMapError } from './plugin.ts'
 export { REPO_MAP_PLUGIN_SOURCE_NAME } from './plugin.ts'
-export type { RepoMapErrorCode } from './plugin.ts'
+export type { Config, RepoMapErrorCode } from './plugin.ts'
 export { DEFAULT_MIN_REPO_MAP_BYTES, DEFAULT_REPO_MAP_CONTEXT_FRACTION } from './config.ts'
 
 export { RepoMap as default } from './plugin.ts'

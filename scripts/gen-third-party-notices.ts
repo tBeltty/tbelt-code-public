@@ -707,7 +707,7 @@ function renderNonPermissiveNote(deps: ExternalDep[]): string {
   if (deps.length === 0) return ''
   const named = deps.map(dep => `\`${dep.name}\` (${dep.license})`)
   const subject = named.length === 1 ? named[0] : `${named.slice(0, -1).join(', ')} and ${named.at(-1)}`
-  return `\n${subject} ${named.length === 1 ? 'runs' : 'run'} only as development tooling; their code is not linked into or distributed with any DeepSeek Harness artifact.\n`
+  return `\n${subject} ${named.length === 1 ? 'runs' : 'run'} only as development tooling; their code is not linked into or distributed with any tBelt Code artifact.\n`
 }
 
 /** Render one npm dependency table. */

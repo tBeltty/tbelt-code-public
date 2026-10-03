@@ -12,7 +12,7 @@ maybe('BraveSearchProvider real API', () => {
   it('accepts its key and returns sources for a live query', async () => {
     const provider = new BraveSearchProvider({ apiKey: apiKey!, baseURL: process.env.BRAVE_BASE_URL ?? BRAVE_DEFAULT_BASE_URL })
     await provider.checkKey(apiKey!)
-    const result = await provider.search({ query: 'DeepSeek Harness', maxResults: 5 })
+    const result = await provider.search({ query: 'tBelt Code', maxResults: 5 })
     expect(result.sources.length).toBeGreaterThan(0)
     for (const source of result.sources) expect(source.url).toMatch(/^https?:\/\//)
   }, 30_000)

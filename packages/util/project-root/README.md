@@ -1,5 +1,5 @@
 ---
-description: "Shared upward marker-directory search that locates a project root from a working directory for the DeepSeek Harness."
+description: "Shared upward marker-directory search that locates a project root from a working directory for tBelt Code."
 kind: "package-library"
 ---
 

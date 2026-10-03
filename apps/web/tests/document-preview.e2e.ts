@@ -334,7 +334,7 @@ it.skipIf(MODE === 'record').each(['en-US', 'zh-CN'])('fills the spreadsheet pan
     await meetingCanvas.dispose()
     for (const colorScheme of ['light', 'dark'] as const) {
       await page.emulateMedia({ colorScheme })
-      await expect.poll(() => page.locator('body').getAttribute('data-ds-dark-theme')).toBe(colorScheme === 'dark' ? '' : null)
+      await expect.poll(() => page.locator('body').getAttribute('data-ds-dark-theme')).toBe('')
       for (const name of ['budget.xlsx', 'meeting.xlsx', 'legacy.xls', 'values.csv', 'values.tsv']) {
         await openPreviewFile(column, filesTab, preview, name)
         await excel.locator('.fortune-sheet-overlay').waitFor()
@@ -490,7 +490,7 @@ it.skipIf(MODE === 'record').each([1, 2])('keeps frozen headings without divider
     const layout = await page.addStyleTag({ content: '[data-sidebar-right-panel] { width: 360px !important; }' })
     for (const colorScheme of ['light', 'dark'] as const) {
       await page.emulateMedia({ colorScheme })
-      await expect.poll(() => page.locator('body').getAttribute('data-ds-dark-theme')).toBe(colorScheme === 'dark' ? '' : null)
+      await expect.poll(() => page.locator('body').getAttribute('data-ds-dark-theme')).toBe('')
       await expectExcelLayout(excel)
       await successShot(page, `excel-freeze-narrow-${colorScheme}-${deviceScaleFactor}`)
     }
@@ -948,7 +948,7 @@ else process.exit(1);
     expect(secondColor).toBe('blue')
     for (const colorScheme of ['dark', 'light'] as const) {
       await page.emulateMedia({ colorScheme })
-      await expect.poll(() => page.locator('body').getAttribute('data-ds-dark-theme')).toBe(colorScheme === 'dark' ? '' : null)
+      await expect.poll(() => page.locator('body').getAttribute('data-ds-dark-theme')).toBe('')
       await expectPdfPageSpacing(preview)
       await copyPdfText(page, preview, 'Selectable PDF text')
       await successShot(page, `pdf-spacing-${colorScheme}`)
@@ -1254,7 +1254,7 @@ else process.exit(1);
     ].join('\n'))
 
     const officeMenus: number[] = []
-    const configurationGuide = 'Read failed: Office previews are unavailable. Enable the document preview service on the computer running DeepSeek Harness.'
+    const configurationGuide = 'Read failed: Office previews are unavailable. Enable the document preview service on the computer running tBelt Code.'
     for (const extension of ['doc', 'docx', 'ppt', 'pptx']) {
       await openFile(`unavailable.${extension}`)
       expect(await preview.locator('[data-document-viewer-menu]').count()).toBe(0)
@@ -1564,7 +1564,7 @@ describe.skipIf(MODE === 'record')('web e2e: Host Office preview', () => {
       await column.locator('[data-files-entry="file"]').getByRole('button', { name: 'chinese.docx', exact: true }).click()
       for (const colorScheme of ['dark', 'light'] as const) {
         await page.emulateMedia({ colorScheme })
-        await expect.poll(() => page.locator('body').getAttribute('data-ds-dark-theme')).toBe(colorScheme === 'dark' ? '' : null)
+        await expect.poll(() => page.locator('body').getAttribute('data-ds-dark-theme')).toBe('')
         await expectDocumentLoading(preview)
         await successShot(page, `office-loading-${colorScheme}`)
       }
@@ -1745,7 +1745,7 @@ describe.skipIf(MODE === 'record')('web e2e: Host Office preview', () => {
           })
           for (const colorScheme of ['dark', 'light'] as const) {
             await page.emulateMedia({ colorScheme })
-            await expect.poll(() => page.locator('body').getAttribute('data-ds-dark-theme')).toBe(colorScheme === 'dark' ? '' : null)
+            await expect.poll(() => page.locator('body').getAttribute('data-ds-dark-theme')).toBe('')
             await expectPdfPageSpacing(preview)
             await successShot(page, `office-pptx-spacing-${colorScheme}`)
           }

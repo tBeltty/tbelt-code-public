@@ -27,7 +27,7 @@ export async function createInstalledUpdateBuilderConfig(manifest: string, versi
   return { ...config,
     productName: run.productName,
     directories: { ...config.directories, output: join(run.root, version, 'installer') },
-    extraMetadata: { ...config.extraMetadata, name: `dsh-update-test-${run.id}`, version, main: 'qualification-bootstrap.mjs' },
+    extraMetadata: { ...config.extraMetadata, name: `dsh-update-test-${run.id}`, productName: run.productName, version, main: 'qualification-bootstrap.mjs' },
     files: [
       { from: application, to: '.', filter: ['lib/*.js', 'lib/*.cjs', 'renderer/**/*', 'qualification-bootstrap.mjs', 'installed-update-identity.mjs'] },
       'package.json',

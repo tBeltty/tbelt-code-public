@@ -1,7 +1,10 @@
-/** Sidebar account launcher and locally authoritative sign-out action. */
+/**
+ * Sidebar Settings launcher, beside an account menu that holds only account
+ * actions (feedback and sign-out) and is omitted when it would be empty.
+ */
 import { useEffect, useRef, useState } from 'react'
 import {
-  Toast, Menu, IconEllipsisOutlineMedium, IconPaperPlaneOutlineMedium, IconSettingsOutlineMedium,
+  Toast, Menu, Tooltip, IconEllipsisOutlineMedium, IconPaperPlaneOutlineMedium, IconSettingsOutlineMedium,
 } from '@deepseek-ai/dsh-client-ui-primitives'
 import type { InjectFace, PropsLocale, PropsRuntime } from '@deepseek-ai/dsh-client-ui-slots'
 import type { AccountSectionInjected } from './AccountSection.tsx'
@@ -52,34 +55,41 @@ export function AccountMenu({
     catch (_error) { setSignOutImpact('unknown'); setOpen(false) }
     finally { setBusy(false) }
   }
+  const menuItems = [
+    ...(contactUs === undefined ? [] : [{ id: 'contact', label: t('contactUs'), icon: <IconPaperPlaneOutlineMedium size={16} /> }]),
+    // tBelt Code is model-agnostic: the signed-out menu offers no provider account sign-in.
+    ...(signedIn ? [{ id: 'signout', label: t('signOut'), icon: <LogoutIcon />, disabled: busy }] : []),
+  ]
   // The plugin's start publishes `loginFailed` before it rejects, so the dialog owns the report.
-  return <div ref={anchor} className={css.root}>
+  return <div ref={anchor} className={css.root} data-collapsed={!wide}>
     {signInNotice > 0 && <Toast key={signInNotice} text={t('modelSignInRequired')} onDone={() => { setSignInNotice(0) }} />}
     {expiryNotice && <Toast text={t('sessionExpired')} onDone={() => { setExpiryNotice(false) }} />}
     {signedIn && account.notice && <AccountNoticeCard key={account.notice.orderId} notice={account.notice}
       anchor={anchor} title={t('bonusNoticeTitle')} closeLabel={t('close')}
       onShown={bonusNoticeShown} onDismiss={bonusNoticeDismissed} />}
-    <Menu open={open} side="top" portal autoFocus className={css.anchor} listClassName={signedIn ? undefined : css.signedOutMenu}
-      anchor={<button ref={trigger} type="button" className={css.trigger} data-collapsed={!wide} data-signed-out={!signedIn} aria-label={t('menu')}
-        aria-haspopup="menu" aria-expanded={open} onClick={() => { setOpen(value => !value) }}>
+    <Tooltip disabled={settingsOpen} label={t('settings')} shortcutKeys={settingsShortcut?.keys}>
+      <button type="button" className={css.trigger} data-collapsed={!wide} aria-label={t('settings')}
+        aria-keyshortcuts={settingsShortcut?.aria} aria-haspopup="dialog" aria-expanded={settingsOpen}
+        onClick={() => { openSettings() }}>
+        <IconSettingsOutlineMedium size={14} />
+        {wide && <span className={css.label}>{t('settings')}</span>}
+      </button>
+    </Tooltip>
+    {menuItems.length > 0 && <Menu open={open} side="top" portal autoFocus className={css.menuAnchor}
+      listClassName={signedIn ? undefined : css.signedOutMenu}
+      anchor={<button ref={trigger} type="button" className={css.menuTrigger} aria-label={t('menu')}
+        title={signedIn ? label ?? undefined : t('more')} aria-haspopup="menu" aria-expanded={open}
+        onClick={() => { setOpen(value => !value) }}>
         {signedIn
           ? <span className={css.avatar}><AccountAvatar url={profile?.status === 'ready' ? profile.value.avatarUrl : null} /></span>
           : <IconEllipsisOutlineMedium size={14} />}
-        {wide && <span className={css.label}>{signedIn ? label : t('more')}</span>}
       </button>}
-      items={[
-        { id: 'settings', label: t('settings'), icon: <IconSettingsOutlineMedium size={16} />,
-          ...(settingsShortcut === undefined ? {} : { shortcut: settingsShortcut }) },
-        ...(contactUs === undefined ? [] : [{ id: 'contact', label: t('contactUs'), icon: <IconPaperPlaneOutlineMedium size={16} /> }]),
-        // tBelt Code is model-agnostic: the signed-out menu offers no provider account sign-in.
-        ...(signedIn ? [{ id: 'signout', label: t('signOut'), icon: <LogoutIcon />, disabled: busy }] : []),
-      ]}
+      items={menuItems}
       onClose={() => { setOpen(false) }}
       onSelect={(id) => {
-        if (id === 'settings') { setOpen(false); trigger.current?.focus(); openSettings() }
-        else if (id === 'contact') { setOpen(false); contactUs?.() }
+        if (id === 'contact') { setOpen(false); trigger.current?.focus(); contactUs?.() }
         else void requestSignOut()
-      }} />
+      }} />}
     {account.loginVisible && !account.onboarding && <SignInDialog account={account} colorScheme={colorScheme}
       start={start} cancel={cancel} t={t}
       close={() => { showLogin(false) }} useApiKey={() => { showLogin(false); openOnboarding('deepseek-official') }} />}

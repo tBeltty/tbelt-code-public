@@ -94,6 +94,19 @@ export interface CustomProviderCardProps {
   onBusyChange?: (busy: boolean) => void
 }
 
+/** Hosts that never leave this computer, where plain HTTP exposes nothing. */
+const LOOPBACK_HOSTS: ReadonlySet<string> = new Set(['localhost', '127.0.0.1', '[::1]'])
+
+/**
+ * Whether an endpoint sends its key unencrypted to another machine.
+ * @param url - an http or https URL that {@link isHttpUrl} accepted.
+ * @returns true for an `http:` URL whose host is not this computer.
+ */
+function cleartextRemote(url: string): boolean {
+  const parsed = new URL(url)
+  return parsed.protocol === 'http:' && !LOOPBACK_HOSTS.has(parsed.hostname) && !parsed.hostname.endsWith('.localhost')
+}
+
 /**
  * Render the custom-provider creation card.
  * @param props - existing routes, protocol choices, wire faces, and copy.
@@ -127,6 +140,7 @@ export function CustomProviderCard(props: CustomProviderCardProps): ReactNode {
   const routeTaken = taken.includes(route)
   const normalizedBaseURL = baseURL.trim()
   const baseUrlInvalid = baseURL.length > 0 && !isHttpUrl(normalizedBaseURL)
+  const baseUrlUnencrypted = normalizedBaseURL.length > 0 && !baseUrlInvalid && cleartextRemote(normalizedBaseURL)
   // Rows are checked by the same per-row validator the editor cards use, so a
   // bad row is named by its position here too. Capacities have route-level
   // fallbacks; what a route cannot default is at least one model.
@@ -215,6 +229,7 @@ export function CustomProviderCard(props: CustomProviderCardProps): ReactNode {
       // reopening a committed card over a secondary write. `ready` already
       // requires at least one model.
       const firstModel = models[0]
+      /* v8 ignore else -- submit stays disabled until `ready`, which requires a model */
       if (firstModel !== undefined) await operations.setDefaultModel(route, String(firstModel.id))
       props.onClose(true)
     } finally {
@@ -269,6 +284,7 @@ export function CustomProviderCard(props: CustomProviderCardProps): ReactNode {
         />
       </div>
       {baseUrlInvalid ? <p className={styles['error']}>{t('customBaseUrlInvalid')}</p> : null}
+      {baseUrlUnencrypted ? <p className={styles['advancedHint']} role="note">{t('customHttpWarning')}</p> : null}
       <div className={styles['field']}>
         <span className={styles['fieldLabel']}>{t('customApi')}</span>
         <select

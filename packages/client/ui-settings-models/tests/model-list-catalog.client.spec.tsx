@@ -106,3 +106,33 @@ it('restores inherited image input after a failed catalog read is retried manual
   expect(discover).toHaveBeenCalledTimes(2)
   expect(onChange).not.toHaveBeenCalled()
 })
+
+it('edits a model price in dollars per million tokens over the catalog price placeholder', async () => {
+  const onChange = vi.fn()
+  const props = {
+    onChange, catalogProvider: 'openai',
+    probe: { settingsNs: 'llm-pi-ai', provider: 'openai' },
+    disabled: false, t: (key: keyof typeof en) => en[key], onBusyChange: () => {},
+    operations: operations(() => Promise.resolve({
+      kind: 'found', models: [{ id: 'priced', pricing: { input: 2.5, output: 10 } }],
+    })),
+  }
+  const { rerender } = render(<ModelListEditor {...props} models={[{ id: 'priced' }, { id: 'unpriced' }]} />)
+  fireEvent.click(screen.getByRole('button', { name: `${en.modelAdvanced} 1` }))
+  fireEvent.click(screen.getByRole('button', { name: `${en.modelAdvanced} 2` }))
+  const input = screen.getByLabelText<HTMLInputElement>(`${en.modelPriceInput} 1`)
+  await waitFor(() => { expect(input.placeholder).toBe('2.5') })
+  expect(screen.getByLabelText<HTMLInputElement>(`${en.modelPriceInput} 2`).placeholder).toBe(en.modelPriceUnknown)
+  expect(screen.getByLabelText<HTMLInputElement>(`${en.modelPriceCacheRead} 2`).placeholder).toBe(en.modelPriceCacheReadDefault)
+
+  fireEvent.change(screen.getByLabelText(`${en.modelPriceInput} 2`), { target: { value: '$0.30' } })
+  expect(onChange).toHaveBeenLastCalledWith([{ id: 'priced' }, { id: 'unpriced', pricing: { input: 0.3 } }])
+  rerender(<ModelListEditor {...props} models={[{ id: 'priced' }, { id: 'unpriced', pricing: { input: 0.3 } }]} />)
+  fireEvent.change(screen.getByLabelText(`${en.modelPriceOutput} 2`), { target: { value: '1.2' } })
+  expect(onChange).toHaveBeenLastCalledWith([{ id: 'priced' }, { id: 'unpriced', pricing: { input: 0.3, output: 1.2 } }])
+
+  // Clearing the last rate removes the price, so the route's own price applies again.
+  rerender(<ModelListEditor {...props} models={[{ id: 'priced' }, { id: 'unpriced', pricing: { input: 0.3 } }]} />)
+  fireEvent.change(screen.getByLabelText(`${en.modelPriceInput} 2`), { target: { value: '' } })
+  expect(onChange).toHaveBeenLastCalledWith([{ id: 'priced' }, { id: 'unpriced' }])
+})

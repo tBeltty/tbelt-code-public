@@ -6,15 +6,14 @@
  * @module @deepseek-ai/dsh-web-search-perplexity/provider
  */
 
-import { userAgent } from '@deepseek-ai/dsh-llm'
-import { WebError } from '@deepseek-ai/dsh-web'
+import { KeyedSearchProvider, requestProviderJson, WebError } from '@deepseek-ai/dsh-web'
 import type {
-  WebSearchProvider,
+  SearchKeySource,
   WebSearchRequest,
   WebSearchResult,
   WebSearchSource,
 } from '@deepseek-ai/dsh-web'
-import type { PerplexityError, PerplexityResponse, PerplexitySearchResult } from './types.ts'
+import type { PerplexityResponse, PerplexitySearchResult } from './types.ts'
 
 /** Stable id this provider registers under. */
 export const PERPLEXITY_PROVIDER_ID = 'perplexity'
@@ -31,13 +30,10 @@ export const PERPLEXITY_DEFAULT_MAX_TOKENS = 1024
 /** Recency filter values Perplexity accepts for `search_recency_filter`. */
 export type PerplexityRecency = 'day' | 'week' | 'month' | 'year'
 
-/** Attribution header sent on every request; sourced from the shared harness identity. */
-const USER_AGENT = userAgent()
-
 /** Resolved provider options (the plugin's `apply` supplies env-var and constant defaults). */
 export interface PerplexitySearchProviderOptions {
-  /** Perplexity API key. Empty/absent makes the provider unavailable. */
-  apiKey: string
+  /** Perplexity API key, or its source; an empty or unconfigured key makes the provider unavailable. */
+  apiKey: string | SearchKeySource
   /** Endpoint base; `/chat/completions` is appended. */
   baseURL: string
   /** Search model name. */
@@ -84,85 +80,43 @@ export function mapPerplexityResponse(response: PerplexityResponse): WebSearchRe
 }
 
 /** The Perplexity-backed search provider; HTTP redirects fail as `WEB_PROVIDER_ERROR`. */
-export class PerplexitySearchProvider implements WebSearchProvider {
+export class PerplexitySearchProvider extends KeyedSearchProvider {
   readonly id = PERPLEXITY_PROVIDER_ID
 
-  constructor(private readonly options: PerplexitySearchProviderOptions) {}
+  constructor(private readonly options: PerplexitySearchProviderOptions) {
+    super(options.apiKey, 'Perplexity')
+  }
 
-  // Availability checks stay beside each provider's distinct config contract;
-  // a shared base class would obscure which fields make this backend usable.
-  /* jscpd:ignore-start */
   available(): boolean {
-    return this.options.apiKey.length > 0
+    return this.key.configured()
       && URL.canParse(this.options.baseURL)
       && isPositiveInteger(this.options.maxTokens)
   }
-  /* jscpd:ignore-end */
 
-  async search(request: WebSearchRequest, signal?: AbortSignal): Promise<WebSearchResult> {
-    let response: Response
+  protected async send(apiKey: string, request: WebSearchRequest, check: boolean, signal?: AbortSignal): Promise<WebSearchResult> {
+    const payload = await requestProviderJson({
+      label: 'Perplexity',
+      url: `${this.options.baseURL}/chat/completions`,
+      method: 'POST',
+      headers: { authorization: `Bearer ${apiKey}` },
+      body: {
+        model: this.options.model,
+        // One answer token keeps a key check to the provider's minimum charge.
+        max_tokens: check ? 1 : this.options.maxTokens,
+        messages: [{ role: 'user', content: request.query }],
+        ...this.options.searchRecency !== undefined ? { search_recency_filter: this.options.searchRecency } : {},
+      },
+      ...signal !== undefined ? { signal } : {},
+    })
     try {
-      response = await fetch(`${this.options.baseURL}/chat/completions`, {
-        method: 'POST',
-        redirect: 'error',
-        headers: {
-          'authorization': `Bearer ${this.options.apiKey}`,
-          'content-type': 'application/json',
-          'accept': 'application/json',
-          'user-agent': USER_AGENT,
-        },
-        body: JSON.stringify({
-          model: this.options.model,
-          max_tokens: this.options.maxTokens,
-          messages: [{ role: 'user', content: request.query }],
-          ...this.options.searchRecency !== undefined ? { search_recency_filter: this.options.searchRecency } : {},
-        }),
-        ...signal !== undefined ? { signal } : {},
-      })
+      return mapPerplexityResponse(payload as PerplexityResponse)
     } catch (error: unknown) {
-      if (isAbortError(error)) throw new WebError('Perplexity search aborted', 'WEB_ABORTED', { cause: error })
-      throw new WebError(`Perplexity search request failed: ${String(error)}`, 'WEB_PROVIDER_ERROR', { cause: error })
-    }
-
-    if (!response.ok) {
-      const status = response.status
-      let message = `Perplexity API error (HTTP ${status})`
-      try {
-        const parsed = await response.json() as PerplexityError
-        const detail = typeof parsed.error === 'string' ? parsed.error : parsed.error?.message ?? parsed.message
-        if (detail !== undefined && detail.length > 0) message = detail
-      } catch (error: unknown) {
-        // An abort fired mid-body must surface as WEB_ABORTED, not be swallowed
-        // into a generic HTTP-error message — cancellation is not a provider
-        // error (the seam's cancellation contract).
-        if (isAbortError(error)) throw new WebError('Perplexity search aborted', 'WEB_ABORTED', { cause: error })
-        // Otherwise: the HTTP status is already captured in `message` above; a
-        // malformed/non-JSON error body (normal for gateway 5xx/429s) can only
-        // cost a richer provider message, never the real error.
-      }
-      throw new WebError(message, 'WEB_PROVIDER_ERROR')
-    }
-
-    try {
-      const payload = await response.json() as PerplexityResponse
-      return mapPerplexityResponse(payload)
-    } catch (error: unknown) {
-      if (isAbortError(error)) throw new WebError('Perplexity search aborted', 'WEB_ABORTED', { cause: error })
       throw new WebError(`Perplexity returned an unprocessable response body: ${String(error)}`, 'WEB_PROVIDER_ERROR', { cause: error })
     }
   }
-}
-
-// These two predicates are intentionally local: exporting generic internals
-// from the public web seam would add more API than these pure checks.
-/* jscpd:ignore-start */
-/** True for a fetch/`AbortSignal` abort, surfaced as `WEB_ABORTED`. */
-function isAbortError(error: unknown): boolean {
-  return error instanceof DOMException && error.name === 'AbortError'
 }
 
 /** True for a request limit that can be sent to Perplexity (a positive whole number). */
 function isPositiveInteger(value: number): boolean {
   return Number.isInteger(value) && value > 0
 }
-/* jscpd:ignore-end */

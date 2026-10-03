@@ -290,6 +290,15 @@ export interface LlmModelDiscoveryRequest {
   api?: string
   /** Credential for this interrogation alone; the harness never stores it. */
   apiKey?: string
+  /**
+   * Ask the endpoint even when the adapter already knows the route's models.
+   * The answer is what the endpoint lists for this credential, so a rejected
+   * key fails the request with `INVALID_CREDENTIAL` instead of passing
+   * unchecked. Adapter knowledge still supplies the metadata of every listed
+   * model it describes. A route whose protocol has no readable listing keeps
+   * the adapter's answer.
+   */
+  live?: boolean
 }
 
 /** Provider-side discovery request with operation-local cancellation attached. */
@@ -304,6 +313,8 @@ declare module '@deepseek-ai/dsh-typert-protocol' {
     'llm/model-discovery-rejected': {
       readonly settingsNs: string
       readonly baseURL?: string
+      /** The adapter's `LlmError` code, such as `INVALID_CREDENTIAL` or `QUOTA`, when it gave one. */
+      readonly code?: string
     }
   }
 }
@@ -324,6 +335,8 @@ export interface LlmDiscoveredModel {
   maxTokens?: number
   /** Accepted input types when disclosed by the catalog or endpoint; absent means unknown. */
   inputModalities?: readonly ModelModality[]
+  /** List price when the catalog or endpoint publishes one; absent means unknown, never free. */
+  pricing?: LlmModelPricing
 }
 
 /** One adapter-discovered model; catalog membership is advisory, not request validation. */

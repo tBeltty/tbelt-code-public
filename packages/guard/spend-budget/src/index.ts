@@ -20,6 +20,7 @@
  */
 
 import { Context, Service, type Volatile } from '@deepseek-ai/cordis'
+import { Remote, TypertRemoteService } from '@deepseek-ai/dsh-typert-protocol'
 import z from '@deepseek-ai/schemastery'
 import type {} from '@deepseek-ai/cordis-plugin-loader'
 import type {} from '@deepseek-ai/dsh-agent'
@@ -32,7 +33,7 @@ import { settlementUsage, usageCostUsd, utcMonthOf } from './cost.ts'
 import { findBreaches, SPEND_LIMIT_CODE, spendLimitMessage } from './limits.ts'
 import { spendDomainSpec } from './spec.ts'
 import type { MonthSpendRecord, SessionSpendRecord } from './spec.ts'
-import type { SpendMonth, SpendScopeSummary, SpendSummary } from './types.ts'
+import type { SpendMonth, SpendMonthReading, SpendScopeSummary, SpendSummary, SpendSummaryReading } from './types.ts'
 
 export type * from './types.ts'
 export { monthSpendRecord, sessionSpendRecord, spendDomainSpec } from './spec.ts'
@@ -84,7 +85,7 @@ function assertLimit(limitUsd: number | undefined): void {
  * Owns the `spend_budget` storage domain, records spend from committed model
  * requests, and refuses model steps past a reached limit.
  */
-export default class SpendBudget extends Service {
+export default class SpendBudget extends TypertRemoteService {
   static Config = z.object({
     monthlyLimitUsd: z.number().min(0).volatile(),
   })
@@ -146,6 +147,30 @@ export default class SpendBudget extends Service {
       month,
       monthly: scopeSummary(monthRecord, this.config.monthlyLimitUsd.get()),
     }
+  }
+
+  /**
+   * Spend and limits after every accounting job started so far has settled,
+   * for clients that read once a turn ends.
+   * @param session - any Session; a subagent Session reports its top Session's record.
+   * @returns the budget Session's figures and the current month's figures.
+   */
+  @Remote('summary')
+  async settledSummary(session: SessionId): Promise<SpendSummaryReading> {
+    await this.whenSettled()
+    return this.summary(session)
+  }
+
+  /**
+   * The current UTC month's spend and limit after every accounting job started
+   * so far has settled, for clients with no Session in view.
+   * @returns the month and its figures.
+   */
+  @Remote('month')
+  async settledMonth(): Promise<SpendMonthReading> {
+    await this.whenSettled()
+    const month = utcMonthOf(Date.now())
+    return { month, monthly: scopeSummary(this.requireMonths().get(month) ?? EMPTY_MONTH, this.config.monthlyLimitUsd.get()) }
   }
 
   /**

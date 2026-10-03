@@ -770,6 +770,13 @@ describe('ModelsSection', () => {
     expect(validateDeepSeekModels([{ id: 'model', maxTokens: 0 }]))
       .toEqual({ index: 0, key: 'modelMaxTokensInvalid' })
     expect(validateDeepSeekModels([{ id: 'model', maxTokens: 8192 }])).toBeUndefined()
+    expect(validateDeepSeekModels([{ id: 'model', pricing: { input: 0.3 } }]))
+      .toEqual({ index: 0, key: 'modelPriceInvalid' })
+    expect(validateDeepSeekModels([{ id: 'model', pricing: { input: Number.NaN, output: 1 } }]))
+      .toEqual({ index: 0, key: 'modelPriceInvalid' })
+    expect(validateDeepSeekModels([{ id: 'model', pricing: 'free' }]))
+      .toEqual({ index: 0, key: 'modelPriceInvalid' })
+    expect(validateDeepSeekModels([{ id: 'model', pricing: { input: 0.3, output: 1.2, cacheRead: 0.03 } }])).toBeUndefined()
   })
 
   it('reads context windows written as counts, thousands, or millions', () => {

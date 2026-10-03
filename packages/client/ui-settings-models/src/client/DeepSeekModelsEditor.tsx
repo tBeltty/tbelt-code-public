@@ -73,7 +73,21 @@ export interface DeepSeekModelsValidationFailure {
   index: number
   /** Message key owned by the Models settings section. */
   key: 'modelIdRequired' | 'modelIdDuplicate' | 'modelNameInvalid' | 'modelContextInvalid'
-  | 'modelMaxTokensInvalid'
+  | 'modelMaxTokensInvalid' | 'modelPriceInvalid'
+}
+
+/**
+ * Whether a row's `pricing` is absent or a price the adapter accepts: input
+ * and output rates both set, and every rate a finite number at or above 0.
+ */
+function validPricing(pricing: unknown): boolean {
+  if (pricing === undefined) return true
+  if (typeof pricing !== 'object' || pricing === null || Array.isArray(pricing)) return false
+  const rates = pricing as Record<string, unknown>
+  const rate = (key: string): boolean => rates[key] === undefined
+    || (typeof rates[key] === 'number' && Number.isFinite(rates[key]) && rates[key] >= 0)
+  return rates['input'] !== undefined && rates['output'] !== undefined
+    && ['input', 'output', 'cacheRead', 'cacheWrite'].every(rate)
 }
 
 /** Convert a schema-validated catalog value into records without dropping hidden fields. */
@@ -117,6 +131,7 @@ export function validateDeepSeekModels(value: unknown): DeepSeekModelsValidation
       && (typeof maxTokens !== 'number' || !Number.isInteger(maxTokens) || maxTokens <= 0)) {
       return { index, key: 'modelMaxTokensInvalid' }
     }
+    if (!validPricing(model['pricing'])) return { index, key: 'modelPriceInvalid' }
   }
   return undefined
 }

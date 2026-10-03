@@ -28,7 +28,7 @@ try {
   await ctx.plugin(AgentRegistry)
   await ctx.plugin(LocalFileSystem, { cwd: root })
   ctx.provide('sessionProjections', { stateOf() { return { openTurnStartSeq: 1, lastTurn: 1 } } })
-  await ctx.plugin(Present, { maxFiles: 2 })
+  await ctx.plugin(Present, { maxFiles: 2, preview: true })
   const scope = ctx.plugin(() => {})
   const session = Session.create('built-present', [], { version: SESSION_FORMAT_VERSION, id: 'built-present', createdAt: 0, cwd: root, isSeeded: false })
   const owner = { id: 'built-present', session, ctx: scope.ctx, options: {}, status: 'idle' }

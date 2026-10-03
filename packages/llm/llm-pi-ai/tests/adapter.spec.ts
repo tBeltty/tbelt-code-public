@@ -601,6 +601,32 @@ describe('provider profile lifecycle', () => {
     })
   })
 
+  it('publishes a configured list price for any model and lets it replace the catalog price', async () => {
+    const ctx = new Context()
+    await ctx.plugin(LlmRuntime)
+    await ctx.plugin(LlmPiAi, {
+      providers: {
+        'acme-gateway': {
+          apiKeyEnv: 'PI_TEST_KEY',
+          api: 'openai-completions',
+          baseURL: 'https://acme.test/v1',
+          models: [
+            { id: 'acme-priced', pricing: { input: 0.3, output: 1.2, cacheRead: 0.03 } },
+            { id: 'acme-half', pricing: { input: 0.3 } },
+          ],
+        },
+        deepseek: { modelOverrides: { 'deepseek-flash': { pricing: { input: 9, output: 18 } } } },
+      },
+    })
+
+    await expect(ctx.llm.resolveModelInfo('acme-gateway', 'acme-priced'))
+      .resolves.toMatchObject({ pricing: { input: 0.3, output: 1.2, cacheRead: 0.03 } })
+    // A price missing its output rate is no price, not a free output.
+    await expect(ctx.llm.resolveModelInfo('acme-gateway', 'acme-half')).resolves.not.toHaveProperty('pricing')
+    await expect(ctx.llm.resolveModelInfo('deepseek', 'deepseek-flash'))
+      .resolves.toMatchObject({ pricing: { input: 9, output: 18 } })
+  })
+
   it('sends the declared wire spelling and refuses undeclared levels before network I/O', async () => {
     vi.stubEnv('PI_TEST_KEY', 'test-key')
     const server = await mockServer([{ events: textEvents }])

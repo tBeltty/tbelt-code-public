@@ -26,6 +26,44 @@
   color: var(--dsw-alias-label-tertiary);
 }
 
+/* This month's reading on the Spending page: a label, a tabular figure, and
+   the uncounted-call note on its own line. */
+.spendMonth {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  column-gap: 12px;
+  row-gap: 2px;
+  padding: 12px 14px;
+  border: 1px solid var(--dsw-alias-border-l3);
+  border-radius: 10px;
+}
+
+.spendMonthLabel {
+  font-size: 13px;
+  color: var(--dsw-alias-label-secondary);
+}
+
+.spendMonthValue {
+  font-size: 15px;
+  font-variant-numeric: tabular-nums;
+  color: var(--dsw-alias-label-primary);
+}
+
+.spendUnpriced {
+  flex-basis: 100%;
+  font-size: 12px;
+  line-height: 18px;
+  color: var(--dsw-alias-label-tertiary);
+}
+
+.spendHint {
+  margin: 0;
+  font-size: 12px;
+  line-height: 18px;
+  color: var(--dsw-alias-label-tertiary);
+}
+
 .notice {
   margin: 0;
   font-size: 12px;
@@ -525,6 +563,29 @@
   flex-direction: column;
   min-width: 0;
   gap: 4px;
+}
+
+/* The list price spans the row: a caption, then three equal rate inputs. */
+.modelPrice {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: none;
+}
+
+.modelPrice > legend {
+  padding: 0;
+  margin-bottom: 4px;
+}
+
+.modelPriceLabel {
+  color: var(--dsw-alias-label-tertiary);
+  font-size: 11px;
+  line-height: 16px;
 }
 
 .modelInputTypes {

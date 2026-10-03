@@ -589,8 +589,8 @@
   disabled: true
 
 # The product ships model-agnostic: no provider adapter is pre-registered, so
-# Settings > Models opens empty and Settings > Plugins shows no search card
-# until the user adds a provider themselves. `base` composes the native
+# Settings > Models opens empty until the user adds a provider themselves.
+# `base` composes the native
 # DeepSeek chat adapter and its DeepSeek-specific web-search provider
 # unconditionally, which is right for the CLI and SDK bundles that many
 # existing fixtures pin against; the Web surface is the one product this
@@ -600,6 +600,20 @@
 
 - id: web-search-deepseek
   disabled: true
+
+# The search providers the user chooses from in Settings > Plugins > Web
+# search. Each reads its key from its own credential reference at every
+# search and stays unavailable until that key exists; the page writes the
+# choice to the `web` row's volatile `searchProvider`.
+- insert:
+    - id: web-search-exa
+      name: '@deepseek-ai/dsh-web-search-exa'
+    - id: web-search-perplexity
+      name: '@deepseek-ai/dsh-web-search-perplexity'
+    - id: web-search-brave
+      name: '@deepseek-ai/dsh-web-search-brave'
+    - id: web-search-tavily
+      name: '@deepseek-ai/dsh-web-search-tavily'
 
 # The preset selection registry. The shipped preset declarations follow as
 # separate patch files under `presets/`, listed after this file in

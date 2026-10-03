@@ -1,0 +1,10 @@
+Additional permission under GNU AGPL version 3 section 7
+
+If you modify tBelt Code, or any covered work, by linking or combining it
+with the Claude Agent SDK (the @anthropic-ai/claude-agent-sdk package and the
+Claude Code platform packages it declares as optional dependencies), or a
+modified version of them, containing parts covered by the terms of their own
+licenses, the licensors of tBelt Code grant you additional permission to
+convey the resulting work. Corresponding Source for a non-source form of such
+a combination shall not include the source code for the parts of the Claude
+Agent SDK used.

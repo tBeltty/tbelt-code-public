@@ -1,10 +1,10 @@
-/** Read immutable plan arguments from a Session snapshot and earlier history pages. */
+/** Read immutable plan arguments and their episode versions from a Session snapshot and earlier history pages. */
 import type { Context } from '@deepseek-ai/cordis'
 import type { SessionFollowFrame } from '@deepseek-ai/dsh-api-session-controller/types'
 import type { ResourceProvider } from '@deepseek-ai/dsh-client-resources/client'
 import { RemoteError, remoteErrorOf } from '@deepseek-ai/dsh-typert-protocol'
 import type { RemoteResult } from '@deepseek-ai/dsh-typert-protocol'
-import { parsePlanAddress, submittedPlan, type SubmittedPlan } from './plan.ts'
+import { loggedPlan, parsePlanAddress, submittedPlan, type LoggedPlan } from './plan.ts'
 
 declare module '@deepseek-ai/dsh-typert-protocol' {
   interface RemoteErrorDetailsMap {
@@ -21,9 +21,16 @@ declare module '@deepseek-ai/dsh-typert-protocol' {
 
 declare module '@deepseek-ai/dsh-client-ui-slots' {
   interface ResourceProtocolMap {
-    /** Immutable Markdown from a logged exit_plan_mode invocation. */
-    plan: SubmittedPlan
+    /** Immutable Markdown from a logged exit_plan_mode invocation, with the versions of its plan-mode episode. */
+    plan: LoggedPlan
   }
+}
+
+/** Whether the events already hold the invocation's plan and the `plan/mode` activation before it. */
+function episodeStart(events: readonly { readonly type: string; readonly data: unknown }[], callId: string): boolean {
+  const index = events.findIndex(event => submittedPlan(event)?.callId === callId)
+  return index > 0 && events.slice(0, index).some(event => event.type === 'plan/mode'
+    && typeof event.data === 'object' && event.data !== null && (event.data as { active?: unknown }).active === true)
 }
 
 /**
@@ -32,12 +39,12 @@ declare module '@deepseek-ai/dsh-client-ui-slots' {
  * Generated Remote streams can throw carrier failures; the provider reports failed
  * reads as resource failure frames and preserves Remote error codes.
  * @param remote - Existing Session history API.
- * @returns a provider whose reads stop after finding the exact invocation.
+ * @returns a provider that reads history pages back to the invocation's episode start and yields the invocation with its episode versions.
  */
 export function planResourceProvider(remote: Pick<Context['remote']['session'], 'follow' | 'page'>): ResourceProvider<'plan'> {
   return {
     protocol: 'plan',
-    async *open(address, { signal }): AsyncIterable<RemoteResult<SubmittedPlan>> {
+    async *open(address, { signal }): AsyncIterable<RemoteResult<LoggedPlan>> {
       const aborted = (): boolean => signal.aborted
       if (aborted()) return
       const target = parsePlanAddress(address)
@@ -55,20 +62,20 @@ export function planResourceProvider(remote: Pick<Context['remote']['session'], 
         if (aborted()) return
         if (snapshot === undefined) throw new RemoteError('plan/unavailable', 'Session history ended before the plan could be read.', {})
         let page = { records: snapshot.records, hasMore: snapshot.hasMore }
+        let events = page.records.map(entry => entry.event)
         while (true) {
-          for (const entry of page.records) {
-            const plan = submittedPlan(entry.event)
-            if (plan?.callId === target.callId) {
-              yield { ok: true, value: plan }
-              return
-            }
-          }
           const beforeSeq = page.records[0]?.event.seq
-          if (!page.hasMore || beforeSeq === undefined) break
+          if (!page.hasMore || beforeSeq === undefined || episodeStart(events, target.callId)) break
           const next = await remote.page({ address: sessionAddress, throughSeq: snapshot.cursor, beforeSeq }, signal)
           if (aborted()) return
           if (!next.ok) { yield next; return }
           page = next.value
+          events = [...page.records.map(entry => entry.event), ...events]
+        }
+        const plan = loggedPlan(events, target.callId)
+        if (plan !== undefined) {
+          yield { ok: true, value: plan }
+          return
         }
         yield { ok: false, error: new RemoteError('plan/not-found', 'The submitted plan was not found in this Session.', {}) }
       } catch (error) {

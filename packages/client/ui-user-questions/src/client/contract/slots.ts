@@ -71,7 +71,7 @@ export interface PlanReview {
 /**
  * Owner values of the `conversation.plan-review.decision` seat. The panel keeps
  * the answer channel and its failure display; the occupant chooses which
- * decision controls to show.
+ * decision controls to show, including the Request changes control.
  */
 export interface PlanReviewDecision {
   /** The review being decided. */
@@ -85,6 +85,11 @@ export interface PlanReviewDecision {
    * @returns whether the answer was sent; the panel shows a failure itself.
    */
   approve: () => Promise<boolean>
+  /**
+   * Dismiss the review so the user can answer in the composer; `exit_plan_mode` tells the model to wait for that message.
+   * @returns whether the dismissal was sent; the panel shows a failure itself.
+   */
+  discuss: () => Promise<boolean>
   /**
    * Decline the plan with written feedback, which `exit_plan_mode` returns to the model in its result.
    * @param feedback - Non-empty feedback sent as the answer's custom text.

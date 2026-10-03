@@ -19,6 +19,15 @@
     },
     {
       "path": "../../llm/llm"
+    },
+    {
+      "path": "../../credentials/credentials"
+    },
+    {
+      "path": "../../util/launch-environment"
+    },
+    {
+      "path": "../../typert/protocol"
     }
   ]
 }

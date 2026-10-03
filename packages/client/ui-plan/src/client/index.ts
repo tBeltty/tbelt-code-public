@@ -22,14 +22,17 @@ import { PlanCards, PlanReviewOpen, type PlanCardsInjected, type PlanOpenInjecte
 import { PlanPreview, PlanTitle } from './PlanPreview.tsx'
 import { planDefinition } from './plan-definition.ts'
 import { planResourceProvider } from './plan-resource.ts'
-import { planAddress, parsePlanAddress } from './plan.ts'
+import { planAddress, parsePlanAddress, samePlanSession } from './plan.ts'
 import { isReviewPreviewAddress, reviewPreviewAddress } from './review-preview.ts'
 import { createPlanReviewStore } from './review-store.ts'
 import { PlanChip } from './PlanModeControl.tsx'
 import {
-  addPlanComment, createPlanCommentStore, formatPlanFeedback, removePlanComments, sessionComments, updatePlanComment,
+  addPlanComment, carryPlanComments, createPlanCommentStore, formatPlanFeedback, removePlanComments, resolvePlanComments,
+  sessionComments, updatePlanComment,
 } from './comments.ts'
-import { PlanCommentChip, PlanReviewDecision, type PlanCommentsInjected, type PlanReviewDecisionInjected } from './PlanCommentControls.tsx'
+import {
+  PlanCommentChip, PlanReviewDecision, type PlanCommentChipInjected, type PlanCommentsInjected, type PlanReviewDecisionInjected,
+} from './PlanCommentControls.tsx'
 import type { PlanPreviewInjected } from './PlanPreview.tsx'
 import { en, zh, type PlanKey } from './locales.ts'
 
@@ -59,8 +62,10 @@ export const inject = ['slots', 'remote', 'remote.commands', 'remote.session', '
 
 /**
  * Register plan controls, permanent Chat cards, sidebar document reading, and
- * plan comments: comments live in this fiber's memory until a review decision
- * or the next plain composer message of their Session carries them.
+ * plan comments: comments live in this fiber's memory; a review decision, the
+ * next plain composer message, or the chip's send action carries the unsent
+ * ones of their Session and marks them resolved. Each Session shows one plan
+ * tab: opening another plan of the same plan Session replaces it.
  * @param ctx - client root context.
  */
 export function apply(ctx: ClientContext): void {
@@ -80,8 +85,16 @@ export function apply(ctx: ClientContext): void {
     const session = child === undefined ? { kind: 'session' as const, sessionId } : { kind: 'subagent' as const, ...child }
     return planAddress({ session, callId })
   }
+  const openLogged = (address: string): void => {
+    const target = parsePlanAddress(address)
+    const onScreen = ctx.sidebarRight.mounted.getSnapshot()
+    const tab = target === undefined ? undefined : ctx.sidebarRight.openTabs.getSnapshot().find(entry =>
+      entry.sessionId === onScreen && entry.kind === 'plan' && entry.contentId !== address
+      && samePlanSession(parsePlanAddress(entry.contentId), target))
+    ctx.sidebarRight.openResource(address, tab === undefined ? {} : { replaceTab: tab.tabId })
+  }
   const open = (sessionId: SessionId): PlanOpenInjected => ({
-    openPlan: (callId) => { ctx.sidebarRight.openResource(logged(sessionId, callId)) },
+    openPlan: (callId) => { openLogged(logged(sessionId, callId)) },
   })
   const reviewWindow = randomUUID()
   const reviewDocument = (sessionId: SessionId, review: { callId?: ToolCallId }, requestKey: string): string =>
@@ -90,13 +103,28 @@ export function apply(ctx: ClientContext): void {
   const commentFace: PlanCommentsInjected = {
     hooks: { planComments: comments },
     removeComments: (address, ids) => { removePlanComments(comments, address, ids) },
+    resolveComments: (address, ids) => { resolvePlanComments(comments, address, ids) },
+  }
+  const chipFace: PlanCommentChipInjected = {
+    ...commentFace,
+    sendComments: async (sessionId) => {
+      const entries = sessionComments(comments.getSnapshot().documents, sessionId)
+      if (entries.length === 0) return null
+      const session = ctx.sessions.binding(sessionId)?.session
+      // Failure strings stay English (error-surface policy: not localized).
+      if (session === undefined) return `unknown session: ${sessionId}`
+      const result = await session.prompt([{ type: 'text', text: formatPlanFeedback(entries.map(entry => entry.comment)) }], 'queue')
+      if (!result.ok) return `${result.error.message} (${result.error.code})`
+      for (const { address, comment } of entries) resolvePlanComments(comments, address, [comment.id])
+      return null
+    },
   }
   ctx.effect(() => ctx.conversation.prefixes.register((sessionId) => {
     const entries = sessionComments(comments.getSnapshot().documents, sessionId)
     if (entries.length === 0) return undefined
     return {
       text: formatPlanFeedback(entries.map(entry => entry.comment)),
-      commit: () => { for (const { address, comment } of entries) removePlanComments(comments, address, [comment.id]) },
+      commit: () => { for (const { address, comment } of entries) resolvePlanComments(comments, address, [comment.id]) },
     }
   }), 'ui-plan: comments in composer messages')
   const reviewStore = createPlanReviewStore()
@@ -138,7 +166,7 @@ export function apply(ctx: ClientContext): void {
     }),
   }, PlanReviewDecision))
   ctx.slots.inject('conversation.input.dock', () => ctx.slots.register({
-    name: 'conversation.input.dock', id: previewId, order: 10, locale: NS, inject: (): PlanCommentsInjected => commentFace,
+    name: 'conversation.input.dock', id: previewId, order: 10, locale: NS, inject: (): PlanCommentChipInjected => chipFace,
   }, PlanCommentChip))
   ctx.slots.inject('sidebar.right.pane.tab', () => ctx.slots.register({
     name: 'sidebar.right.pane.tab', key: previewId, locale: NS,
@@ -147,6 +175,7 @@ export function apply(ctx: ClientContext): void {
       addComment: (address, anchor, text) => { addPlanComment(comments, address, { ...anchor, id: randomUUID(), text }) },
       updateComment: (address, id, text) => { updatePlanComment(comments, address, id, text) },
       removeComment: (address, id) => { removePlanComments(comments, address, [id]) },
+      carryComments: (from, to, text) => { carryPlanComments(comments, from, to, text) },
     }),
   }, PlanPreview))
   ctx.slots.inject('sidebar.right.pane.tab.title', () => ctx.slots.register({

@@ -14,6 +14,18 @@ export interface SubmittedPlan extends PlanDocument {
   readonly callId: ToolCallId
 }
 
+/** One version of a plan document. */
+export interface PlanVersion {
+  readonly callId: ToolCallId
+  readonly title: string
+}
+
+/** A logged plan together with every version of its plan-mode episode. */
+export interface LoggedPlan extends SubmittedPlan {
+  /** Plans submitted between the episode's `plan/mode` activation and the next one, oldest first; includes this plan. */
+  readonly versions: readonly PlanVersion[]
+}
+
 /** A saved sidebar resource names one invocation in one Session. */
 export interface PlanAddress {
   readonly session: SessionAddress
@@ -61,6 +73,19 @@ export function planAddress(target: PlanAddress): string {
 }
 
 /**
+ * Decide whether two plan addresses name plans of the same Session.
+ * @param a - First decoded address, or undefined for an address that is not a plan.
+ * @param b - Second decoded address.
+ * @returns whether both name the same top-level Session or the same subagent child.
+ */
+export function samePlanSession(a: PlanAddress | undefined, b: PlanAddress): boolean {
+  if (a === undefined || a.session.kind !== b.session.kind) return false
+  if (a.session.kind === 'session' && b.session.kind === 'session') return a.session.sessionId === b.session.sessionId
+  return a.session.kind === 'subagent' && b.session.kind === 'subagent'
+    && a.session.parentSessionId === b.session.parentSessionId && a.session.childSessionId === b.session.childSessionId
+}
+
+/**
  * Validate a saved or caller-supplied plan resource address.
  * @param address - Address submitted to the sidebar or resource provider.
  * @returns the decoded identity, or undefined for an unsupported address.
@@ -83,4 +108,32 @@ export function parsePlanAddress(address: string): PlanAddress | undefined {
     // Invalid saved percent encoding cannot identify a Session or invocation.
     return undefined
   }
+}
+
+/**
+ * Group logged plans into versions of one document: every plan submitted
+ * after the same `plan/mode` activation is a version of that episode's plan.
+ * @param events - Session events in log order.
+ * @param callId - Invocation whose document is wanted.
+ * @returns the invocation's plan and its episode versions, or undefined when the events hold no such plan.
+ */
+export function loggedPlan(
+  events: readonly { readonly type: string; readonly data: unknown }[], callId: ToolCallId,
+): LoggedPlan | undefined {
+  let episode: PlanVersion[] = []
+  let found: SubmittedPlan | undefined
+  let versions: readonly PlanVersion[] = []
+  for (const event of events) {
+    if (event.type === 'plan/mode' && record(event.data) && event.data.active === true) {
+      if (found !== undefined) break
+      episode = []
+      continue
+    }
+    const plan = submittedPlan(event)
+    if (plan === undefined || episode.some(version => version.callId === plan.callId)) continue
+    episode.push({ callId: plan.callId, title: plan.title })
+    if (plan.callId === callId) found = plan
+    if (found !== undefined) versions = episode
+  }
+  return found === undefined ? undefined : { ...found, versions }
 }

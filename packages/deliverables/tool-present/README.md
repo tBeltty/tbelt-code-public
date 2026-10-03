@@ -1,5 +1,5 @@
 ---
-description: "Declare accessible files as deliverables with present; configuration, Session ownership, and source-file opening."
+description: "Declare accessible files as deliverables with present and show files or local servers with preview; configuration, Session ownership, and source-file opening."
 kind: "package-reference"
 ---
 
@@ -7,7 +7,7 @@ kind: "package-reference"
 
 ## Summary
 
-Use `present` to declare final files accessible through the Session filesystem, including files created through shell commands. Users open the current source files in their default application. The tool records paths and optional descriptions without copying file contents.
+Use `present` to declare final files accessible through the Session filesystem, including files created through shell commands. Users open the current source files in their default application. The tool records paths and optional descriptions without copying file contents. Use `preview` to show one file or a local web server in the Web client's right Sidebar.
 
 ## Table of Contents
 
@@ -36,6 +36,9 @@ Mount it in an agent's Cordis composition with `tools`, `fs`, and the `turnBound
 | Field | Default | Meaning |
 |---|---|---|
 | `maxFiles` | `8` | Positive maximum file count per call |
+| `preview` | `true` | Register the `preview` tool |
+
+Call `preview` with `target` set to an existing regular file or an HTTP(S) URL whose host is `localhost`, a `*.localhost` name, `127.0.0.1`, or `[::1]`. Relative paths resolve against the Session working directory. Other hosts, URLs with credentials, missing files, and directories fail the call. The Web client opens the target when the call settles while its row is on screen: files open in [Document Preview](../../client/ui-sidebar-documentpreview/README.md), and URLs open in a [Browser](../../client/ui-sidebar-browser/README.md) tab, or in the system browser when no Browser tab type is composed. A row restored from history stays closed and offers an Open action.
 
 The file-count limit is validated at mount. The tool requires an agent Session with a workspace and an open turn. Delivery belongs to the calling Session; a parent must call `present` itself to declare files created by a subagent.
 
@@ -81,6 +84,20 @@ One tool schema per mounted agent and one result line per delivered file. File b
 
 The tool schema is static for the mount lifetime. Delivery result text extends the conversation without rewriting its prompt prefix.
 
+### preview
+
+#### What the model sees
+
+The [preview schema](../../../docs/tool-catalog.md#preview) takes one `target`, a file path or a loopback URL, and tells the model to start a dev server in the background before previewing it and never to show results with `open`, `xdg-open`, `start`, or a browser command. The result reads `Showing <target> in the preview panel`; the program result contains `path` or the normalized `url`.
+
+#### Token effect
+
+One tool schema per mounted agent and one short result line per call.
+
+#### KV Cache effect
+
+The tool schema is static for the mount lifetime. Results extend the conversation without rewriting its prompt prefix.
+
 ## Known Limitations and Deferred Work
 
 <a id="known-limitations-and-deferred-work"></a>
@@ -88,6 +105,7 @@ The tool schema is static for the mount lifetime. Delivery result text extends t
 - Metadata and Host-path checks cannot atomically prevent replacement before a desktop application opens a file.
 - Edits change what opens. Deleted or moved source files cannot be opened from their declarations.
 - Session ZIP exports contain declarations, not file contents. Persistent delivery versions and copy-on-write storage are deferred.
+- `preview` checks that a URL names a loopback host but does not probe the server; a server that is not listening yet shows the Browser tab's load failure.
 
 <a id="dev-note"></a>
 ### Dev Note

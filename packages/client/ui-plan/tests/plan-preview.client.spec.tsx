@@ -39,7 +39,7 @@ function reviewProps(review: { plan: string; callId?: typeof plan.callId }, open
 /** Comment props of a preview whose document has no comments. */
 const noComments = {
   usePlanComments: <S,>(select: (state: PlanCommentState) => S): S => select({ documents: {} }),
-  addComment: vi.fn(), updateComment: vi.fn(), removeComment: vi.fn(),
+  addComment: vi.fn(), updateComment: vi.fn(), removeComment: vi.fn(), carryComments: vi.fn(),
 }
 /** A bound `useSidebarMounted` reading one on-screen Session value. */
 function seatHook(read: () => SessionId | undefined) {
@@ -323,6 +323,26 @@ describe('plan entry points and document', () => {
     cleanup()
     render(<PlanTitle {...props as unknown as Parameters<typeof PlanTitle>[0]} />)
     expect(screen.getByText(plan.title)).toBeTruthy()
+  })
+  it('switches plan versions within the tab and carries comments into the newest version', () => {
+    const openResource = vi.fn()
+    const carryComments = vi.fn()
+    const versions = [{ callId: 'call:0', title: 'Draft' }, { callId: plan.callId, title: plan.title }]
+    const props = {
+      t, ...noComments, carryComments,
+      useTabInfo: () => ({ tab: { title: 'Plan', navigation: { address: planAddress(target) }, actions: { openResource } } }),
+      useResource: () => ({ status: 'live', value: { ...plan, versions } }),
+    }
+    render(<PlanPreview {...props as unknown as Parameters<typeof PlanPreview>[0]} />)
+    const bar = screen.getByRole('navigation', { name: en['versions.label'] })
+    const [first, second] = Array.from(bar.querySelectorAll('button'))
+    expect(second!.getAttribute('aria-current')).toBe('page')
+    fireEvent.click(second!)
+    expect(openResource).not.toHaveBeenCalled()
+    fireEvent.click(first!)
+    expect(openResource).toHaveBeenCalledExactlyOnceWith(planAddress({ ...target, callId: 'call:0' as typeof plan.callId }), { replaceTab: true })
+    expect(carryComments).toHaveBeenCalledExactlyOnceWith(
+      [planAddress({ ...target, callId: 'call:0' as typeof plan.callId })], planAddress(target), expect.stringContaining('Implement'))
   })
   it('keeps a tab label while history loads', () => {
     const props = { useTabInfo: () => ({ tab: { title: 'Plan', navigation: { address: planAddress(target) } } }), useResource: () => ({ status: 'loading' }) }

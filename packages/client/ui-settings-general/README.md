@@ -35,6 +35,8 @@ In Desktop, the account-row update control shows availability, progress, verific
 
 Settings visibility and section selection live in the shell owner store. The shell supplies the effective Settings binding to the contributed launcher for menu keycaps and `aria-keyshortcuts`; the fallback button uses the same binding for hover and keyboard-focus hints and `aria-keyshortcuts`. The Settings command (Desktop: `Mod+,`; Windows/macOS Web: `Mod+Alt+,`) toggles the dialog when Settings is in front or no modal is open; the sidebar control opens the same dialog. The command cannot open or close Settings while the shortcut reference or another modal is in front. Held-key repeats do nothing. Initial focus lands on the selected section in the navigation, or on the title when no sections are available, without drawing a focus outline. Tab and directional navigation retain their visible focus indicators. `Mod+/` can open the shortcut reference above Settings; `Escape` closes the top dialog and restores focus to its invoking control. Return focus omits outlines after shortcut, Escape, or pointer dismissal.
 
+While the shell is registered, it provides `ctx.settingsNavigation`, typed in [ui-settings](../ui-settings/README.md#opening-settings-from-other-features). Its `openSection(id)` opens the dialog on that section through the shell owner store; an id no `settings.section` entry registers opens the first section. The service is withdrawn with the shell registration.
+
 ### The General section
 
 The current release version appears at the bottom of General Settings in Web and Desktop, using the build’s `DSH_CLIENT_VERSION` metadata and the active language. Partial builds without version metadata omit the row.

@@ -1,4 +1,4 @@
-/** Scoped tool that declares filesystem deliveries in their owning Session. */
+/** Scoped tools that declare filesystem deliveries in their owning Session and show previews beside it. */
 import type { Context } from '@deepseek-ai/cordis'
 import z from '@deepseek-ai/schemastery'
 import { FsError } from '@deepseek-ai/dsh-fs'
@@ -7,19 +7,23 @@ import type {} from '@deepseek-ai/dsh-agent'
 import type {} from '@deepseek-ai/dsh-session-projection'
 import type { Session } from '@deepseek-ai/dsh-session'
 import type { PresentedFile } from './types.ts'
+import { registerPreview } from './preview.ts'
 
 /** Stable Loader identity. */
 export const name = 'tool-present'
 
-/** Per-call delivery limit. */
+/** Per-call delivery limit and the optional preview tool. */
 export interface Config {
   /** Maximum number of files in one call. */
   maxFiles: number
+  /** Register `preview`, which shows a file or a loopback server in the Web client's right Sidebar. */
+  preview: boolean
 }
 
 /** Validated delivery limit. */
 export const Config: z<Config> = z.object({
   maxFiles: z.number().default(8),
+  preview: z.boolean().default(true),
 })
 
 /** Services used by the scoped delivery tool. */
@@ -28,12 +32,13 @@ export const inject = ['tools', 'fs', 'sessionProjections']
 /**
  * Register present with durable file references in its tool result.
  * @param ctx - agent-scoped services.
- * @param config - maximum files per call.
+ * @param config - maximum files per call and whether `preview` is registered.
  */
 export function apply(ctx: Context, config: Config): void {
   if (!Number.isSafeInteger(config.maxFiles) || config.maxFiles < 1) {
     throw new Error('present requires a positive integer maxFiles')
   }
+  if (config.preview) registerPreview(ctx)
   const pending = new WeakMap<ToolExecution, { session: Session; turn: number; files: PresentedFile[] }>()
   ctx.tools.register(defineTool({
     name: 'present',

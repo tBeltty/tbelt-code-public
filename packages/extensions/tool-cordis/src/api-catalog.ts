@@ -3567,6 +3567,18 @@ export const SERVICE_API: readonly ServiceApiEntry[] = [
         parameters: [{ name: 'request', description: 'the URL plus retrieval options.' }, { name: 'signal', description: 'optional cancellation signal forwarded to the provider.' }],
         returns: 'the retrieval outcome; non-2xx responses resolve descriptively.',
       },
+      {
+        signature: '@Remote(\'searchProviders\') listSearchProviders(signal: AbortSignal): WebSearchProviderInfo[]',
+        description: 'List the registered search providers that take a user API key, for a configuration surface to offer.',
+        parameters: [{ name: 'signal', description: 'Remote caller cancellation.' }],
+        returns: 'each provider\'s id and the credential reference its key is written to, in registration order.',
+      },
+      {
+        signature: '@Remote(\'checkSearchKey\') async checkSearchKey(providerId: string, apiKey: string, signal: AbortSignal): Promise<WebSearchKeyCheck>',
+        description: 'Check a candidate API key against one registered provider before a surface stores it. The key is sent only to that provider\'s endpoint and is neither stored nor logged here.',
+        parameters: [{ name: 'providerId', description: 'the provider to ask.' }, { name: 'apiKey', description: 'the candidate key.' }, { name: 'signal', description: 'Remote caller cancellation, forwarded to the provider.' }],
+        returns: '`ok`, or why the key cannot be used: `auth` for a rejected key, `quota` for an accepted key refused for quota, credit, or rate limits, and `error` for anything else, with the provider\'s message.',
+      },
     ],
   },
   {
@@ -8087,8 +8099,16 @@ export const TYPE_API: readonly TypeApiEntry[] = [
     declaration: 'export type WebRouteKind = \'exact\' | \'prefix\';',
   },
   {
+    name: 'WebSearchKeyCheck',
+    declaration: 'export type WebSearchKeyCheck = {\n    ok: true;\n} | {\n    ok: false;\n    reason: \'auth\' | \'quota\' | \'error\';\n    message: string;\n};',
+  },
+  {
     name: 'WebSearchProvider',
-    declaration: 'export interface WebSearchProvider {\n    readonly id: string;\n    available(): boolean;\n    search(request: WebSearchRequest, signal?: AbortSignal): Promise<WebSearchResult>;\n}',
+    declaration: 'export interface WebSearchProvider {\n    readonly id: string;\n    readonly credentialRef?: string | undefined;\n    available(): boolean;\n    search(request: WebSearchRequest, signal?: AbortSignal): Promise<WebSearchResult>;\n    checkKey?(apiKey: string, signal?: AbortSignal): Promise<void>;\n}',
+  },
+  {
+    name: 'WebSearchProviderInfo',
+    declaration: 'export interface WebSearchProviderInfo {\n    id: string;\n    credentialRef: string;\n}',
   },
   {
     name: 'WebSearchRequest',

@@ -9,6 +9,7 @@ import commandsRemote from '@deepseek-ai/dsh-commands/remote'
 import accountRemote from '@deepseek-ai/dsh-api-account-controller/remote'
 import settingsControllerRemote from '@deepseek-ai/dsh-api-settings-controller/remote'
 import officeToPdfRemote from '@deepseek-ai/dsh-office-to-pdf/remote'
+import webRemote from '@deepseek-ai/dsh-web/remote'
 import goalsRemote from '@deepseek-ai/dsh-goal/remote'
 import scheduleRemote from '@deepseek-ai/dsh-schedule/remote'
 import llmRemote from '@deepseek-ai/dsh-llm/remote'
@@ -17,6 +18,7 @@ import pluginManagerRemote from '@deepseek-ai/dsh-plugin-manager/remote'
 import pluginRegistryProbeRemote from '@deepseek-ai/dsh-client-ui-plugin-manager/remote'
 import pluginInventoryRemote from '@deepseek-ai/dsh-host-plugin-inventory/remote'
 import messageFeedbackRemote from '@deepseek-ai/dsh-message-feedback/remote'
+import spendBudgetRemote from '@deepseek-ai/dsh-spend-budget/remote'
 import permissionPresetsRemote from '@deepseek-ai/dsh-permission-presets/remote'
 import sessionFeedbackRemote from '@deepseek-ai/dsh-command-feedback/remote'
 import fileUploadsRemote from '@deepseek-ai/dsh-client-file-upload/remote'
@@ -47,9 +49,12 @@ export type {} from '@deepseek-ai/dsh-api-account-controller/remote'
 export type {} from '@deepseek-ai/dsh-goal/remote'
 export type {} from '@deepseek-ai/dsh-schedule/remote'
 export type {} from '@deepseek-ai/dsh-office-to-pdf/remote'
+export type {} from '@deepseek-ai/dsh-web/remote'
 export type {} from '@deepseek-ai/dsh-llm/remote'
 export type {} from '@deepseek-ai/dsh-host-plugin-inventory/remote'
 export type {} from '@deepseek-ai/dsh-message-feedback/remote'
+export type {} from '@deepseek-ai/dsh-spend-budget/remote'
+export type { SpendMonthReading, SpendScopeSummary, SpendSummaryReading } from '@deepseek-ai/dsh-spend-budget/types'
 export type {} from '@deepseek-ai/dsh-permission-presets/remote'
 export type {} from '@deepseek-ai/dsh-command-feedback/remote'
 export type {} from '@deepseek-ai/dsh-client-file-upload/remote'
@@ -184,7 +189,7 @@ export async function apply(ctx: Context): Promise<() => Promise<void>> {
       pluginInventoryRemote, pluginManagerRemote, pluginRegistryProbeRemote, messageFeedbackRemote, sessionFeedbackRemote,
       fileUploadsRemote, sessionReferencesRemote,
       permissionPresetsRemote, subagentsRemote, sessionRemote, jobRemote, workspaceRemote, workspaceFilesRemote, terminalRemote,
-      officeToPdfRemote, userQuestionsRemote,
+      officeToPdfRemote, userQuestionsRemote, spendBudgetRemote, webRemote,
     ]) {
       disposers.push(await ctx.remote.$mount(contribution))
     }

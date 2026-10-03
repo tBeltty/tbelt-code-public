@@ -116,16 +116,19 @@ describe('PerplexitySearchProvider request mapping', () => {
 })
 
 describe('PerplexitySearchProvider error handling', () => {
-  it('maps an HTTP error to WEB_PROVIDER_ERROR with the provider message', async () => {
+  it('maps a rate limit to WEB_PROVIDER_QUOTA with the provider message', async () => {
     vi.stubGlobal('fetch', vi.fn(async () => jsonResponse({ error: { message: 'rate limited' } }, { status: 429 })))
     await expect(new PerplexitySearchProvider(options).search({ query: 'q' }))
-      .rejects.toThrow(expect.objectContaining({ code: 'WEB_PROVIDER_ERROR', message: 'rate limited' }))
+      .rejects.toThrow(expect.objectContaining({
+        code: 'WEB_PROVIDER_QUOTA',
+        message: 'Perplexity refused the search for quota, credit, or rate limits (HTTP 429): rate limited.',
+      }))
   })
 
   it('handles a string-form error body', async () => {
     vi.stubGlobal('fetch', vi.fn(async () => jsonResponse({ error: 'bad request' }, { status: 400 })))
     await expect(new PerplexitySearchProvider(options).search({ query: 'q' }))
-      .rejects.toThrow(expect.objectContaining({ message: 'bad request' }))
+      .rejects.toThrow(expect.objectContaining({ code: 'WEB_PROVIDER_ERROR', message: 'Perplexity API error (HTTP 400): bad request' }))
   })
 
   it('maps a well-formed body of the wrong shape to WEB_PROVIDER_ERROR, not a raw TypeError', async () => {

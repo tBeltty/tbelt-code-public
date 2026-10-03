@@ -129,15 +129,17 @@ it.each([en, zh].flatMap(copy => ([false, true, 'unknown'] as const).map(running
     useAccount={selector => selector(operations.hooks.account.getSnapshot())}
     useTheme={selector => selector(operations.hooks.theme.getSnapshot())} wide openOnboarding={() => {}} openSettings={openSettings}
     t={key => key in copy ? copy[key as AccountKey] : key} />)
-  fireEvent.click(screen.getByRole('button', { name: copy.menu }))
-  expect(screen.getAllByRole('menuitem').map(item => item.textContent)).toEqual([copy.settings, copy.contactUs, copy.signOut])
-  await expect(`${screen.getByRole('menu').textContent}\n`).toMatchFileSnapshot(`./expected/menu-${copy === en ? 'en' : 'zh'}.txt`)
-  fireEvent.click(screen.getByRole('menuitem', { name: copy.settings }))
+  // Settings is its own sidebar button; the account menu holds only account actions.
+  fireEvent.click(screen.getByRole('button', { name: copy.settings }))
   expect(openSettings).toHaveBeenCalledOnce()
-  fireEvent.click(screen.getByRole('button', { name: copy.menu }))
+  const trigger = screen.getByRole('button', { name: copy.menu })
+  fireEvent.click(trigger)
+  expect(screen.getAllByRole('menuitem').map(item => item.textContent)).toEqual([copy.contactUs, copy.signOut])
+  await expect(`${screen.getByRole('menu').textContent}\n`).toMatchFileSnapshot(`./expected/menu-${copy === en ? 'en' : 'zh'}.txt`)
   fireEvent.click(screen.getByRole('menuitem', { name: copy.contactUs }))
   expect(operations.contactUs).toHaveBeenCalledOnce()
   expect(screen.queryByRole('menu')).toBeNull()
+  expect(document.activeElement).toBe(trigger)
   fireEvent.click(screen.getByRole('button', { name: copy.menu }))
   await act(async () => { fireEvent.click(screen.getByRole('menuitem', { name: copy.signOut })) })
   expect(signOut).not.toHaveBeenCalled()
@@ -147,7 +149,7 @@ it.each([en, zh].flatMap(copy => ([false, true, 'unknown'] as const).map(running
   expect(screen.queryByRole('menu')).toBeNull()
 })
 
-it.each([en, zh])('updates the Settings menu keycaps and accessible combination from its owner', async (copy) => {
+it.each([en, zh])('updates the Settings button keycaps and accessible combination from its owner', async (copy) => {
   const operations = mount({ status: 'signed-out', attempt: null }, copy)
   cleanup()
   const { AccountMenu } = await import('../src/client/AccountMenu.tsx')
@@ -155,28 +157,40 @@ it.each([en, zh])('updates the Settings menu keycaps and accessible combination 
     ...({} as GlobalStandardProps), ...operations, wide: true, settingsOpen: false,
     useAccount: selector => selector(operations.hooks.account.getSnapshot()),
     useTheme: selector => selector(operations.hooks.theme.getSnapshot()),
-    openSettings: vi.fn(() => { expect(document.activeElement).toBe(screen.getByRole('button', { name: copy.menu })) }),
+    openSettings: vi.fn(),
     openOnboarding: vi.fn(),
     t: key => key in copy ? copy[key as AccountKey] : key,
   }
+  // The tooltip bubble stays visibility-hidden until ResizeObserver measures it, so it is queried as hidden.
+  const keycaps = () => [...screen.getByRole('tooltip', { hidden: true }).querySelectorAll('kbd')].map(key => key.textContent)
   const view = render(<AccountMenu {...props} settingsShortcut={{ keys: ['⌘', ','], aria: 'Meta+,' }} />)
-  fireEvent.click(screen.getByRole('button', { name: copy.menu }))
-  const settings = screen.getByRole('menuitem', { name: copy.settings })
+  const settings = screen.getByRole('button', { name: copy.settings })
+  expect(settings.getAttribute('aria-haspopup')).toBe('dialog')
+  expect(settings.getAttribute('aria-expanded')).toBe('false')
   expect(settings.getAttribute('aria-keyshortcuts')).toBe('Meta+,')
-  expect([...settings.querySelectorAll('kbd')].map(key => key.textContent)).toEqual(['⌘', ','])
+  expect(settings.textContent).toBe(copy.settings)
+  fireEvent.mouseEnter(settings)
+  expect(screen.getByRole('tooltip', { hidden: true }).textContent).toContain(copy.settings)
+  expect(keycaps()).toEqual(['⌘', ','])
 
   view.rerender(<AccountMenu {...props} settingsShortcut={{ keys: ['Ctrl', 'Shift', 'S'], aria: 'Control+Shift+S' }} />)
   expect(settings.getAttribute('aria-keyshortcuts')).toBe('Control+Shift+S')
-  expect([...settings.querySelectorAll('kbd')].map(key => key.textContent)).toEqual(['Ctrl', 'Shift', 'S'])
+  expect(keycaps()).toEqual(['Ctrl', 'Shift', 'S'])
 
   view.rerender(<AccountMenu {...props} />)
   expect(settings.hasAttribute('aria-keyshortcuts')).toBe(false)
-  expect(settings.querySelector('kbd')).toBeNull()
+  expect(keycaps()).toEqual([])
   fireEvent.click(settings)
   expect(props.openSettings).toHaveBeenCalledOnce()
+
+  // The open panel suppresses the tooltip and reports itself expanded on the launcher.
+  view.rerender(<AccountMenu {...props} settingsOpen />)
+  expect(settings.getAttribute('aria-expanded')).toBe('true')
+  fireEvent.mouseEnter(settings)
+  expect(screen.queryByRole('tooltip', { hidden: true })).toBeNull()
 })
 
-it.each([en, zh])('offers settings and contact, but no provider account sign-in, from the signed-out account menu', async (copy) => {
+it.each([en, zh])('offers only feedback, and no provider account sign-in, from the signed-out account menu', async (copy) => {
   const openSettings = vi.fn()
   const operations = operationsOf({ status: 'signed-out', attempt: null })
   const { AccountMenu } = await import('../src/client/AccountMenu.tsx')
@@ -185,27 +199,33 @@ it.each([en, zh])('offers settings and contact, but no provider account sign-in,
     useTheme={selector => selector(operations.hooks.theme.getSnapshot())} wide openOnboarding={() => {}} openSettings={openSettings}
     t={key => key in copy ? copy[key as AccountKey] : key} />)
   const trigger = screen.getByRole('button', { name: copy.menu })
-  expect(trigger.textContent).toBe(copy.more)
+  // The signed-out trigger is the icon-only ellipsis; its title names it.
+  expect(trigger.textContent).toBe('')
+  expect(trigger.getAttribute('title')).toBe(copy.more)
   expect(trigger.querySelector('svg')).not.toBeNull()
   fireEvent.click(trigger)
-  expect(screen.getAllByRole('menuitem').map(item => item.textContent)).toEqual([copy.settings, copy.contactUs])
+  expect(screen.getAllByRole('menuitem').map(item => item.textContent)).toEqual([copy.contactUs])
   await expect(`${screen.getByRole('menu').textContent}\n`).toMatchFileSnapshot(`./expected/menu-signed-out-${copy === en ? 'en' : 'zh'}.txt`)
-  fireEvent.click(screen.getByRole('menuitem', { name: copy.settings }))
-  expect(openSettings).toHaveBeenCalledOnce()
-  fireEvent.click(screen.getByRole('button', { name: copy.menu }))
   fireEvent.click(screen.getByRole('menuitem', { name: copy.contactUs }))
   expect(operations.contactUs).toHaveBeenCalledOnce()
+  expect(openSettings).not.toHaveBeenCalled()
 })
 
-it('omits feedback from the account menu when no form is configured', async () => {
-  const { contactUs: _contactUs, ...operations } = operationsOf({ status: 'signed-out', attempt: null })
+it.each([
+  { status: 'signed-out' as const, items: null },
+  { status: 'credential-stored' as const, items: [en.signOut] },
+])('omits feedback from the $status account menu when no form is configured', async ({ status, items }) => {
+  const { contactUs: _contactUs, ...operations } = operationsOf({ status, attempt: null })
   const { AccountMenu } = await import('../src/client/AccountMenu.tsx')
   render(<AccountMenu {...({} as GlobalStandardProps)} {...operations} settingsOpen={false}
     useAccount={selector => selector(operations.hooks.account.getSnapshot())}
     useTheme={selector => selector(operations.hooks.theme.getSnapshot())} wide openOnboarding={() => {}} openSettings={() => {}}
     t={key => key in en ? en[key as AccountKey] : key} />)
+  expect(screen.getByRole('button', { name: en.settings })).toBeTruthy()
+  // A menu with no actions is not rendered, so the sidebar keeps only the Settings button.
+  if (items === null) { expect(screen.queryByRole('button', { name: en.menu })).toBeNull(); return }
   fireEvent.click(screen.getByRole('button', { name: en.menu }))
-  expect(screen.getAllByRole('menuitem').map(item => item.textContent)).toEqual([en.settings])
+  expect(screen.getAllByRole('menuitem').map(item => item.textContent)).toEqual(items)
 })
 
 it('reports a failed start in the login dialog, not as a sidebar alert', async () => {
@@ -394,7 +414,7 @@ it.each([
   [null, '138****0000', '138****0000'],
   [null, 'u***@example.com', 'u***@example.com'],
   [null, null, en.signedIn],
-])('uses the sidebar profile label %s / %s', async (name, contact, expected) => {
+])('titles the sidebar account menu with the profile label %s / %s', async (name, contact, expected) => {
   const operations = mount({ status: 'credential-stored', attempt: null }, en, {
     profile: { status: 'ready', value: { id: null, name, contact } },
   })
@@ -404,7 +424,16 @@ it.each([
     useAccount={selector => selector(operations.hooks.account.getSnapshot())}
     useTheme={selector => selector(operations.hooks.theme.getSnapshot())}
     wide openSettings={() => {}} openOnboarding={() => {}} t={key => en[key as AccountKey]} />)
-  expect(screen.getByRole('button', { name: en.menu }).textContent).toBe(expected)
+  // The avatar trigger is icon-only, so the label is its title rather than visible text.
+  const trigger = screen.getByRole('button', { name: en.menu })
+  expect(trigger.getAttribute('title')).toBe(expected)
+  expect(trigger.textContent).toBe('')
+})
+
+it('leaves the signed-in account menu untitled while the profile loads', async () => {
+  const operations = operationsOf({ status: 'credential-stored', attempt: null })
+  render(await accountMenu(operations, () => operations.hooks.account.getSnapshot(), false))
+  expect(screen.getByRole('button', { name: en.menu }).hasAttribute('title')).toBe(false)
 })
 
 it('shows the profile image in settings and the sidebar, with independent load-error fallbacks', async () => {
@@ -589,6 +618,8 @@ it('dismisses a collapsed menu and hands its login dialog to the API-key onboard
     useTheme: <T,>(select: (value: ThemeSnapshot) => T) => select(operations.hooks.theme.getSnapshot()),
     t: (key: string) => en[key as AccountKey] }
   const view = render(<AccountMenu {...props} />)
+  // The collapsed rail shows icons only; both buttons keep their accessible names.
+  expect(screen.getByRole('button', { name: en.settings }).textContent).toBe('')
   expect(screen.getByRole('button', { name: en.menu }).textContent).toBe('')
   fireEvent.click(screen.getByRole('button', { name: en.menu }))
   fireEvent.keyDown(document, { key: 'Escape' })

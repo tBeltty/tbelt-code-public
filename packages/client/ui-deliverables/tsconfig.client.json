@@ -46,6 +46,9 @@
       "path": "../ui-primitives"
     },
     {
+      "path": "../ui-sidebar-browser/tsconfig.client.json"
+    },
+    {
       "path": "../ui-sidebar-right"
     },
     {

@@ -144,8 +144,15 @@ function layoutOf(ns: string): EditorLayout {
   return 'unknown'
 }
 
-/** The credential reference this profile resolves keys through. */
-function refFor(
+/**
+ * The credential reference this profile resolves keys through.
+ * @param schema - settings schema operations.
+ * @param namespace - the owning namespace view.
+ * @param path - path from the section root to the profile.
+ * @param provider - provider route id, used to derive a reference the profile does not name.
+ * @returns the profile's `apiKeyEnv`, or the conventional `<ROUTE>_API_KEY`.
+ */
+export function refFor(
   schema: SettingsSchemaOperations,
   namespace: SettingsNamespaceView,
   path: readonly string[],

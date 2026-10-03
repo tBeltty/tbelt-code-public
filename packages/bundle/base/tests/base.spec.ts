@@ -40,7 +40,7 @@ describe('dsh-base bundle', () => {
       config: { root: [] },
     })
     // tBelt Code never uploads session content to DeepSeek's API by
-    // default, regardless of the active model provider — see SAFETY.md.
+    // default, regardless of the active model provider (SAFETY.md, "What leaves your computer").
     // A dependency bump or upstream merge that drops this override would
     // silently re-enable that upload; this assertion is the regression gate.
     expect(rows.find(row => row.id === 'session-log-deepseek')).toMatchObject({

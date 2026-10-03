@@ -12,7 +12,9 @@ function setup(records: unknown[], hasMore = false) {
     try { yield { type: 'snapshot', cursor: 100, records, hasMore } }
     finally { closed() }
   })
-  const page = vi.fn(async () => ({ ok: true, value: { records: [entry], hasMore: false } }))
+  const page = vi.fn(async (): Promise<{ ok: true; value: { records: unknown[]; hasMore: boolean } }> => (
+    { ok: true, value: { records: [entry], hasMore: false } }
+  ))
   const provider = planResourceProvider({ follow, page } as unknown as Parameters<typeof planResourceProvider>[0])
   return { provider, follow, page, closed }
 }
@@ -26,9 +28,24 @@ async function read(provider: ReturnType<typeof planResourceProvider>, url = add
 describe('plan history resource', () => {
   it('restores the exact invocation and releases its snapshot stream', async () => {
     const b = setup([entry])
-    expect(await read(b.provider)).toEqual([{ ok: true, value: { callId: 'call', markdown: '# Saved plan', title: 'Saved plan' } }])
+    expect(await read(b.provider)).toEqual([{ ok: true, value: {
+      callId: 'call', markdown: '# Saved plan', title: 'Saved plan', versions: [{ callId: 'call', title: 'Saved plan' }],
+    } }])
     expect(b.closed).toHaveBeenCalledOnce()
     expect(b.page).not.toHaveBeenCalled()
+  })
+  it('lists the plans of the invocation\'s plan-mode episode as its versions and stops paging at the episode start', async () => {
+    const plan = (seq: number, callId: string, title: string) => ({ type: 'event', event: {
+      type: 'tool/call', seq, data: { callId, name: 'exit_plan_mode', arguments: JSON.stringify({ plan: `# ${title}` }) },
+    } })
+    const mode = (seq: number, active: boolean) => ({ type: 'event', event: { type: 'plan/mode', seq, data: { active } } })
+    const b = setup([plan(30, 'call', 'Second draft'), plan(40, 'third', 'Third draft'), mode(50, false), mode(60, true), plan(70, 'next', 'Other work')], true)
+    b.page.mockResolvedValueOnce({ ok: true, value: { records: [mode(10, true), plan(20, 'first', 'First draft')], hasMore: true } })
+    expect(await read(b.provider)).toEqual([{ ok: true, value: {
+      callId: 'call', markdown: '# Second draft', title: 'Second draft',
+      versions: [{ callId: 'first', title: 'First draft' }, { callId: 'call', title: 'Second draft' }, { callId: 'third', title: 'Third draft' }],
+    } }])
+    expect(b.page).toHaveBeenCalledOnce()
   })
   it('pages older history with the fixed opening cursor without changing the chat window', async () => {
     const b = setup([{ type: 'event', event: { type: 'user/message', seq: 80, data: {} } }], true)

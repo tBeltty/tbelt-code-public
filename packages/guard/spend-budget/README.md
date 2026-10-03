@@ -47,7 +47,7 @@ The `dsh` base bundle mounts this row without a monthly limit. In the Web and De
 | Cache-read tokens | `pricing.cacheRead`, or `pricing.input` when the route publishes no cache-read rate |
 | Cache-write tokens | `pricing.cacheWrite`, or `pricing.input` when the route publishes no cache-write rate |
 
-Prices are US dollars per million tokens from `ctx.llm.resolveModelInfo(provider, model).pricing`. A route that publishes no price adds nothing and counts one unpriced call, which `/budget` reports.
+Prices are US dollars per million tokens from `ctx.llm.resolveModelInfo(provider, model).pricing`. A route that publishes no price adds nothing and counts one unpriced call, which `/budget`, the composer spend reading, and the Spending settings page report. A pi-ai model's `pricing` setting gives a price to a model whose catalog has none.
 
 Each committed `assistant/message` and each `assistant/attempt` (a failed, retried, or cancelled request) that carries usage is one request. A successful request is priced under its message's `source.provider`/`source.model`; an attempt is priced under the session's latest `request/context` route.
 
@@ -76,6 +76,17 @@ When both limits are reached, both sentences appear, session first. The user mes
 | `setSessionLimit(session, limitUsd \| undefined)` | Durably sets or clears the budget session's limit; rejects a negative or non-finite value with `RangeError`. |
 | `setMonthlyLimit(limitUsd \| undefined)` | Writes `monthlyLimitUsd` into this plugin's profile entry through Settings, updating the live value without a remount; clearing removes the profile value. Throws when no Settings service or profile entry exists, or when Settings refuses the write. |
 
+### Remote API
+
+The service is also the `spendBudget` Typert Remote namespace, which the Web and Desktop client mount through [`dsh-api-remotes`](../../api/remotes/README.md). Both reads wait for pending accounting first, so a read issued after a turn ends includes that turn.
+
+| Remote method | Returns |
+|---|---|
+| `summary(session)` | `SpendSummaryReading`: `SpendSummary` for the session's budget session and the current UTC month, with the month as `YYYY-MM` text. |
+| `month()` | `SpendMonthReading`: the current UTC month and its `monthly` figures, for a client with no session in view. |
+
+The client edits `monthlyLimitUsd` through the `spend-budget` settings namespace and the session limit through `/budget`; the Remote carries no writes.
+
 `findBreaches`, `spendLimitMessage`, `usageCostUsd`, `settlementUsage`, `utcMonthOf`, and `formatUsd` are exported pure helpers.
 
 -----
@@ -102,7 +113,7 @@ The `agent/pre-step` listener throws `LlmError(message, 'SPEND_LIMIT')`. The age
 
 | File | Role |
 |---|---|
-| [`src/index.ts`](src/index.ts) | `SpendBudget` service: domain lifetime, accounting, guard, service API |
+| [`src/index.ts`](src/index.ts) | `SpendBudget` service: domain lifetime, accounting, guard, service API, Remote methods |
 | [`src/spec.ts`](src/spec.ts) | `spend_budget` domain and record schemas |
 | [`src/cost.ts`](src/cost.ts) | Usage extraction, pricing, UTC month, dollar formatting |
 | [`src/limits.ts`](src/limits.ts) | Limit evaluation and refusal text |

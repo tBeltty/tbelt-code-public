@@ -8,6 +8,7 @@ import type { SettingsNamespaceView } from '@deepseek-ai/dsh-api-remotes/client'
 import type { JsonValue } from '@deepseek-ai/dsh-util-values'
 import { bindSnapshotSelector, RemoteError } from '@deepseek-ai/dsh-client-test-runtime'
 import { ProviderOnboardingDialog } from '../src/client/ProviderOnboardingDialog.tsx'
+import { OnboardingProviderSetup } from '../src/client/OnboardingProviderSetup.tsx'
 import type { ProviderOnboardingDialogProps } from '../src/client/ProviderOnboardingDialog.tsx'
 import { SettingsDescribeMirror } from '@deepseek-ai/dsh-client-ui-settings/src/client/settings-mirror.ts'
 import { ModelsSettingsStore } from '../src/client/store.ts'
@@ -42,6 +43,25 @@ const PiAiConfig = Schema.object({
   })),
 })
 
+const DeepSeekConfig = Schema.object({
+  profiles: Schema.dict(Schema.object({
+    apiKeyEnv: Schema.string().role('credential-ref'),
+    baseURL: Schema.string(),
+  })),
+})
+
+/** A non-pi-ai namespace with no stored profile, so its catalog route is set up through the provider editor. */
+const deepSeekNamespace: SettingsNamespaceView = {
+  ns: 'llm-deepseek',
+  schema: JSON.parse(JSON.stringify(DeepSeekConfig.toJSON())) as JsonValue,
+  value: { profiles: {} },
+  base: {},
+  user: {},
+  autoGenerate: true, applies: 'live',
+  secrets: [],
+  revision: 0,
+}
+
 function piAiNamespace(providers: Record<string, JsonValue>): SettingsNamespaceView {
   const value = { providers }
   return {
@@ -65,7 +85,13 @@ function harness(options: {
   settingsWritable?: boolean
   providersFailure?: string
   namespacePresent?: boolean
-  catalog?: readonly { provider: string; displayName: string }[]
+  catalog?: readonly { provider: string; displayName: string; settingsNs?: string; settingsPath?: string[] }[]
+  /** Namespaces described beside llm-pi-ai. */
+  extraNamespaces?: readonly SettingsNamespaceView[]
+  discovery?: ReturnType<typeof remoteOk<{ id: string; name?: string }[]>> | { ok: false; error: RemoteError }
+  writeFailure?: RemoteError
+  credentialFailure?: string
+  defaultModelFailure?: string
 } = {}) {
   if (document.getElementById('root') === null) {
     const appRoot = document.createElement('div')
@@ -84,29 +110,45 @@ function harness(options: {
       listConfigurableProviders: () => Promise.resolve(remoteOk(
         usable
           ? [{ provider: 'openai', displayName: 'openai', settingsNs: 'llm-pi-ai', settingsPath: ['providers', 'openai'] }]
-          : (options.catalog ?? []).map(entry => ({ ...entry, settingsNs: 'llm-pi-ai', settingsPath: ['providers', entry.provider] })),
+          : (options.catalog ?? []).map(entry => ({
+            settingsNs: 'llm-pi-ai', settingsPath: ['providers', entry.provider], ...entry,
+          })),
       )),
-      discoverModels: () => Promise.resolve(remoteOk([])),
+      discoverModels: vi.fn((_ns: string, _request: Record<string, unknown>) => Promise.resolve(
+        options.discovery ?? remoteOk([] as { id: string; name?: string }[]),
+      )),
     },
     settings: {
       describe: () => {
         const namespaceProviders: Record<string, JsonValue> = usable
           ? { openai: { apiKeyEnv: 'OPENAI_API_KEY', baseURL: 'https://api.openai.com/v1', api: 'openai-completions' } }
           : {}
-        const namespaces = namespacePresent ? [piAiNamespace(namespaceProviders)] : []
+        const namespaces = [
+          ...namespacePresent ? [piAiNamespace(namespaceProviders)] : [],
+          ...options.extraNamespaces ?? [],
+        ]
         return Promise.resolve(remoteOk({
           writable: options.settingsWritable ?? true,
           hasDocument: false,
           namespaces,
         }))
       },
-      mutate: vi.fn(() => Promise.resolve(remoteOk(undefined))),
+      mutate: vi.fn((_ns: string, _ops: unknown[], _revision: number) => Promise.resolve(
+        options.writeFailure === undefined ? remoteOk(undefined) : { ok: false as const, error: options.writeFailure },
+      )),
     },
     credentials: {
       describe: (refs: string[]) => Promise.resolve(remoteOk(
         Object.fromEntries(refs.map(ref => [ref, { configured: usable, writable: true }])),
       )),
-      set: vi.fn(() => Promise.resolve(remoteOk(undefined))),
+      set: vi.fn((_ref: string, _value: string) => Promise.resolve(
+        options.credentialFailure === undefined ? remoteOk(undefined) : remoteFail(options.credentialFailure),
+      )),
+    },
+    session: {
+      setDefaultModel: vi.fn((_request: { provider: string; model: string }) => Promise.resolve(
+        options.defaultModelFailure === undefined ? remoteOk(undefined) : remoteFail(options.defaultModelFailure),
+      )),
     },
   }
   // The page plugin's context, scripted down to the namespaces it reaches.
@@ -133,6 +175,7 @@ function harness(options: {
   return {
     controller, complete, openSection, props,
     mutate: face.settings.mutate, set: face.credentials.set,
+    discover: face.llm.discoverModels, setDefaultModel: face.session.setDefaultModel,
     makeUsable: () => { usable = true },
   }
 }
@@ -158,19 +201,320 @@ describe('ProviderOnboardingDialog', () => {
     expect(screen.getByRole('button', { name: en.onboardingLater })).toBeTruthy()
   })
 
-  it('leads with the catalog: no provider preselected, alphabetical, key form after a pick', async () => {
+  it('lists every provider in one searchable list, catalog first and alphabetical, none picked', async () => {
     const h = harness({ catalog: [
       { provider: 'zeta', displayName: 'Zeta AI' },
       { provider: 'acme', displayName: 'Acme Models' },
     ] })
     render(<ProviderOnboardingDialog {...h.props} />)
-    const select = await screen.findByRole<HTMLSelectElement>('combobox', { name: en.provider })
-    expect(select.value).toBe('')
-    expect([...select.options].map(option => option.text)).toEqual([en.onboardingChooseProvider, 'Acme Models', 'Zeta AI'])
-    expect(screen.getByText(en.onboardingAlternatives)).toBeTruthy()
-    fireEvent.change(select, { target: { value: 'acme' } })
-    expect(select.value).toBe('acme')
-    expect(await screen.findByRole('button', { name: en.cancel })).toBeTruthy()
+    const list = await screen.findByRole('list', { name: en.provider })
+    const names = [...list.querySelectorAll('button')].map(button => button.getAttribute('aria-label'))
+    expect(names).toEqual([
+      'Acme Models', 'Zeta AI', ...LOCAL_PROVIDER_TEMPLATES.map(template => template.displayName), en.addCustom,
+    ])
+    expect(list.querySelector('[aria-pressed="true"]')).toBeNull()
+
+    const search = screen.getByRole('searchbox', { name: en.onboardingSearchProviders })
+    fireEvent.change(search, { target: { value: 'ZETA' } })
+    expect([...list.querySelectorAll('button')].map(button => button.getAttribute('aria-label'))).toEqual(['Zeta AI'])
+    fireEvent.change(search, { target: { value: 'no such provider' } })
+    expect(screen.getByText(en.onboardingNoProviders)).toBeTruthy()
+    fireEvent.change(search, { target: { value: '' } })
+
+    fireEvent.click(screen.getByRole('button', { name: 'Acme Models' }))
+    expect(screen.getByRole('button', { name: 'Acme Models' }).getAttribute('aria-pressed')).toBe('true')
+    expect(await screen.findByLabelText(en.keyInput)).toBeTruthy()
+  })
+
+  it('checks a typed key and lists its models below, none selected, then stores the choice', async () => {
+    const h = harness({
+      catalog: [{ provider: 'acme', displayName: 'Acme Models' }],
+      discovery: remoteOk([{ id: 'acme-large' }, { id: 'acme-small' }]),
+    })
+    render(<ProviderOnboardingDialog {...h.props} />)
+    fireEvent.click(await screen.findByRole('button', { name: 'Acme Models' }))
+    fireEvent.change(await screen.findByLabelText(en.keyInput), { target: { value: ' sk-acme ' } })
+    expect(screen.getByText(en.onboardingKeyChecking)).toBeTruthy()
+
+    const small = await screen.findByRole('checkbox', { name: 'acme-small' })
+    expect(h.discover).toHaveBeenCalledWith('llm-pi-ai', { provider: 'acme', apiKey: 'sk-acme', live: true })
+    expect(screen.getAllByRole('checkbox').every(box => !(box as HTMLInputElement).checked)).toBe(true)
+    const startButton = screen.getByRole('button', { name: en.onboardingStart })
+    expect((startButton as HTMLButtonElement).disabled).toBe(true)
+    expect(screen.getByText(en.onboardingPickModel)).toBeTruthy()
+
+    fireEvent.click(small)
+    expect((startButton as HTMLButtonElement).disabled).toBe(false)
+    fireEvent.click(startButton)
+    await waitFor(() => { expect(h.setDefaultModel).toHaveBeenCalledWith({ provider: 'acme', model: 'acme-small' }) })
+    expect(h.mutate).toHaveBeenCalledWith('llm-pi-ai', [{
+      op: 'set',
+      path: ['providers', 'acme'],
+      value: { apiKeyEnv: 'ACME_API_KEY', models: [{ id: 'acme-small' }] },
+    }], 0)
+    expect(h.set).toHaveBeenCalledWith('ACME_API_KEY', 'sk-acme')
+  })
+
+  it.each([
+    ['INVALID_CREDENTIAL', en.onboardingKeyRejected],
+    ['QUOTA', en.onboardingKeyQuota],
+    [undefined, 'the endpoint is down'],
+  ])('reports a key the provider refuses (%s) without listing models', async (code, shown) => {
+    const h = harness({
+      catalog: [{ provider: 'acme', displayName: 'Acme Models' }],
+      discovery: {
+        ok: false,
+        error: new RemoteError('llm/model-discovery-rejected', 'the endpoint is down', {
+          settingsNs: 'llm-pi-ai', ...code === undefined ? {} : { code },
+        }),
+      },
+    })
+    render(<ProviderOnboardingDialog {...h.props} />)
+    fireEvent.click(await screen.findByRole('button', { name: 'Acme Models' }))
+    fireEvent.change(await screen.findByLabelText(en.keyInput), { target: { value: 'sk-bad' } })
+    expect((await screen.findByRole('alert')).textContent).toBe(shown)
+    expect(screen.queryByRole('checkbox')).toBeNull()
+    expect(screen.queryByRole('button', { name: en.onboardingStart })).toBeNull()
+  })
+
+  it('does not ask the provider about a key it can already refuse locally', async () => {
+    const h = harness({ catalog: [{ provider: 'acme', displayName: 'Acme Models' }] })
+    render(<ProviderOnboardingDialog {...h.props} />)
+    fireEvent.click(await screen.findByRole('button', { name: 'Acme Models' }))
+    fireEvent.change(await screen.findByLabelText(en.keyInput), { target: { value: 'sk\u00e9' } })
+    await new Promise(resolve => setTimeout(resolve, 700))
+    expect(h.discover).not.toHaveBeenCalled()
+  })
+
+  it('ignores a key check answered after the key changed', async () => {
+    const h = harness({
+      catalog: [{ provider: 'acme', displayName: 'Acme Models' }],
+      discovery: remoteOk([{ id: 'acme-current' }]),
+    })
+    let answerStale: (models: { id: string }[]) => void = () => {}
+    h.discover.mockImplementationOnce(() => new Promise((resolve) => {
+      answerStale = (models) => { resolve(remoteOk(models)) }
+    }))
+    render(<ProviderOnboardingDialog {...h.props} />)
+    fireEvent.click(await screen.findByRole('button', { name: 'Acme Models' }))
+    const keyInput = await screen.findByLabelText(en.keyInput)
+    fireEvent.change(keyInput, { target: { value: 'sk-old' } })
+    await waitFor(() => { expect(h.discover).toHaveBeenCalledOnce() })
+
+    fireEvent.change(keyInput, { target: { value: 'sk-new' } })
+    await act(async () => { answerStale([{ id: 'acme-stale' }]) })
+    expect(screen.queryByRole('checkbox')).toBeNull()
+    expect(screen.getByText(en.onboardingKeyChecking)).toBeTruthy()
+
+    expect(await screen.findByRole('checkbox', { name: 'acme-current' })).toBeTruthy()
+    expect(h.discover).toHaveBeenLastCalledWith('llm-pi-ai', { provider: 'acme', apiKey: 'sk-new', live: true })
+    expect(screen.queryByRole('checkbox', { name: 'acme-stale' })).toBeNull()
+  })
+
+  it('filters the listed models by id or name and says when none match', async () => {
+    const h = harness({
+      catalog: [{ provider: 'acme', displayName: 'Acme Models' }],
+      discovery: remoteOk([{ id: 'acme-large', name: 'Acme Large' }, { id: 'acme-small' }, { id: 'a-3', name: 'Turbo' }]),
+    })
+    render(<ProviderOnboardingDialog {...h.props} />)
+    fireEvent.click(await screen.findByRole('button', { name: 'Acme Models' }))
+    fireEvent.change(await screen.findByLabelText(en.keyInput), { target: { value: 'sk-acme' } })
+    await screen.findByRole('checkbox', { name: 'acme-large' })
+    const search = screen.getByRole('searchbox', { name: en.fetchSearch })
+    const listed = (): string[] => screen.queryAllByRole('checkbox').map(box => box.parentElement?.textContent ?? '')
+
+    fireEvent.change(search, { target: { value: 'SMALL' } })
+    expect(listed()).toEqual(['acme-small'])
+    fireEvent.change(search, { target: { value: 'turbo' } })
+    expect(listed()).toEqual(['a-3'])
+    fireEvent.change(search, { target: { value: 'nothing like it' } })
+    expect(listed()).toEqual([])
+    expect(screen.getByText(en.fetchNoMatches)).toBeTruthy()
+  })
+
+  it('unchecks a picked model, leaving nothing to start with', async () => {
+    const h = harness({
+      catalog: [{ provider: 'acme', displayName: 'Acme Models' }],
+      discovery: remoteOk([{ id: 'acme-large' }]),
+    })
+    render(<ProviderOnboardingDialog {...h.props} />)
+    fireEvent.click(await screen.findByRole('button', { name: 'Acme Models' }))
+    fireEvent.change(await screen.findByLabelText(en.keyInput), { target: { value: 'sk-acme' } })
+    const large = await screen.findByRole<HTMLInputElement>('checkbox', { name: 'acme-large' })
+    const startButton = screen.getByRole<HTMLButtonElement>('button', { name: en.onboardingStart })
+
+    fireEvent.click(large)
+    expect(large.checked).toBe(true)
+    expect(screen.getByText(`1 ${en.onboardingSelected}`)).toBeTruthy()
+    fireEvent.click(large)
+    expect(large.checked).toBe(false)
+    expect(startButton.disabled).toBe(true)
+    expect(screen.getByText(en.onboardingPickModel)).toBeTruthy()
+  })
+
+  it('says when the key can use no models and offers nothing to start', async () => {
+    const h = harness({
+      catalog: [{ provider: 'acme', displayName: 'Acme Models' }],
+      discovery: remoteOk([]),
+    })
+    render(<ProviderOnboardingDialog {...h.props} />)
+    fireEvent.click(await screen.findByRole('button', { name: 'Acme Models' }))
+    fireEvent.change(await screen.findByLabelText(en.keyInput), { target: { value: 'sk-acme' } })
+    expect(await screen.findByText(en.fetchEmpty)).toBeTruthy()
+    expect(screen.queryByRole('searchbox', { name: en.fetchSearch })).toBeNull()
+    expect(screen.queryByRole('button', { name: en.onboardingStart })).toBeNull()
+  })
+
+  /** Pick acme, type a key, choose its one listed model and start. */
+  async function startWithAcme(h: ReturnType<typeof harness>): Promise<void> {
+    render(<ProviderOnboardingDialog {...h.props} />)
+    fireEvent.click(await screen.findByRole('button', { name: 'Acme Models' }))
+    fireEvent.change(await screen.findByLabelText(en.keyInput), { target: { value: 'sk-acme' } })
+    fireEvent.click(await screen.findByRole('checkbox', { name: 'acme-large' }))
+    fireEvent.click(screen.getByRole('button', { name: en.onboardingStart }))
+  }
+
+  it('edits a profile the user already stores for the provider instead of replacing it', async () => {
+    const h = harness({ discovery: remoteOk([{ id: 'acme-large' }]) })
+    const onDone = vi.fn()
+    render(
+      <OnboardingProviderSetup
+        provider="acme"
+        namespace={piAiNamespace({ acme: { baseURL: 'https://acme.example/v1' } })}
+        settingsPath={['providers', 'acme']}
+        schema={settingsSchema}
+        operations={h.props.operations}
+        t={h.props.t}
+        readOnly={false}
+        onDone={onDone}
+      />,
+    )
+    fireEvent.change(screen.getByLabelText(en.keyInput), { target: { value: 'sk-acme' } })
+    fireEvent.click(await screen.findByRole('checkbox', { name: 'acme-large' }))
+    fireEvent.click(screen.getByRole('button', { name: en.onboardingStart }))
+    await waitFor(() => { expect(onDone).toHaveBeenCalledOnce() })
+    const ops = h.mutate.mock.calls[0]?.[1]
+    expect(ops).toContainEqual({ op: 'set', path: ['providers', 'acme', 'apiKeyEnv'], value: 'ACME_API_KEY' })
+    expect(ops).toContainEqual({ op: 'set', path: ['providers', 'acme', 'models'], value: [{ id: 'acme-large' }] })
+    expect(ops?.some(op => JSON.stringify(op).includes('baseURL'))).toBe(false)
+  })
+
+  it.each([
+    ['conflict', new RemoteError('settings/conflict', 'changed elsewhere', { ns: 'llm-pi-ai', expected: 0, actual: 1 }), en.conflict],
+    ['rejection', new RemoteError('settings/rejected', 'the profile is invalid', { ns: 'llm-pi-ai' }), 'the profile is invalid'],
+  ])('reports a profile write %s without storing the key', async (_kind, writeFailure, shown) => {
+    const h = harness({
+      catalog: [{ provider: 'acme', displayName: 'Acme Models' }],
+      discovery: remoteOk([{ id: 'acme-large' }]),
+      writeFailure,
+    })
+    await startWithAcme(h)
+    expect((await screen.findByRole('alert')).textContent).toBe(shown)
+    expect(h.set).not.toHaveBeenCalled()
+    expect(h.setDefaultModel).not.toHaveBeenCalled()
+    expect(screen.getByRole<HTMLButtonElement>('button', { name: en.onboardingStart }).disabled).toBe(false)
+  })
+
+  it('reports a key the Host could not store and leaves the default model alone', async () => {
+    const h = harness({
+      catalog: [{ provider: 'acme', displayName: 'Acme Models' }],
+      discovery: remoteOk([{ id: 'acme-large' }]),
+      credentialFailure: 'the keychain is locked',
+    })
+    await startWithAcme(h)
+    expect((await screen.findByRole('alert')).textContent).toBe('the keychain is locked')
+    expect(h.mutate).toHaveBeenCalledOnce()
+    expect(h.setDefaultModel).not.toHaveBeenCalled()
+  })
+
+  it('retries only the key after the Host refused it, and writes again for a changed model choice', async () => {
+    const h = harness({
+      catalog: [{ provider: 'acme', displayName: 'Acme Models' }],
+      discovery: remoteOk([{ id: 'acme-large' }, { id: 'acme-small' }]),
+      credentialFailure: 'the keychain is locked',
+    })
+    await startWithAcme(h)
+    await screen.findByRole('alert')
+    fireEvent.click(screen.getByRole('button', { name: en.onboardingStart }))
+    await waitFor(() => { expect(h.set).toHaveBeenCalledTimes(2) })
+    expect(h.mutate).toHaveBeenCalledOnce()
+    fireEvent.click(screen.getByRole('checkbox', { name: 'acme-small' }))
+    fireEvent.click(screen.getByRole('button', { name: en.onboardingStart }))
+    await waitFor(() => { expect(h.mutate).toHaveBeenCalledTimes(2) })
+  })
+
+  it('finishes the setup even when the default model is refused', async () => {
+    const h = harness({
+      catalog: [{ provider: 'acme', displayName: 'Acme Models' }],
+      discovery: remoteOk([{ id: 'acme-large' }]),
+      defaultModelFailure: 'no session is open',
+    })
+    const load = vi.spyOn(h.controller, 'load')
+    await startWithAcme(h)
+    await waitFor(() => { expect(screen.queryByLabelText(en.keyInput)).toBeNull() })
+    expect(h.setDefaultModel).toHaveBeenCalledOnce()
+    expect(load).toHaveBeenCalled()
+    expect(screen.queryByRole('alert')).toBeNull()
+  })
+
+  it('refuses a custom route a catalog provider uses and reloads once a custom provider is created', async () => {
+    const h = harness({ catalog: [{ provider: 'acme', displayName: 'Acme Models' }] })
+    render(<ProviderOnboardingDialog {...h.props} />)
+    fireEvent.click(await screen.findByRole('button', { name: en.addCustom }))
+    fireEvent.change(await screen.findByLabelText(en.customRoute), { target: { value: 'acme' } })
+    expect(screen.getByText(en.customRouteTaken)).toBeTruthy()
+
+    const load = vi.spyOn(h.controller, 'load')
+    fireEvent.change(screen.getByLabelText(en.customRoute), { target: { value: 'acme-gateway' } })
+    fireEvent.change(screen.getByLabelText(en.baseUrl), { target: { value: 'https://gateway.example/v1' } })
+    fireEvent.change(screen.getByLabelText(en.keyInput), { target: { value: 'gw-key' } })
+    fireEvent.click(screen.getByRole('button', { name: en.addModel }))
+    fireEvent.change(screen.getByLabelText(`${en.modelId} 1`), { target: { value: 'gw-model' } })
+    fireEvent.click(screen.getByText(en.create))
+
+    await waitFor(() => { expect(load).toHaveBeenCalled() })
+    expect(h.setDefaultModel).toHaveBeenCalledWith({ provider: 'acme-gateway', model: 'gw-model' })
+    expect(await screen.findByRole('button', { name: en.addCustom })).toBeTruthy()
+    expect(h.complete).not.toHaveBeenCalled()
+  })
+
+  it('sets up a catalog route of another namespace in the provider editor, skipping routes with no namespace', async () => {
+    const h = harness({
+      catalog: [
+        { provider: 'deepseek-eu', displayName: 'DeepSeek', settingsNs: 'llm-deepseek', settingsPath: ['profiles', 'deepseek-eu'] },
+        { provider: 'ghost', displayName: 'Ghost', settingsNs: 'llm-ghost', settingsPath: [] },
+      ],
+      extraNamespaces: [deepSeekNamespace],
+    })
+    render(<ProviderOnboardingDialog {...h.props} />)
+    fireEvent.click(await screen.findByRole('button', { name: 'DeepSeek' }))
+    expect(screen.queryByRole('button', { name: 'Ghost' })).toBeNull()
+    const load = vi.spyOn(h.controller, 'load')
+
+    fireEvent.click(await screen.findByRole('button', { name: en.cancel }))
+    expect(screen.queryByLabelText(en.keyInput)).toBeNull()
+    expect(screen.getByRole('button', { name: 'DeepSeek' }).getAttribute('aria-pressed')).toBe('false')
+    expect(load).not.toHaveBeenCalled()
+
+    fireEvent.click(screen.getByRole('button', { name: 'DeepSeek' }))
+    fireEvent.change(await screen.findByLabelText(en.keyInput), { target: { value: 'sk-deepseek' } })
+    fireEvent.click(screen.getByRole('button', { name: en.apply }))
+    await waitFor(() => { expect(load).toHaveBeenCalled() })
+    expect(h.set).toHaveBeenCalledWith('DEEPSEEK_EU_API_KEY', 'sk-deepseek')
+    expect(screen.queryByLabelText(en.keyInput)).toBeNull()
+  })
+
+  it('warns that a custom endpoint on another machine over http would send the key in plain text', async () => {
+    const h = harness()
+    render(<ProviderOnboardingDialog {...h.props} />)
+    fireEvent.click(await screen.findByRole('button', { name: en.addCustom }))
+    const baseUrl = await screen.findByLabelText<HTMLInputElement>(en.baseUrl)
+    fireEvent.change(baseUrl, { target: { value: 'http://192.168.1.5:11434/v1' } })
+    expect(screen.getByText(en.customHttpWarning)).toBeTruthy()
+    for (const local of ['http://localhost:11434/v1', 'http://127.0.0.1:1234/v1', 'https://gateway.example/v1']) {
+      fireEvent.change(baseUrl, { target: { value: local } })
+      expect(screen.queryByText(en.customHttpWarning)).toBeNull()
+    }
   })
 
   it('hides the templates and the custom-provider button when no declarable namespace exists', async () => {

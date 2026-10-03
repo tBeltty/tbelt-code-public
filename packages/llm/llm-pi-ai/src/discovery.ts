@@ -6,7 +6,10 @@
  * with no network call at all: pi-ai's registry is the authoritative list for
  * its own providers, and it carries the capacities a listing endpoint would
  * not disclose. Only a route the catalog does not describe — a gateway, a
- * self-hosted server — is interrogated over the wire.
+ * self-hosted server — is interrogated over the wire, unless the request asks
+ * for a `live` answer: then a catalog route is interrogated too, which checks
+ * the key, and catalog metadata replaces the listing's row for every id the
+ * catalog knows.
  *
  * Neither path is a catalog refresh. Nothing here is stored: the request
  * carries a draft the user is still editing, and the reply is candidate
@@ -22,9 +25,10 @@
  * @module dsh-llm-pi-ai/discovery
  */
 
-import { INVALID_CREDENTIAL_CODE, LlmError, normalizeApiKey } from '@deepseek-ai/dsh-llm'
-import type { LlmDiscoveredModel, LlmModelDiscoveryOperation } from '@deepseek-ai/dsh-llm'
+import { INVALID_CREDENTIAL_CODE, LlmError, QUOTA_EXCEEDED_CODE, normalizeApiKey } from '@deepseek-ai/dsh-llm'
+import type { LlmDiscoveredModel, LlmModelDiscoveryOperation, LlmModelPricing } from '@deepseek-ai/dsh-llm'
 import { attributionHeaders } from '@deepseek-ai/dsh-llm'
+import type { Api, Model } from '@earendil-works/pi-ai'
 import { catalogModels } from './catalog.ts'
 
 /**
@@ -41,6 +45,42 @@ const LISTABLE_PROTOCOLS: ReadonlySet<string> = new Set([
   'openai-completions',
   'openai-responses',
 ])
+
+/**
+ * Routes whose model listing answers without authentication, mapped to the
+ * path under their base URL that does require the key. A `live` request checks
+ * the key there first, so a rejected key is reported instead of a listing the
+ * key never unlocked.
+ */
+const CREDENTIAL_CHECK_PATHS: Readonly<Record<string, string>> = {
+  openrouter: '/key',
+}
+
+/**
+ * The endpoint a catalog route lists its models at: the listable protocol most
+ * of its models speak, with the base URL of a model speaking it. A gateway route
+ * such as OpenRouter mixes protocols per model, so the first model is not a
+ * reliable answer.
+ * @param models - the route's installed catalog models; at least one.
+ * @returns the protocol and base URL to ask, or the first model's when none is listable.
+ */
+function routeEndpoint(models: Iterable<Model<Api>>): { readonly api: string; readonly baseUrl: string } {
+  const counts = new Map<string, { count: number; baseUrl: string }>()
+  let fallback: { api: string; baseUrl: string } | undefined
+  for (const model of models) {
+    fallback ??= { api: model.api, baseUrl: model.baseUrl }
+    if (!LISTABLE_PROTOCOLS.has(model.api)) continue
+    const entry = counts.get(model.api) ?? { count: 0, baseUrl: model.baseUrl }
+    entry.count += 1
+    counts.set(model.api, entry)
+  }
+  let best: { api: string; baseUrl: string; count: number } | undefined
+  for (const [api, entry] of counts) {
+    if (best === undefined || entry.count > best.count) best = { api, ...entry }
+  }
+  /* v8 ignore next -- callers pass a non-empty catalog */
+  return best ?? fallback ?? { api: '', baseUrl: '' }
+}
 
 /** Stable API version required by Anthropic's model-listing endpoint. */
 const ANTHROPIC_VERSION = '2023-06-01'
@@ -68,6 +108,17 @@ interface ListingTopProvider {
   max_completion_tokens?: unknown
 }
 
+/**
+ * Per-token list prices in US dollars, as decimal strings, that OpenRouter and
+ * compatible gateways publish under each entry's `pricing`.
+ */
+interface ListingPricing {
+  prompt?: unknown
+  completion?: unknown
+  input_cache_read?: unknown
+  input_cache_write?: unknown
+}
+
 /** One entry of a supported `GET /models` reply. */
 interface ListingEntry {
   id?: unknown
@@ -85,6 +136,7 @@ interface ListingEntry {
   maxTokens?: unknown
   limit?: ListingLimit | null
   top_provider?: ListingTopProvider | null
+  pricing?: ListingPricing | null
 }
 
 /** A positive integer field of a listing entry, or `undefined` when absent or unusable. */
@@ -93,6 +145,36 @@ function capacity(...candidates: readonly unknown[]): number | undefined {
     if (typeof candidate === 'number' && Number.isInteger(candidate) && candidate > 0) return candidate
   }
   return undefined
+}
+
+/** One per-token price field as US dollars per million tokens, or `undefined` when absent or unusable. */
+function perMillion(candidate: unknown): number | undefined {
+  const perToken = typeof candidate === 'string' && candidate.trim().length > 0 ? Number(candidate)
+    : typeof candidate === 'number' ? candidate
+      : Number.NaN
+  if (!Number.isFinite(perToken) || perToken < 0) return undefined
+  // Rounded to 1e-6 dollars per million so float noise from the decimal
+  // string (`0.0000003` → 0.30000000000000004) does not reach the form.
+  return Math.round(perToken * 1e12) / 1e6
+}
+
+/**
+ * The list price an entry publishes, or `undefined` when it publishes no usable
+ * input and output price. OpenRouter marks a route whose price varies with
+ * `-1`, which is unusable and reads as unknown.
+ */
+function listingPricing(pricing: ListingPricing | null | undefined): LlmModelPricing | undefined {
+  const input = perMillion(pricing?.prompt)
+  const output = perMillion(pricing?.completion)
+  if (input === undefined || output === undefined) return undefined
+  const cacheRead = perMillion(pricing?.input_cache_read)
+  const cacheWrite = perMillion(pricing?.input_cache_write)
+  return {
+    input,
+    output,
+    ...cacheRead === undefined || cacheRead === 0 ? {} : { cacheRead },
+    ...cacheWrite === undefined || cacheWrite === 0 ? {} : { cacheWrite },
+  }
 }
 
 /** A non-empty string field of a listing entry, or `undefined`. */
@@ -219,11 +301,13 @@ function readListing(body: unknown): LlmDiscoveredModel[] {
       entry?.limit?.output,
       entry?.top_provider?.max_completion_tokens,
     )
+    const pricing = listingPricing(entry?.pricing)
     models.push({
       id,
       name,
       ...contextWindow === undefined ? {} : { contextWindow },
       ...maxTokens === undefined ? {} : { maxTokens },
+      ...pricing === undefined ? {} : { pricing },
     })
   }
   return models
@@ -271,17 +355,44 @@ export async function discoverModels(
   storedProfile?: () => StoredModelDiscoveryProfile | undefined,
 ): Promise<readonly LlmDiscoveredModel[]> {
   // A catalog route already has its answer, and a better one: the installed
-  // entries carry context windows and output caps no listing endpoint reports.
+  // entries carry context windows, output caps, and list prices no listing
+  // endpoint reports.
   if (request.provider !== undefined) {
     const installed = catalogModels(request.provider)
     if (installed.size > 0) {
-      return [...installed.values()].map(model => ({
+      const described = (model: Model<Api>): LlmDiscoveredModel => ({
         id: model.id,
         name: model.name,
         contextWindow: model.contextWindow,
         maxTokens: model.maxTokens,
         inputModalities: [...model.input],
-      }))
+        ...model.cost.input === 0 && model.cost.output === 0
+          ? {}
+          : {
+            pricing: {
+              input: model.cost.input,
+              output: model.cost.output,
+              ...model.cost.cacheRead > 0 ? { cacheRead: model.cost.cacheRead } : {},
+              ...model.cost.cacheWrite > 0 ? { cacheWrite: model.cost.cacheWrite } : {},
+            },
+          },
+      })
+      const fromCatalog = [...installed.values()].map(described)
+      if (request.live !== true) return fromCatalog
+      const route = routeEndpoint(installed.values())
+      const baseURL = request.baseURL ?? route.baseUrl
+      const api = request.api ?? route.api
+      // A route whose protocol has no readable listing keeps its catalog answer.
+      if (baseURL.length === 0 || !LISTABLE_PROTOCOLS.has(api)) return fromCatalog
+      const checkPath = CREDENTIAL_CHECK_PATHS[request.provider]
+      if (checkPath !== undefined) {
+        await interrogate({ ...request, baseURL, api }, storedProfile, `${baseURL.replace(/\/+$/, '')}${checkPath}`)
+      }
+      const listed = readListing(await interrogate({ ...request, baseURL, api }, storedProfile))
+      return listed.map((model) => {
+        const known = installed.get(model.id)
+        return known === undefined ? model : described(known)
+      })
     }
   }
   if (request.baseURL === undefined || request.baseURL.length === 0) {
@@ -304,7 +415,25 @@ export async function discoverModels(
       'DISCOVERY_UNSUPPORTED',
     )
   }
-  const url = listingUrl(request.baseURL, api)
+  return readListing(await interrogate({ ...request, baseURL: request.baseURL, api }, storedProfile))
+}
+
+/**
+ * Send one authenticated GET to a provider endpoint and return its parsed JSON.
+ * @param request - the endpoint, a listable protocol, and the one-shot credential.
+ * @param storedProfile - Host-owned headers and lazy credential resolution.
+ * @param target - URL to ask instead of the protocol's model listing.
+ * @returns the parsed reply body.
+ * @throws LlmError coded `INVALID_CREDENTIAL` for a 401 or 403, `QUOTA` for a
+ *   402, and `DISCOVERY_FAILED` for any other failure.
+ */
+async function interrogate(
+  request: LlmModelDiscoveryOperation & { readonly baseURL: string; readonly api: string },
+  storedProfile: (() => StoredModelDiscoveryProfile | undefined) | undefined,
+  target?: string,
+): Promise<unknown> {
+  const { api } = request
+  const url = target ?? listingUrl(request.baseURL, api)
   // A key typed into the form wins: it may replace the stored key that is
   // failing. The stored profile is asked past the catalog and protocol checks,
   // and its credential resolver remains lazy so a typed key cannot fail over a
@@ -336,10 +465,14 @@ export async function discoverModels(
     throw new LlmError(`could not reach ${url}`, 'DISCOVERY_FAILED', { cause: error })
   }
   if (!response.ok) {
-    throw new LlmError(
-      `${url} answered ${response.status}${response.status === 401 || response.status === 403 ? '; check the API key' : ''}`,
-      'DISCOVERY_FAILED',
-    )
+    await response.body?.cancel()
+    if (response.status === 401 || response.status === 403) {
+      throw new LlmError(`${url} answered ${response.status}; check the API key`, INVALID_CREDENTIAL_CODE)
+    }
+    if (response.status === 402) {
+      throw new LlmError(`${url} answered 402; the key has no credit left or reached its spending limit`, QUOTA_EXCEEDED_CODE)
+    }
+    throw new LlmError(`${url} answered ${response.status}`, 'DISCOVERY_FAILED')
   }
   let text: string
   try {
@@ -353,11 +486,9 @@ export async function discoverModels(
     }
     throw error
   }
-  let body: unknown
   try {
-    body = JSON.parse(text)
+    return JSON.parse(text) as unknown
   } catch (error: unknown) {
     throw new LlmError(`${url} did not answer with JSON`, 'DISCOVERY_FAILED', { cause: error })
   }
-  return readListing(body)
 }

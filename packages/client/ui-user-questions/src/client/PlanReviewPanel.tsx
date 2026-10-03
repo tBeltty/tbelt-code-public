@@ -22,8 +22,9 @@ function tooltip(description: string | undefined): { title?: string } {
 
 /**
  * Render plan review controls; the submitted document opens in the sidebar.
- * The `conversation.plan-review.decision` occupant replaces the Approve button
- * and may decline with written feedback through the same answer channel.
+ * The `conversation.plan-review.decision` occupant replaces the Request changes
+ * and Approve buttons and may decline with written feedback through the same
+ * answer channel.
  *
  * @param props - the question domain face, the narrowed plan review, and `t`.
  * @returns The plan-review takeover for this request.
@@ -54,6 +55,7 @@ export function PlanReviewPanel({ pending, review, t, renderSlot }: PlanReviewPa
     settle(() => pending.answer({ answers: [item] }), pending.snapshot().channel === 'rpc')
   const approve = (): Promise<boolean> => decide({ id: review.id, selected: [review.approve.label] })
   const keepPlanning = (feedback: string): Promise<boolean> => decide({ id: review.id, selected: [], custom: feedback })
+  const discuss = (): Promise<boolean> => settle(() => pending.dismiss())
   const summary = useMemo(() => {
     const title = extractMarkdownPlainText(review.plan, { mode: 'first-line' })
     const description = extractMarkdownPlainText(review.plan, { mode: 'first-paragraph' })
@@ -77,20 +79,22 @@ export function PlanReviewPanel({ pending, review, t, renderSlot }: PlanReviewPa
         <div className={css.footer}>
           <div className={css.feedback} role="status">{error}</div>
           <div className={css.actions}>
-            <Button
-              variant="outline" className={css.discuss} icon={<IconEditOutlineRegular size={14} />}
-              disabled={busy} onClick={() => { void settle(() => pending.dismiss()) }}
-            >
-              {t('plan.discuss')}
-            </Button>
-            {renderSlot('conversation.plan-review.decision', { review, requestKey: pending.key, busy, approve, keepPlanning }, {
+            {renderSlot('conversation.plan-review.decision', { review, requestKey: pending.key, busy, approve, discuss, keepPlanning }, {
               fallback: (
-                <Button
-                  variant="primary" {...tooltip(review.approve.description)}
-                  disabled={busy} onClick={() => { void approve() }}
-                >
-                  {t('plan.approve')}
-                </Button>
+                <>
+                  <Button
+                    variant="outline" className={css.discuss} icon={<IconEditOutlineRegular size={14} />}
+                    disabled={busy} onClick={() => { void discuss() }}
+                  >
+                    {t('plan.discuss')}
+                  </Button>
+                  <Button
+                    variant="primary" {...tooltip(review.approve.description)}
+                    disabled={busy} onClick={() => { void approve() }}
+                  >
+                    {t('plan.approve')}
+                  </Button>
+                </>
               ),
             })}
           </div>

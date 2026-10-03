@@ -20,7 +20,7 @@ import { PlanChip } from '../src/client/PlanModeControl.tsx'
 import { PlanCards, PlanReviewOpen, type PlanCardsInjected, type PlanOpenInjected, type PlanReviewOpenInjected } from '../src/client/PlanCard.tsx'
 import { PlanPreview, PlanTitle, type PlanPreviewInjected } from '../src/client/PlanPreview.tsx'
 import {
-  PlanCommentChip, PlanReviewDecision, type PlanCommentsInjected, type PlanReviewDecisionInjected,
+  PlanCommentChip, PlanReviewDecision, type PlanCommentChipInjected, type PlanReviewDecisionInjected,
 } from '../src/client/PlanCommentControls.tsx'
 import type { ToolCallId } from '@deepseek-ai/dsh-llm/brand'
 import { submittedPlan } from '../src/client/plan.ts'
@@ -30,6 +30,8 @@ import { apply as nodeApply } from '../src/index.ts'
 import { createSidebarRightController } from '@deepseek-ai/dsh-client-ui-sidebar-right/src/client/service.ts'
 import { SidebarRightTabRegistry } from '@deepseek-ai/dsh-client-ui-sidebar-right/src/client/tab-registry.ts'
 import { createSidebarRightStore } from '@deepseek-ai/dsh-client-ui-sidebar-right/src/client/stores.ts'
+
+type OpenTab = ReturnType<Context['sidebarRight']['openTabs']['getSnapshot']>[number]
 
 function providePreview(ctx: Context) {
   const events = new ConversationEventRegistry(ctx)
@@ -41,17 +43,19 @@ function providePreview(ctx: Context) {
   const openResourceIn = vi.fn<Context['sidebarRight']['openResourceIn']>()
   const openResource = vi.fn<Context['sidebarRight']['openResource']>()
   const mounted = createSnapshotStore<SessionId | undefined>(undefined)
+  const openTabs = createSnapshotStore<ReturnType<Context['sidebarRight']['openTabs']['getSnapshot']>>([])
   const subagentAddress = vi.fn<Context['sessions']['subagentAddress']>(() => undefined)
   const binding = vi.fn<() => object | undefined>(() => ({}))
   ctx.provide('sessions', { subagentAddress, binding })
   ctx.provide('resources', { register: vi.fn(() => removeResources) })
   ctx.provide('sidebarRightTabs', { register: registerType })
-  ctx.provide('sidebarRight', { openResourceIn, openResource, mounted })
+  ctx.provide('sidebarRight', { openResourceIn, openResource, mounted, openTabs })
   ctx.provide('remote.session', {})
   const prefixes = new ComposerMessagePrefixRegistry()
   ctx.provide('conversation', { prefixes })
   return {
-    events, removeResources, removeType, registerType, openResourceIn, openResource, mounted, subagentAddress, chat, binding, prefixes,
+    events, removeResources, removeType, registerType, openResourceIn, openResource, mounted, openTabs, subagentAddress, chat, binding,
+    prefixes,
   }
 }
 
@@ -167,7 +171,7 @@ describe('ui-plan browser apply', () => {
       const decision = (decisionEntry.inject as DecisionResolver)(SID)
       const chipEntry = b.slots.entries('conversation.input.dock')[0]!
       expect(chipEntry.component).toBe(PlanCommentChip)
-      const chip = (chipEntry.inject as NonNullable<typeof chipEntry.inject> & ((sessionId: SessionId) => PlanCommentsInjected))(SID)
+      const chip = (chipEntry.inject as NonNullable<typeof chipEntry.inject> & ((sessionId: SessionId) => PlanCommentChipInjected))(SID)
       expect(chip.hooks.planComments).toBe(document.hooks.planComments)
       const logged = decision.documentOf({ id: 'r', question: 'Approve?', plan: '# P', callId: 'call' as ToolCallId, approve: { label: 'Approve' } }, 'q:1')
       expect(logged).toBe('dsh-resource://plan/s-plan/call')
@@ -183,11 +187,17 @@ describe('ui-plan browser apply', () => {
       document.removeComment(logged, second!.id)
       expect(b.prefixes.collect(SID)[0]?.text).toBe('> first\nearlier, edited')
       prefix!.commit()
-      expect(document.hooks.planComments.getSnapshot().documents[logged]).toBeUndefined()
+      expect(document.hooks.planComments.getSnapshot().documents[logged]).toEqual([{ ...first, text: 'earlier, edited', resolved: true }])
       expect(b.prefixes.collect(SID)).toEqual([])
       expect(b.prefixes.collect('other-session' as SessionId)).toHaveLength(1)
       chip.removeComments('dsh-resource://plan/other-session/call', document.hooks.planComments.getSnapshot().documents['dsh-resource://plan/other-session/call']!.map(comment => comment.id))
-      expect(document.hooks.planComments.getSnapshot().documents).toEqual({})
+      expect(Object.keys(document.hooks.planComments.getSnapshot().documents)).toEqual([logged])
+      document.addComment(logged, { block: 1, quote: 'sent', offset: 0 }, 'on its own')
+      const prompt = vi.fn(() => Promise.resolve({ ok: true as const, value: { accepted: true as const } }))
+      b.binding.mockReturnValue({ session: { prompt } })
+      await expect(chip.sendComments(SID)).resolves.toBeNull()
+      expect(prompt).toHaveBeenCalledWith([{ type: 'text', text: '> sent\non its own' }], 'queue')
+      expect(b.prefixes.collect(SID)).toEqual([])
       document.addComment(logged, { block: 0, quote: 'kept', offset: 0 }, 'until teardown')
       await fiber.dispose()
       expect(b.prefixes.collect(SID)).toEqual([])
@@ -269,7 +279,17 @@ describe('ui-plan browser apply', () => {
       expect(card.component).toBe(PlanCards)
       const injected = (card.inject as unknown as (sessionId: SessionId) => PlanOpenInjected)(SID)
       injected.openPlan(plan.callId)
-      expect(b.openResource).toHaveBeenLastCalledWith(address)
+      expect(b.openResource).toHaveBeenLastCalledWith(address, {})
+      // Another plan of the same Session replaces the open plan tab instead of adding one.
+      b.mounted.set(SID)
+      b.openTabs.set([
+        { sessionId: SID, tabId: 'other' as OpenTab['tabId'], kind: 'plan', contentId: 'dsh-resource://plan/elsewhere/call' },
+        { sessionId: SID, tabId: 'tab' as OpenTab['tabId'], kind: 'plan', contentId: 'dsh-resource://plan/s-plan/older' },
+      ])
+      injected.openPlan(plan.callId)
+      expect(b.openResource).toHaveBeenLastCalledWith(address, { replaceTab: 'tab' })
+      b.openTabs.set([])
+      b.mounted.set(undefined)
       const review = b.slots.entries('conversation.plan-review.actions')[0]!
       expect(review.component).toBe(PlanReviewOpen)
       const reviewInjected = (review.inject as unknown as (sessionId: SessionId) => PlanReviewOpenInjected)(SID)
@@ -277,12 +297,12 @@ describe('ui-plan browser apply', () => {
       expect(reviewInjected.hooks.sidebarMounted).toBe(b.mounted)
       const pending = { id: 'review', question: 'Approve?', plan: plan.markdown, callId: plan.callId, approve: { label: 'Approve' } }
       reviewInjected.openReview(pending, 'question:1')
-      expect(b.openResource).toHaveBeenLastCalledWith(address)
+      expect(b.openResource).toHaveBeenLastCalledWith(address, {})
       b.subagentAddress.mockReturnValue({ parentSessionId: 'parent' as SessionId, childSessionId: SID, mode: 'continuable' })
       injected.openPlan(plan.callId)
-      expect(b.openResource).toHaveBeenLastCalledWith('dsh-resource://plan/subagent/parent/s-plan/continuable/call')
+      expect(b.openResource).toHaveBeenLastCalledWith('dsh-resource://plan/subagent/parent/s-plan/continuable/call', {})
       reviewInjected.openReview(pending, 'question:1')
-      expect(b.openResource).toHaveBeenLastCalledWith('dsh-resource://plan/subagent/parent/s-plan/continuable/call')
+      expect(b.openResource).toHaveBeenLastCalledWith('dsh-resource://plan/subagent/parent/s-plan/continuable/call', {})
       const temporary = { id: 'review', question: 'Approve?', plan: '# Temporary\n\nComplete body', approve: { label: 'Approve' } }
       reviewInjected.openReview(temporary, 'question:2')
       const first = b.openResource.mock.calls.at(-1)!

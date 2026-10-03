@@ -39,6 +39,10 @@ A page that edits a namespace another plugin owns registers through `ctx.configF
 
 A settings surface registers into the slot types this package declares. The shell (`sidebar.settings` occupant, navigation, chrome) lives in ui-settings-general; feature pages register `settings.section` contributions; the Plugins section hosts `settings.plugins.tab` pages; onboarding steps register `settings.onboarding`. Cross-namespace surfaces (schema introspection, the served-namespace directory, `hasDocument`) read the same mirror through `ctx.configForms.describe()`.
 
+### Opening Settings from other features
+
+`ctx.settingsNavigation.openSection(id)` opens the Settings panel on one `settings.section` entry. The settings shell provides the service only while it is registered, so features outside Settings read it with `ctx.get('settingsNavigation')` when the user acts and hide their entry while it is absent. This package declares the service type and provides no implementation; [ui-settings-general](../ui-settings-general/README.md) provides it.
+
 ### Observable success and failures
 
 A committed write folds its answer into the shared mirror. Refused writes refresh the latest Host values. Browser validation uses the serialized Config schema; the Host validates complete configuration, including checks that cannot be serialized.

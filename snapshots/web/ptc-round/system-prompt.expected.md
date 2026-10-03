@@ -170,6 +170,11 @@ interface ToolArgsMap {
       description?: string;
     }[];
   } & Record<string, JsonValue>;
+  /** Show a file or a local web server to the user in the preview panel beside the conversation. The panel renders the page first and keeps its source one toggle away. Use it whenever the user should see a result: an HTML page, an image, a PDF, Markdown, or a dev server you started. For a dev server, start it in the background first, then call preview with its http://localhost URL. Never use open, xdg-open, start, or a browser command to show results; they leave the app. */
+  preview: {
+    /** Path of an existing file (relative paths use the Session working directory), or an http(s) URL on localhost, 127.0.0.1, or [::1]. */
+    target: string;
+  } & Record<string, JsonValue>;
   /** Read a UTF-8 text file and return line-numbered content. */
   read: {
     /** Path to read, resolved by the filesystem backend. */
@@ -413,6 +418,10 @@ interface ToolOutputMap {
       description?: string;
     }[];
   };
+  preview: {
+    path?: string;
+    url?: string;
+  };
   read: {
     path: string;
     offset: number;
@@ -547,7 +556,7 @@ declare const tools: {
 }
 ```
 
-Prefer showing the primary results within your final response alongside a brief explanation. Use ![Description](<path/to/image.png>) when an image supports an explanation or comparison. Use [Description](<path/to/image.png>) when referring to an image or listing files. Enclose Markdown file destinations in angle brackets, especially paths containing spaces. Do not call present just to list edited source files, or run commands to check whether a diff view will appear. Use present when a separate file card helps the user open the complete deliverable, including images, Office documents, spreadsheets, and slide decks. Each presented file adds a card below the reply, with preview and native-open actions. Avoid repeating results already shown inline unless the separate card adds useful access. Outside commands, configuration expressions, and code blocks, link every mention of an existing file, including repeats and tables, to its full path relative to the working directory or absolute; append #L24 or #L24-L30 to the target for known lines. Use the filename or a clear alias as the label, adding only enough parent directories to distinguish files; keep full paths out of labels. Default to the name alone; when precise locations matter, append :24 or :24–30, with no # or L in the line suffix.
+Prefer showing the primary results within your final response alongside a brief explanation. Use ![Description](<path/to/image.png>) when an image supports an explanation or comparison. Use [Description](<path/to/image.png>) when referring to an image or listing files. Enclose Markdown file destinations in angle brackets, especially paths containing spaces. Do not call present just to list edited source files, or run commands to check whether a diff view will appear. Use present when a separate file card helps the user open the complete deliverable, including images, Office documents, spreadsheets, and slide decks. Each presented file adds a card below the reply, with preview and native-open actions. Avoid repeating results already shown inline unless the separate card adds useful access. To show the user a web page, an HTML file, an image, a PDF, or a running dev server, call preview: the page renders beside the conversation, with its source one toggle away. For a dev server, start it in the background first, then call preview with its http://localhost URL. Never run open, xdg-open, or start to show results; they leave the app. Outside commands, configuration expressions, and code blocks, link every mention of an existing file, including repeats and tables, to its full path relative to the working directory or absolute; append #L24 or #L24-L30 to the target for known lines. Use the filename or a clear alias as the label, adding only enough parent directories to distinguish files; keep full paths out of labels. Default to the name alone; when precise locations matter, append :24 or :24–30, with no # or L in the line suffix.
 
 The DeepSeek Harness implementation checkout is at {{sourceRoot}}. The checkout location and current working directory are separate values and may differ; never infer the working directory from this path. Use pwd to determine the current working directory. Use this checkout only to inspect or extend DSH itself.
 

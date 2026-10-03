@@ -9,7 +9,8 @@ import type { ToolCallId } from '@deepseek-ai/dsh-llm/brand'
 import { en } from '../src/client/locales.ts'
 import { anchorRange, blockAnchor, selectionAnchor } from '../src/client/anchor.ts'
 import {
-  addPlanComment, commentSession, createPlanCommentStore, formatPlanFeedback, planCommentExcerpt, removePlanComments,
+  addPlanComment, carryPlanComments, commentSession, createPlanCommentStore, formatPlanFeedback, planCommentExcerpt, removePlanComments,
+  resolvePlanComments,
   updatePlanComment, type PlanCommentState, type PlanCommentStore,
 } from '../src/client/comments.ts'
 import { PlanCommentChip, PlanReviewDecision } from '../src/client/PlanCommentControls.tsx'
@@ -52,23 +53,25 @@ function hookOf(store: PlanCommentStore) {
 }
 
 /** The plan document and the composer chip sharing one comment store, as the plugin wires them. */
-function renderDocument(store = createPlanCommentStore()) {
+function renderDocument(store = createPlanCommentStore(), sendComments = vi.fn((): Promise<string | null> => Promise.resolve(null))) {
   const usePlanComments = hookOf(store)
   let next = 0
   const preview = {
     t, usePlanComments,
     useTabInfo: () => ({ tab: { title: 'Plan', navigation: { address } } }),
-    useResource: () => ({ status: 'live', value: { callId: 'call-1', title: 'Ship the picker', markdown } }),
+    useResource: () => ({ status: 'live', value: { callId: 'call-1', title: 'Ship the picker', markdown, versions: [{ callId: 'call-1', title: 'Ship the picker' }] } }),
     addComment: (target: string, anchor: Parameters<typeof addPlanComment>[2], text: string) => {
       next += 1
       addPlanComment(store, target, { ...anchor, id: `comment-${String(next)}`, text })
     },
     updateComment: (target: string, id: string, text: string) => { updatePlanComment(store, target, id, text) },
     removeComment: (target: string, id: string) => { removePlanComments(store, target, [id]) },
+    carryComments: () => undefined,
   } as Parameters<typeof PlanPreview>[0]
   const chip = {
-    t, sessionId: SID, usePlanComments,
+    t, sessionId: SID, usePlanComments, sendComments,
     removeComments: (target: string, ids: readonly string[]) => { removePlanComments(store, target, ids) },
+    resolveComments: (target: string, ids: readonly string[]) => { resolvePlanComments(store, target, ids) },
   } as Parameters<typeof PlanCommentChip>[0]
   render(<><PlanPreview {...preview} /><PlanCommentChip {...chip} /></>)
   return store
@@ -161,6 +164,33 @@ describe('plan document comments', () => {
     expect(highlights.has('dsh-plan-comment')).toBe(false)
   })
 
+  it('sends unsent comments from the composer chip and lists resolved ones read-only', async () => {
+    const store = createPlanCommentStore()
+    addPlanComment(store, address, { id: 'sent', block: 1, quote: 'store', offset: 9, text: 'Which store?' })
+    const sendComments = vi.fn(() => {
+      resolvePlanComments(store, address, ['sent'])
+      return Promise.resolve(null)
+    })
+    renderDocument(store, sendComments)
+    await act(async () => { fireEvent.click(screen.getByRole('button', { name: en['comments.send'] })) })
+    expect(sendComments).toHaveBeenCalledExactlyOnceWith(SID)
+    expect(document.querySelector('[data-plan-comment-chip]')).toBeNull()
+    const marker = document.querySelector('[data-plan-comment-marker]')!
+    expect(marker.hasAttribute('data-resolved')).toBe(true)
+    fireEvent.click(marker)
+    expect(screen.getByText(en['comment.resolved'])).toBeTruthy()
+    expect(screen.queryByRole('button', { name: en['comment.edit'] })).toBeNull()
+  })
+
+  it('shows a failed chip send and keeps the comments', async () => {
+    const store = createPlanCommentStore()
+    addPlanComment(store, address, { id: 'kept', block: 1, quote: 'store', offset: 9, text: 'Which store?' })
+    renderDocument(store, vi.fn(() => Promise.resolve('busy (session/busy)')))
+    await act(async () => { fireEvent.click(screen.getByRole('button', { name: en['comments.send'] })) })
+    expect(screen.getByRole('alert').textContent).toBe('busy (session/busy)')
+    expect(store.getSnapshot().documents[address]).toHaveLength(1)
+  })
+
   it('ignores selections that start outside the document or hold only whitespace', () => {
     renderDocument()
     const chip = document.body.appendChild(document.createElement('p'))
@@ -206,6 +236,18 @@ describe('plan comment feedback text', () => {
     ])).toBe('> Read the store\nWhich store?\n\n> Ship it\nAdd a rollback.\nThen ship.')
   })
 
+  it('carries unsent comments to a newer version only while their quote remains', () => {
+    const store = createPlanCommentStore()
+    const older = 'dsh-resource://plan/s-plan/call-0'
+    addPlanComment(store, older, { id: 'kept', block: 0, quote: 'read  the\nstore', offset: 0, text: 'Which store?' })
+    addPlanComment(store, older, { id: 'gone', block: 1, quote: 'removed step', offset: 0, text: 'Why?' })
+    addPlanComment(store, older, { id: 'done', block: 0, quote: 'store', offset: 9, text: 'Sent already' })
+    resolvePlanComments(store, older, ['done'])
+    carryPlanComments(store, [older], address, 'First read the store.\nThen ship.')
+    expect(store.getSnapshot().documents[address]?.map(comment => comment.id)).toEqual(['kept'])
+    expect(store.getSnapshot().documents[older]?.map(comment => comment.id)).toEqual(['done', 'gone'])
+  })
+
   it('assigns comments to the Session that submitted the plan', () => {
     expect(commentSession(address)).toBe(SID)
     expect(commentSession(reviewPreviewAddress(SID, 'window:q'))).toBe(SID)
@@ -221,13 +263,15 @@ describe('plan review decision', () => {
   function renderDecision(store: PlanCommentStore, sent = true) {
     const approve = vi.fn(() => Promise.resolve(sent))
     const keepPlanning = vi.fn((_feedback: string) => Promise.resolve(sent))
+    const discuss = vi.fn(() => Promise.resolve(sent))
     const props = {
-      t, review, requestKey: 'question:1', busy: false, approve, keepPlanning,
+      t, review, requestKey: 'question:1', busy: false, approve, discuss, keepPlanning,
       usePlanComments: hookOf(store), documentOf: () => address,
       removeComments: (target: string, ids: readonly string[]) => { removePlanComments(store, target, ids) },
+      resolveComments: (target: string, ids: readonly string[]) => { resolvePlanComments(store, target, ids) },
     } as Parameters<typeof PlanReviewDecision>[0]
     render(<PlanReviewDecision {...props} />)
-    return { approve, keepPlanning }
+    return { approve, discuss, keepPlanning }
   }
   function commented(): PlanCommentStore {
     const store = createPlanCommentStore()
@@ -236,6 +280,14 @@ describe('plan review decision', () => {
     addPlanComment(store, address, { id: 'middle', block: 1, quote: 'rows', offset: 32, text: 'Paginate them.' })
     return store
   }
+
+  it('returns the composer through Request changes while the review has no comments', () => {
+    const { approve, discuss, keepPlanning } = renderDecision(createPlanCommentStore())
+    fireEvent.click(screen.getByRole('button', { name: en['review.requestChanges'] }))
+    expect(discuss).toHaveBeenCalledOnce()
+    expect(approve).not.toHaveBeenCalled()
+    expect(keepPlanning).not.toHaveBeenCalled()
+  })
 
   it('approves directly while the review has no comments', () => {
     const { approve, keepPlanning } = renderDecision(createPlanCommentStore())
@@ -246,14 +298,16 @@ describe('plan review decision', () => {
     expect(keepPlanning).not.toHaveBeenCalled()
   })
 
-  it('sends comments in document order as keep-planning feedback and clears them once sent', async () => {
+  it('sends comments through Request changes in document order as keep-planning feedback and resolves them once sent', async () => {
     const store = commented()
-    const { approve, keepPlanning } = renderDecision(store)
+    const { approve, discuss, keepPlanning } = renderDecision(store)
     expect(screen.queryByRole('button', { name: en['review.approve'] })).toBeNull()
-    await act(async () => { fireEvent.click(screen.getByRole('button', { name: 'Send 3 comments' })) })
+    await act(async () => { fireEvent.click(screen.getByRole('button', { name: 'Request changes (3 comments)' })) })
     expect(keepPlanning).toHaveBeenCalledExactlyOnceWith('> store\nWhich store?\n\n> rows\nPaginate them.\n\n> Ship it\nAdd a rollback step.')
     expect(approve).not.toHaveBeenCalled()
-    expect(store.getSnapshot().documents).toEqual({})
+    expect(discuss).not.toHaveBeenCalled()
+    expect(store.getSnapshot().documents[address]?.map(comment => comment.resolved)).toEqual([true, true, true])
+    expect(screen.getByRole('button', { name: en['review.approve'] })).toBeTruthy()
   })
 
   it('approves without comments only through the explicit action, which discards them', async () => {
@@ -268,9 +322,9 @@ describe('plan review decision', () => {
   it('keeps comments when the decision is not sent', async () => {
     const store = commented()
     renderDecision(store, false)
-    await act(async () => { fireEvent.click(screen.getByRole('button', { name: 'Send 3 comments' })) })
+    await act(async () => { fireEvent.click(screen.getByRole('button', { name: 'Request changes (3 comments)' })) })
     expect(store.getSnapshot().documents[address]).toHaveLength(3)
     removePlanComments(store, address, ['late', 'middle'])
-    await waitFor(() => { expect(screen.getByRole('button', { name: 'Send 1 comment' })).toBeTruthy() })
+    await waitFor(() => { expect(screen.getByRole('button', { name: 'Request changes (1 comment)' })).toBeTruthy() })
   })
 })

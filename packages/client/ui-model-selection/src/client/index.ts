@@ -8,7 +8,10 @@
  * ride each entry's own retry surface (popup shell error/retry; seat menu
  * inline error) without forking the state. Addressed subagent sessions expose
  * neither entry because those Agent-bound RPCs would activate persisted
- * history outside the direct-parent continuation path.
+ * history outside the direct-parent continuation path. The seat's Add model
+ * entry reads the optional `settingsNavigation` service when its menu opens.
+ * A third entry shows the Session's spend under the composer while the Host
+ * serves the `spendBudget` Remote.
  */
 // Type-only: the carrier types, the forwarded Host-event face and the ctx.remote merge.
 import type { ModelSelection } from '@deepseek-ai/dsh-api-session-controller/types'
@@ -21,19 +24,23 @@ import type {} from '@deepseek-ai/dsh-client-ui-conversation/client'
 import type {} from '@deepseek-ai/dsh-client-locale/client'
 import type {} from '@deepseek-ai/dsh-client-ui-renderer/client'
 import type {} from '@deepseek-ai/dsh-client-ui-session/client'
+// Type-only: pulls the optional ctx.settingsNavigation Context merge.
+import type {} from '@deepseek-ai/dsh-client-ui-settings/client'
 import type { TranslateNS } from '@deepseek-ai/dsh-client-ui-slots'
 import { IconDataOutlineRegular } from '@deepseek-ai/dsh-client-ui-primitives'
 import type { ModelDirectoryState } from './directory.ts'
 import { ModelDirectoryResolver } from './service.ts'
 import type { ModelSelectInjected } from './slots.ts'
 import { ModelSelect } from './ModelSelect.tsx'
+import { SpendPill } from './SpendPill.tsx'
+import type { SpendPillInjected } from './slots.ts'
 import { en, zh, type ModelKey } from './locales.ts'
 import { orderModelProviders } from './provider-order.ts'
 
 export { ModelDirectory } from './directory.ts'
 export type { ModelDirectoryState } from './directory.ts'
 export { ModelDirectoryResolver } from './service.ts'
-export type { ModelSelectInjected } from './slots.ts'
+export type { ModelSelectInjected, SpendPillInjected } from './slots.ts'
 export type { ModelKey } from './locales.ts'
 
 declare module '@deepseek-ai/dsh-client-ui-slots' {
@@ -102,6 +109,12 @@ function selectionOf(state: ModelDirectoryState, id: string): ModelSelection | u
 
 /** Dictionary namespace owned by this plugin. */
 const NS = 'model'
+
+/** The `settings.section` id ui-settings-models registers for model configuration. */
+const MODELS_SECTION = 'models'
+
+/** The `settings.section` id ui-settings-models registers for spend limits. */
+const SPENDING_SECTION = 'spending'
 
 /** Required services: the contribution registry, the seat's slot registry, locale, and the service's own faces. */
 export const inject = ['commandUi', 'locale', 'sessions', 'slots', 'remote', 'remote.session']
@@ -184,8 +197,58 @@ export function apply(ctx: ClientContext): void {
           select: (selection: ModelSelection) => available
             ? directory.select(selection)
             : Promise.resolve(undefined),
+          modelSettings: () => {
+            const navigation = scope.get('settingsNavigation')
+            return navigation === undefined
+              ? undefined
+              : () => { navigation.openSection(MODELS_SECTION) }
+          },
         }
       },
     }, ModelSelect))
+  })
+
+  // Entry 3: the spend reading under the composer, while the Host serves the
+  // spend ledger.
+  ctx.inject(['slots', 'remote.spendBudget'], (scope: ClientContext) => {
+    const sessions = scope.sessions
+    scope.slots.inject('conversation.composer.dock', () => scope.slots.register({
+      name: 'conversation.composer.dock',
+      id: 'spend',
+      order: 10,
+      locale: NS,
+      inject: (sessionId): SpendPillInjected => ({
+        read: async () => {
+          try {
+            const result = await scope.remote.spendBudget.summary(sessionId)
+            return result.ok ? result.value : undefined
+          } catch (error) {
+            // A failed read leaves the last reading in place; the next turn retries.
+            console.warn('[ui-model-selection] spend read failed:', error)
+            return undefined
+          }
+        },
+        subscribe: (listener) => {
+          const session = sessions.binding(sessionId)?.session
+          let running = session?.getSnapshot().running
+          const disposers = [
+            session?.subscribe(() => {
+              const next = session.getSnapshot().running
+              if (next === running) return
+              running = next
+              listener()
+            }),
+            scope.on('connection/reset', listener),
+          ]
+          return () => { for (const dispose of disposers) dispose?.() }
+        },
+        spendSettings: () => {
+          const navigation = scope.get('settingsNavigation')
+          return navigation === undefined
+            ? undefined
+            : () => { navigation.openSection(SPENDING_SECTION) }
+        },
+      }),
+    }, SpendPill))
   })
 }

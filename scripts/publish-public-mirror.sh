@@ -4,17 +4,16 @@
 # Development happens in the private repository; the public repository only
 # receives one snapshot commit per call, authored by MIRROR_AUTHOR_NAME and
 # MIRROR_AUTHOR_EMAIL, whose parent is the previous snapshot. No private commit,
-# author or message reaches the mirror. Paths in EXCLUDE are left out:
-# workflows that hold private deployment secrets, the upstream sync state, and
-# the internal documentation and agent instructions (docs/, website/, .agents/,
+# author or message reaches the mirror. Paths in EXCLUDE are left out: the
+# upstream sync state and the internal documentation and agent instructions (docs/, website/, .agents/,
 # .claude/, AGENTS.md and CLAUDE.md files). Paths in KEEP are published even
 # though an EXCLUDE pattern matches them: the README logo and agent-instruction
 # test fixtures.
 #
 # The snapshot is tagged v<version>, where <version> is the newest released
 # version in CHANGELOG.md; the public repository's release workflow turns the
-# tag into a GitHub Release. Publishing refuses a version whose tag already
-# exists in the mirror.
+# tag into a GitHub Release. When that tag already exists in the mirror, the
+# snapshot is published without a tag, so no new Release is created.
 #
 # Usage: scripts/publish-public-mirror.sh
 # Environment:
@@ -34,11 +33,8 @@ set -euo pipefail
 : "${MIRROR_AUTHOR_EMAIL:?MIRROR_AUTHOR_EMAIL is required}"
 
 EXCLUDE=(
-  '.github/workflows/publish-public-mirror.yml'
-  '.github/workflows/site-deploy.yml'
-  '.github/workflows/site-domain.yml'
-  '.github/workflows/upstream-sync.yml'
   '.upstream'
+  'scripts/release-public.sh'
   '.agents'
   '.claude'
   'docs'
@@ -59,9 +55,10 @@ version=$(scripts/release-notes.sh version)
 scripts/release-notes.sh notes "$version" >/dev/null
 tag="v$version"
 replace=${MIRROR_REPLACE_HISTORY:-false}
+refs=("refs/heads/main" "refs/tags/$tag")
 if git ls-remote --exit-code --tags "$MIRROR_REMOTE" "refs/tags/$tag" >/dev/null; then
-  echo "publish-public-mirror: $tag already exists in the mirror and [Unreleased] has no entries; nothing to publish" >&2
-  exit 1
+  # Already released: publish the snapshot without a new tag or Release.
+  refs=("refs/heads/main")
 fi
 
 index=$(mktemp)
@@ -71,8 +68,8 @@ GIT_INDEX_FILE=$index git rm -r -q --cached --ignore-unmatch -- "${EXCLUDE[@]}"
 GIT_INDEX_FILE=$index git reset -q HEAD -- "${KEEP[@]}"
 tree=$(GIT_INDEX_FILE=$index git write-tree)
 
-if [[ "$(git cat-file -p "$tree:LICENSE" | head -n 1)" != 'tBelt Code Audit-Only License' ]]; then
-  echo 'publish-public-mirror: LICENSE is not the audit-only license; refusing to publish' >&2
+if [[ "$(git cat-file -p "$tree:LICENSE" | head -n 1 | xargs)" != 'GNU AFFERO GENERAL PUBLIC LICENSE' ]]; then
+  echo 'publish-public-mirror: LICENSE is not the GNU AGPL; refusing to publish' >&2
   exit 1
 fi
 
@@ -98,9 +95,13 @@ fi
 commit=$(
   GIT_AUTHOR_NAME=$MIRROR_AUTHOR_NAME GIT_AUTHOR_EMAIL=$MIRROR_AUTHOR_EMAIL \
   GIT_COMMITTER_NAME=$MIRROR_AUTHOR_NAME GIT_COMMITTER_EMAIL=$MIRROR_AUTHOR_EMAIL \
-    git commit-tree "$tree" "${parent[@]}" -m "tBelt Code $version"
+    git commit-tree "$tree" ${parent[@]+"${parent[@]}"} -m "tBelt Code $version"
 )
 force=()
 [[ "$replace" == true ]] && force=(--force)
-git push -q "${force[@]}" "$MIRROR_REMOTE" "$commit:refs/heads/main" "$commit:refs/tags/$tag"
-echo "publish-public-mirror: published tBelt Code $version as ${commit:0:12} ($tag)"
+git push -q --no-verify ${force[@]+"${force[@]}"} "$MIRROR_REMOTE" "${refs[@]/#/$commit:}"
+if (( ${#refs[@]} == 2 )); then
+  echo "publish-public-mirror: published tBelt Code $version as ${commit:0:12} ($tag)"
+else
+  echo "publish-public-mirror: published ${commit:0:12}; $tag was already released, so no tag was added"
+fi

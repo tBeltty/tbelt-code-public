@@ -1,0 +1,82 @@
+name: Site deploy
+
+# Publishes site/ (https://tbelt.online) to Cloudflare Pages when main changes
+# site/. Runs only in the public repository. It never builds the app or runs
+# the quality gate.
+#
+# Repository secret: CLOUDFLARE_API_TOKEN (Account > Cloudflare Pages > Edit).
+# Optional: CLOUDFLARE_ACCOUNT_ID (secret or variable); when absent, the job
+# reads it from the token's account or the tbelt.online zone. Without a token it skips the deploy.
+on:
+  push:
+    branches: [main]
+    paths: ['site/**', '.github/workflows/site-deploy.yml']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: site-deploy-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    if: ${{ !github.event.repository.private }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID || vars.CLOUDFLARE_ACCOUNT_ID }}
+      PROJECT: tbelt-online
+    defaults:
+      run:
+        working-directory: site
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Test release lookup
+        run: node --test shared/releases.test.js
+
+      - name: Check Cloudflare credentials
+        id: credentials
+        run: |
+          if [[ -z "$CLOUDFLARE_API_TOKEN" ]]; then
+            echo '::notice::CLOUDFLARE_API_TOKEN is not set; skipping the deploy.'
+            echo 'ready=false' >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          if [[ -z "$CLOUDFLARE_ACCOUNT_ID" ]]; then
+            # A Pages-only token cannot list accounts, but a token with DNS access
+            # to the tbelt.online zone can read the zone's owning account.
+            api=https://api.cloudflare.com/client/v4
+            auth="Authorization: Bearer $CLOUDFLARE_API_TOKEN"
+            account=$(curl -fsS "$api/accounts" -H "$auth" | jq -r 'if (.result | length) == 1 then .result[0].id else empty end' || true)
+            if [[ -z "$account" ]]; then
+              account=$(curl -fsS "$api/zones?name=tbelt.online" -H "$auth" | jq -r '.result[0].account.id // empty' || true)
+            fi
+            if [[ -z "$account" ]]; then
+              echo '::error::Could not find the Cloudflare account from the token; set CLOUDFLARE_ACCOUNT_ID.'
+              exit 1
+            fi
+            echo "CLOUDFLARE_ACCOUNT_ID=$account" >> "$GITHUB_ENV"
+          fi
+          echo 'ready=true' >> "$GITHUB_OUTPUT"
+
+      - uses: actions/setup-node@v4
+        if: steps.credentials.outputs.ready == 'true'
+        with:
+          node-version: '22'
+
+      - name: Create the Pages project on first deploy
+        if: steps.credentials.outputs.ready == 'true'
+        run: |
+          if ! npx -y wrangler@4 pages project list 2>/dev/null | grep -q "\b$PROJECT\b"; then
+            npx -y wrangler@4 pages project create "$PROJECT" --production-branch=main
+          fi
+
+      - name: Deploy
+        if: steps.credentials.outputs.ready == 'true'
+        env:
+          BRANCH: ${{ github.event_name == 'pull_request' && github.head_ref || 'main' }}
+        run: npx -y wrangler@4 pages deploy --project-name="$PROJECT" --branch="$BRANCH" --commit-dirty=true

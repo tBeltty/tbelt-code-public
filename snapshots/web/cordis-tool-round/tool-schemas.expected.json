@@ -553,6 +553,22 @@
       }
     },
     {
+      "name": "preview",
+      "description": "Show a file or a local web server to the user in the preview panel beside the conversation. The panel renders the page first and keeps its source one toggle away. Use it whenever the user should see a result: an HTML page, an image, a PDF, Markdown, or a dev server you started. For a dev server, start it in the background first, then call preview with its http://localhost URL. Never use open, xdg-open, start, or a browser command to show results; they leave the app.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "target": {
+            "type": "string",
+            "description": "Path of an existing file (relative paths use the Session working directory), or an http(s) URL on localhost, 127.0.0.1, or [::1]."
+          }
+        },
+        "required": [
+          "target"
+        ]
+      }
+    },
+    {
       "name": "read",
       "description": "Read a UTF-8 text file and return line-numbered content.",
       "parameters": {

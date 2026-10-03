@@ -41,14 +41,18 @@
 .footer {
   display: flex;
   align-items: center;
+  flex-wrap: wrap;
   justify-content: space-between;
   flex-shrink: 0;
-  gap: 12px;
+  gap: 8px 12px;
   padding: 8px 16px 12px;
 }
 
 .feedback {
+  flex: 1 1 160px;
+  min-width: 0;
   min-height: 16px;
+  overflow-wrap: anywhere;
   color: var(--dsw-alias-state-error-primary);
   font-size: 11px;
   line-height: 16px;
@@ -56,8 +60,10 @@
 
 .actions {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
-  flex-shrink: 0;
+  justify-content: flex-end;
+  margin-left: auto;
   gap: 8px;
 }
 
@@ -82,6 +88,7 @@
   -webkit-line-clamp: 2;
   overflow: hidden;
   margin: 8px 0 0;
+  overflow-wrap: anywhere;
   color: var(--dsw-alias-label-secondary);
   font-size: 14px;
   line-height: 24px;

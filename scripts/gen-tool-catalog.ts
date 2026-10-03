@@ -318,7 +318,7 @@ const TOOL_PACKAGES: ToolPackage[] = [
       await ctx.plugin(LocalFileSystem)
       await ctx.plugin(ToolPresent)
     },
-    note: 'Deliveries belong to the calling Session; Web ui-deliverables supplies source-file opening and cards.',
+    note: 'Deliveries belong to the calling Session; Web ui-deliverables supplies source-file opening and cards. preview registers by default (`preview: true`); ui-deliverables opens its file or loopback URL in the right Sidebar.',
   },
   {
     pkg: '@deepseek-ai/dsh-tool-pwsh',

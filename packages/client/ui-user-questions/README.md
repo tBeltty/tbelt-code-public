@@ -39,7 +39,7 @@ A question that already settled opens as a read-only card: the same pager over t
 
 A `plan-review` intent — set by `dsh-plan-mode` on the `exit_plan_mode` review — renders a compact approval card: a `Plan review` strip with a `View full plan` link, the plan title and a two-line plain-text summary, and `Request changes` / `Approve` actions. The strip uses the shared warning dot and changes it to the ongoing loader while either action settles. The complete plan opens in the sidebar through the link or its permanent Chat card. Approve answers with the asker's approval label; `Request changes` rejects the wait as `ASK_CANCELLED`, returning the composer for the user's feedback without submitting an approval. The card has no separate refusal button.
 
-The `conversation.plan-review.decision` seat replaces the `Approve` button when occupied. Its occupant receives the review, the request key, the busy state, and two answers: `approve()` and `keepPlanning(feedback)`, which answers with empty `selected` and the feedback as `custom` text. Both return whether the answer was sent and keep the panel's busy and failure display.
+The `conversation.plan-review.decision` seat replaces the `Request changes` and `Approve` buttons when occupied. Its occupant receives the review, the request key, the busy state, and three answers: `approve()`, `discuss()`, which dismisses the review as `Request changes` does, and `keepPlanning(feedback)`, which answers with empty `selected` and the feedback as `custom` text. Each returns whether the answer was sent and keeps the panel's busy and failure display.
 
 ### Failure and recovery
 

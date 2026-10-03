@@ -14,6 +14,7 @@
 
 import { builtinProviders, getBuiltinModels, getBuiltinProviders } from '@earendil-works/pi-ai/providers/all'
 import type { BuiltinProvider } from '@earendil-works/pi-ai/providers/all'
+import type { LlmModelPricing } from '@deepseek-ai/dsh-llm'
 import type {
   AnthropicMessagesCompat,
   Api,
@@ -35,6 +36,21 @@ import type {
  * reads an all-zero price as unknown and publishes no `pricing` for it.
  */
 const NO_COST: ModelCost = { input: 0, output: 0, cacheRead: 0, cacheWrite: 0 }
+
+/**
+ * pi-ai's cost record for a configured list price. A cache rate the profile
+ * does not name stays zero, which the adapter publishes as no cache rate.
+ * @returns the cost, or `undefined` when the profile names no input and output rate.
+ */
+function modelCost(pricing: Partial<LlmModelPricing> | undefined): ModelCost | undefined {
+  if (pricing?.input === undefined || pricing.output === undefined) return undefined
+  return {
+    input: pricing.input,
+    output: pricing.output,
+    cacheRead: pricing.cacheRead ?? 0,
+    cacheWrite: pricing.cacheWrite ?? 0,
+  }
+}
 
 /** One request modality a pi-ai model may accept. */
 export type PiAiModality = Model<Api>['input'][number]
@@ -619,6 +635,14 @@ export interface PiAiModelProfile {
   reasoningEfforts?: false | PiAiReasoningEfforts
   /** pi-ai wire-compatibility switches for this model, winning over the route's per field; one its protocol does not declare is refused. */
   compat?: PiAiCompatProfile
+  /**
+   * List price in US dollars per million tokens, replacing the installed
+   * catalog entry's. Absent, or missing its input or output rate, keeps the
+   * catalog's price; a model the catalog does not describe then has no known
+   * price. An all-zero input and output price reads as unknown, like the
+   * catalog's.
+   */
+  pricing?: Partial<LlmModelPricing>
 }
 
 /**
@@ -934,7 +958,7 @@ export function resolveRouteModels(
       provider,
       baseUrl,
       input: declaredInput(entry.input) ?? base?.input ?? [...request.defaultInput],
-      cost: base?.cost ?? NO_COST,
+      cost: modelCost(entry.pricing) ?? base?.cost ?? NO_COST,
       contextWindow,
       maxTokens,
       ...resolveModelReasoning(provider, entry, base),

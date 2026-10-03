@@ -27,22 +27,21 @@ Mount the provider in a composition that already loads the web service; it regis
 
 ### When to choose it
 
-Choose this backend when a deployment holds an Exa API key and wants Exa's keyword or neural search with per-result highlight snippets and publication dates. The provider is unavailable — and every search call fails with a structured error — when the key is empty or the endpoint base does not parse.
+Choose this backend when a deployment holds an Exa API key and wants Exa's keyword or neural search with per-result highlight snippets and publication dates. The provider is unavailable — and every search call fails with a structured error — while no key is configured or the endpoint base does not parse.
 
 ### Minimal configuration
 
-Load the web service and the provider; the API key falls back to `$EXA_API_KEY` from the launch environment, and all other settings have safe defaults.
+Load the web service and the provider. The key is read at each search from the `EXA_API_KEY` credential reference through the credentials service, or from the launch environment where no credentials service is mounted; all other settings have safe defaults.
 
 ```yaml
 - name: '@deepseek-ai/dsh-web'
 - name: '@deepseek-ai/dsh-web-search-exa'
-  config:
-    apiKey: !!js process.env.EXA_API_KEY
 ```
 
 | Field | Default | Meaning |
 |---|---|---|
-| `apiKey` | `$EXA_API_KEY` | Exa API key; empty or absent makes the provider unavailable |
+| `apiKey` | (unset) | Literal key; when non-empty it wins over `apiKeyEnv` |
+| `apiKeyEnv` | `EXA_API_KEY` | Credential reference resolved at each search |
 | `baseURL` | `https://api.exa.ai` | Endpoint base; `/search` is appended. An unparseable value makes the provider unavailable |
 | `searchType` | `auto` | Retrieval mode sent as Exa's `type`: `auto`, `keyword`, or `neural` |
 | `numResults` | (unset) | Default result count when a request carries no `maxResults`; must be a positive integer |
@@ -56,7 +55,7 @@ Each Exa result maps to a `WebSearchSource`: `url`, `title`, the first non-blank
 
 ### Failures and recovery
 
-Provider failures — HTTP errors, network failures, unparseable or wrong-shape bodies — surface as `WebError` `WEB_PROVIDER_ERROR`; an aborted request surfaces as `WEB_ABORTED`. HTTP redirects are rejected before the `Location` target is contacted and surface as `WEB_PROVIDER_ERROR`. Callers route on the code; the model-facing `web_search` tool surfaces failures to the model under its own error wrapper.
+A rejected key surfaces as `WebError` `WEB_PROVIDER_AUTH` and a quota, credit, or rate limit as `WEB_PROVIDER_QUOTA`; other provider failures — HTTP errors, network failures, unparseable or wrong-shape bodies — surface as `WEB_PROVIDER_ERROR`, and an aborted request surfaces as `WEB_ABORTED`. `checkKey()` runs a one-result search with a candidate key against the configured endpoint only, so a settings surface can refuse a bad key before storing it. HTTP redirects are rejected before the `Location` target is contacted and surface as `WEB_PROVIDER_ERROR`. Callers route on the code; the model-facing `web_search` tool surfaces failures to the model under its own error wrapper.
 
 -----
 
@@ -79,14 +78,14 @@ The provider is a thin adapter over Exa's API with two deliberate rules:
 
 | File | Role |
 |---|---|
-| [`src/index.ts`](src/index.ts) | Plugin entry: config schema, environment fallback, provider registration |
-| [`src/provider.ts`](src/provider.ts) | The `ExaSearchProvider`: request dispatch, abort classification, result mapping |
-| [`src/types.ts`](src/types.ts) | Exa wire types: `ExaSearchResponse`, `ExaResult`, `ExaError` |
+| [`src/index.ts`](src/index.ts) | Plugin entry: config schema, credential reference, provider registration |
+| [`src/provider.ts`](src/provider.ts) | The `ExaSearchProvider`: request dispatch, key check, result mapping |
+| [`src/types.ts`](src/types.ts) | Exa wire types: `ExaSearchResponse`, `ExaResult` |
 | — | No runtime invariant companion is published; this package exposes no independent event sequence or mutable data relation beyond contracts enforced at its owning seam. |
 
 ### Request and mapping flow
 
-`search()` posts the query, retrieval mode, highlight request, and optional result count to `{baseURL}/search` with `redirect: 'error'`, so a redirect fails the request without contacting the target. The parsed `results[]` are mapped one by one, snippet-less entries dropped, and the service applies the final `maxResults` bound on the way back. An abort — a `DOMException` named `AbortError` — becomes `WEB_ABORTED`; anything else becomes `WEB_PROVIDER_ERROR`.
+`search()` resolves the key through the plugin's `SearchApiKey`, then posts the query, retrieval mode, highlight request, and optional result count to `{baseURL}/search` through `requestProviderJson` from `dsh-web`, which sends `redirect: 'error'` so a redirect fails the request without contacting the target, and classifies refusals. The parsed `results[]` are mapped one by one, snippet-less entries dropped, and the service applies the final `maxResults` bound on the way back.
 
 </details>
 
@@ -98,7 +97,7 @@ The provider is a thin adapter over Exa's API with two deliberate rules:
 Read these pages when the package-level contract is not enough. They move from the shared vocabulary to the service, the model-facing tools, and the design rationale.
 
 - [Web subsystem](../../../docs/subsystems/web.md) — the exhaustive search request/result vocabulary and error codes.
-- [Web package map](../README.md) — the six-package family and each role.
+- [Web package map](../README.md) — the eight-package family and each role.
 - [dsh-web](../web/README.md) — the web service this provider registers into.
 - [dsh-tool-web](../tool-web/README.md) — the model-facing `web_search` tool that renders this provider's sources.
 - [Generated configuration catalog](../../../docs/config-catalog.md#deepseek-aidsh-web-search-exa) — every accepted config field and its source declaration.
@@ -109,7 +108,7 @@ Read these pages when the package-level contract is not enough. They move from t
 <a id="model-experience"></a>
 ## Model Experience
 
-Indirectly, through `dsh-tool-web`, which retains this provider's `maxResults`-bounded URLs, titles, first highlights, and publication dates or its exact `Exa search aborted`, `Exa search request failed: <error>`, and `Exa returned an unprocessable response body: <error>` failures under the consumer's error wrapper.
+Indirectly, through `dsh-tool-web`, which retains this provider's `maxResults`-bounded URLs, titles, first highlights, and publication dates or its exact `Exa has no API key configured; the user must add one`, `Exa rejected the API key (HTTP <status>)…`, `Exa refused the search for quota, credit, or rate limits (HTTP <status>)…`, `Exa search aborted`, `Exa search request failed: <error>`, and `Exa returned an unprocessable response body: <error>` failures under the consumer's error wrapper.
 
 #### KV Cache effect
 
@@ -124,7 +123,8 @@ These limits define when the provider is a poor fit. They are current package co
 
 - **A result with no non-blank highlight is dropped entirely** — there is no portable snippet to map, so fewer sources than requested can return.
 - **Only `searchType`/`numResults`/`highlightsPerResult` are exposed** — Exa's other controls (livecrawl, category, domain/date filters, full-text contents) wait on provider-neutral service fields ([seam Agent Note](../../../.agents/notes/implemented/architecture/2026-06-24-web-capability-seam.md)).
-- **Abort classification is error-shape-based** — only a `DOMException` named `AbortError` maps to `WEB_ABORTED`; an abort carrying a custom reason (such as `dsh-timeout`'s `TimeoutReason`) surfaces as `WEB_PROVIDER_ERROR`.
+- **Abort classification is error-shape-based** — only a `DOMException` named `AbortError` or `TimeoutError` maps to `WEB_ABORTED`; an abort carrying a custom reason (such as `dsh-timeout`'s `TimeoutReason`) surfaces as `WEB_PROVIDER_ERROR`.
+- **A key check spends one search** of the key's plan, because the check is a real search.
 
 <a id="dev-note"></a>
 ### Dev Note

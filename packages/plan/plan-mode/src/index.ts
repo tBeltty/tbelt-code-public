@@ -86,6 +86,11 @@ const EXIT_DESCRIPTION
   + 'The user may approve (carry out the plan from your next step) or keep '
   + 'planning — their feedback comes back in the tool result; revise and present again.'
 
+/** How the model answers review feedback: with a revised plan, not a chat reply. */
+const REVISE_WITH_PLAN
+  = 'Address this feedback by presenting the complete revised plan with exit_plan_mode; '
+  + 'keep any chat reply to one line.'
+
 /** The plan's first markdown heading (any level), or `undefined` when it has none. */
 function firstHeading(plan: string): string | undefined {
   for (const line of plan.split('\n')) {
@@ -344,7 +349,7 @@ export class PlanModeController extends Service {
           const feedback = item?.custom ?? ''
           throw new Error(feedback === ''
             ? 'The user chose to keep planning; revise the plan and present it again.'
-            : `The user chose to keep planning; their feedback: ${feedback}`)
+            : `The user chose to keep planning; their feedback: ${feedback}\n\n${REVISE_WITH_PLAN}`)
         }
         // Keep plan guidance for the rest of this assistant tool batch. The
         // silent selection is appended at the next accepted in-turn pre-step,

@@ -95,6 +95,21 @@ describe('spend ledger', () => {
     expect(summary.budgetSession).toBe(agent.session.id)
   })
 
+  it('answers the Remote reads with settled spend', async () => {
+    const { ctx } = await harness({ root: await newRoot(), monthlyLimitUsd: 50 })
+    const agent = await ctx.agentLoop.create(SessionId('remote-read'), { provider: 'mock', model: 'm' })
+    await runTurn(agent)
+    // No whenSettled() here: the Remote reads wait for pending accounting themselves.
+    await expect(ctx.spendBudget.settledSummary(agent.session.id)).resolves.toMatchObject({
+      session: { spentUsd: REQUEST_USD, unpricedCalls: 0 },
+      monthly: { spentUsd: REQUEST_USD, unpricedCalls: 0, limitUsd: 50 },
+    })
+    await expect(ctx.spendBudget.settledMonth()).resolves.toEqual({
+      month: ctx.spendBudget.summary(agent.session.id).month,
+      monthly: { spentUsd: REQUEST_USD, unpricedCalls: 0, limitUsd: 50 },
+    })
+  })
+
   it('prices a failed attempt from its stream usage and the request/context route', async () => {
     const { ctx } = await harness({ root: await newRoot(), script: ['error'] })
     const agent = await ctx.agentLoop.create(SessionId('attempt'), { provider: 'mock', model: 'm' })

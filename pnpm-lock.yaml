@@ -635,7 +635,7 @@ importers:
         version: link:../../native/system/packages/entry
       '@electron/get':
         specifier: ^5.1.0
-        version: 5.1.0
+        version: 5.1.0(supports-color@9.4.0)
       '@electron/notarize':
         specifier: 2.5.0
         version: 2.5.0
@@ -1271,6 +1271,9 @@ importers:
       '@deepseek-ai/dsh-settings':
         specifier: workspace:*
         version: link:../../settings/settings
+      '@deepseek-ai/dsh-spend-budget':
+        specifier: workspace:*
+        version: link:../../guard/spend-budget
       '@deepseek-ai/dsh-subagent':
         specifier: workspace:*
         version: link:../../subagent/subagent
@@ -1283,6 +1286,9 @@ importers:
       '@deepseek-ai/dsh-user-questions':
         specifier: workspace:*
         version: link:../../interaction/user-questions
+      '@deepseek-ai/dsh-web':
+        specifier: workspace:*
+        version: link:../../web/web
       zod:
         specifier: ^4.4.3
         version: 4.4.3
@@ -2774,6 +2780,18 @@ importers:
       '@deepseek-ai/dsh-web-frontend':
         specifier: workspace:*
         version: link:../../../apps/web
+      '@deepseek-ai/dsh-web-search-brave':
+        specifier: workspace:*
+        version: link:../../web/web-search-brave
+      '@deepseek-ai/dsh-web-search-exa':
+        specifier: workspace:*
+        version: link:../../web/web-search-exa
+      '@deepseek-ai/dsh-web-search-perplexity':
+        specifier: workspace:*
+        version: link:../../web/web-search-perplexity
+      '@deepseek-ai/dsh-web-search-tavily':
+        specifier: workspace:*
+        version: link:../../web/web-search-tavily
       '@deepseek-ai/dsh-workflow-ptc':
         specifier: workspace:*
         version: link:../../workflow/workflow-ptc
@@ -3681,6 +3699,9 @@ importers:
       '@deepseek-ai/dsh-client-ui-settings':
         specifier: workspace:*
         version: link:../ui-settings
+      '@deepseek-ai/dsh-client-ui-sidebar-browser':
+        specifier: workspace:*
+        version: link:../ui-sidebar-browser
       '@deepseek-ai/dsh-client-ui-sidebar-right':
         specifier: workspace:*
         version: link:../ui-sidebar-right
@@ -4128,6 +4149,9 @@ importers:
       '@deepseek-ai/dsh-client-ui-session':
         specifier: workspace:*
         version: link:../ui-session
+      '@deepseek-ai/dsh-client-ui-settings':
+        specifier: workspace:*
+        version: link:../ui-settings
       '@deepseek-ai/dsh-client-ui-slots':
         specifier: workspace:*
         version: link:../ui-slots
@@ -9266,6 +9290,9 @@ importers:
       '@deepseek-ai/dsh-tools':
         specifier: workspace:*
         version: link:../../core/tools
+      '@deepseek-ai/dsh-typert-protocol':
+        specifier: workspace:*
+        version: link:../../typert/protocol
 
   packages/guard/timeout-policy:
     devDependencies:
@@ -14244,13 +14271,25 @@ importers:
 
   packages/web/web:
     dependencies:
+      '@deepseek-ai/dsh-typert-protocol':
+        specifier: workspace:*
+        version: link:../../typert/protocol
       '@deepseek-ai/schemastery':
         specifier: link:../../../vendor/schemastery
         version: link:../../../vendor/schemastery
+      zod:
+        specifier: ^4.4.3
+        version: 4.4.3
     devDependencies:
       '@deepseek-ai/cordis':
         specifier: workspace:~
         version: link:../../../vendor/cordis
+      '@deepseek-ai/dsh-credentials':
+        specifier: workspace:*
+        version: link:../../credentials/credentials
+      '@deepseek-ai/dsh-launch-environment':
+        specifier: workspace:*
+        version: link:../../util/launch-environment
       '@deepseek-ai/dsh-llm':
         specifier: workspace:*
         version: link:../../llm/llm
@@ -14279,6 +14318,22 @@ importers:
       '@deepseek-ai/dsh-timeout':
         specifier: workspace:*
         version: link:../../util/timeout
+      '@deepseek-ai/dsh-web':
+        specifier: workspace:*
+        version: link:../web
+
+  packages/web/web-search-brave:
+    dependencies:
+      '@deepseek-ai/schemastery':
+        specifier: link:../../../vendor/schemastery
+        version: link:../../../vendor/schemastery
+    devDependencies:
+      '@deepseek-ai/cordis':
+        specifier: workspace:~
+        version: link:../../../vendor/cordis
+      '@deepseek-ai/dsh-http-proxy':
+        specifier: workspace:*
+        version: link:../../util/http-proxy
       '@deepseek-ai/dsh-web':
         specifier: workspace:*
         version: link:../web
@@ -14322,9 +14377,6 @@ importers:
 
   packages/web/web-search-exa:
     dependencies:
-      '@deepseek-ai/dsh-llm':
-        specifier: workspace:^
-        version: link:../../llm/llm
       '@deepseek-ai/schemastery':
         specifier: link:../../../vendor/schemastery
         version: link:../../../vendor/schemastery
@@ -14335,18 +14387,12 @@ importers:
       '@deepseek-ai/dsh-http-proxy':
         specifier: workspace:*
         version: link:../../util/http-proxy
-      '@deepseek-ai/dsh-launch-environment':
-        specifier: workspace:*
-        version: link:../../util/launch-environment
       '@deepseek-ai/dsh-web':
         specifier: workspace:*
         version: link:../web
 
   packages/web/web-search-perplexity:
     dependencies:
-      '@deepseek-ai/dsh-llm':
-        specifier: workspace:^
-        version: link:../../llm/llm
       '@deepseek-ai/schemastery':
         specifier: link:../../../vendor/schemastery
         version: link:../../../vendor/schemastery
@@ -14357,9 +14403,22 @@ importers:
       '@deepseek-ai/dsh-http-proxy':
         specifier: workspace:*
         version: link:../../util/http-proxy
-      '@deepseek-ai/dsh-launch-environment':
+      '@deepseek-ai/dsh-web':
         specifier: workspace:*
-        version: link:../../util/launch-environment
+        version: link:../web
+
+  packages/web/web-search-tavily:
+    dependencies:
+      '@deepseek-ai/schemastery':
+        specifier: link:../../../vendor/schemastery
+        version: link:../../../vendor/schemastery
+    devDependencies:
+      '@deepseek-ai/cordis':
+        specifier: workspace:~
+        version: link:../../../vendor/cordis
+      '@deepseek-ai/dsh-http-proxy':
+        specifier: workspace:*
+        version: link:../../util/http-proxy
       '@deepseek-ai/dsh-web':
         specifier: workspace:*
         version: link:../web
@@ -15116,6 +15175,9 @@ importers:
       '@deepseek-ai/dsh-web-fetch-http':
         specifier: workspace:*
         version: link:../../packages/web/web-fetch-http
+      '@deepseek-ai/dsh-web-search-brave':
+        specifier: workspace:*
+        version: link:../../packages/web/web-search-brave
       '@deepseek-ai/dsh-web-search-deepseek':
         specifier: workspace:*
         version: link:../../packages/web/web-search-deepseek
@@ -15125,6 +15187,9 @@ importers:
       '@deepseek-ai/dsh-web-search-perplexity':
         specifier: workspace:*
         version: link:../../packages/web/web-search-perplexity
+      '@deepseek-ai/dsh-web-search-tavily':
+        specifier: workspace:*
+        version: link:../../packages/web/web-search-tavily
       '@deepseek-ai/dsh-workflow':
         specifier: workspace:*
         version: link:../../packages/workflow/workflow
@@ -23017,7 +23082,7 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  '@electron/get@5.1.0':
+  '@electron/get@5.1.0(supports-color@9.4.0)':
     dependencies:
       debug: 4.4.3(supports-color@9.4.0)
       env-paths: 3.0.0
@@ -26242,7 +26307,7 @@ snapshots:
   electron@44.0.0:
     dependencies:
       '@electron-internal/extract-zip': 1.0.5
-      '@electron/get': 5.1.0
+      '@electron/get': 5.1.0(supports-color@9.4.0)
       '@types/node': 24.13.3
     transitivePeerDependencies:
       - supports-color

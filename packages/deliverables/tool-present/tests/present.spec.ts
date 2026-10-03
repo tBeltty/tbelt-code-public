@@ -62,7 +62,7 @@ async function setup() {
   await ctx.plugin(LocalFileSystem, { cwd: root })
   await ctx.plugin(SessionProjectionRegistry)
   ctx.sessionProjections.register(turnBoundaryProjectionDefinition)
-  const fiber = ctx.plugin(Present, { maxFiles: 2 })
+  const fiber = ctx.plugin(Present, { maxFiles: 2, preview: true })
   await fiber
   const owner = await agent(ctx, root)
   owner.session.append('turn/start', { turn: 1 })
@@ -114,7 +114,7 @@ describe('present', () => {
 
   it('records once when ancestor and agent scopes both mount present', async () => {
     const { owner, root, execute } = await setup()
-    await owner.ctx.plugin(Present, { maxFiles: 2 })
+    await owner.ctx.plugin(Present, { maxFiles: 2, preview: true })
     await writeFile(join(root, 'a'), 'a')
     expect((await execute([{ path: 'a' }])).isError).toBe(false)
     const deliveries = owner.session.snapshotEvents().filter(event => event.type === 'deliverables/presented')
@@ -149,8 +149,8 @@ describe('present', () => {
 
 
 it('validates deployment limits before registering the tool', () => {
-  for (const config of [{ maxFiles: 0 }, { maxFiles: 1.5 }, { maxFiles: Number.POSITIVE_INFINITY }]) {
-    expect(() => { Present.apply(new Context(), config) }).toThrow('positive integer maxFiles')
+  for (const maxFiles of [0, 1.5, Number.POSITIVE_INFINITY]) {
+    expect(() => { Present.apply(new Context(), { maxFiles, preview: true }) }).toThrow('positive integer maxFiles')
   }
 })
 

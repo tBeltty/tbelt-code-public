@@ -82,6 +82,15 @@ describe('catalog-route model discovery', () => {
     expect(models.find(model => model.id === 'gpt-6-astra')).toMatchObject({ inputModalities: installed?.input })
   })
 
+  it('includes the installed list price for priced models', async () => {
+    const ctx = await harness()
+    const models = await ctx.llm.discoverModels('llm-pi-ai', { provider: 'openai' })
+    const installed = getBuiltinModels('openai').find(model => model.cost.input > 0 && model.cost.output > 0)
+    expect(installed).toBeDefined()
+    expect(models.find(model => model.id === installed?.id)?.pricing)
+      .toMatchObject({ input: installed?.cost.input, output: installed?.cost.output })
+  })
+
   it('answers from the installed registry, with capacities and no network call', async () => {
     const server = await listingServer({ body: JSON.stringify({ data: [{ id: 'from-the-endpoint' }] }) })
     const ctx = await harness()
@@ -94,6 +103,83 @@ describe('catalog-route model discovery', () => {
       .toEqual(getBuiltinModels('deepseek').map(model => model.id).sort())
     expect(models.every(model => (model.contextWindow ?? 0) > 0 && (model.maxTokens ?? 0) > 0)).toBe(true)
     expect(server.paths).toEqual([])
+  })
+
+  it('asks the endpoint for a live answer, keeping catalog metadata for the ids it knows', async () => {
+    const known = getBuiltinModels('deepseek')[0]
+    if (known === undefined) throw new Error('deepseek catalog is empty')
+    const server = await listingServer({ body: JSON.stringify({ data: [{ id: known.id }, { id: 'listed-only' }] }) })
+    const ctx = await harness()
+
+    const models = await ctx.llm.discoverModels('llm-pi-ai', {
+      provider: 'deepseek', baseURL: server.url, apiKey: 'typed', live: true,
+    })
+
+    expect(models.map(model => model.id)).toEqual([known.id, 'listed-only'])
+    expect(models[0]?.contextWindow).toBe(known.contextWindow)
+    expect(models[1]).toEqual({ id: 'listed-only', name: 'listed-only' })
+    expect(server.paths).toEqual(['/models'])
+    expect(server.headers[0]?.authorization).toBe('Bearer typed')
+  })
+
+  it('codes a live answer\'s rejected key and exhausted credit', async () => {
+    const ctx = await harness()
+    const rejected = await listingServer({ status: 401, body: '{}' })
+    await expect(ctx.llm.discoverModels('llm-pi-ai', {
+      provider: 'deepseek', baseURL: rejected.url, apiKey: 'wrong', live: true,
+    })).rejects.toMatchObject({ code: 'INVALID_CREDENTIAL' })
+    const broke = await listingServer({ status: 402, body: '{}' })
+    await expect(ctx.llm.discoverModels('llm-pi-ai', {
+      provider: 'deepseek', baseURL: broke.url, apiKey: 'spent', live: true,
+    })).rejects.toMatchObject({ code: 'QUOTA' })
+  })
+
+  it('checks the key of a route whose listing is public before listing it', async () => {
+    const paths: string[] = []
+    const server = createServer((request: IncomingMessage, response: ServerResponse) => {
+      paths.push(request.url ?? '')
+      const authorized = request.headers.authorization === 'Bearer good'
+      const status = request.url === '/key' && !authorized ? 401 : 200
+      response.writeHead(status, { 'content-type': 'application/json' })
+      response.end(request.url === '/models' ? '{"data":[{"id":"some/model"}]}' : '{"data":{}}')
+    })
+    servers.push(server)
+    await new Promise<void>(resolve => server.listen(0, '127.0.0.1', resolve))
+    const address = server.address()
+    if (address === null || typeof address === 'string') throw new Error('no port')
+    const url = `http://127.0.0.1:${address.port}`
+    const ctx = await harness()
+
+    await expect(ctx.llm.discoverModels('llm-pi-ai', {
+      provider: 'openrouter', baseURL: url, apiKey: 'bad', live: true,
+    })).rejects.toMatchObject({ code: 'INVALID_CREDENTIAL' })
+    await expect(ctx.llm.discoverModels('llm-pi-ai', {
+      provider: 'openrouter', baseURL: url, apiKey: 'good', live: true,
+    })).resolves.toEqual([{ id: 'some/model', name: 'some/model' }])
+    expect(paths).toEqual(['/key', '/key', '/models'])
+  })
+
+  it('lists a mixed-protocol route through the protocol most of its models speak, whichever comes first', async () => {
+    const counts = new Map<string, number>()
+    for (const model of getBuiltinModels('fireworks')) counts.set(model.api, (counts.get(model.api) ?? 0) + 1)
+    // Fireworks lists its Anthropic-protocol models first and has more of them.
+    expect([...counts.keys()].slice(0, 2)).toEqual(['anthropic-messages', 'openai-completions'])
+    expect(counts.get('anthropic-messages')).toBeGreaterThan(counts.get('openai-completions') ?? 0)
+    const server = await listingServer({ body: JSON.stringify({ data: [{ id: 'listed-only' }] }) })
+    const ctx = await harness()
+
+    await ctx.llm.discoverModels('llm-pi-ai', {
+      provider: 'fireworks', baseURL: server.url, apiKey: 'typed', live: true,
+    })
+
+    expect(server.paths).toEqual(['/v1/models?limit=1000'])
+    expect(server.headers[0]?.['x-api-key']).toBe('typed')
+  })
+
+  it('keeps the catalog answer when a live route\'s protocol has no readable listing', async () => {
+    const ctx = await harness()
+    const models = await ctx.llm.discoverModels('llm-pi-ai', { provider: 'google', apiKey: 'typed', live: true })
+    expect(models.map(model => model.id).sort()).toEqual(getBuiltinModels('google').map(model => model.id).sort())
   })
 
   it('needs no endpoint for a route the catalog describes', async () => {
@@ -141,6 +227,34 @@ describe('draft-provider model discovery', () => {
     expect(server.paths).toEqual(['/v1/models'])
     expect(server.headers[0]?.authorization).toBe('Bearer probe-key')
     expect(server.headers[0]?.['user-agent']).toBe(userAgent())
+  })
+
+  it('converts the per-token prices a gateway publishes to dollars per million tokens', async () => {
+    const server = await listingServer({
+      body: JSON.stringify({
+        data: [
+          {
+            id: 'acme/priced',
+            pricing: { prompt: '0.0000003', completion: '0.0000012', input_cache_read: '0.00000003', input_cache_write: '0' },
+          },
+          { id: 'acme/free', pricing: { prompt: '0', completion: '0' } },
+          { id: 'acme/variable', pricing: { prompt: '-1', completion: '-1' } },
+          { id: 'acme/half', pricing: { prompt: '0.000001' } },
+          { id: 'acme/garbled', pricing: { prompt: 'n/a', completion: '' } },
+        ],
+      }),
+    })
+    const ctx = await harness()
+
+    const models = await ctx.llm.discoverModels('llm-pi-ai', { baseURL: `${server.url}/v1`, apiKey: 'probe-key' })
+
+    expect(models.map(model => [model.id, model.pricing])).toEqual([
+      ['acme/priced', { input: 0.3, output: 1.2, cacheRead: 0.03 }],
+      ['acme/free', { input: 0, output: 0 }],
+      ['acme/variable', undefined],
+      ['acme/half', undefined],
+      ['acme/garbled', undefined],
+    ])
   })
 
   it('reads an enriched models map using route ids and nested capacities', async () => {
@@ -504,10 +618,23 @@ const RECORDED_LISTINGS = [
     file: 'openrouter-2026-09-02.json',
     api: 'openai-completions',
     models: [
-      { id: 'anthropic/claude-fable-5.1', name: 'Anthropic: Claude Fable 5.1', contextWindow: 1_000_000, maxTokens: 128_000 },
-      // The router's own aggregate route reports no completion cap.
+      {
+        id: 'anthropic/claude-fable-5.1',
+        name: 'Anthropic: Claude Fable 5.1',
+        contextWindow: 1_000_000,
+        maxTokens: 128_000,
+        pricing: { input: 10, output: 50, cacheRead: 0.25, cacheWrite: 12.5 },
+      },
+      // The router's own aggregate route reports no completion cap, and its
+      // `-1` rates mean the price varies by the route it picks.
       { id: 'openrouter/auto-beta', name: 'Auto Router (Beta)', contextWindow: 2_000_000 },
-      { id: 'deepseek/deepseek-v4-flash', name: 'DeepSeek: DeepSeek V4 Flash 0423', contextWindow: 1_048_576, maxTokens: 384_000 },
+      {
+        id: 'deepseek/deepseek-v4-flash',
+        name: 'DeepSeek: DeepSeek V4 Flash 0423',
+        contextWindow: 1_048_576,
+        maxTokens: 384_000,
+        pricing: { input: 0.08708, output: 0.17416, cacheRead: 0.017416 },
+      },
     ],
   },
   {

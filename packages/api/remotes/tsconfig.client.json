@@ -46,6 +46,9 @@
       "path": "../../feedback/message-feedback"
     },
     {
+      "path": "../../guard/spend-budget"
+    },
+    {
       "path": "../../host/plugin-inventory"
     },
     {
@@ -101,6 +104,9 @@
     },
     {
       "path": "../../document/office-to-pdf"
+    },
+    {
+      "path": "../../web/web"
     },
     {
       "path": "../account-controller"

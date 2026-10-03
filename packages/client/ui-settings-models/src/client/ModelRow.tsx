@@ -1,4 +1,4 @@
-/** Shared model fields and actions for both adapter catalog editors. */
+/** Shared model fields and actions for both adapter catalog editors; only the pi-ai editor edits list prices. */
 
 import type { ReactNode } from 'react'
 import {
@@ -17,6 +17,9 @@ interface CapacityInput {
   onBlur?: () => void
 }
 
+/** The rates a row edits, in US dollars per million tokens. */
+export type PriceField = 'input' | 'output' | 'cacheRead'
+
 /** Adapter-owned data and actions for one model row. */
 interface ModelRowProps {
   model: DeepSeekModelDraft
@@ -29,11 +32,20 @@ interface ModelRowProps {
   t: (key: ModelsKey) => string
   contextWindow: CapacityInput
   maxTokens: CapacityInput
+  /** List-price inputs; absent on an adapter whose models take no configured price. */
+  pricing?: Readonly<Record<PriceField, CapacityInput>> | undefined
   onFieldChange: (field: 'id' | 'name', value: string | undefined) => void
   onIdBlur?: (value: string) => void
   onChange: (model: DeepSeekModelDraft) => void
   onToggle: () => void
   onRemove: () => void
+}
+
+/** Copy key of each price input's label. */
+const PRICE_LABEL: Readonly<Record<PriceField, ModelsKey>> = {
+  input: 'modelPriceInput',
+  output: 'modelPriceOutput',
+  cacheRead: 'modelPriceCacheRead',
 }
 
 /**
@@ -102,6 +114,28 @@ export function ModelRow(props: ModelRowProps): ReactNode {
                 />
               </label>
             ))}
+            {props.pricing === undefined
+              ? null
+              : (
+                <fieldset className={styles['modelPrice']}>
+                  <legend className={styles['modelFieldLabel']}>{t('modelPrice')}</legend>
+                  {(['input', 'output', 'cacheRead'] as const).map(field => (
+                    <label className={styles['modelField']} key={field}>
+                      <span className={styles['modelPriceLabel']}>{t(PRICE_LABEL[field])}</span>
+                      <input
+                        className={styles['input']}
+                        type="text"
+                        inputMode="decimal"
+                        value={props.pricing?.[field].value}
+                        placeholder={props.pricing?.[field].placeholder}
+                        aria-label={`${t(PRICE_LABEL[field])} ${String(position)}`}
+                        disabled={disabled}
+                        onChange={(event) => { props.pricing?.[field].onChange(event.target.value) }}
+                      />
+                    </label>
+                  ))}
+                </fieldset>
+              )}
             <ModelInputTypes
               model={model} field={props.inputField} position={position}
               fallback={props.inputFallback} disabled={disabled || props.inputLoading === true} t={t} onChange={props.onChange}

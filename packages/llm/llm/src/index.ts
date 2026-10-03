@@ -621,6 +621,7 @@ export class LlmRuntime extends TypertRemoteService {
         ...model.contextWindow === undefined ? {} : { contextWindow: model.contextWindow },
         ...model.maxTokens === undefined ? {} : { maxTokens: model.maxTokens },
         ...model.inputModalities === undefined ? {} : { inputModalities: [...model.inputModalities] },
+        ...model.pricing === undefined ? {} : { pricing: { ...model.pricing } },
       })
     }
     return models
@@ -649,6 +650,7 @@ export class LlmRuntime extends TypertRemoteService {
         {
           settingsNs,
           ...request.baseURL === undefined ? {} : { baseURL: request.baseURL },
+          ...error instanceof LlmError ? { code: error.code } : {},
         },
         { cause: error },
       )

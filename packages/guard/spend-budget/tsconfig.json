@@ -17,6 +17,7 @@
     { "path": "../../core/session" },
     { "path": "../../settings/settings" },
     { "path": "../../storage/storage-domain" },
+    { "path": "../../typert/protocol" },
     { "path": "../../util/values" }
   ]
 }

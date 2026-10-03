@@ -22,7 +22,7 @@ import { formatCapacity, parseCapacity } from './DeepSeekModelsEditor.tsx'
 import type { ModelsOperations } from './operations.ts'
 import type { DeepSeekModelDraft } from './DeepSeekModelsEditor.tsx'
 import type { en } from './locales.ts'
-import { ModelRow } from './ModelRow.tsx'
+import { ModelRow, type PriceField } from './ModelRow.tsx'
 import styles from './ModelsSection.module.css'
 
 /**
@@ -129,15 +129,41 @@ function capacitySpelling(value: number | undefined): string {
   return value === undefined ? '' : formatCapacity(value)
 }
 
-/** Adopt a candidate, preserving disclosed capacities and input types. */
-function adopt(candidate: LlmDiscoveredModel): ModelDraft {
+/**
+ * Adopt a candidate, preserving disclosed capacities, input types, and list price.
+ * @param candidate - one discovered model.
+ * @returns the model row to store.
+ */
+export function adopt(candidate: LlmDiscoveredModel): ModelDraft {
   return {
     id: candidate.id,
     ...candidate.name === undefined ? {} : { name: candidate.name },
     ...candidate.contextWindow === undefined ? {} : { contextWindow: candidate.contextWindow },
     ...candidate.maxTokens === undefined ? {} : { maxTokens: candidate.maxTokens },
     ...candidate.inputModalities === undefined ? {} : { input: [...candidate.inputModalities] },
+    ...candidate.pricing === undefined ? {} : { pricing: { ...candidate.pricing } },
   }
+}
+
+/**
+ * Read a typed rate in US dollars per million tokens; a leading `$` is accepted.
+ * @param text - raw field text.
+ * @returns the rate; `undefined` when blank, `NaN` when unreadable or negative
+ * (rejected by `validateDeepSeekModels` before any write).
+ */
+export function parsePrice(text: string): number | undefined {
+  const trimmed = text.trim().replace(/^\$/, '')
+  if (trimmed.length === 0) return undefined
+  const rate = Number(trimmed)
+  return Number.isFinite(rate) && rate >= 0 ? rate : Number.NaN
+}
+
+/** A row's stored list price as an editable record; non-record values read as no price. */
+function pricingOf(model: ModelDraft): Partial<Record<PriceField | 'cacheWrite', number>> {
+  const pricing = model['pricing']
+  return typeof pricing === 'object' && pricing !== null && !Array.isArray(pricing)
+    ? pricing
+    : {}
 }
 
 /**
@@ -167,6 +193,13 @@ export function ModelListEditor(props: ModelListEditorProps): ReactNode {
   }, [catalogProvider, operations, probe.settingsNs])
   const catalog = inheritedCatalog?.provider === catalogProvider ? inheritedCatalog?.models : undefined
   const inputDefaults = useMemo(() => new Map(catalog?.map(model => [model.id, model.inputModalities])), [catalog])
+  const priceDefaults = useMemo(() => new Map(catalog?.map(model => [model.id, model.pricing])), [catalog])
+  /** A price field's placeholder: the installed catalog's rate, else the shared hint. */
+  const pricePlaceholder = (model: ModelDraft, field: PriceField): string => {
+    const rate = priceDefaults.get(textOf(model, 'id'))?.[field]
+    if (rate !== undefined) return String(rate)
+    return t(field === 'cacheRead' ? 'modelPriceCacheReadDefault' : 'modelPriceUnknown')
+  }
   const [candidates, setCandidates] = useState<readonly LlmDiscoveredModel[] | undefined>(undefined)
   const [picked, setPicked] = useState<ReadonlySet<string>>(new Set())
   const [candidateQuery, setCandidateQuery] = useState('')
@@ -179,8 +212,34 @@ export function ModelListEditor(props: ModelListEditorProps): ReactNode {
   // the abandoned one would render its stored NaN as the literal `NaN`.
   const [editing, setEditing] = useState<ReadonlyMap<string, string>>(new Map())
 
-  /** Buffer key for one capacity field; the row half moves when rows do. */
-  const bufferKey = (index: number, field: CapacityField): string => `${String(index)}:${field}`
+  /** Buffer key for one capacity or price field; the row half moves when rows do. */
+  const bufferKey = (index: number, field: CapacityField | `price.${PriceField}`): string => `${String(index)}:${field}`
+
+  /**
+   * Stage one rate. Clearing every rate removes the row's `pricing`, so the
+   * route's own price applies again; a cache-write rate this card does not
+   * show survives.
+   */
+  const editPrice = (index: number, field: PriceField, text: string): void => {
+    setEditing(current => new Map(current).set(bufferKey(index, `price.${field}`), text))
+    const model = models[index]
+    /* v8 ignore next -- a rendered row always has its model */
+    if (model === undefined) return
+    const { [field]: _previous, ...rest } = pricingOf(model)
+    const rate = parsePrice(text)
+    const next = rate === undefined ? rest : { ...rest, [field]: rate }
+    onChange(models.map((row, at) => {
+      if (at !== index) return row
+      const { pricing: _pricing, ...others } = row
+      return Object.keys(next).length === 0 ? others : { ...others, pricing: next }
+    }))
+  }
+
+  /** What a price field shows: the buffer while typing, else the stored rate. */
+  const priceText = (model: ModelDraft, index: number, field: PriceField): string => {
+    const stored = pricingOf(model)[field]
+    return editing.get(bufferKey(index, `price.${field}`)) ?? (stored === undefined ? '' : String(stored))
+  }
 
   const editCapacity = (index: number, field: CapacityField, text: string): void => {
     setEditing(current => new Map(current).set(bufferKey(index, field), text))
@@ -374,6 +433,11 @@ export function ModelListEditor(props: ModelListEditorProps): ReactNode {
               value: capacityText(model, index, 'maxTokens'),
               placeholder: CAPACITY_HINT.maxTokens,
               onChange: (text) => { editCapacity(index, 'maxTokens', text) },
+            }}
+            pricing={{
+              input: { value: priceText(model, index, 'input'), placeholder: pricePlaceholder(model, 'input'), onChange: (text) => { editPrice(index, 'input', text) } },
+              output: { value: priceText(model, index, 'output'), placeholder: pricePlaceholder(model, 'output'), onChange: (text) => { editPrice(index, 'output', text) } },
+              cacheRead: { value: priceText(model, index, 'cacheRead'), placeholder: pricePlaceholder(model, 'cacheRead'), onChange: (text) => { editPrice(index, 'cacheRead', text) } },
             }}
             onFieldChange={(field, value) => { patch(index, { [field]: value }) }}
             onChange={(next) => { onChange(models.map((row, at) => at === index ? next : row)) }}

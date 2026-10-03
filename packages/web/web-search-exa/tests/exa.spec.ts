@@ -141,10 +141,13 @@ describe('ExaSearchProvider request mapping', () => {
 })
 
 describe('ExaSearchProvider error handling', () => {
-  it('maps an HTTP error to WEB_PROVIDER_ERROR with the provider message', async () => {
+  it('maps a rejected key to WEB_PROVIDER_AUTH with the provider message', async () => {
     vi.stubGlobal('fetch', vi.fn(async () => jsonResponse({ error: 'bad key' }, { status: 401 })))
     await expect(new ExaSearchProvider(options).search({ query: 'q' }))
-      .rejects.toThrow(expect.objectContaining({ code: 'WEB_PROVIDER_ERROR', message: 'bad key' }))
+      .rejects.toThrow(expect.objectContaining({
+        code: 'WEB_PROVIDER_AUTH',
+        message: 'Exa rejected the API key (HTTP 401): bad key; the user must supply a valid key for this provider.',
+      }))
   })
 
   it('keeps a status-line message when the error body is not JSON', async () => {

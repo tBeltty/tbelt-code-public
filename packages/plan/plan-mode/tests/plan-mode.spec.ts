@@ -1013,7 +1013,7 @@ describe('exit_plan_mode', () => {
     const { ctx, agent } = await setupWithReview({ selected: ['Keep planning'], custom: 'consider the resume path' })
     const result = await callExit(ctx, agent)
     expect(result.isError).toBe(true)
-    expect(result.content).toEqual([{ type: 'text', text: 'Error: The user chose to keep planning; their feedback: consider the resume path' }])
+    expect(result.content).toEqual([{ type: 'text', text: 'Error: The user chose to keep planning; their feedback: consider the resume path\n\nAddress this feedback by presenting the complete revised plan with exit_plan_mode; keep any chat reply to one line.' }])
     expect(foldPlanMode(agent.session.snapshotEvents())).toBe(true)
   })
 
@@ -1028,7 +1028,7 @@ describe('exit_plan_mode', () => {
     const { ctx, agent } = await setupWithReview({ selected: [], custom: 'add tests first' })
     const result = await callExit(ctx, agent)
     expect(result.isError).toBe(true)
-    expect(result.content).toEqual([{ type: 'text', text: 'Error: The user chose to keep planning; their feedback: add tests first' }])
+    expect(result.content).toEqual([{ type: 'text', text: 'Error: The user chose to keep planning; their feedback: add tests first\n\nAddress this feedback by presenting the complete revised plan with exit_plan_mode; keep any chat reply to one line.' }])
     expect(foldPlanMode(agent.session.snapshotEvents())).toBe(true)
   })
 
@@ -1044,7 +1044,7 @@ describe('exit_plan_mode', () => {
     const { ctx, agent } = await setupWithReview({ selected: ['Approve'], custom: 'change the tests' })
     const result = await callExit(ctx, agent)
     expect(result.isError).toBe(true)
-    expect(result.content).toEqual([{ type: 'text', text: 'Error: The user chose to keep planning; their feedback: change the tests' }])
+    expect(result.content).toEqual([{ type: 'text', text: 'Error: The user chose to keep planning; their feedback: change the tests\n\nAddress this feedback by presenting the complete revised plan with exit_plan_mode; keep any chat reply to one line.' }])
     expect(foldPlanMode(agent.session.snapshotEvents())).toBe(true)
   })
 

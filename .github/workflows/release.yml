@@ -1,11 +1,17 @@
 # Creates the GitHub Release for a version tag, with that version's
-# CHANGELOG.md section as its notes. Versions with a pre-release suffix
-# (for example 0.2.0-rc.2.20261002) are marked as pre-releases.
+# CHANGELOG.md section as its notes. Runs on each pushed v* tag, or by hand
+# for an existing tag whose release did not run. Versions with a pre-release
+# suffix (for example 0.2.0-rc.2.20261002) are marked as pre-releases.
 name: Release
 
 on:
   push:
     tags: ['v*']
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Existing version tag to release, e.g. v0.2.0-rc.2.20261002
+        required: true
 
 permissions:
   contents: write
@@ -18,12 +24,13 @@ jobs:
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
         with:
+          ref: ${{ inputs.tag || github.ref }}
           persist-credentials: false
 
       - name: Create the release
         env:
           GH_TOKEN: ${{ github.token }}
-          TAG: ${{ github.ref_name }}
+          TAG: ${{ inputs.tag || github.ref_name }}
         run: |
           version=${TAG#v}
           scripts/release-notes.sh notes "$version" > "$RUNNER_TEMP/notes.md"

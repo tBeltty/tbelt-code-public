@@ -11,6 +11,7 @@ import { createClientTest, type TestClient, webApp } from '@deepseek-ai/dsh-clie
 import { inject } from '../src/client/index.ts'
 import type { SettingsRootInjected } from '../src/client/shell-contract.ts'
 import { SettingsRoot } from '../src/client/SettingsRoot.tsx'
+import type { createSettingsShellStore } from '../src/client/shell-store.ts'
 import type { DesktopUpdatePresentation } from '../src/types.ts'
 
 const SELF = '@deepseek-ai/dsh-client-ui-settings-general'
@@ -166,6 +167,29 @@ describe('ui-settings-general shell', () => {
     expect(c.ctx.slots.entries('sidebar.settings').map(entry => entry.component)).toEqual([SettingsRoot])
     expect(c.ctx.slots.entries('sidebar.settings')[0]).not.toBe(before)
     for (const name of CHILD_NAMES) expect(c.ctx.slots.spec(name)).toEqual(CHILD_SPECS[name])
+  })
+
+  it('provides settings navigation that opens the mounted shell on the requested section', async ({ start }) => {
+    const c = await start()
+    const handle = c.ctx.slots.entries('sidebar.settings')[0]!.store as ReturnType<typeof createSettingsShellStore>
+    const shell = handle.create().store
+    expect(shell.getSnapshot()).toEqual({ open: false, activeId: undefined })
+    c.ctx.get('settingsNavigation')!.openSection('models')
+    expect(shell.getSnapshot()).toEqual({ open: true, activeId: 'models' })
+  })
+
+  it('withdraws settings navigation with the shell and provides it again after the declarer reloads', async ({ start }) => {
+    const c = await start()
+    const before = c.ctx.get('settingsNavigation')
+    expect(before).toBeDefined()
+    await c.reload(SIDEBAR)
+    await c.flush()
+    const after = c.ctx.get('settingsNavigation')
+    expect(after).toBeDefined()
+    expect(after).not.toBe(before)
+    await c.unload(SELF)
+    await c.flush()
+    expect(c.ctx.get('settingsNavigation')).toBeUndefined()
   })
 
   it('unregisters the shell and collapses every child slot when its row unloads', async ({ start }) => {

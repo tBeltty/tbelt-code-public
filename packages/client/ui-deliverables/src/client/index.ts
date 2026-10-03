@@ -1,7 +1,8 @@
 /**
  * Deliverables plugin, browser half: registers the changed-files card and
- * delivery cards into the chat view's turn-tail list, the `changes-review`
- * right-Sidebar tab type that reviews one turn's changed files one comparison
+ * delivery cards into the chat view's turn-tail list, the `present` and
+ * `preview` tool rows, the `changes-review` right-Sidebar tab type that
+ * reviews one turn's changed files one comparison
  * at a time, and provides the `chatFileMentions` service that links
  * inline-code mentions of produced or delivered files in the closing prose.
  * All policy lives here — the supported mutation calls, mention matching, row
@@ -16,6 +17,7 @@ import type { ChatFileMentions } from '@deepseek-ai/dsh-client-ui-chat/client'
 import type {} from '@deepseek-ai/dsh-client-locale/client'
 import type {} from '@deepseek-ai/dsh-client-ui-conversation/client'
 import type {} from '@deepseek-ai/dsh-client-ui-renderer/client'
+import type {} from '@deepseek-ai/dsh-client-ui-sidebar-browser/client'
 import type {} from '@deepseek-ai/dsh-client-ui-sidebar-right/client'
 import type {} from '@deepseek-ai/dsh-client-ui-settings/client'
 import { changesReviewAddress } from '../changes.ts'
@@ -23,6 +25,7 @@ import { ChangesDiffStore } from './changes-diff.ts'
 import { ChangesSummaryStore } from './changes-summary.ts'
 import { PresentedOpenController } from './present-open.ts'
 import { PresentRow } from './PresentRow.tsx'
+import { PreviewRow, type PreviewInjected } from './PreviewRow.tsx'
 import { DeliverablesTail, type DeliverablesInjected } from './Deliverables.tsx'
 import { ReviewTab, type ReviewInjected } from './ReviewTab.tsx'
 import { CHANGES_REVIEW_ID, changesReviewDefinition } from './review-definition.ts'
@@ -82,6 +85,16 @@ export function apply(ctx: ClientContext): void {
   ctx.slots.inject('tool.call.toolview', () => ctx.slots.register(
     { name: 'tool.call.toolview', key: 'present', locale: NS }, PresentRow,
   ))
+  // Loopback pages open in a Browser tab when one is composed; otherwise the system browser shows them.
+  ctx.slots.inject('tool.call.toolview', () => ctx.slots.register({
+    name: 'tool.call.toolview', key: 'preview', locale: NS,
+    inject: (): PreviewInjected => ({
+      openUrl: (url) => {
+        if (ctx.get('sidebarRightTabs')?.get('browser') !== undefined) ctx.sidebarRight.openTab('browser', { params: { url } })
+        else window.open(url, '_blank', 'noopener,noreferrer')
+      },
+    }),
+  }, PreviewRow))
   const t = ctx.locale.bind(NS)
   ctx.effect(() => ctx.sidebarRightTabs.register(changesReviewDefinition(t)), 'ui-deliverables: changes-review type')
   ctx.effect(() => ctx.slots.inject('sidebar.right.pane.tab', () => ctx.slots.register(

@@ -345,6 +345,20 @@
   color: var(--dsw-alias-label-tertiary);
 }
 
+/* Divides the selection rows from the Settings entry; matches the Menu
+   primitive's separator. */
+.separator {
+  flex: none;
+  height: 0.5px;
+  margin: 3px 2px;
+  background: var(--dsw-alias-border-l2);
+}
+
+.cellIcon {
+  flex: 0 0 auto;
+  color: var(--dsw-alias-menu-icon);
+}
+
 .cellChevron {
   flex: 0 0 auto;
   width: 12px;

@@ -313,6 +313,14 @@ const modelFields = {
   // installed catalog's capability", while `false` disables reasoning.
   reasoningEfforts: z.union([z.const(false), reasoningEfforts]),
   compat: compatProfile,
+  // Fields stay optional: schemastery materializes `{}` for an absent object,
+  // and resolution reads a price without input or output as no price.
+  pricing: z.object({
+    input: z.number().min(0),
+    output: z.number().min(0),
+    cacheRead: z.number().min(0),
+    cacheWrite: z.number().min(0),
+  }),
 }
 
 const modelProfile: z<PiAiModelProfile> = z.object({

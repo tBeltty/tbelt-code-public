@@ -176,7 +176,11 @@
     "@deepseek-ai/dsh-client-ui-shortcuts": "workspace:*",
     "@deepseek-ai/dsh-client-product-analytics": "workspace:*",
     "@deepseek-ai/dsh-host-product-telemetry-otel": "workspace:*",
-    "@deepseek-ai/dsh-client-ui-settings-session-log": "workspace:*"
+    "@deepseek-ai/dsh-client-ui-settings-session-log": "workspace:*",
+    "@deepseek-ai/dsh-web-search-brave": "workspace:*",
+    "@deepseek-ai/dsh-web-search-exa": "workspace:*",
+    "@deepseek-ai/dsh-web-search-perplexity": "workspace:*",
+    "@deepseek-ai/dsh-web-search-tavily": "workspace:*"
   },
   "peerDependencies": {
     "@deepseek-ai/cordis": "workspace:~",

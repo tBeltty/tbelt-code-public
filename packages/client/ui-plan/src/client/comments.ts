@@ -1,7 +1,8 @@
 /**
- * Unsent plan comments. They live in browser memory, keyed by plan document
- * address, until a review answer or a composer message carries them; the
- * Session log then records the text the model received.
+ * Plan comments. They live in browser memory, keyed by plan document address.
+ * A review answer, a composer message, or the chip's send action carries the
+ * unsent ones and marks them resolved; the Session log records the text the
+ * model received.
  */
 import { createSnapshotStore, type SnapshotStore } from '@deepseek-ai/dsh-client-store'
 import type { SessionId } from '@deepseek-ai/dsh-session/types'
@@ -18,21 +19,23 @@ export interface PlanCommentAnchor {
   readonly offset: number
 }
 
-/** One unsent comment. */
+/** One comment. */
 export interface PlanComment extends PlanCommentAnchor {
   /** Browser-local identity. */
   readonly id: string
   /** The user's comment text, trimmed and non-empty. */
   readonly text: string
+  /** Present once a sent answer or message carried the comment; resolved comments are read-only and never sent again. */
+  readonly resolved?: true
 }
 
-/** Unsent comments of every plan document opened in this browser runtime. */
+/** Comments of every plan document opened in this browser runtime. */
 export interface PlanCommentState {
   /** Comments per plan document address, in block and offset order; documents keep first-comment order. */
   readonly documents: Readonly<Record<string, readonly PlanComment[]>>
 }
 
-/** Observable comment memory shared by the preview, the review decision, the composer chip, and the send path. */
+/** Observable comment memory shared by the preview, the review decision, the composer chip, and the send paths. */
 export type PlanCommentStore = SnapshotStore<PlanCommentState>
 
 /** One comment with the document that owns it. */
@@ -89,6 +92,49 @@ export function updatePlanComment(store: PlanCommentStore, address: string, id: 
 }
 
 /**
+ * Keep only the comments no answer or message has carried yet.
+ * @param comments - One document's comments.
+ * @returns the unsent comments, in the same order.
+ */
+export function unsentComments(comments: readonly PlanComment[]): readonly PlanComment[] {
+  return comments.filter(comment => comment.resolved !== true)
+}
+
+/**
+ * Mark comments as carried by a sent answer or message.
+ * @param store - Comment memory.
+ * @param address - Plan document address.
+ * @param ids - Comment identities to resolve.
+ */
+export function resolvePlanComments(store: PlanCommentStore, address: string, ids: readonly string[]): void {
+  const list = store.getSnapshot().documents[address]
+  if (list === undefined) return
+  replaceDocument(store, address, list.map(comment => ids.includes(comment.id) ? { ...comment, resolved: true as const } : comment))
+}
+
+/**
+ * Move the unsent comments of earlier plan versions to a newer version whose text still contains their quote.
+ * Comments whose quote no longer occurs stay on their version.
+ * @param store - Comment memory.
+ * @param from - Addresses of the earlier versions.
+ * @param to - Address of the newer version.
+ * @param text - Plain text of the newer version.
+ */
+export function carryPlanComments(store: PlanCommentStore, from: readonly string[], to: string, text: string): void {
+  const haystack = collapse(text)
+  for (const address of from) {
+    const moved = unsentComments(store.getSnapshot().documents[address] ?? []).filter(comment => haystack.includes(collapse(comment.quote)))
+    if (moved.length === 0) continue
+    removePlanComments(store, address, moved.map(comment => comment.id))
+    for (const comment of moved) addPlanComment(store, to, comment)
+  }
+}
+
+function collapse(text: string): string {
+  return text.replace(/\s+/gu, ' ').trim()
+}
+
+/**
  * Remove comments; documents left without comments disappear.
  * @param store - Comment memory.
  * @param address - Plan document address.
@@ -110,14 +156,14 @@ function replaceDocument(store: PlanCommentStore, address: string, list: readonl
 }
 
 /**
- * List the comments a Session's next message carries.
+ * List the unsent comments a Session's next message carries.
  * @param documents - Current comment memory.
  * @param sessionId - Session the message goes to.
- * @returns comments in document order, then anchor order.
+ * @returns unsent comments in document order, then anchor order.
  */
 export function sessionComments(documents: PlanCommentState['documents'], sessionId: SessionId): readonly AddressedPlanComment[] {
   return Object.entries(documents).flatMap(([address, comments]) =>
-    commentSession(address) === sessionId ? comments.map(comment => ({ address, comment })) : [])
+    commentSession(address) === sessionId ? unsentComments(comments).map(comment => ({ address, comment })) : [])
 }
 
 /**

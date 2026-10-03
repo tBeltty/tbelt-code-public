@@ -23,7 +23,9 @@
  * Retry remains the catalog-load surface. While the directory's pending
  * selection is unsettled, the trigger shows a spinner in place of its
  * chevron, and each row whose value that selection carries shows one in place
- * of its check mark.
+ * of its check mark. While a settings shell provides navigation, the root
+ * pane ends with an Add model entry, also offered under an empty catalog,
+ * that closes the menu and opens Settings at the Models section.
  */
 import { MenuGroup, MenuSurface, observeStickyMenuGroups } from '@deepseek-ai/dsh-client-ui-primitives'
 import {
@@ -35,7 +37,7 @@ import clsx from 'clsx'
 import type { ModelPricing, ModelReasoningEffort, ModelSelection } from '@deepseek-ai/dsh-api-remotes/client'
 import {
   IconCheckOutlineRegular, IconChevronDownOutlineRegular, IconChevronRightOutlineRegular, IconCloseFillRegular,
-  IconDataOutlineRegular, IconWarningOutlineRegular, Input, rankByName, StateDot, Toast,
+  IconDataOutlineRegular, IconPlusOutlineRegular, IconWarningOutlineRegular, Input, rankByName, StateDot, Toast,
 } from '@deepseek-ai/dsh-client-ui-primitives'
 import type { PropsLocale } from '@deepseek-ai/dsh-client-ui-slots'
 import type { ModelSelectInjected } from './slots.ts'
@@ -85,7 +87,7 @@ function priceTitle(pricing: ModelPricing, t: PropsLocale<'model'>['t']): string
  * @returns the trigger and, while open, the two-level menu.
  */
 export function ModelSelect(
-  { locked, available, directory, load, select, t }:
+  { locked, available, directory, load, select, modelSettings, t }:
   ModelSelectInjected & { locked: boolean } & PropsLocale<'model'>,
 ) {
   const state = useSyncExternalStore(
@@ -97,6 +99,9 @@ export function ModelSelect(
   const [query, setQuery] = useState('')
   const [highlightedIndex, setHighlightedIndex] = useState<number | null>(null)
   const [selectionFocus, setSelectionFocus] = useState(false)
+  // The Settings entry resolved when the menu last opened; null while no
+  // settings shell provides navigation.
+  const [settingsEntry, setSettingsEntry] = useState<{ open: () => void } | null>(null)
   // The in-menu error strip serves catalog loads (its Retry re-runs the
   // load); a rejected SELECTION announces through the transient toast
   // instead, so the strip renders only while the latest failure-capable
@@ -269,6 +274,8 @@ export function ModelSelect(
     setHighlightedIndex(null)
     if (state.current === null) paneFocus.current = 'drill'
     setPane(state.current === null ? 'model' : 'root')
+    const openSettings = modelSettings()
+    setSettingsEntry(openSettings === undefined ? null : { open: openSettings })
     setOpen(true)
     reload()
   }
@@ -282,6 +289,12 @@ export function ModelSelect(
     setOpen(false)
     setPane('root')
     if (restoreFocus) queueMicrotask(() => { triggerRef.current?.focus() })
+  }
+
+  /** Close the menu and hand over to Settings, whose dialog takes focus. */
+  const openModelSettings = (entry: { open: () => void }): void => {
+    close()
+    entry.open()
   }
 
   const closeAfterSelection = (): void => {
@@ -447,7 +460,8 @@ export function ModelSelect(
       : effortLabel === undefined
         ? t('trigger.aria', { model: modelLabel })
         : t('trigger.ariaEffort', { model: modelLabel, effort: effortLabel })
-  itemRefs.current = []
+  // Only commits write `itemRefs`: React nulls an unmounted row's slot, and a
+  // render React discards (a bailed-out state update) never clears the rows.
   let itemIndex = 0
   let modelIndex = 0
   const itemRef = () => {
@@ -521,6 +535,15 @@ export function ModelSelect(
                   <span className={css.cellValue}>{effortLabel}</span>
                   <IconChevronRightOutlineRegular className={css.cellChevron} />
                 </button>
+              )}
+              {settingsEntry !== null && (
+                <>
+                  <div className={css.separator} role="separator" />
+                  <button ref={itemRef()} type="button" role="menuitem" className={css.cell} onClick={() => { openModelSettings(settingsEntry) }}>
+                    <IconPlusOutlineRegular className={css.cellIcon} size={14} />
+                    <span className={css.cellLabel}>{t('action.addModel')}</span>
+                  </button>
+                </>
               )}
             </>
           )}
@@ -629,6 +652,12 @@ export function ModelSelect(
               </div>
               {state.status === 'ready' && filteredGroups.length === 0 && (
                 <div className={css.empty} role="status">{t(choices.length === 0 ? 'empty.models' : 'search.empty')}</div>
+              )}
+              {state.status === 'ready' && choices.length === 0 && settingsEntry !== null && (
+                <button ref={itemRef()} type="button" className={css.cell} onClick={() => { openModelSettings(settingsEntry) }}>
+                  <IconPlusOutlineRegular className={css.cellIcon} size={14} />
+                  <span className={css.cellLabel}>{t('action.addModel')}</span>
+                </button>
               )}
             </>
           )}

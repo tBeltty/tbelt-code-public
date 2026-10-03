@@ -2,7 +2,8 @@ name: CI
 
 # The full quality gate needs more than a standard GitHub-hosted runner, so it
 # only runs when started by hand (Actions > CI > Run workflow). Pushes and pull
-# requests run the light checks, which need no dependency install.
+# requests run the light checks, which need no dependency install. Every job
+# runs only in the public repository; the private one runs no workflows.
 on:
   push:
     branches: [main]
@@ -17,6 +18,7 @@ concurrency:
 jobs:
   light:
     name: Light checks
+    if: ${{ !github.event.repository.private }}
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
@@ -25,8 +27,12 @@ jobs:
           fetch-depth: 2
 
       # On a pull request HEAD is the merge commit, so HEAD~1 is the base branch.
+      # A root commit (a public mirror snapshot that replaces history) is
+      # checked against the empty tree.
       - name: Whitespace in the change
-        run: git diff --check HEAD~1 HEAD
+        run: |
+          base=$(git rev-parse -q --verify HEAD~1 || git hash-object -t tree /dev/null)
+          git diff --check "$base" HEAD
 
       - name: Shell script syntax
         run: for f in scripts/*.sh; do bash -n "$f"; done
@@ -36,7 +42,7 @@ jobs:
 
   primary:
     name: Quality gate (Linux)
-    if: github.event_name == 'workflow_dispatch'
+    if: ${{ github.event_name == 'workflow_dispatch' && !github.event.repository.private }}
     runs-on: ubuntu-latest
     timeout-minutes: 60
     steps:

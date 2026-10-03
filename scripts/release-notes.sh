@@ -4,7 +4,7 @@
 # Usage: scripts/release-notes.sh version          newest released version
 #        scripts/release-notes.sh notes <version>  that version's section body
 #        scripts/release-notes.sh unreleased       succeed when [Unreleased] has entries
-#        scripts/release-notes.sh cut [date]       move [Unreleased] into a new version
+#        scripts/release-notes.sh cut [YYYY-MM-DD] move [Unreleased] into a new version
 #
 # `cut` names the version <root package.json version>.<YYYYMMDD of date>, adding
 # .2, .3, ... for further releases on the same day, writes the section and its
@@ -46,7 +46,13 @@ case "${1:-}" in
     ;;
   cut)
     has_entries || { echo 'release-notes: [Unreleased] has no entries' >&2; exit 1; }
-    day=$(date -u -d "${2:-now}" +%Y-%m-%d)
+    # Node instead of `date -d`, which macOS's BSD date lacks.
+    day=$(node -e '
+      const arg = process.argv[1]
+      const date = arg === "now" ? new Date() : new Date(`${arg}T00:00:00Z`)
+      if (Number.isNaN(date.getTime())) { console.error(`release-notes: invalid date ${arg}`); process.exit(2) }
+      console.log(date.toISOString().slice(0, 10))
+    ' "${2:-now}")
     base="$(node -p "require('$root/package.json').version").${day//-/}"
     version=$base
     n=1

@@ -6,9 +6,8 @@
  */
 
 import type { Context } from '@deepseek-ai/cordis'
-import { launchEnvironmentOf } from '@deepseek-ai/dsh-launch-environment'
 import z from '@deepseek-ai/schemastery'
-import type {} from '@deepseek-ai/dsh-web'
+import { SearchApiKey } from '@deepseek-ai/dsh-web'
 import {
   ExaSearchProvider,
   EXA_DEFAULT_BASE_URL,
@@ -31,10 +30,15 @@ export const name = 'web-search-exa'
 /** The web seam this provider registers into. */
 export const inject = ['web']
 
-/** Plugin config (all optional — `apply` fills env-var and constant defaults). */
+/** Credential reference the key is read from when config carries no literal. */
+export const EXA_API_KEY_REF = 'EXA_API_KEY'
+
+/** Plugin config (all optional — `apply` fills credential and constant defaults). */
 export interface Config {
-  /** Exa API key. Falls back to `$EXA_API_KEY`. Empty → provider unavailable. */
+  /** Literal Exa API key; prefer {@link apiKeyEnv} so no secret enters configuration files. */
   apiKey?: string
+  /** Credential reference resolved at each search. Defaults to `EXA_API_KEY`. */
+  apiKeyEnv?: string
   /** Endpoint base; `/search` is appended. Defaults to the public API. */
   baseURL?: string
   /** Retrieval mode sent as Exa's `type`. Defaults to `auto`. */
@@ -46,7 +50,8 @@ export interface Config {
 }
 
 export const Config: z<Config> = z.object({
-  apiKey: z.string(),
+  apiKey: z.string().role('secret'),
+  apiKeyEnv: z.string().role('credential-ref'),
   baseURL: z.string(),
   searchType: z.union(['auto', 'keyword', 'neural'] as const),
   numResults: z.number().step(1).min(1),
@@ -56,9 +61,7 @@ export const Config: z<Config> = z.object({
 /** Register the Exa search provider with `ctx.web`. */
 export function apply(ctx: Context, config: Config): void {
   ctx.web.registerSearchProvider(new ExaSearchProvider({
-    // Every environment layer may name this key: the product trusts the
-    // project it is launched in, and the managed store is not involved here.
-    apiKey: config.apiKey ?? launchEnvironmentOf(ctx).get('EXA_API_KEY')?.value ?? '',
+    apiKey: new SearchApiKey(ctx, config.apiKeyEnv ?? EXA_API_KEY_REF, config.apiKey),
     baseURL: config.baseURL ?? EXA_DEFAULT_BASE_URL,
     searchType: config.searchType ?? EXA_DEFAULT_SEARCH_TYPE,
     highlightsPerResult: config.highlightsPerResult ?? EXA_DEFAULT_HIGHLIGHTS_PER_RESULT,

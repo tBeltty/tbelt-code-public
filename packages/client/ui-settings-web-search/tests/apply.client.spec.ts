@@ -29,9 +29,11 @@ async function bench(served?: string[]) {
   const describeSettings = vi.fn(() => Promise.resolve(served === undefined
     ? { ok: false, error: new RemoteError('gateway/internal', 'no provider', {}) }
     : { ok: true, value: { writable: true, hasDocument: true, namespaces: served.map(ns => view(ns)) } }))
+  const searchProviders = vi.fn(() => Promise.resolve({ ok: true, value: [{ id: 'exa', credentialRef: 'EXA_API_KEY' }] }))
   const remote = new TestRemote(ctx, {
     credentials: { describe: describeCredentials, set: vi.fn() },
     settings: { describe: describeSettings },
+    web: { searchProviders, checkSearchKey: vi.fn() },
   })
   await ctx.plugin({ inject: [...settingsInject], apply: settingsApply }).await()
   return { ctx, slots: ctx.get('slots') as SlotRegistry, describeCredentials, describeSettings, remote }
@@ -51,11 +53,11 @@ describe('ui-settings-web-search apply', () => {
   })
 
   it('declares the services it uses', () => {
-    expect(inject).toEqual(['slots', 'locale', 'remote', 'remote.credentials', 'configForms'])
+    expect(inject).toEqual(['slots', 'locale', 'remote', 'remote.credentials', 'remote.web', 'configForms'])
   })
 
   it('registers the page while the Host serves the namespace, titled in the active locale', async () => {
-    const { ctx, slots } = await bench(['web-search-deepseek'])
+    const { ctx, slots } = await bench(['web'])
     declareRoot(slots)
 
     await ctx.plugin({ inject: [...inject], apply }).await()
@@ -78,7 +80,7 @@ describe('ui-settings-web-search apply', () => {
     expect(slots.entries('plugins.item')).toHaveLength(0)
   })
 
-  it('re-reads the credential when the Host reports the watched reference changed, and ignores another', async () => {
+  it('re-reads key states when the Host reports a provider reference changed, and ignores another', async () => {
     const { ctx, slots, describeCredentials, remote } = await bench()
     declareRoot(slots)
     await ctx.plugin({ inject: [...inject], apply }).await()
@@ -91,12 +93,12 @@ describe('ui-settings-web-search apply', () => {
 
     // A key written on another surface changes no settings section, so this
     // event is the only thing that reaches the page.
-    remote.emit('credentials/reference-updated', ['DEEPSEEK_API_KEY'])
+    remote.emit('credentials/reference-updated', ['EXA_API_KEY'])
     await vi.waitFor(() => { expect(describeCredentials).toHaveBeenCalledTimes(1) })
   })
 
   it('collapses the page on teardown', async () => {
-    const { ctx, slots } = await bench(['web-search-deepseek'])
+    const { ctx, slots } = await bench(['web'])
     declareRoot(slots)
     const fiber = ctx.plugin({ inject: [...inject], apply })
     await fiber.await()

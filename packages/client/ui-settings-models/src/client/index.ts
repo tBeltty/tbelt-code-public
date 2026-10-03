@@ -1,6 +1,7 @@
 /**
  * Models settings and product-onboarding plugin, browser half. It registers
- * the Models page plus a model-agnostic first-run provider dialog, whose UI
+ * the Models page, the Spending page while the Host serves the spend ledger,
+ * plus a model-agnostic first-run provider dialog, whose UI
  * shares this package's modal wrapper. The Host settings and credential
  * contracts stay behind their existing wire APIs.
  * Export discipline:
@@ -24,8 +25,13 @@ import { ModelsSettingsStore } from './store.ts'
 import { createModelsOperations } from './operations.ts'
 import { createSettingsSchemaOperations } from './schema-operations.ts'
 import { en, zh, type ModelsKey } from './locales.ts'
+import { SpendingSection } from './SpendingSection.tsx'
+import type { SpendingSectionInjected } from './SpendingSection.tsx'
+import { SPEND_BUDGET_NS, SpendingLimitController } from './spending-controller.ts'
 
 export type { ModelsSectionInjected, ModelsSectionProps } from './ModelsSection.tsx'
+export type { SpendingSectionInjected } from './SpendingSection.tsx'
+export type { SpendingLimitFace, SpendingLimitState, SpendingSettings } from './spending-controller.ts'
 export type { ModelsFooterOwnerProps, ProviderCardExtrasOwnerProps } from './slot-contract.ts'
 export type { ModelsKey } from './locales.ts'
 
@@ -124,6 +130,34 @@ export function apply(ctx: ClientContext): void {
       'settings.models.footer': { kind: 'list', scope: 'root' },
     },
   }, ModelsSection))
+  // The Spending section, while the Host serves both the spend ledger's
+  // Remote and its settings namespace.
+  ctx.inject(['remote.spendBudget'], (scope: ClientContext) => {
+    const limit = new SpendingLimitController(scope.configForms.get(SPEND_BUDGET_NS))
+    scope.effect(() => () => { limit.dispose() }, 'ui-settings-models: spending form subscription')
+    const spendingInjected = (): SpendingSectionInjected => ({
+      ...limit.inject(),
+      readMonth: async () => {
+        try {
+          const result = await scope.remote.spendBudget.month()
+          return result.ok ? result.value : undefined
+        } catch (error) {
+          // The section keeps its last reading; the next mount or save retries.
+          console.warn('[ui-settings-models] spend read failed:', error)
+          return undefined
+        }
+      },
+      t,
+    })
+    scope.effect(() => scope.configForms.whileServed([SPEND_BUDGET_NS], () => scope.slots.inject('settings.section', () => scope.slots.register({
+      name: 'settings.section',
+      id: 'spending',
+      order: 11,
+      label: () => t('spendingNav'),
+      inject: spendingInjected,
+    }, SpendingSection))), 'ui-settings-models: spending section')
+  })
+
   ctx.slots.inject('settings.onboarding', () => ctx.slots.register({
     name: 'settings.onboarding',
     id: 'provider-onboarding',

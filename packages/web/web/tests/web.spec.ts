@@ -34,7 +34,7 @@ function fetchResult(marker: string): WebFetchResult {
 }
 
 /** Mount a WebRuntime on a fresh root context with the given config. */
-async function mountWeb(config: ConstructorParameters<typeof WebRuntime>[1] = {}): Promise<{ ctx: Context; web: WebRuntime }> {
+async function mountWeb(config: { searchProvider?: string; fetchProvider?: string } = {}): Promise<{ ctx: Context; web: WebRuntime }> {
   const ctx = new Context()
   await ctx.plugin(WebRuntime, config)
   return { ctx, web: ctx.web }

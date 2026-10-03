@@ -101,11 +101,44 @@ export type WebFetchBody =
  */
 export interface WebSearchProvider {
   readonly id: string
+  /**
+   * Credential reference the provider resolves its API key from at each
+   * search. Configuration surfaces write a user-supplied key to it; absent
+   * when the provider takes no user key.
+   */
+  readonly credentialRef?: string | undefined
   /** Cheap local usability check; must not make network calls. */
   available(): boolean
   /** Run one search; honor `signal` for cancellation. */
   search(request: WebSearchRequest, signal?: AbortSignal): Promise<WebSearchResult>
+  /**
+   * Verify a candidate API key with one minimal request to this provider's own
+   * endpoint, before anything stores it. The key is sent nowhere else.
+   * Resolves when the provider accepts the key; rejects with {@link WebError}
+   * `WEB_PROVIDER_AUTH` when it rejects the key, `WEB_PROVIDER_QUOTA` when it
+   * accepts the key but refuses the request for quota, credit, or rate
+   * limits, and `WEB_PROVIDER_ERROR` or `WEB_ABORTED` otherwise.
+   * @param apiKey - the candidate key.
+   * @param signal - optional cancellation signal.
+   */
+  checkKey?(apiKey: string, signal?: AbortSignal): Promise<void>
 }
+
+/** One registered search provider, as a configuration surface lists it. */
+export interface WebSearchProviderInfo {
+  /** Provider id; the value `searchProvider` selects. */
+  id: string
+  /** Credential reference its API key is written to. */
+  credentialRef: string
+}
+
+/**
+ * Outcome of checking a candidate search key. `quota` means the provider
+ * accepted the key and refused the request for quota, credit, or rate limits.
+ */
+export type WebSearchKeyCheck =
+  | { ok: true }
+  | { ok: false; reason: 'auth' | 'quota' | 'error'; message: string }
 
 /**
  * A fetch-capable backend. Registered with `ctx.web.registerFetchProvider`.
@@ -122,7 +155,9 @@ export interface WebFetchProvider {
 /**
  * Typed web error with a machine-routable, open-string `code` and chained `cause`.
  * Consumers must tolerate provider-specific codes. Shared codes cover unavailable,
- * missing, unusable, ambiguous, or duplicate providers, cancellation, and provider failure;
+ * missing, unusable, ambiguous, or duplicate providers, cancellation, and provider failure,
+ * which a provider narrows to `WEB_PROVIDER_AUTH` for a rejected API key and
+ * `WEB_PROVIDER_QUOTA` for quota, credit, or rate limits;
  * the local fetch provider additionally distinguishes invalid or blocked URLs, redirects,
  * size and timeout limits, and unsupported content types. Tool execution exposes the code in
  * structured error metadata.

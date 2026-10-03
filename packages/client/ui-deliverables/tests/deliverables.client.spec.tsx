@@ -755,9 +755,14 @@ describe('plugin registration', () => {
     } as never, () => null)
     const registerTab = vi.fn(() => () => { registered = undefined })
     let registered: unknown
-    ctx.provide('sidebarRightTabs', { register: (definition: unknown) => { registered = definition; return registerTab() } } as never)
+    let browserType: object | undefined = {}
+    ctx.provide('sidebarRightTabs', {
+      register: (definition: unknown) => { registered = definition; return registerTab() },
+      get: (kind: string) => kind === 'browser' ? browserType : undefined,
+    } as never)
     const openResource = vi.fn()
-    ctx.provide('sidebarRight', { openResource } as never)
+    const openTab = vi.fn()
+    ctx.provide('sidebarRight', { openResource, openTab } as never)
     // ui-theme's Appearance row binds a durable scope through these two.
     const session = {
       canOpenWorkspacePath: () => Promise.resolve({ ok: true as const, value: true }),
@@ -775,7 +780,17 @@ describe('plugin registration', () => {
     await fiber.await()
     const [entry] = ctx.slots.entries('conversation.chat.turnTail')
     expect(entry).toBeDefined()
-    expect(ctx.slots.entries('tool.call.toolview')).toHaveLength(1)
+    const toolviews = ctx.slots.entries('tool.call.toolview')
+    expect(toolviews.map(view => view.options.key)).toEqual(['present', 'preview'])
+    // preview opens loopback URLs in a Browser tab when one is composed, else in the system browser.
+    const previewFace = toolviews[1]?.inject?.(SessionId('viewed-session') as never, undefined as never) as { openUrl: (url: string) => void }
+    previewFace.openUrl('http://localhost:5173/')
+    expect(openTab).toHaveBeenCalledExactlyOnceWith('browser', { params: { url: 'http://localhost:5173/' } })
+    browserType = undefined
+    const windowOpen = vi.spyOn(window, 'open').mockReturnValue(null)
+    previewFace.openUrl('http://localhost:5173/')
+    expect(windowOpen).toHaveBeenCalledExactlyOnceWith('http://localhost:5173/', '_blank', 'noopener,noreferrer')
+    windowOpen.mockRestore()
     expect(entry?.inject).toBeDefined()
     expect(registered).toMatchObject({ kind: 'changes-review', patterns: ['dsh-resource://changes-review/**'] })
     const [tabEntry] = ctx.slots.entries('sidebar.right.pane.tab')

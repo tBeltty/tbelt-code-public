@@ -9,12 +9,6 @@
   ],
   "references": [
     {
-      "path": "../../llm/llm"
-    },
-    {
-      "path": "../../util/launch-environment"
-    },
-    {
       "path": "../../../vendor/cosmokit"
     },
     {

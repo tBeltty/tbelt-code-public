@@ -3,7 +3,7 @@
 (() => {
   const NAMES = { windows: 'Windows', mac: 'macOS', linux: 'Linux' }
   // Browsers report every Mac as Intel, so the note names the supported chip instead of detecting it.
-  const NOTES = { mac: ' (Apple silicon: M1 or newer)' }
+  const NOTES = { mac: ' on Apple silicon' }
 
   function detectPlatform() {
     const source = `${navigator.userAgentData?.platform ?? ''} ${navigator.platform ?? ''} ${navigator.userAgent}`.toLowerCase()

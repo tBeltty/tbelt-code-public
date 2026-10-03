@@ -21,7 +21,7 @@ export interface PlanCommentLayerProps extends PropsLocale<'plan'> {
   readonly markdown: string
   /** Localized Markdown chrome, reference-stable per locale. */
   readonly labels: MarkdownLabels
-  /** This document's unsent comments. */
+  /** This document's comments; resolved ones are listed read-only and not highlighted. */
   readonly comments: readonly PlanComment[]
   /** Save a new comment. */
   readonly onAdd: (anchor: PlanCommentAnchor, text: string) => void
@@ -73,7 +73,7 @@ function CommentEditor({ initial, submitLabel, onCancel, onSubmit, t }: {
   )
 }
 
-/** One saved comment inside a block's comment list, editable in place. */
+/** One saved comment inside a block's comment list; unsent comments are editable in place. */
 function CommentItem({ comment, onUpdate, onRemove, t }: {
   comment: PlanComment
   onUpdate: (id: string, text: string) => void
@@ -81,7 +81,7 @@ function CommentItem({ comment, onUpdate, onRemove, t }: {
 } & PropsLocale<'plan'>) {
   const [editing, setEditing] = useState(false)
   return (
-    <li className={css.item} data-plan-comment={comment.id}>
+    <li className={css.item} data-plan-comment={comment.id} data-resolved={comment.resolved === true ? '' : undefined}>
       <blockquote className={css.quote}>{comment.quote}</blockquote>
       {editing
         ? (
@@ -91,8 +91,12 @@ function CommentItem({ comment, onUpdate, onRemove, t }: {
         : (
           <div className={css.itemBody}>
             <p className={css.text}>{comment.text}</p>
-            <button type="button" className={css.iconButton} aria-label={t('comment.edit')} title={t('comment.edit')}
-              onClick={() => { setEditing(true) }}><IconEditOutlineRegular size={14} /></button>
+            {comment.resolved === true
+              ? <span className={css.resolved}>{t('comment.resolved')}</span>
+              : (
+                <button type="button" className={css.iconButton} aria-label={t('comment.edit')} title={t('comment.edit')}
+                  onClick={() => { setEditing(true) }}><IconEditOutlineRegular size={14} /></button>
+              )}
             <button type="button" className={css.iconButton} aria-label={t('comment.remove')} title={t('comment.remove')}
               onClick={() => { onRemove(comment.id) }}><IconTrashOutlineRegular size={14} /></button>
           </div>
@@ -134,7 +138,7 @@ export function PlanCommentLayer({ markdown, labels, comments, onAdd, onUpdate, 
       const byBlock = new Map<number, PlanComment[]>()
       for (const comment of comments) {
         const located = anchorRange(root, comment)
-        if (located !== undefined) ranges.push(located.range)
+        if (located !== undefined && comment.resolved !== true) ranges.push(located.range)
         const block = Math.min(located?.block ?? comment.block, blocks.length - 1)
         byBlock.set(block, [...byBlock.get(block) ?? [], comment])
       }
@@ -214,6 +218,7 @@ export function PlanCommentLayer({ markdown, labels, comments, onAdd, onUpdate, 
       {placed.map(entry => (
         <button key={entry.block} type="button" className={css.marker} style={{ top: entry.top }} data-plan-comment-ui=""
           data-plan-comment-marker={entry.block} aria-expanded={openBlock === entry.block}
+          data-resolved={entry.comments.every(comment => comment.resolved === true) ? '' : undefined}
           aria-label={t(entry.comments.length === 1 ? 'comment.marker.one' : 'comment.marker.other', { count: entry.comments.length })}
           onClick={() => { setOpenBlock(openBlock === entry.block ? undefined : entry.block) }}>
           <IconListPenOutlineRegular size={14} />

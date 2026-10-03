@@ -27,8 +27,11 @@ export type SettingsWriteOutcome =
 export type ModelDiscoveryOutcome =
   /** The candidates the provider disclosed, in its own order. */
   | { readonly kind: 'found'; readonly models: readonly LlmDiscoveredModel[] }
-  /** The interrogation was refused, with the Host's own diagnostic. */
-  | { readonly kind: 'refused'; readonly message: string }
+  /**
+   * The interrogation was refused, with the Host's own diagnostic and the
+   * adapter's error code when it gave one (`INVALID_CREDENTIAL`, `QUOTA`).
+   */
+  | { readonly kind: 'refused'; readonly message: string; readonly code?: string }
 
 /** The Host operations the Models page and its cards invoke. */
 export interface ModelsOperations {
@@ -111,9 +114,11 @@ export function createModelsOperations(ctx: ClientContext): ModelsOperations {
     },
     discoverModels: async (settingsNs, request) => {
       const response = await ctx.remote.llm.discoverModels(settingsNs, request)
-      return response.ok
-        ? { kind: 'found', models: response.value }
-        : { kind: 'refused', message: response.error.message }
+      if (response.ok) return { kind: 'found', models: response.value }
+      const { code, message, details } = response.error
+      return code === 'llm/model-discovery-rejected' && details.code !== undefined
+        ? { kind: 'refused', message, code: details.code }
+        : { kind: 'refused', message }
     },
     setDefaultModel: async (provider, model) => {
       const response = await ctx.remote.session.setDefaultModel({ provider, model })

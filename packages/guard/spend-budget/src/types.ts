@@ -3,7 +3,7 @@
  * @module @deepseek-ai/dsh-spend-budget/src/types
  */
 
-import type { SessionId } from '@deepseek-ai/dsh-session'
+import type { SessionId } from '@deepseek-ai/dsh-session/types'
 
 /** A UTC calendar month as `YYYY-MM`, the key of one month record. */
 export type SpendMonth = `${number}-${number}`
@@ -29,6 +29,18 @@ export interface SpendSummary {
   /** The month's spend across every Session, and the configured monthly limit. */
   readonly monthly: SpendScopeSummary
 }
+
+/**
+ * {@link SpendSummary} as the `spendBudget` Remote returns it. The month is
+ * plain `YYYY-MM` text because the wire codec cannot carry a template-literal type.
+ */
+export interface SpendSummaryReading extends Omit<SpendSummary, 'month'> {
+  /** The UTC month the `monthly` figures belong to, as `YYYY-MM`. */
+  readonly month: string
+}
+
+/** The current month's figures as the `spendBudget` Remote's `month` read returns them. */
+export type SpendMonthReading = Pick<SpendSummaryReading, 'month' | 'monthly'>
 
 /** One limit that refuses the next model step. */
 export interface SpendLimitBreach {

@@ -506,6 +506,21 @@ describe('ui-model-selection dual entry', () => {
     expect(b.calls.select).toBe(0)
   })
 
+  it('offers the Models settings entry only while settings navigation is provided', async () => {
+    const b = await bench()
+    b.mint('s1')
+    const face = b.seat().inject!(sid('s1'))
+    expect(face.modelSettings()).toBeUndefined()
+    const openSection = vi.fn()
+    const withdraw = b.ctx.reflect.provide('settingsNavigation', { openSection })
+    const entry = face.modelSettings()
+    expect(entry).toBeTypeOf('function')
+    entry!()
+    expect(openSection).toHaveBeenCalledExactlyOnceWith('models')
+    await withdraw()
+    expect(face.modelSettings()).toBeUndefined()
+  })
+
   it('an unknown session fails loud at the seat inject', async () => {
     const b = await bench()
     expect(() => b.seat().inject!(sid('ghost'))).toThrow(/resolved no scope/)

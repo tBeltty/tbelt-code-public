@@ -1,0 +1,186 @@
+name: Desktop release
+
+# Build one desktop installer and, when the update bucket is configured, upload
+# it so installed apps update themselves. Started by hand only; it builds the
+# app but never runs the quality gate.
+#
+# Repository variables: DSH_DESKTOP_APP_ID, DOWNLOAD_PROD_ORIGIN,
+#   DOWNLOAD_S3_ENDPOINT, DOWNLOAD_PROD_COS_BUCKET
+# Repository secrets:   DOWNLOAD_PROD_COS_SECRET_ID, DOWNLOAD_PROD_COS_SECRET_KEY
+# Optional variables:   DOWNLOAD_BUCKET_LIMIT_GB (default 8) and DOWNLOAD_KEEP_VERSIONS
+#   (default 2). The upload keeps that many releases per platform, deletes older
+#   ones, and refuses to run if the bucket would still exceed the limit.
+# macOS signing:        CSC_LINK (base64 .p12 Developer ID certificate), CSC_KEY_PASSWORD,
+#   APPLE_API_KEY_P8, APPLE_API_KEY_ID, APPLE_API_ISSUER (secrets) and
+#   DSH_DESKTOP_MACOS_SIGNING_IDENTITY, DSH_DESKTOP_MACOS_TEAM_ID (variables).
+#   Without CSC_LINK the macOS build is ad-hoc signed and not notarized: users
+#   approve it once in System Settings, and it does not update itself.
+# Windows builds here are unsigned (the signing setup needs a hardware token):
+# SmartScreen warns on first install, but they are uploaded and update
+# themselves like the other platforms.
+on:
+  workflow_dispatch:
+    inputs:
+      target:
+        description: Platform to build
+        type: choice
+        options: [linux-x64, mac-arm64, win-x64]
+        default: linux-x64
+      upload:
+        description: Upload to the update bucket
+        type: boolean
+        default: true
+
+permissions:
+  contents: read
+
+jobs:
+  package:
+    # Hosted runner minutes are free only for public repositories.
+    if: ${{ !github.event.repository.private }}
+    runs-on: ${{ inputs.target == 'mac-arm64' && 'macos-14' || inputs.target == 'win-x64' && 'windows-latest' || 'ubuntu-latest' }}
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      # Every build publishes its own version, so installed apps see each rebuild
+      # as an update: <product version>.<commit date>.<commit time>, both UTC.
+      # All targets built from one commit share it.
+      - name: Choose build version
+        id: version
+        shell: bash
+        run: |
+          product=$(node -p "require('./apps/desktop/package.json').version")
+          stamp=$(TZ=UTC git show -s --format=%cd --date=format-local:'%Y%m%d %H%M' HEAD)
+          day=${stamp% *}
+          time=${stamp#* }
+          case "$product" in
+            *-*) version="$product.$day.$((10#$time))" ;;
+            *)   version="$product-test.$day.$((10#$time))" ;;
+          esac
+          echo "Publishing $version"
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+
+      - name: Choose macOS signing
+        id: macos
+        if: inputs.target == 'mac-arm64'
+        shell: bash
+        env:
+          CSC_LINK: ${{ secrets.CSC_LINK }}
+        run: |
+          if [[ -n "$CSC_LINK" ]]; then echo 'signed=true' >> "$GITHUB_OUTPUT"
+          else echo '::notice::CSC_LINK is not set; building an unsigned macOS release.'; echo 'signed=false' >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Prepare macOS signing
+        if: inputs.target == 'mac-arm64' && steps.macos.outputs.signed == 'true'
+        shell: bash
+        env:
+          APPLE_API_KEY_P8: ${{ secrets.APPLE_API_KEY_P8 }}
+          CSC_LINK: ${{ secrets.CSC_LINK }}
+          CSC_KEY_PASSWORD: ${{ secrets.CSC_KEY_PASSWORD }}
+        run: |
+          # Runtime preparation signs embedded binaries with `codesign`, which
+          # reads the identity from a keychain, so import the certificate too.
+          keychain="$RUNNER_TEMP/signing.keychain-db"
+          keychain_password=$(openssl rand -hex 16)
+          printf '%s' "$CSC_LINK" | base64 --decode > "$RUNNER_TEMP/certificate.p12"
+          security create-keychain -p "$keychain_password" "$keychain"
+          security set-keychain-settings -lut 21600 "$keychain"
+          security unlock-keychain -p "$keychain_password" "$keychain"
+          security import "$RUNNER_TEMP/certificate.p12" -P "$CSC_KEY_PASSWORD" -A -t cert -f pkcs12 -k "$keychain"
+          security set-key-partition-list -S apple-tool:,apple: -k "$keychain_password" "$keychain" >/dev/null
+          # shellcheck disable=SC2046  # one argument per existing keychain
+          security list-keychains -d user -s "$keychain" $(security list-keychains -d user | tr -d '"')
+          rm -f "$RUNNER_TEMP/certificate.p12"
+          key="$RUNNER_TEMP/apple-api-key.p8"
+          printf '%s' "$APPLE_API_KEY_P8" > "$key"
+          echo "APPLE_API_KEY=$key" >> "$GITHUB_ENV"
+          printf '%s' "$CSC_LINK" | base64 --decode > "$RUNNER_TEMP/developer-id.p12"
+          echo "CSC_LINK_FILE=$RUNNER_TEMP/developer-id.p12" >> "$GITHUB_ENV"
+
+      - name: Write release settings
+        shell: bash
+        env:
+          DSH_DESKTOP_APP_ID: ${{ vars.DSH_DESKTOP_APP_ID }}
+          DOWNLOAD_PROD_ORIGIN: ${{ vars.DOWNLOAD_PROD_ORIGIN }}
+          DOWNLOAD_PROD_COS_BUCKET: ${{ vars.DOWNLOAD_PROD_COS_BUCKET }}
+          DOWNLOAD_PROD_COS_SECRET_ID: ${{ secrets.DOWNLOAD_PROD_COS_SECRET_ID }}
+          DOWNLOAD_PROD_COS_SECRET_KEY: ${{ secrets.DOWNLOAD_PROD_COS_SECRET_KEY }}
+          CSC_KEY_PASSWORD: ${{ secrets.CSC_KEY_PASSWORD }}
+          APPLE_API_KEY_ID: ${{ secrets.APPLE_API_KEY_ID }}
+          APPLE_API_ISSUER: ${{ secrets.APPLE_API_ISSUER }}
+          DSH_DESKTOP_MACOS_SIGNING_IDENTITY: ${{ vars.DSH_DESKTOP_MACOS_SIGNING_IDENTITY }}
+          DSH_DESKTOP_MACOS_TEAM_ID: ${{ vars.DSH_DESKTOP_MACOS_TEAM_ID }}
+        run: |
+          # Packaging and upload read release settings only from the target dotenv file.
+          case '${{ inputs.target }}' in
+            linux-x64) file=apps/desktop/.env.linux ;;
+            mac-arm64) file=apps/desktop/.env.macos ;;
+            win-x64)   file=apps/desktop/.env.windows ;;
+          esac
+          {
+            echo "DSH_DESKTOP_AUTO_UPDATE_ENV=production"
+            for name in DSH_DESKTOP_APP_ID DOWNLOAD_PROD_ORIGIN DOWNLOAD_PROD_COS_BUCKET DOWNLOAD_PROD_COS_SECRET_ID DOWNLOAD_PROD_COS_SECRET_KEY; do
+              if [[ -n "${!name}" ]]; then printf '%s=%s\n' "$name" "${!name}"; fi
+            done
+            if [[ '${{ steps.macos.outputs.signed }}' == 'true' ]]; then
+              printf 'CSC_LINK=%s\n' "$CSC_LINK_FILE"
+              for name in CSC_KEY_PASSWORD APPLE_API_KEY APPLE_API_KEY_ID APPLE_API_ISSUER DSH_DESKTOP_MACOS_SIGNING_IDENTITY DSH_DESKTOP_MACOS_TEAM_ID; do
+                printf '%s=%s\n' "$name" "${!name}"
+              done
+            fi
+          } > "$file"
+
+      - name: Package
+        shell: bash
+        run: |
+          desktop() { pnpm --filter @deepseek-ai/dsh-desktop run "$1" -- --build-version '${{ steps.version.outputs.version }}'; }
+          case '${{ inputs.target }}' in
+            linux-x64) desktop package:linux:x64 ;;
+            mac-arm64)
+              if [[ '${{ steps.macos.outputs.signed }}' == 'true' ]]; then desktop package:mac:arm64
+              else desktop package:mac:arm64:unsigned-release
+              fi ;;
+            win-x64)   desktop package:win:x64:unsigned-release ;;
+          esac
+
+      - name: Upload to the update bucket
+        if: inputs.upload
+        shell: bash
+        env:
+          DOWNLOAD_S3_ENDPOINT: ${{ vars.DOWNLOAD_S3_ENDPOINT }}
+          DOWNLOAD_BUCKET_LIMIT_GB: ${{ vars.DOWNLOAD_BUCKET_LIMIT_GB }}
+          DOWNLOAD_KEEP_VERSIONS: ${{ vars.DOWNLOAD_KEEP_VERSIONS }}
+        run: |
+          case '${{ inputs.target }}' in
+            linux-x64) pnpm --filter @deepseek-ai/dsh-desktop run upload:linux:x64 ;;
+            mac-arm64) pnpm --filter @deepseek-ai/dsh-desktop run upload:mac:arm64 ;;
+            win-x64)   pnpm --filter @deepseek-ai/dsh-desktop run upload:win:x64 ;;
+          esac
+          # A fixed URL that always serves the newest installer, for the download site.
+          pnpm --filter @deepseek-ai/dsh-desktop run "upload:latest:${{ inputs.target == 'linux-x64' && 'linux:x64' || inputs.target == 'mac-arm64' && 'mac:arm64' || 'win:x64' }}"
+
+      - name: Remove release settings
+        if: always()
+        shell: bash
+        run: rm -f apps/desktop/.env.linux apps/desktop/.env.macos apps/desktop/.env.windows
+
+      - name: Keep the installer as a workflow artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: tbelt-code-${{ inputs.target }}
+          path: |
+            apps/desktop/.desktop-build/targets/${{ inputs.target }}/artifacts/*
+            apps/desktop/.desktop-build/targets/${{ inputs.target }}/unsigned-artifacts/*
+          if-no-files-found: error

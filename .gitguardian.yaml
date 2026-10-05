@@ -1,0 +1,19 @@
+# GitGuardian (ggshield and the GitHub check) secret-scan exceptions.
+# Each entry is a placeholder credential that a test or README feeds to the
+# redaction or credential code on purpose; none is a live key.
+version: 2
+secret:
+  ignored_matches:
+    - name: Fake AWS access key id in memory redaction tests and README
+      match: AKIAABCDEFGHIJKLMNOP
+    - name: Fake API key in session-telemetry-otel e2e fixtures
+      match: sk-e2efixture1234567890
+    - name: Fake API key in credentials-local tests
+      match: sk-live-DO-NOT-LOG-abcdef123456
+    # Generic-detector hits; matched by ggshield ignore SHA.
+    - name: "'fixture-secret' ConvertTo-SecureString in apps/desktop/tests/upload-with-credentials.spec.ts"
+      match: 366e4897eadf85f0faab55416a06f3350cda3205c3cd1449014640d7b6342c44
+    - name: Example proxy URL user:password in a user guide
+      match: a46fd20a7bfc2f7a48b0d2a0fd3199adad1882878fa8daf3f243b56af24bb20d
+    - name: "PWD environment variable read as a password in subprocess-local/src/index.ts"
+      match: 05b2ea3d3f100064bf6371a10d04f5d141d855389fbf4051c8c76e23204209f8

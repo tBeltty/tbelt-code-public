@@ -1,0 +1,37 @@
+.root { display: flex; flex: 1; align-items: center; gap: 4px; min-width: 0; }
+.root[data-collapsed='true'] { flex-direction: column; }
+.menuAnchor { flex: none; }
+.menuTrigger { user-select: none; display: grid; place-items: center; box-sizing: border-box; width: 32px; height: 32px; padding: 0; border: 0; border-radius: var(--dsw-radius-md); background: transparent; color: var(--dsw-alias-label-primary); font: inherit; cursor: pointer; }
+.menuTrigger:hover { background: var(--dsw-alias-interactive-bg-hover); }
+.trigger { user-select: none; display: flex; flex: 1; align-items: center; min-width: 0; height: 44px; gap: 8px; padding: 6px; border: 0; border-radius: var(--dsw-radius-md); background: transparent; color: var(--dsw-alias-label-primary); font: inherit; font-size: 14px; cursor: pointer; }
+.trigger[data-collapsed='true'] { box-sizing: border-box; width: 36px; height: 36px; justify-content: center; gap: 0; padding: 0; }
+.trigger:hover { background: var(--dsw-alias-interactive-bg-hover); }
+.avatar { display: flex; align-items: center; justify-content: center; flex: none; width: 24px; height: 24px; border-radius: 50%;
+  corner-shape: round; background: var(--dsw-alias-bg-skeleton); color: var(--dsw-alias-label-tertiary); }
+.label { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+/* Settings launcher: a 32px row carrying the 14px gear. */
+.trigger:not([data-collapsed='true']) { height: 32px; padding: 6px 2px 6px 6px; line-height: 20px; }
+
+/* Signed-out menu card and rows; listClassName reaches the portaled card. */
+.signedOutMenu[role='menu'] {
+  min-width: 124px;
+  max-width: 280px;
+  padding: 4px;
+}
+
+.signedOutMenu [role='menuitem'] {
+  min-height: 40px;
+  gap: 8px;
+  padding: 8px 10px;
+  border-radius: var(--dsw-radius-md);
+  font-size: 14px;
+  line-height: 22px;
+}
+
+.signedOutMenu [role='menuitem'] > span:first-child:not(:last-child) {
+  width: 16px;
+  height: 16px;
+  color: var(--dsw-alias-menu-icon);
+}
+
+.signedOutMenu [role='menuitem'] > span:first-child:not(:last-child) svg { width: 16px; height: 16px; }

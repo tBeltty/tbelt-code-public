@@ -1,0 +1,45 @@
+/* A quiet tertiary reading under the composer, in the same tier as the stats
+   pills; only the reached-limit state and the uncounted-call dot add color. */
+
+.root {
+  display: flex;
+  justify-content: center;
+  min-width: 0;
+  font-size: calc(var(--dsh-content-font-size-secondary, 13px) - 1px);
+  line-height: calc(20px + var(--dsh-content-font-delta-secondary, 0px));
+}
+
+.pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 1px 8px;
+  border: none;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--dsw-alias-label-tertiary);
+  font: inherit;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+button.pill {
+  cursor: pointer;
+}
+
+button.pill:hover {
+  background: var(--dsw-alias-interactive-bg-hover);
+  color: var(--dsw-alias-label-secondary);
+}
+
+.root[data-reached] .pill {
+  color: var(--dsw-alias-label-error);
+}
+
+.unpriced {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: currentColor;
+  opacity: 0.8;
+}

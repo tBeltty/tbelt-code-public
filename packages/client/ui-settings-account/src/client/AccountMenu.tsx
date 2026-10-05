@@ -1,0 +1,99 @@
+/**
+ * Sidebar Settings launcher, beside an account menu that holds only account
+ * actions (feedback and sign-out) and is omitted when it would be empty.
+ */
+import { useEffect, useRef, useState } from 'react'
+import {
+  Toast, Menu, Tooltip, IconEllipsisOutlineMedium, IconPaperPlaneOutlineMedium, IconSettingsOutlineMedium,
+} from '@deepseek-ai/dsh-client-ui-primitives'
+import type { InjectFace, PropsLocale, PropsRuntime } from '@deepseek-ai/dsh-client-ui-slots'
+import type { AccountSectionInjected } from './AccountSection.tsx'
+import { SignOutDialog } from './SignOutDialog.tsx'
+import { SignInDialog } from './SignInDialog.tsx'
+import { LogoutIcon } from './LogoutIcon.tsx'
+import { AccountAvatar } from './AccountAvatar.tsx'
+import { AccountNoticeCard } from './AccountNotice.tsx'
+import css from './AccountMenu.module.css'
+
+/** Account launcher composed by the settings shell. */
+export type AccountMenuProps = PropsRuntime<'settings.launcher'> & PropsLocale<'settings.account'> & InjectFace<AccountSectionInjected>
+
+/** The signed-in label stays empty while the profile loads.
+ * @param props - sidebar geometry, settings navigation and account operations.
+ * @returns account menu launcher.
+ */
+export function AccountMenu({
+  subscribeSessionExpired, subscribeModelSignInRequired, wide, settingsShortcut, openSettings, openOnboarding, settingsOpen,
+  useAccount, useTheme, signOut, hasRunningAccountTasks, refreshAccount, bonusNoticeShown, bonusNoticeDismissed,
+  contactUs, showLogin, start, cancel, t,
+}: AccountMenuProps) {
+  const anchor = useRef<HTMLDivElement>(null)
+  // The launcher outlives the panel, so a false-to-true edge is one Settings entry:
+  // re-renders, section switches and tab switches inside one open must not read again.
+  const settingsWasOpen = useRef(false)
+  useEffect(() => {
+    if (settingsOpen && !settingsWasOpen.current) void refreshAccount()
+    settingsWasOpen.current = settingsOpen
+  }, [refreshAccount, settingsOpen])
+  const account = useAccount(state => state)
+  const colorScheme = useTheme(snapshot => snapshot.active.colorScheme)
+  const signedIn = account.view?.status === 'credential-stored'
+  const [signInNotice, setSignInNotice] = useState(0)
+  useEffect(() => subscribeModelSignInRequired?.(() => { setSignInNotice(value => value + 1) }), [subscribeModelSignInRequired])
+  const [expiryNotice, setExpiryNotice] = useState(false)
+  useEffect(() => subscribeSessionExpired?.(() => { setExpiryNotice(true) }), [subscribeSessionExpired])
+  const profile = account.details?.profile
+  const label = profile === undefined ? null : profile.status === 'ready'
+    ? profile.value.name ?? profile.value.contact ?? t('signedIn') : t('signedIn')
+  const [open, setOpen] = useState(false)
+  const trigger = useRef<HTMLButtonElement>(null)
+  const [busy, setBusy] = useState(false)
+  const [signOutImpact, setSignOutImpact] = useState<boolean | 'unknown'>()
+  const requestSignOut = async () => {
+    setBusy(true)
+    try { setSignOutImpact(await hasRunningAccountTasks()); setOpen(false) }
+    catch (_error) { setSignOutImpact('unknown'); setOpen(false) }
+    finally { setBusy(false) }
+  }
+  const menuItems = [
+    ...(contactUs === undefined ? [] : [{ id: 'contact', label: t('contactUs'), icon: <IconPaperPlaneOutlineMedium size={16} /> }]),
+    // tBelt Code is model-agnostic: the signed-out menu offers no provider account sign-in.
+    ...(signedIn ? [{ id: 'signout', label: t('signOut'), icon: <LogoutIcon />, disabled: busy }] : []),
+  ]
+  // The plugin's start publishes `loginFailed` before it rejects, so the dialog owns the report.
+  return <div ref={anchor} className={css.root} data-collapsed={!wide}>
+    {signInNotice > 0 && <Toast key={signInNotice} text={t('modelSignInRequired')} onDone={() => { setSignInNotice(0) }} />}
+    {expiryNotice && <Toast text={t('sessionExpired')} onDone={() => { setExpiryNotice(false) }} />}
+    {signedIn && account.notice && <AccountNoticeCard key={account.notice.orderId} notice={account.notice}
+      anchor={anchor} title={t('bonusNoticeTitle')} closeLabel={t('close')}
+      onShown={bonusNoticeShown} onDismiss={bonusNoticeDismissed} />}
+    <Tooltip disabled={settingsOpen} label={t('settings')} shortcutKeys={settingsShortcut?.keys}>
+      <button type="button" className={css.trigger} data-collapsed={!wide} aria-label={t('settings')}
+        aria-keyshortcuts={settingsShortcut?.aria} aria-haspopup="dialog" aria-expanded={settingsOpen}
+        onClick={() => { openSettings() }}>
+        <IconSettingsOutlineMedium size={14} />
+        {wide && <span className={css.label}>{t('settings')}</span>}
+      </button>
+    </Tooltip>
+    {menuItems.length > 0 && <Menu open={open} side="top" portal autoFocus className={css.menuAnchor}
+      listClassName={signedIn ? undefined : css.signedOutMenu}
+      anchor={<button ref={trigger} type="button" className={css.menuTrigger} aria-label={t('menu')}
+        title={signedIn ? label ?? undefined : t('more')} aria-haspopup="menu" aria-expanded={open}
+        onClick={() => { setOpen(value => !value) }}>
+        {signedIn
+          ? <span className={css.avatar}><AccountAvatar url={profile?.status === 'ready' ? profile.value.avatarUrl : null} /></span>
+          : <IconEllipsisOutlineMedium size={14} />}
+      </button>}
+      items={menuItems}
+      onClose={() => { setOpen(false) }}
+      onSelect={(id) => {
+        if (id === 'contact') { setOpen(false); trigger.current?.focus(); contactUs?.() }
+        else void requestSignOut()
+      }} />}
+    {account.loginVisible && !account.onboarding && <SignInDialog account={account} colorScheme={colorScheme}
+      start={start} cancel={cancel} t={t}
+      close={() => { showLogin(false) }} useApiKey={() => { showLogin(false); openOnboarding('deepseek-official') }} />}
+    {signedIn && signOutImpact !== undefined && <SignOutDialog running={signOutImpact} signOut={signOut}
+      close={() => { setSignOutImpact(undefined) }} t={t} />}
+  </div>
+}

@@ -1,0 +1,58 @@
+.icon {
+  /* The design platform has no violet token matching the supplied image/video artwork. */
+  --dsh-file-type-violet: rgb(139, 118, 246);
+
+  color: var(--dsh-file-type-icon-color, var(--dsh-file-type-default-color));
+}
+
+.code {
+  --dsh-file-type-default-color: var(--dsw-static-deepseek-500);
+}
+
+.excel {
+  --dsh-file-type-default-color: var(--dsw-static-green-500);
+}
+
+.folder {
+  --dsh-file-type-default-color: var(--dsw-static-amber-400);
+}
+
+.html {
+  --dsh-file-type-default-color: var(--dsw-static-deepseek-500);
+}
+
+.image {
+  --dsh-file-type-default-color: var(--dsh-file-type-violet);
+}
+
+.markdown {
+  --dsh-file-type-default-color: var(--dsw-static-deepseek-500);
+}
+
+.other {
+  --dsh-file-type-default-color: var(--dsw-static-neutral-550);
+}
+
+.pdf {
+  --dsh-file-type-default-color: var(--dsw-static-red-600);
+}
+
+.plan {
+  --dsh-file-type-default-color: var(--dsw-alias-state-business-primary);
+}
+
+.ppt {
+  --dsh-file-type-default-color: var(--dsw-static-amber-500);
+}
+
+.text {
+  --dsh-file-type-default-color: var(--dsw-static-neutral-500);
+}
+
+.video {
+  --dsh-file-type-default-color: var(--dsh-file-type-violet);
+}
+
+.word {
+  --dsh-file-type-default-color: var(--dsw-static-deepseek-450);
+}

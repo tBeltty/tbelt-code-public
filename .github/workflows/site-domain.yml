@@ -1,0 +1,63 @@
+name: Site domain
+
+# Points tbelt.online and www.tbelt.online at the tbelt-online Pages project
+# (site/scripts/connect-domain.sh) and keeps the replaced DNS records as the
+# dns-backup artifact. With restore_run_id it puts back the records saved by
+# that run (site/scripts/restore-domain.sh).
+#
+# Needs CLOUDFLARE_API_TOKEN with Cloudflare Pages Edit and Zone DNS Edit.
+# Runs only in the public repository.
+on:
+  push:
+    branches: [site/connect-domain]
+    paths: ['.github/workflows/site-domain.yml']
+  workflow_dispatch:
+    inputs:
+      restore_run_id:
+        description: Run id whose dns-backup to restore (empty connects the domain)
+        required: false
+        default: ''
+
+permissions:
+  contents: read
+  actions: read
+
+concurrency:
+  group: site-domain
+  cancel-in-progress: false
+
+jobs:
+  domain:
+    if: ${{ !github.event.repository.private }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID || vars.CLOUDFLARE_ACCOUNT_ID }}
+      RESTORE_RUN_ID: ${{ inputs.restore_run_id }}
+      GH_TOKEN: ${{ github.token }}
+    defaults:
+      run:
+        working-directory: site
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Connect the domain
+        if: env.RESTORE_RUN_ID == ''
+        run: |
+          bash scripts/connect-domain.sh
+          jq . dns-backup-*.json
+
+      - uses: actions/upload-artifact@v4
+        if: always() && env.RESTORE_RUN_ID == ''
+        with:
+          name: dns-backup
+          path: site/dns-backup-*.json
+          if-no-files-found: ignore
+          retention-days: 90
+
+      - name: Restore the previous records
+        if: env.RESTORE_RUN_ID != ''
+        run: |
+          gh run download "$RESTORE_RUN_ID" -R "$GITHUB_REPOSITORY" -n dns-backup -D backup
+          bash scripts/restore-domain.sh backup/dns-backup-*.json

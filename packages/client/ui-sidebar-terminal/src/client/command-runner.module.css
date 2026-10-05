@@ -1,0 +1,5 @@
+.footer { display: flex; align-items: center; gap: 12px; padding: 8px 16px 10px; border-top: 0.5px solid var(--dsw-alias-border-l3); color: var(--dsw-alias-label-secondary); font-size: 12px; line-height: 18px; }
+.status { min-width: 0; overflow-wrap: anywhere; }
+.link { flex-shrink: 0; margin-left: auto; padding: 0; border: 0; color: var(--dsw-alias-state-business-primary); background: transparent; font: inherit; cursor: pointer; }
+.link:hover { text-decoration: underline; }
+.link:focus-visible { outline: 1px solid var(--dsw-focus-ring-color, var(--dsw-alias-state-business-primary)); outline-offset: 2px; }

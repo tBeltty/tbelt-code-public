@@ -29,9 +29,11 @@ Download it from [tbelt.online](https://tbelt.online). It is a developer preview
 
 Builds are not code-signed yet.
 
-## This repository
+## Contributing
 
-The source of each release. Pull requests are not accepted; report bugs and security issues in [Issues](https://github.com/tBeltty/tbelt-code-public/issues).
+Bug reports, ideas and pull requests are welcome. Open an [issue](https://github.com/tBeltty/tbelt-code-public/issues) for bugs and feature ideas, or send a pull request directly. This repository is published from a mirror, so accepted changes are merged by hand and can take a while to land.
+
+Contributions are licensed under the same terms as the project.
 
 ## License
 

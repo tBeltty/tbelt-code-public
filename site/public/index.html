@@ -136,7 +136,7 @@
           </div>
           <p class="platform-version" data-version>Checking for the latest version</p>
           <a class="button button-primary" href="/download/windows" data-download>Download .exe</a>
-          <p class="platform-help">If Windows shows "Windows protected your PC", choose <em>More info</em>, then <em>Run anyway</em>.</p>
+          <p class="platform-help">The installer is not signed. If Windows shows "Windows protected your PC", choose <em>More info</em>, then <em>Run anyway</em>. The app installs later versions itself.</p>
         </li>
         <li class="platform" data-platform="mac">
           <div class="platform-name">
@@ -145,7 +145,7 @@
           </div>
           <p class="platform-version" data-version>Checking for the latest version</p>
           <a class="button button-primary" href="/download/mac" data-download>Download .dmg</a>
-          <p class="platform-help">Open the disk image and drag tBelt Code into Applications. The first time you open it, macOS blocks it: go to System Settings, then Privacy &amp; Security, and choose <em>Open Anyway</em>.</p>
+          <p class="platform-help">Open the disk image and drag tBelt Code into Applications. The app is not signed, so macOS blocks the first launch: go to System Settings, then Privacy &amp; Security, and choose <em>Open Anyway</em>. Or run <code>xattr -dr com.apple.quarantine "/Applications/tBelt Code.app"</code> once. The app does not update itself on macOS: download each new version here and replace the old one.</p>
         </li>
         <li class="platform" data-platform="linux">
           <div class="platform-name">
@@ -154,16 +154,17 @@
           </div>
           <p class="platform-version" data-version>Checking for the latest version</p>
           <a class="button button-primary" href="/download/linux" data-download>Download AppImage</a>
-          <p class="platform-help">Make it executable, then run it: <code>chmod +x tbelt-code-*.AppImage &amp;&amp; ./tbelt-code-*.AppImage</code></p>
+          <p class="platform-help">Make it executable, then run it: <code>chmod +x tbelt-code-*.AppImage &amp;&amp; ./tbelt-code-*.AppImage</code>. On Ubuntu 22.04 and later, install <code>libfuse2</code> first. The app updates itself while the file stays where you put it.</p>
         </li>
       </ul>
       <p class="requirement">To start, add a model under Settings, then Models. Use an API key from a hosted provider, or the address of a local Ollama or LM Studio server.</p>
+      <p class="requirement" id="beta">tBelt Code is in a closed beta. Expect rough edges and changes between versions. Your sessions stay on your computer, so nothing is lost when you update. If something breaks, <a href="https://github.com/tBeltty/tbelt-code-public/issues/new/choose">open an issue</a> with your version, system and the steps that led to it.</p>
     </section>
   </main>
 
   <footer class="bottom">
     <span>© <span data-year>2026</span> tBelt</span>
-    <a href="/privacy">Privacy</a>
+    <span class="bottom-links"><a href="https://github.com/tBeltty/tbelt-code-public/issues/new/choose">Report a problem</a> <a href="/privacy">Privacy</a></span>
   </footer>
 </body>
 </html>

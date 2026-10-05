@@ -43,8 +43,11 @@ function renderPolicyContext(policy: SandboxExecutionPolicy): string {
   switch (policy.mode) {
     case 'read-only':
       return 'Current DSH file policy: read-only. Any available operation enforced by the DSH file sandbox cannot modify files in the standing mode. Do not refuse a required modification from this policy alone: try an available tool normally and follow any denial and escalation guidance it returns.'
-    case 'workspace-write':
-      return `Current DSH file policy: workspace-write. Any available operation enforced by the DSH file sandbox may modify files under the session workspace: ${JSON.stringify(policy.workspaceRoot)}. Some platform temporary areas may also be writable.`
+    case 'workspace-write': {
+      const extra = policy.extraWritableRoots ?? []
+      const extraText = extra.length === 0 ? '' : ` It may also modify files under: ${extra.map(root => JSON.stringify(root)).join(', ')}.`
+      return `Current DSH file policy: workspace-write. Any available operation enforced by the DSH file sandbox may modify files under the session workspace: ${JSON.stringify(policy.workspaceRoot)}.${extraText} Some platform temporary areas may also be writable.`
+    }
     case 'danger-full-access':
       return 'Current DSH file policy: danger-full-access. The DSH file sandbox does not restrict file modifications by available operations.'
     /* v8 ignore next 4 -- SandboxMode is a typed same-process closed union; this branch is only the static exhaustiveness guard. */
@@ -60,6 +63,22 @@ declare module '@deepseek-ai/cordis' {
     sandboxPolicy: SandboxPolicyService
   }
 }
+
+/** What a {@link ExtraWritableRootsProvider} may read to derive roots for one call. */
+export interface ExtraWritableRootsRequest {
+  /** The call's resolved workspace root, in execution-world spelling. */
+  workspaceRoot: string
+  /** Calling session, when the call has one. */
+  session?: Session
+}
+
+/**
+ * Trusted host code that contributes `workspace-write` roots beyond the
+ * workspace, for example the shared git directories of a linked worktree.
+ * Called synchronously for every {@link SandboxPolicyService.resolve}; return
+ * absolute paths derived from host state, never from model or tool input.
+ */
+export type ExtraWritableRootsProvider = (request: ExtraWritableRootsRequest) => readonly string[]
 
 /**
  * Plugin config: the deployment's sandbox default. All optional — `Config`
@@ -122,6 +141,7 @@ export class SandboxPolicyService extends Service {
   readonly defaultMode: SandboxMode
   /** The absolute `workspace-write` fallback root for calls without a session cwd. */
   readonly workspaceRoot: string
+  private readonly extraRootProviders = new Set<ExtraWritableRootsProvider>()
   constructor(ctx: Context, config: Config) {
     super(ctx, 'sandboxPolicy')
     // schemastery (static Config) already filled `mode`; the cast records that
@@ -163,11 +183,38 @@ export class SandboxPolicyService extends Service {
    */
   resolve(request: SandboxPolicyRequest = {}): SandboxExecutionPolicy {
     const { session } = request
+    const workspaceRoot = resolveWorkspaceRoot(session?.header.cwd ?? this.workspaceRoot)
+    const extraWritableRoots = this.extraRootsFor(workspaceRoot, session)
     return {
       mode: request.mode ?? (session === undefined ? undefined : this.overrideOf(session)) ?? this.defaultMode,
-      workspaceRoot: resolveWorkspaceRoot(session?.header.cwd ?? this.workspaceRoot),
+      workspaceRoot,
       ...session === undefined ? {} : { sessionId: session.id },
+      ...extraWritableRoots.length === 0 ? {} : { extraWritableRoots },
     }
+  }
+
+  /**
+   * Add a source of extra `workspace-write` roots. Each root a provider
+   * returns must be absolute; a relative one throws from {@link resolve}
+   * instead of being granted.
+   * @param provider - host-derived root source, called on every resolution.
+   * @returns the disposer that removes the provider.
+   */
+  registerExtraWritableRoots(provider: ExtraWritableRootsProvider): () => void {
+    this.extraRootProviders.add(provider)
+    return () => { this.extraRootProviders.delete(provider) }
+  }
+
+  /** Collect, validate, and deduplicate the extra roots every provider contributes for one call. */
+  private extraRootsFor(workspaceRoot: string, session: Session | undefined): string[] {
+    const roots = new Set<string>()
+    for (const provider of this.extraRootProviders) {
+      for (const root of provider({ workspaceRoot, ...session === undefined ? {} : { session } })) {
+        if (!isAbsolute(root)) throw new Error(`sandbox-policy: extra writable root must be an absolute execution-world path: ${JSON.stringify(root)}`)
+        roots.add(root)
+      }
+    }
+    return [...roots]
   }
 
   /**

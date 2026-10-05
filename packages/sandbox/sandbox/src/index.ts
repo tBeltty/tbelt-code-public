@@ -50,6 +50,13 @@ export interface SandboxExecutionPolicy {
    * for agentless calls, which fall back to per-call backend state.
    */
   sessionId?: SessionId
+  /**
+   * Absolute directories `workspace-write` may additionally write under, such
+   * as the shared git directories a linked worktree needs for `git commit`.
+   * Derived by trusted host code through the sandbox-policy providers, never
+   * supplied by a model or tool call. Ignored outside `workspace-write`.
+   */
+  extraWritableRoots?: readonly string[]
 }
 
 /**

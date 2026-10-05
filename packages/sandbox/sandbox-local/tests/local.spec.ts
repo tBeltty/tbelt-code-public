@@ -8,7 +8,7 @@
  */
 
 import { spawnSync } from 'node:child_process'
-import { mkdtempSync, realpathSync, rmSync, writeFileSync } from 'node:fs'
+import { mkdtempSync, realpathSync, rmSync, symlinkSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { afterEach, describe, expect, it, vi } from 'vitest'
@@ -84,6 +84,30 @@ describe('profile dialects', () => {
     ])
   })
 
+  it('bwrap workspace-write binds every extra writable root after the workspace root', () => {
+    expect(bwrapProfileArgs({ ...WW, extraWritableRoots: ['/repo/.git/objects', '/repo/.git/worktrees/a'] })).toEqual([
+      '--ro-bind', '/', '/', '--dev', '/dev', '--unshare-pid', '--proc', '/proc', '--die-with-parent',
+      '--tmpfs', '/tmp', '--bind', '/ws', '/ws', '--bind', '/repo/.git/objects', '/repo/.git/objects',
+      '--bind', '/repo/.git/worktrees/a', '/repo/.git/worktrees/a',
+    ])
+  })
+
+  it('bwrap and landlock read-only ignore extra writable roots', () => {
+    const policy: SandboxPolicy = { ...RO, extraWritableRoots: ['/repo/.git/objects'] }
+    expect(bwrapProfileArgs(policy)).toEqual(bwrapProfileArgs(RO))
+    expect(landlockProfileArgs(policy)).toEqual(landlockProfileArgs(RO))
+  })
+
+  it('landlock workspace-write grants every extra writable root', () => {
+    expect(landlockProfileArgs({ ...WW, extraWritableRoots: ['/repo/.git/objects'] }))
+      .toEqual(['--ro', '/', '--rw', '/dev/null', '--rw', '/tmp', '--rw', '/ws', '--rw', '/repo/.git/objects'])
+  })
+
+  it('seatbelt workspace-write allows every extra writable root', () => {
+    const profile = seatbeltProfileArgs({ ...WW, extraWritableRoots: ['/repo/.git/objects'] })[1] as string
+    expect(profile).toContain('(subpath "/repo/.git/objects")')
+  })
+
   it('landlock read-only: readable tree plus a writable /dev/null, nothing else', () => {
     // /dev/null specifically, NOT /dev: a whole-/dev grant would let confined
     // commands write real host paths beneath it (/dev/shm) under read-only.
@@ -114,6 +138,26 @@ describe('profile dialects', () => {
     const grant = `(subpath "${realpathSync(tmpdir())}")`
     expect(profile).toContain(grant)
     expect(profile.split(grant)).toHaveLength(2)
+  })
+})
+
+describe('extra writable roots', () => {
+  it('canonicalizes them before building the profile', async () => {
+    const dir = mkdtempSync(join(tmpdir(), 'dsh-extra-root-'))
+    tempDirs.push(dir)
+    const link = `${dir}-link`
+    symlinkSync(dir, link)
+    tempDirs.push(link)
+    const { sandbox } = await setup({ runnerCommand: ['fake-runner'], runnerFailureSignatures: ['fake-runner: failed'] })
+    const confined = await sandbox.confine(['true'], { ...WW, extraWritableRoots: [link] })
+    expect(confined.argv).toContain(realpathSync(dir))
+    expect(confined.argv).not.toContain(link)
+  })
+
+  it('fails closed on the windows-acl runner, whose grants cover one workspace root', async () => {
+    const { sandbox } = await setup({}, { chain: ['windows-acl'], probeWindowsAcl: () => true, windowsAclRunnerArgs: ['node', 'windows-acl-runner.js'] })
+    await expect(sandbox.confine(['true'], { ...WW, extraWritableRoots: ['/repo/.git/objects'] }))
+      .rejects.toThrow('the windows-acl runner does not support extraWritableRoots')
   })
 })
 

@@ -122,6 +122,32 @@ describe('SandboxPolicyService', () => {
     }
   })
 
+  it('adds extra writable roots from registered providers and drops them with the disposer', async () => {
+    const ctx = await mounted({ mode: 'workspace-write', workspaceRoot: '/fallback' })
+    const active = session('sess-extra', '/projects/linked')
+    const seen: string[] = []
+    const dispose = ctx.sandboxPolicy.registerExtraWritableRoots(({ workspaceRoot, session: caller }) => {
+      seen.push(`${workspaceRoot}:${caller?.id}`)
+      return ['/repo/.git/objects', '/repo/.git/objects']
+    })
+    expect(ctx.sandboxPolicy.resolve({ session: active })).toEqual({
+      mode: 'workspace-write',
+      workspaceRoot: '/projects/linked',
+      sessionId: 'sess-extra',
+      extraWritableRoots: ['/repo/.git/objects'],
+    })
+    expect(ctx.sandboxPolicy.resolve().extraWritableRoots).toEqual(['/repo/.git/objects'])
+    expect(seen).toEqual(['/projects/linked:sess-extra', '/fallback:undefined'])
+    dispose()
+    expect(ctx.sandboxPolicy.resolve({ session: active })).not.toHaveProperty('extraWritableRoots')
+  })
+
+  it('rejects a relative extra root instead of granting it', async () => {
+    const ctx = await mounted({ mode: 'workspace-write', workspaceRoot: '/fallback' })
+    ctx.sandboxPolicy.registerExtraWritableRoots(() => ['relative/objects'])
+    expect(() => ctx.sandboxPolicy.resolve()).toThrow('sandbox-policy: extra writable root must be an absolute execution-world path: "relative/objects"')
+  })
+
   it('lets an approved mode outrank the session mode while retaining its root', async () => {
     const ctx = await mounted({ workspaceRoot: '/fallback' })
     const active = session('sess-approved', '/projects/approved')
@@ -224,6 +250,19 @@ describe('sandbox:policy request context', () => {
 
     expect(await policyContext(ctx, resumed)).toContain('workspace-write')
     expect((await ctx.systemPrompt.assemble()).contexts.find(context => context.name === 'sandbox:policy')?.text).toBe('')
+  })
+})
+
+describe('sandbox:policy extra roots', () => {
+  it('names the extra writable roots in the workspace-write context', async () => {
+    const ctx = new Context()
+    await ctx.plugin(SessionProjectionRegistry)
+    await ctx.plugin(SystemPrompt)
+    await ctx.plugin(SandboxPolicyService, { mode: 'workspace-write' })
+    ctx.sandboxPolicy.registerExtraWritableRoots(() => ['/repo/.git/objects', '/repo/.git/refs'])
+    expect(await policyContext(ctx, session('sess-extra-context', '/projects/linked'))).toBe(
+      `Current DSH file policy: workspace-write. Any available operation enforced by the DSH file sandbox may modify files under the session workspace: ${JSON.stringify('/projects/linked')}. It may also modify files under: "/repo/.git/objects", "/repo/.git/refs". Some platform temporary areas may also be writable.`,
+    )
   })
 })
 

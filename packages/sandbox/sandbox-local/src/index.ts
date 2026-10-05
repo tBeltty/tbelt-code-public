@@ -324,7 +324,11 @@ export class LocalSandboxProvider extends SandboxProvider {
    */
   async confine(argv: readonly string[], policy: SandboxPolicy, signal?: AbortSignal): Promise<ConfinedArgv> {
     signal?.throwIfAborted()
-    policy = { ...policy, workspaceRoot: canonicalPath(policy.workspaceRoot) }
+    policy = {
+      ...policy,
+      workspaceRoot: canonicalPath(policy.workspaceRoot),
+      ...policy.extraWritableRoots === undefined ? {} : { extraWritableRoots: policy.extraWritableRoots.map(canonicalPath) },
+    }
     if (this.runnerCommand !== undefined) {
       return Promise.resolve<ConfinedArgv>({
         argv: [...this.runnerCommand, ...bwrapProfileArgs(policy), '--', ...argv],
@@ -367,6 +371,10 @@ export class LocalSandboxProvider extends SandboxProvider {
    * @returns the runner invocation.
    */
   private windowsAclRunnerArgv(policy: SandboxPolicy): string[] {
+    if (policy.mode === 'workspace-write' && (policy.extraWritableRoots?.length ?? 0) > 0) {
+      // The ACL grants cover one workspace root per SID; extra roots would silently stay read-only.
+      throw new SandboxUnavailableError(policy.mode, 'the windows-acl runner does not support extraWritableRoots')
+    }
     const sessionId = policy.sessionId
     if (sessionId === undefined || policy.mode === 'read-only') {
       return [

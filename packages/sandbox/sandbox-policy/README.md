@@ -47,6 +47,10 @@ Load the package with a default mode; the fail-safe default is `read-only`, and 
 
 The generated [configuration catalog](../../../docs/config-catalog.md#deepseek-aidsh-sandbox-policy) is the exhaustive source for every accepted field and its JSDoc.
 
+### Extra writable roots
+
+A host plugin can add directories that `workspace-write` may modify beyond the session workspace, such as the shared git directories a linked worktree needs for `git commit`. The plugin calls `ctx.sandboxPolicy.registerExtraWritableRoots(provider)` inside an effect; the provider receives the call's workspace root and session and returns absolute paths derived from host state. `resolve()` calls every provider on each resolution, deduplicates the paths, rejects a relative one, and returns them as `extraWritableRoots`, which the `workspace-write` text in the model's policy context also names. Modes other than `workspace-write` ignore them.
+
 ### Switching a session's mode
 
 A session's mode can be switched at runtime through a UI policy control or an explicit switch; the switch is recorded in the session log and takes effect on the session's next confined call. The switch survives restart through replay, and each session keeps its own mode — two sessions never see each other's state. A switched session keeps its immutable workspace cwd as the writable boundary.

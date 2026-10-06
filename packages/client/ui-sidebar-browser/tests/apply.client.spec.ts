@@ -32,7 +32,7 @@ interface Recorded {
   component: unknown
 }
 
-async function boot(platform: ShortcutPlatform = 'macos', runtime: 'desktop' | 'web' = 'desktop') {
+async function boot(platform: ShortcutPlatform = 'macos', runtime: 'desktop' | 'web' = 'desktop', conversation?: object) {
   const ctx = new Context()
   contexts.push(ctx)
   const tabs = new SidebarRightTabRegistry(ctx)
@@ -64,6 +64,7 @@ async function boot(platform: ShortcutPlatform = 'macos', runtime: 'desktop' | '
   ctx.provide('workspaces', { list: createSnapshotStore({ phase: 'ready', items: [] }) } as never)
   ctx.provide('slots', slots as never)
   ctx.provide('locale', locale as never)
+  if (conversation !== undefined) ctx.provide('conversation', conversation as never)
   const fiber = ctx.plugin({ inject: [...inject], apply })
   await fiber.await()
   return { tabs, registered, dictionaries, fiber, openTabs, registry, sidebar, target }
@@ -116,6 +117,67 @@ describe('ui-sidebar-browser apply', () => {
       await h.fiber.dispose()
       host.remove()
     }
+  })
+
+  it('carries picked elements in the next composer message and shows them in the dock', async () => {
+    const bridge: DesktopBrowserBridge = {
+      acquire: vi.fn(async () => ({ lease: 'pick-lease' as DesktopBrowserLeaseId, partition: 'pick-partition' })),
+      release: vi.fn(async () => {}),
+      onOpenRequested: vi.fn(() => () => {}),
+    }
+    vi.stubGlobal('dshDesktop', { protocolVersion: 1, browser: bridge })
+    type Provider = (sessionId: string) => { text: string; commit: () => void } | undefined
+    const providers: Provider[] = []
+    const conversation = { prefixes: { register: vi.fn((provider: Provider) => {
+      providers.push(provider)
+      return () => { providers.splice(providers.indexOf(provider), 1) }
+    }) } }
+    const h = await boot('macos', 'desktop', conversation)
+    const dock = h.registered.find(entry => entry.name === 'conversation.input.dock')!
+    expect(dock).toMatchObject({ id: 'browser.picks', locale: 'sidebarBrowser' })
+    interface DockFace {
+      hooks: { picks: { getSnapshot(): Record<string, unknown[]> } }
+      removePick(sessionId: string, id: number): void
+    }
+    const face = (dock.inject as () => DockFace)()
+    expect(providers[0]!('session')).toBeUndefined()
+
+    const injectFace = h.registered.find(entry => entry.name === 'sidebar.right.pane.tab')!.inject as
+      (sessionId: string, actions: Parameters<BrowserInjected['rebind']>[0]) => BrowserInjected
+    const controller = injectFace('session', createBrowserStore().create('apply-pick').actions)
+    const host = document.createElement('div')
+    host.id = 'browser-apply-pick'
+    document.body.append(host)
+    const tabId = 'pick-tab' as TabId
+    const signal = new AbortController()
+    try {
+      controller.mount({ tabId, signal: signal.signal, viewportId: host.id, applicationOrigin: 'https://dsh.example',
+        initial: undefined, initialUrl: 'https://example.test/', openTab: vi.fn() })
+      await vi.waitFor(() => { expect(host.querySelector('webview')).not.toBeNull() })
+      const webview = host.querySelector('webview') as unknown as Record<string, unknown> & HTMLElement
+      Object.assign(webview, {
+        loadURL: async () => {}, getURL: () => 'https://example.test/', getTitle: () => 'Example', canGoBack: () => false,
+        canGoForward: () => false, clearHistory: () => {}, isLoading: () => false,
+        executeJavaScript: vi.fn(async () => ({ picked: { page: { url: 'https://example.test/', title: 'Example' },
+          target: { tagName: 'a', selector: 'a#home', textSnippet: 'Home' } } })),
+      })
+      webview.dispatchEvent(new Event('dom-ready'))
+      controller.togglePick(tabId)
+      await vi.waitFor(() => { expect(providers[0]!('session')?.text).toContain('Selector: a#home') })
+      expect(providers[0]!('other')).toBeUndefined()
+      expect(face.hooks.picks.getSnapshot().session).toHaveLength(1)
+      providers[0]!('session')!.commit()
+      expect(face.hooks.picks.getSnapshot().session).toBeUndefined()
+      controller.togglePick(tabId)
+      await vi.waitFor(() => { expect(face.hooks.picks.getSnapshot().session).toHaveLength(1) })
+      const [entry] = face.hooks.picks.getSnapshot().session as { id: number }[]
+      face.removePick('session', entry!.id)
+      expect(providers[0]!('session')).toBeUndefined()
+    } finally {
+      await h.fiber.dispose()
+      host.remove()
+    }
+    expect(providers).toEqual([])
   })
 
   it('registers a multi-instance builtin and its body and title', async () => {

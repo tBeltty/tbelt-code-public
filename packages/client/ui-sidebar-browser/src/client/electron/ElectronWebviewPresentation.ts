@@ -15,6 +15,7 @@ export interface WebviewElement extends HTMLElement {
   goForward(): void
   reload(): void
   isLoading(): boolean
+  executeJavaScript(code: string): Promise<unknown>
 }
 
 /** Physical attachment notifications; hiding a retained Sidebar body emits neither. */

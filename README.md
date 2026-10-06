@@ -17,6 +17,7 @@ Download it from [tbelt.online](https://tbelt.online). It is a developer preview
 - Plans with inline comments and versions, reviewed before you approve.
 - An Artifacts page listing the files each turn delivered or changed.
 - A side panel preview for HTML pages, images, PDFs and local dev servers.
+- Point at an element in the preview and the agent knows exactly which one.
 - Run buttons on shell commands, executed in a terminal in the side panel.
 - Web search through Exa, Perplexity, Brave or Tavily, with your own key.
 - Model prices in the model picker, spend per chat and per month, and limits with `/budget`.

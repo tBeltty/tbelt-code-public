@@ -4,6 +4,7 @@ import type { TabId } from '@deepseek-ai/dsh-client-ui-dockkit'
 import type { HostObservable } from '@deepseek-ai/dsh-client-ui-slots'
 import type { BrowserFrameState } from './BrowserFrame.ts'
 import type { BrowserPage, BrowserPageFactory } from './BrowserPage.ts'
+import type { ElementPick } from '../grab/payload.ts'
 import { currentBrowserTarget, type BrowserTabState } from './BrowserPersistence.ts'
 import type { BrowserStore } from './store.ts'
 import { parseBrowserAddress, type BrowserAddressFailure, type BrowserTarget } from './url.ts'
@@ -15,6 +16,8 @@ export interface BrowserControllerState {
   readonly restoreTarget: BrowserTarget | undefined
   readonly addressFailure: BrowserAddressFailure | undefined
   readonly addressRevision: number
+  /** Whether the page's provider can point at elements. */
+  readonly pickable: boolean
 }
 
 /** Construction inputs for one tab occurrence. */
@@ -26,6 +29,8 @@ export interface BrowserControllerOptions {
   readonly actions: BoundActions<BrowserStore>
   readonly createPage: BrowserPageFactory
   readonly openTab: (url: string) => void
+  /** Receives each element the user picked, after the provider clamped it. */
+  readonly onPick: (pick: ElementPick) => void
 }
 
 /** Owns input validation and page lifetime without inspecting the carrier type. */
@@ -59,7 +64,8 @@ export class BrowserController implements HostObservable<BrowserControllerState>
       },
     })
     this.store = createSnapshotStore({ frame: this.page.frame.getSnapshot(),
-      restoreTarget: currentBrowserTarget(this.checkpoint), addressFailure: undefined, addressRevision: 0 })
+      restoreTarget: currentBrowserTarget(this.checkpoint), addressFailure: undefined, addressRevision: 0,
+      pickable: this.page.frame.picker !== undefined })
     this.unsubscribe = this.page.frame.subscribe(() => {
       if (this.disposed) return
       const current = this.store.getSnapshot()
@@ -67,7 +73,7 @@ export class BrowserController implements HostObservable<BrowserControllerState>
       const changed = frame.target?.url !== current.frame.target?.url
       this.store.set({ frame, restoreTarget: frame.target === undefined ? currentBrowserTarget(this.checkpoint) : undefined,
         addressFailure: changed ? undefined : current.addressFailure,
-        addressRevision: current.addressRevision + Number(changed) })
+        addressRevision: current.addressRevision + Number(changed), pickable: current.pickable })
     })
     options.signal.addEventListener('abort', this.abort, { once: true })
   }
@@ -122,6 +128,16 @@ export class BrowserController implements HostObservable<BrowserControllerState>
   reload(): void {
     if (this.store.getSnapshot().restoreTarget !== undefined) this.restore()
     else this.command(() => { this.page.frame.reload() })
+  }
+
+  /** Start choosing an element of the page, or end the choice already in progress; the chosen element goes to `onPick`. */
+  togglePick(): void {
+    const picker = this.page.frame.picker
+    if (this.disposed || picker === undefined) return
+    if (this.page.frame.getSnapshot().picking) { picker.cancel(); return }
+    void picker.pick().then((pick) => {
+      if (pick !== undefined && !this.disposed) this.options.onPick(pick)
+    })
   }
 
   /**
@@ -202,6 +218,8 @@ export interface BrowserInjected {
   reload(tabId: TabId): void
   /** @param tabId - owning tab. @param enabled - provider's optional sandbox control. */
   setSandbox(tabId: TabId, enabled: boolean): void
+  /** Start or end choosing a page element. @param tabId - owning tab. */
+  togglePick(tabId: TabId): void
 }
 
 /**
@@ -209,10 +227,11 @@ export interface BrowserInjected {
  * @param actions - persisted view-state writer.
  * @param createPage - composition-selected provider.
  * @param isTabOpen - authoritative layout membership, independent of mounted bodies and plugin lifetime.
+ * @param onPick - receives each element picked in any of this Session's tabs.
  * @returns tab callbacks.
  */
 export function createBrowserControllers(actions: BoundActions<BrowserStore>, createPage: BrowserPageFactory,
-  isTabOpen: (tabId: TabId) => boolean): BrowserInjected {
+  isTabOpen: (tabId: TabId) => boolean, onPick: (pick: ElementPick) => void): BrowserInjected {
   let currentActions = actions
   const controllers = new Map<TabId, {
     readonly signal: AbortSignal
@@ -231,7 +250,7 @@ export function createBrowserControllers(actions: BoundActions<BrowserStore>, cr
           held.signal.removeEventListener('abort', held.forget)
           void held.controller.dispose()
         }
-        const created = new BrowserController({ ...request, actions: currentActions, createPage })
+        const created = new BrowserController({ ...request, actions: currentActions, createPage, onPick })
         const forget = (): void => {
           controllers.delete(tabId)
           // Plugin unload also aborts occurrences; only layout removal deletes saved navigation.
@@ -263,5 +282,6 @@ export function createBrowserControllers(actions: BoundActions<BrowserStore>, cr
     goForward: (id) => { controller(id)?.goForward() },
     reload: (id) => { controller(id)?.reload() },
     setSandbox: (id, enabled) => { controller(id)?.setSandbox(enabled) },
+    togglePick: (id) => { controller(id)?.togglePick() },
   }
 }

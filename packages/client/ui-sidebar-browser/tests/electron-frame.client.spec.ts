@@ -11,6 +11,7 @@ it('clears a failed load when the main page retries without a toolbar command', 
     loadURL: vi.fn(async () => {}), getURL: () => url, getTitle: () => 'Recovered',
     canGoBack: () => false, canGoForward: () => false, clearHistory: vi.fn(),
     goBack: vi.fn(), goForward: vi.fn(), reload: vi.fn(), isLoading: () => loading,
+    executeJavaScript: vi.fn(async () => undefined),
   })
   const bridge: DesktopBrowserBridge = {
     acquire: vi.fn(async () => ({ lease: 'lease' as DesktopBrowserLeaseId, partition: 'partition' })),

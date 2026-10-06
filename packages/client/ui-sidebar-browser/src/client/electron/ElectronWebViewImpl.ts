@@ -2,9 +2,11 @@
 import { createSnapshotStore, type SnapshotStore } from '@deepseek-ai/dsh-client-store'
 import type { DesktopBrowserBridge, DesktopBrowserLeaseId } from '../../types.ts'
 import type { ElectronWebviewPresentation, WebviewElement } from './ElectronWebviewPresentation.ts'
-import { emptyBrowserFrame, type BrowserFrame, type BrowserFrameState, type BrowserLoadError } from '../browser/BrowserFrame.ts'
+import { emptyBrowserFrame, type BrowserElementPicker, type BrowserFrame, type BrowserFrameState, type BrowserLoadError } from '../browser/BrowserFrame.ts'
 import type { BrowserPageOptions } from '../browser/BrowserPage.ts'
 import { browserAddressCheckpoint, currentBrowserTarget } from '../browser/BrowserPersistence.ts'
+import { PICK_CANCEL_SCRIPT, PICK_GUEST_SCRIPT } from '../grab/guest-script.ts'
+import { clampPick, type ElementPick } from '../grab/payload.ts'
 import { parseBrowserAddress, type BrowserTarget } from '../browser/url.ts'
 
 interface NavigationEvent extends Event { readonly isMainFrame: boolean }
@@ -30,6 +32,10 @@ export class ElectronWebViewImpl implements BrowserFrame {
   private disposal: Promise<void> | undefined
   private attachment: AbortController | undefined
   private readonly releases = new Set<Promise<void>>()
+  private pickRun: AbortController | undefined
+
+  /** Lets the user click one element of the guest page. */
+  readonly picker: BrowserElementPicker = { pick: () => this.pickElement(), cancel: () => { this.endPick() } }
 
   /**
    * @param options - saved address, persistence and source-tab opening callback.
@@ -167,6 +173,7 @@ export class ElectronWebViewImpl implements BrowserFrame {
     }, { signal })
     element.addEventListener('did-start-navigation', (event) => {
       if ((event as NavigationEvent).isMainFrame) {
+        this.endPick()
         this.store.set({ ...this.store.getSnapshot(), loading: true, error: undefined })
       }
     }, { signal })
@@ -249,7 +256,46 @@ export class ElectronWebViewImpl implements BrowserFrame {
     this.failed()
   }
 
+  private async pickElement(): Promise<ElementPick | undefined> {
+    const element = this.element
+    if (!this.ready || element === undefined || this.pickRun !== undefined || this.lifetime.signal.aborted) return undefined
+    const run = new AbortController()
+    this.pickRun = run
+    this.store.set({ ...this.store.getSnapshot(), picking: true })
+    const ended = new Promise<undefined>((resolve) => { run.signal.addEventListener('abort', () => { resolve(undefined) }, { once: true }) })
+    try {
+      const result = await Promise.race([element.executeJavaScript(PICK_GUEST_SCRIPT), ended])
+      if (typeof result !== 'object' || result === null || !('picked' in result)) return undefined
+      return clampPick(result.picked)
+    } catch (error) {
+      if (!run.signal.aborted) console.error('Desktop browser element pick failed', error)
+      return undefined
+    } finally {
+      if (this.pickRun === run) {
+        this.pickRun = undefined
+        this.store.set({ ...this.store.getSnapshot(), picking: false })
+      }
+    }
+  }
+
+  /** Settle the active pick as cancelled and remove its overlay from the page when the page still answers. */
+  private endPick(): void {
+    const run = this.pickRun
+    if (run === undefined) return
+    run.abort()
+    const element = this.element
+    if (element === undefined) return
+    let delivery: Promise<unknown> | undefined
+    try { delivery = element.executeJavaScript(PICK_CANCEL_SCRIPT) }
+    catch (error) {
+      // A webview that is not attached throws synchronously; its overlay went with the page.
+      console.debug('Element pick cancel was not delivered', error)
+    }
+    delivery?.catch((error: unknown) => { console.debug('Element pick cancel was not delivered', error) })
+  }
+
   private dropGuest(): Promise<void> {
+    this.endPick()
     this.guestLifetime?.abort()
     this.guestLifetime = undefined
     this.presentation.clear()

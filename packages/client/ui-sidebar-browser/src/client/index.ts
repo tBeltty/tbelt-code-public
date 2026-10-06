@@ -2,6 +2,7 @@
 import type { ShortcutCommandId } from '@deepseek-ai/dsh-client-shortcuts/client'
 import type { Context } from '@deepseek-ai/cordis'
 import type {} from '@deepseek-ai/dsh-client-locale/client'
+import type {} from '@deepseek-ai/dsh-client-ui-conversation/client'
 import type {} from '@deepseek-ai/dsh-client-ui-renderer/client'
 import type {} from '@deepseek-ai/dsh-client-ui-session/client'
 import type {} from '@deepseek-ai/dsh-client-ui-sidebar-right/client'
@@ -18,10 +19,14 @@ import type { BrowserPageFactory } from './browser/BrowserPage.ts'
 import { BROWSER_ID, browserDefinition } from './definition.tsx'
 import { en, zh } from './locales.ts'
 import { createBrowserStore } from './browser/store.ts'
+import { PickDock, type PickDockInjected } from './grab/PickDock.tsx'
+import { formatPicks } from './grab/payload.ts'
+import { ElementPickStore } from './grab/picks.ts'
 
 export type { BrowserBodyProps } from './view/BrowserBody.tsx'
 export type { BrowserControllerState, BrowserInjected, BrowserMountRequest } from './browser/BrowserController.ts'
-export type { BrowserFrame, BrowserFrameState, BrowserLoadError, BrowserSandboxControl } from './browser/BrowserFrame.ts'
+export type { BrowserElementPicker, BrowserFrame, BrowserFrameState, BrowserLoadError, BrowserSandboxControl } from './browser/BrowserFrame.ts'
+export type { ElementPick } from './grab/payload.ts'
 export type { BrowserPage, BrowserPageFactory, BrowserPageOptions } from './browser/BrowserPage.ts'
 export type { BrowserPresentation } from './view/BrowserPresentation.ts'
 export type { BrowserFailure, BrowserHistoryEntry, BrowserNavigationStatus, BrowserTabState } from './browser/BrowserPersistence.ts'
@@ -65,6 +70,26 @@ export function apply(ctx: Context): void {
     }), 'ui-sidebar-browser: shortcut')
   })
   const store = createBrowserStore()
+  const picks = new ElementPickStore()
+  // Picked elements travel as the leading part of the next plain message, so the
+  // model receives them and the Session log records them.
+  ctx.inject(['conversation'], (scope) => {
+    scope.effect(() => scope.conversation.prefixes.register((sessionId) => {
+      const pending = picks.unsent(sessionId)
+      if (pending.length === 0) return undefined
+      return {
+        text: formatPicks(pending.map(entry => entry.pick)),
+        commit: () => { picks.remove(sessionId, pending.map(entry => entry.id)) },
+      }
+    }), 'ui-sidebar-browser: picked elements in composer messages')
+    scope.slots.inject('conversation.input.dock', () => scope.slots.register({
+      name: 'conversation.input.dock', id: 'browser.picks', order: 30, locale: namespace,
+      inject: (): PickDockInjected => ({
+        hooks: { picks: picks.state },
+        removePick: (sessionId, id) => { picks.remove(sessionId, [id]) },
+      }),
+    }, PickDock))
+  })
   const openTabs = ctx.sidebarRight.openTabs
   const carrier = (globalThis as typeof globalThis & {
     dshDesktop?: { readonly protocolVersion: number; readonly browser?: DesktopBrowserBridge }
@@ -87,8 +112,12 @@ export function apply(ctx: Context): void {
           existing.rebind(actions)
           return existing
         }
-        const controller = createBrowserControllers(actions, factory(sessionId), tabId =>
-          openTabs.getSnapshot().some(tab => tab.sessionId === sessionId && tab.tabId === tabId))
+        const controller = createBrowserControllers(
+          actions,
+          factory(sessionId),
+          tabId => openTabs.getSnapshot().some(tab => tab.sessionId === sessionId && tab.tabId === tabId),
+          (pick) => { picks.add(sessionId, pick) },
+        )
         controllers.set(sessionId, controller)
         return controller
       },

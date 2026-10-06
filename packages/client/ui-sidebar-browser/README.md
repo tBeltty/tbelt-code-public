@@ -44,6 +44,8 @@ The `browser.new` command opens a separate Browser page in the focused dock pane
 
 The toolbar provides Back, Forward, Reload, Go, and Open in system browser. Web also offers a per-tab sandbox toggle; disabling it is temporary and displays an amber warning with neutral text. Desktop shows the observed page title. After a restart, Browser shows the saved title and URL; Restore or Reload opens that address only when requested.
 
+On Desktop the toolbar also has a pick button. It outlines the element under the pointer in the page; one click selects that element, and Escape, the button again, or a navigation cancels. The element appears as a chip above the composer, and the Session's next plain message carries it before the typed text as `Browser element:` lines (page, element position and size, a CSS selector, the readable path, text, safe attributes, and the HTML snippet) whether or not the Browser tab is still open. Removing the chip drops it. The page is untrusted: the guest script and the Host each limit field sizes, keep only an allow-list of attributes, drop URL queries and fragments, and replace values that look like credentials with `[redacted]`. Web iframes cannot be inspected across origins, so Web has no pick button.
+
 -----
 
 <a id="understand-the-implementation"></a>
@@ -55,6 +57,10 @@ The toolbar provides Back, Forward, Reload, Go, and Open in system browser. Web 
 ### Protocol policy
 
 The address parser accepts HTTP and HTTPS, including loopback targets. It rejects `file:` URLs, script/data/blob input, embedded credentials, the DSH application origin, and malformed addresses. Document Preview owns local-file rendering.
+
+### Element picker
+
+`grab/guest-script.ts` is the script `webview.executeJavaScript` runs in the page: a closed shadow-root overlay catches the click so the page never sees it, and the script settles with the extracted element, a cancellation, or an error. Every run first cancels state a page left under the same global. `grab/payload.ts` holds the budgets and `clampPick`, which validates the guest's result again in the renderer before `ElementPickStore` (`grab/picks.ts`) keeps it per Session. `index.ts` registers a `ctx.conversation.prefixes` provider that formats and commits the picks, and a `conversation.input.dock` chip row. The extraction logic, budgets, and clamp are adapted from Orca's browser grab (MIT, see `LICENSES/Orca-MIT.txt`).
 
 ### Iframe carrier
 
@@ -87,7 +93,7 @@ The page refresh shortcut calls the same reload operation as the toolbar. Its to
 <a id="model-experience"></a>
 ## Model Experience
 
-None, as Browser tabs are user-facing presentation state and register no tool, prompt section, or Session event.
+None, as Browser tabs register no tool, prompt section, or Session event, and a picked element reaches a model request only as text at the start of the user's next plain message, which the Session log records as part of that message.
 
 #### KV Cache effect
 

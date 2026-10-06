@@ -8,6 +8,7 @@ import {
   IconLinkOutlineRegular,
   IconRefreshOutlineRegular, Tooltip,
   IconRightUpOutlineRegular,
+  IconInspectOutlineRegular,
   SHIELD_OUTLINE_PATH,
   ICON_REGULAR_STROKE,
 } from '@deepseek-ai/dsh-client-ui-primitives'
@@ -45,7 +46,7 @@ function useBrowserDraft(url: string | undefined, revision: number): readonly [s
 
 /** Render provider-neutral navigation state and optional controls. */
 export function BrowserBody(props: BrowserBodyProps): ReactNode {
-  const { mount, loadUrl, restore, goBack, goForward, reload, setSandbox, useBrowserState, useStore, useTabInfo, t } = props
+  const { mount, loadUrl, restore, goBack, goForward, reload, setSandbox, togglePick, useBrowserState, useStore, useTabInfo, t } = props
   const { tab } = useTabInfo()
   useEffect(() => tab.actions.bindCommands({ refresh: () => { reload(tab.id) } }), [tab.actions, tab.id, reload])
   const saved = useStore(state => state.byTab[tab.id])
@@ -99,6 +100,15 @@ export function BrowserBody(props: BrowserBodyProps): ReactNode {
         <button type="button" className={css.tool} aria-label={t('external')} title={t('external')} disabled={externalUrl === undefined}
           onClick={externalUrl === undefined ? undefined : () => { window.open(externalUrl, '_blank', 'noopener,noreferrer') }}
         ><IconRightUpOutlineRegular size={14} /></button>
+        {state?.pickable === true && <button
+          type="button"
+          className={[css.tool, frame.picking ? css.toolActive : ''].join(' ')}
+          aria-label={t(frame.picking ? 'pick.cancel' : 'pick.start')}
+          title={t(frame.picking ? 'pick.cancel' : 'pick.start')}
+          aria-pressed={frame.picking}
+          disabled={target === undefined || mountEpoch === 0 || frame.loading}
+          onClick={() => { togglePick(tab.id) }}
+        ><IconInspectOutlineRegular size={14} /></button>}
         {sandboxed !== undefined && <button
           type="button"
           className={[css.tool, sandboxed ? '' : css.sandboxOff].join(' ')}

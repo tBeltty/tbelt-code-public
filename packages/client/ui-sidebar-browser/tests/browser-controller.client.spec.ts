@@ -7,6 +7,7 @@ import { createIframePage } from '../src/client/pages.ts'
 import type { BrowserPageFactory, BrowserPageOptions } from '../src/client/browser/BrowserPage.ts'
 import { browserAddressCheckpoint } from '../src/client/browser/BrowserPersistence.ts'
 import { createSnapshotStore } from '@deepseek-ai/dsh-client-store'
+import type { ElementPick } from '../src/client/grab/payload.ts'
 import { emptyBrowserFrame, type BrowserFrameState } from '../src/client/browser/BrowserFrame.ts'
 
 const TAB = 'tab' as TabId
@@ -26,7 +27,7 @@ function harness() {
   const id = `browser-controller-test-${String(++sequence)}`
   const store = createBrowserStore().create(id)
   let open = true
-  const face = createBrowserControllers(store.actions, createIframePage, () => open)
+  const face = createBrowserControllers(store.actions, createIframePage, () => open, () => {})
   disposables.push(face)
   const host = document.createElement('div')
   host.id = id
@@ -117,7 +118,7 @@ describe('BrowserController', () => {
     const store = createBrowserStore().create('provider-callbacks')
     const openTab = vi.fn()
     const controller = new BrowserController({ tabId: TAB, signal: lifetime().signal, applicationOrigin: APP,
-      actions: store.actions, initial: saved, createPage: pageFactory, openTab })
+      actions: store.actions, initial: saved, createPage: pageFactory, openTab, onPick: vi.fn() })
     disposables.push(controller)
     const provider = callbacks[0]!
     provider.openRequested('file:/secret')
@@ -139,12 +140,59 @@ describe('BrowserController', () => {
     expect(openTab).toHaveBeenCalledOnce()
   })
 
+  it('hands the picked element to onPick, toggles an active pick off, and ignores picks after disposal', async () => {
+    const frames = createSnapshotStore<BrowserFrameState>(emptyBrowserFrame())
+    const pick = { page: { url: '' } } as never
+    const picker = { pick: vi.fn(async () => pick as ElementPick | undefined), cancel: vi.fn() }
+    const factory = (withPicker: boolean): BrowserPageFactory => () => ({
+      frame: { getSnapshot: () => frames.getSnapshot(), subscribe: listener => frames.subscribe(listener), ...withPicker ? { picker } : {},
+        loadUrl: vi.fn(), goBack: vi.fn(), goForward: vi.fn(), reload: vi.fn(), dispose: async () => {} },
+      presentation: { mount: () => () => {}, dispose: () => {} },
+    })
+    const store = createBrowserStore().create('pick-controller')
+    const onPick = vi.fn()
+    const make = (withPicker: boolean) => {
+      const controller = new BrowserController({ tabId: TAB, signal: lifetime().signal, applicationOrigin: APP,
+        actions: store.actions, initial: undefined, createPage: factory(withPicker), openTab: vi.fn(), onPick })
+      disposables.push(controller)
+      return controller
+    }
+    const plain = make(false)
+    expect(plain.getSnapshot().pickable).toBe(false)
+    plain.togglePick()
+    expect(onPick).not.toHaveBeenCalled()
+
+    const controller = make(true)
+    expect(controller.getSnapshot().pickable).toBe(true)
+    controller.togglePick()
+    await vi.waitFor(() => { expect(onPick).toHaveBeenCalledExactlyOnceWith(pick) })
+    picker.pick.mockResolvedValueOnce(undefined)
+    controller.togglePick()
+    await Promise.resolve()
+    expect(onPick).toHaveBeenCalledOnce()
+
+    frames.set({ ...emptyBrowserFrame(), picking: true })
+    controller.togglePick()
+    expect(picker.cancel).toHaveBeenCalledOnce()
+    frames.set(emptyBrowserFrame())
+
+    let finish: (value: ElementPick) => void = () => {}
+    picker.pick.mockReturnValueOnce(new Promise<ElementPick>((resolve) => { finish = resolve }))
+    controller.togglePick()
+    await controller.dispose()
+    finish(pick)
+    await Promise.resolve()
+    expect(onPick).toHaveBeenCalledOnce()
+    controller.togglePick()
+    expect(picker.pick).toHaveBeenCalledTimes(3)
+  })
+
   it('ignores navigation commands after its tab occurrence ends', async () => {
     const store = createBrowserStore().create('browser-controller-ended-test')
     const tabLifetime = lifetime()
     const controller = new BrowserController({
       tabId: TAB, signal: tabLifetime.signal, applicationOrigin: APP, actions: store.actions,
-      initial: undefined, createPage: createIframePage, openTab: vi.fn(),
+      initial: undefined, createPage: createIframePage, openTab: vi.fn(), onPick: vi.fn(),
     })
     disposables.push(controller)
     tabLifetime.abort()

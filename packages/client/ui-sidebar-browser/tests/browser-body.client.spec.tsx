@@ -43,7 +43,7 @@ function mountBrowser(navigation?: { readonly url?: string },
   if (options.initial !== undefined) store.actions.replace(TAB, options.initial)
   const lifetime = new AbortController()
   lifetimes.add(lifetime)
-  const injected = createBrowserControllers(store.actions, options.createPage ?? createIframePage, () => true)
+  const injected = createBrowserControllers(store.actions, options.createPage ?? createIframePage, () => true, () => {})
   controllers.push(injected)
   const { keyedHooks, ...commands } = injected
   const tabActions = { bindCommands: vi.fn<ReturnType<BrowserBodyProps['useTabInfo']>['tab']['actions']['bindCommands']>(() => vi.fn()), openResource: vi.fn(), openTab: vi.fn(), close: vi.fn() }
@@ -93,6 +93,31 @@ describe('BrowserBody', () => {
       modified: true, conflicts: [], issue: null } })
     expect(mounted.view.getByRole('button', { name: zh.reload }).getAttribute('aria-keyshortcuts')).toBe('Control+R')
   })
+  it('offers the element picker only when the provider has one, and toggles it', async () => {
+    expect(mountBrowser().view.queryByRole('button', { name: zh['pick.start'] })).toBeNull()
+    cleanup()
+    const target = { kind: 'https' as const, url: 'https://example.test/', title: 'Example' }
+    const frames = createSnapshotStore<BrowserFrameState>({ ...emptyBrowserFrame(), target, address: 'observed' })
+    const pick = vi.fn(async () => {
+      frames.set({ ...frames.getSnapshot(), picking: true })
+      return undefined
+    })
+    const cancel = vi.fn(() => { frames.set({ ...frames.getSnapshot(), picking: false }) })
+    const createPage: BrowserPageFactory = () => ({
+      frame: { getSnapshot: () => frames.getSnapshot(), subscribe: listener => frames.subscribe(listener), picker: { pick, cancel },
+        loadUrl: vi.fn(), goBack: vi.fn(), goForward: vi.fn(), reload: vi.fn(), dispose: async () => {} },
+      presentation: { mount: () => () => {}, dispose: () => {} },
+    })
+    const mounted = mountBrowser(undefined, { createPage })
+    const start = mounted.view.getByRole('button', { name: zh['pick.start'] })
+    await waitFor(() => { expect(start).toHaveProperty('disabled', false) })
+    fireEvent.click(start)
+    const active = await mounted.view.findByRole('button', { name: zh['pick.cancel'] })
+    expect(active.getAttribute('aria-pressed')).toBe('true')
+    fireEvent.click(active)
+    expect(cancel).toHaveBeenCalledOnce()
+  })
+
   it('shows the saved title and URL without loading until Restore is clicked', async () => {
     const target = { kind: 'https' as const, url: 'https://saved.example/page', title: 'Saved title' }
     const mounted = mountBrowser(undefined, { initial: browserAddressCheckpoint(target, 1) })

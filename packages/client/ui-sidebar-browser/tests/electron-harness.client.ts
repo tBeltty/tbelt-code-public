@@ -34,6 +34,7 @@ export function electronFixture(initial?: BrowserTabState) {
       loadURL: vi.fn(async (_url: string) => {}), getURL: vi.fn(() => state.url), getTitle: vi.fn(() => state.title),
       canGoBack: () => state.back, canGoForward: () => state.forward, clearHistory: vi.fn(),
       goBack: vi.fn(), goForward: vi.fn(), reload: vi.fn(), isLoading: () => state.loading,
+      executeJavaScript: vi.fn(async (_code: string): Promise<unknown> => undefined),
     }
     Object.assign(element, methods)
     const emit = (type: string, fields: object = {}): void => { element.dispatchEvent(Object.assign(new Event(type), fields)) }

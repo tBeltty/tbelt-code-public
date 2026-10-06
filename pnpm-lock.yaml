@@ -5396,6 +5396,9 @@ importers:
       '@deepseek-ai/dsh-client-store':
         specifier: workspace:*
         version: link:../store
+      '@deepseek-ai/dsh-client-ui-conversation':
+        specifier: workspace:*
+        version: link:../ui-conversation
       '@deepseek-ai/dsh-client-ui-dockkit':
         specifier: workspace:*
         version: link:../ui-dockkit
@@ -5414,6 +5417,9 @@ importers:
       '@deepseek-ai/dsh-client-ui-slots':
         specifier: workspace:*
         version: link:../ui-slots
+      '@deepseek-ai/dsh-session':
+        specifier: workspace:*
+        version: link:../../core/session
       '@testing-library/react':
         specifier: ^16.1.0
         version: 16.3.2(@testing-library/dom@10.4.2)(@types/react-dom@18.3.7(@types/react@18.3.31))(@types/react@18.3.31)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)

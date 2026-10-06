@@ -50,6 +50,7 @@ import { connectDesktopWelcome, type DesktopWelcomeBackend } from './welcome-bac
 import { DesktopUpdateJournal } from './update-journal.ts'
 import { DesktopUpdatePreparationError } from './update-error.ts'
 import { DesktopUpdateSchedule, resolveDesktopUpdateScheduleConfig } from './update-schedule.ts'
+import { releaseNotesDialogText, releasePageUrl } from './update-release-notes.ts'
 import { desktopUpdateErrorSummary, presentDesktopUpdate } from './update-presentation.ts'
 import { desktopErrorState } from './startup-error.ts'
 import { readDesktopLoginShellEnvironment, resolveDesktopLoginShellConfig } from './login-shell-environment.ts'
@@ -886,12 +887,17 @@ async function main(): Promise<void> {
           return
         }
         if (state.phase !== 'available' && !(state.phase === 'error' && state.failedOperation === 'download')) return
-        if (manual) {
-          const result = await ordinaryMessageBox({ title: locale.messages.updateCheckTitle,
-            message: formatDesktopMessage(locale.messages.updateAvailable, { version: state.version ?? '' }),
-            detail: locale.messages.updateDetail,
-            buttons: [locale.messages.updateDownload], cancelId: 1 })
-          if (result.response !== 0) return
+        if (manual || state.releaseNotes !== undefined) {
+          const detail = state.releaseNotes === undefined ? locale.messages.updateDetail
+            : `${releaseNotesDialogText(state.releaseNotes)}\n\n${locale.messages.updateDetail}`
+          let response = 1
+          do {
+            response = (await ordinaryMessageBox({ title: locale.messages.updateCheckTitle,
+              message: formatDesktopMessage(locale.messages.updateAvailable, { version: state.version ?? '' }),
+              detail, buttons: [locale.messages.updateDownload, locale.messages.updateViewRelease], cancelId: 2 })).response
+            if (response === 1) void shell.openExternal(releasePageUrl(state.releaseName)).catch(() => undefined)
+          } while (response === 1)
+          if (response !== 0) return
         }
         if (!isMandatory() && state.version !== undefined) {
           controller?.abort()

@@ -76,6 +76,14 @@ describe('Desktop local packaging configuration', () => {
     })
   })
 
+  it('keeps the release notes settings from the platform file and resolves the notes path beside it', async () => {
+    await withDirectory(async (directory) => {
+      await writeFile(join(directory, '.env.linux'), 'DSH_DESKTOP_RELEASE_NAME=0.2.0-rc.2.20261006\nDSH_DESKTOP_RELEASE_NOTES_FILE=notes.md\n')
+      const loaded = loadDesktopPackageEnvironment('linux', { DSH_DESKTOP_RELEASE_NAME: 'stale' }, directory)
+      expect(loaded).toEqual({ DSH_DESKTOP_RELEASE_NAME: '0.2.0-rc.2.20261006', DSH_DESKTOP_RELEASE_NOTES_FILE: join(directory, 'notes.md') })
+    })
+  })
+
   it.each(['win32', 'darwin'] as const)('owns the %s release ID in its platform file', async (platform) => {
     await withDirectory(async (directory) => {
       const settings = Object.entries(RELEASE).map(([name, value]) => `${name}='${value}'`).join('\n') + '\n'

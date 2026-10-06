@@ -177,6 +177,14 @@ describe('desktop update coordinator', () => {
     expect(f.downloadUpdate).not.toHaveBeenCalled()
   })
 
+  it('carries the feed release notes and name into the available state', async () => {
+    const f = fixture()
+    f.checkForUpdates.mockResolvedValue({ isUpdateAvailable: true,
+      updateInfo: { version: '1.1.0-rc.2', releaseNotes: '### Added\n\n- One', releaseName: '1.1.0-rc.2.20261006' } })
+    expect(await f.coordinator.check()).toEqual({ phase: 'available', version: '1.1.0-rc.2',
+      releaseNotes: '### Added\n\n- One', releaseName: '1.1.0-rc.2.20261006' })
+  })
+
   it.each(['1.0.0', '1.1.0-alpha.1', 'invalid'])('does not download or install inapplicable version %s', async (version) => {
     const f = fixture()
     f.checkForUpdates.mockResolvedValue({ isUpdateAvailable: true, updateInfo: { version } })

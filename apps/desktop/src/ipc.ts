@@ -41,6 +41,10 @@ export type DesktopUpdatePreparationFailureKind = 'stop-failed' | 'tasks-changed
 export interface DesktopUpdateState {
   readonly phase: 'idle' | 'checking' | 'available' | 'downloading' | 'verifying' | 'installing' | 'ready' | 'error'
   readonly version?: string
+  /** Changelog text the release feed carries for `version`, when present. */
+  readonly releaseNotes?: string
+  /** Changelog version the feed names for the release, used to link its GitHub Release. */
+  readonly releaseName?: string
   readonly message?: string
   /** Main-owned diagnostics without subprocess output or credentials; hidden until expanded. */
   readonly technicalDetails?: string

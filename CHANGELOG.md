@@ -4,6 +4,12 @@ Notable changes to tBelt Code, newest first. The format follows [Keep a Changelo
 
 ## [Unreleased]
 
+## [0.2.0-rc.2.20261006.5] - 2026-10-06
+
+### Changed
+
+- The update dialog lists what changed in the new version and links its release page.
+
 ## [0.2.0-rc.2.20261006.4] - 2026-10-06
 
 ### Added
@@ -108,7 +114,8 @@ Notable changes to tBelt Code, newest first. The format follows [Keep a Changelo
 - Downloads no longer return an older installer.
 - A key that ran out of credit or hit its spending limit is reported as a quota problem instead of an invalid API key.
 
-[Unreleased]: https://github.com/tBeltty/tbelt-code-public/compare/v0.2.0-rc.2.20261006.4...HEAD
+[Unreleased]: https://github.com/tBeltty/tbelt-code-public/compare/v0.2.0-rc.2.20261006.5...HEAD
+[0.2.0-rc.2.20261006.5]: https://github.com/tBeltty/tbelt-code-public/releases/tag/v0.2.0-rc.2.20261006.5
 [0.2.0-rc.2.20261006.4]: https://github.com/tBeltty/tbelt-code-public/releases/tag/v0.2.0-rc.2.20261006.4
 [0.2.0-rc.2.20261006.3]: https://github.com/tBeltty/tbelt-code-public/releases/tag/v0.2.0-rc.2.20261006.3
 [0.2.0-rc.2.20261006.2]: https://github.com/tBeltty/tbelt-code-public/releases/tag/v0.2.0-rc.2.20261006.2

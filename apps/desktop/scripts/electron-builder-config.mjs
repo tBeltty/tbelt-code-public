@@ -269,7 +269,22 @@ export function createElectronBuilderConfig(
       installerLanguages: ['en_US', 'zh_CN'],
       differentialPackage: true,
     },
+    // The update dialog shows the changelog section named here; the release workflow writes both from CHANGELOG.md.
+    releaseInfo: releaseInfo(env),
     detectUpdateChannel: false,
     publish: update === undefined ? null : [{ provider: 'generic', url: update.publicUrl, channel: 'nightly' }],
+  }
+}
+
+/**
+ * @param {Record<string, string | undefined>} env - Packaging environment.
+ * @returns {{ releaseName?: string, releaseNotes?: string }} Release fields written into the update feed.
+ */
+function releaseInfo(env) {
+  const file = env.DSH_DESKTOP_RELEASE_NOTES_FILE
+  const name = env.DSH_DESKTOP_RELEASE_NAME
+  return {
+    ...name ? { releaseName: name } : {},
+    ...file ? { releaseNotes: readFileSync(file, 'utf8').trim() } : {},
   }
 }

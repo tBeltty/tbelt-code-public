@@ -238,8 +238,7 @@ function comboUrl(ids: readonly string[], rev: string, sourceMap = false): strin
 /**
  * Browser reference to one combo resource: app-owned browser routes are
  * document-relative, so the route key's leading slash is stripped here, at the
- * boundary between the two halves. The rule and its reasons are owned by
- * .agents/notes/implemented/architecture/2026-09-14-web-document-relative-app-routes.md.
+ * boundary between the two halves.
  */
 function comboReference(ids: readonly string[], rev: string, sourceMap = false): string {
   return comboUrl(ids, rev, sourceMap).slice(1)

@@ -624,6 +624,28 @@ describe('desktop main startup', () => {
     expect(testAuth.login).not.toHaveBeenCalled()
   })
 
+  it('shows release notes before downloading and opens the release page on request', async () => {
+    await readyForUpdate()
+    await vi.advanceTimersByTimeAsync(0)
+    harness.updateState = { phase: 'available', version: '1.0.1-nightly.1', releaseNotes: '### Added\n\n- One', releaseName: '0.2.0-rc.2.20261006' }
+    harness.dialog.showMessageBox.mockReset().mockResolvedValueOnce({ response: 1 }).mockResolvedValueOnce({ response: 0 })
+    await invoke(DESKTOP_IPC.updatesOpen, 'app')
+    expect(harness.dialog.showMessageBox).toHaveBeenCalledTimes(2)
+    expect(harness.dialog.showMessageBox).toHaveBeenCalledWith(expect.objectContaining({
+      detail: `Added\n\n• One\n\n${en.updateDetail}`, buttons: [en.updateDownload, en.updateViewRelease], cancelId: 2 }))
+    expect(harness.openExternal).toHaveBeenCalledWith('https://github.com/tBeltty/tbelt-code-public/releases/tag/v0.2.0-rc.2.20261006')
+    expect(harness.updateDownload).toHaveBeenCalledWith('1.0.1-nightly.1')
+  })
+
+  it('does not download when the release notes dialog is dismissed', async () => {
+    await readyForUpdate()
+    await vi.advanceTimersByTimeAsync(0)
+    harness.updateState = { phase: 'available', version: '1.0.1-nightly.1', releaseNotes: '- One' }
+    harness.dialog.showMessageBox.mockReset().mockResolvedValue({ response: 2 })
+    await invoke(DESKTOP_IPC.updatesOpen, 'app')
+    expect(harness.updateDownload).not.toHaveBeenCalled()
+  })
+
   it('retains the embedded block and running Host after expired test login is cancelled', async () => {
     harness.embeddedPolicy = { origin: 'https://policy.example.com', authentication: 'feishu-test', allowedAuthOrigins: ['https://login.example.com'],
       allowedPageOrigins: ['https://downloads.example.com'], intervalMs: 1000, jitter: 0 }

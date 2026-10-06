@@ -12,8 +12,7 @@ export const CHANGES_DIFF_PATH = '/api/changes.diff'
 export const CHANGES_OPEN_PATH = '/api/changes.open'
 
 /**
- * Browser-relative form of {@link CHANGED_FILES_PATH}; see
- * .agents/notes/implemented/architecture/2026-09-14-web-document-relative-app-routes.md.
+ * Browser-relative form of {@link CHANGED_FILES_PATH}.
  */
 export const CHANGED_FILES_ROUTE = CHANGED_FILES_PATH.slice(1)
 

@@ -72,6 +72,16 @@ jobs:
           echo "Publishing $version"
           echo "version=$version" >> "$GITHUB_OUTPUT"
 
+      # The update dialog shows the newest released CHANGELOG.md section, which
+      # already went through the writing pipeline. A build with no section fails.
+      - name: Prepare release notes
+        shell: bash
+        run: |
+          name=$(scripts/release-notes.sh version)
+          scripts/release-notes.sh notes "$name" > "$RUNNER_TEMP/release-notes.md"
+          echo "RELEASE_NAME=$name" >> "$GITHUB_ENV"
+          echo "RELEASE_NOTES_FILE=$RUNNER_TEMP/release-notes.md" >> "$GITHUB_ENV"
+
       - name: Choose macOS signing
         id: macos
         if: inputs.target == 'mac-arm64'
@@ -132,6 +142,8 @@ jobs:
           esac
           {
             echo "DSH_DESKTOP_AUTO_UPDATE_ENV=production"
+            echo "DSH_DESKTOP_RELEASE_NAME=$RELEASE_NAME"
+            echo "DSH_DESKTOP_RELEASE_NOTES_FILE=$RELEASE_NOTES_FILE"
             for name in DSH_DESKTOP_APP_ID DOWNLOAD_PROD_ORIGIN DOWNLOAD_PROD_COS_BUCKET DOWNLOAD_PROD_COS_SECRET_ID DOWNLOAD_PROD_COS_SECRET_KEY; do
               if [[ -n "${!name}" ]]; then printf '%s=%s\n' "$name" "${!name}"; fi
             done

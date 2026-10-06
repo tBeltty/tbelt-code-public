@@ -8,6 +8,7 @@ import { gt, valid } from 'semver'
 import type { DesktopUpdateState } from './ipc.ts'
 import { DesktopUpdateHttpExecutor } from './update-http-executor.ts'
 import { DesktopUpdatePreparationError } from './update-error.ts'
+import { feedReleaseName, feedReleaseNotes } from './update-release-notes.ts'
 
 const { autoUpdater } = electronUpdater
 
@@ -188,7 +189,12 @@ export class DesktopUpdateCoordinator {
       const version = result.updateInfo.version
       if (valid(version) === null) throw new Error('desktop update: feed version is invalid')
       this.candidate = result.isUpdateAvailable && gt(version, this.currentVersion()) ? version : undefined
-      return this.setState(this.candidate === undefined ? { phase: 'idle' } : { phase: 'available', version })
+      if (this.candidate === undefined) return this.setState({ phase: 'idle' })
+      const releaseNotes = feedReleaseNotes(result.updateInfo.releaseNotes)
+      const releaseName = feedReleaseName(result.updateInfo.releaseName)
+      return this.setState({ phase: 'available', version,
+        ...(releaseNotes === undefined ? {} : { releaseNotes }),
+        ...(releaseName === undefined ? {} : { releaseName }) })
     } catch (error) {
       return this.failure(error, 'check')
     }

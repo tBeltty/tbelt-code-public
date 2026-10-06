@@ -1,4 +1,4 @@
-// Fills the download rows from /api/releases, points the hero button at the visitor's platform,
+// Fills the download panels from /api/releases, points the hero button at the visitor's platform,
 // and plays the example session once.
 (() => {
   const NAMES = { windows: 'Windows', mac: 'macOS', linux: 'Linux' }
@@ -44,8 +44,17 @@
   if (platform !== null) {
     heroButton.href = `/download/${platform}`
     heroButton.textContent = `Download for ${NAMES[platform]}`
-    document.querySelector(`[data-platform="${platform}"]`)?.classList.add('is-current')
   }
+
+  const panels = document.querySelectorAll('[data-platform]')
+  const tabs = document.querySelectorAll('[data-os]')
+  function select(os) {
+    for (const panel of panels) panel.hidden = panel.dataset.platform !== os
+    for (const tab of tabs) tab.setAttribute('aria-pressed', String(tab.dataset.os === os))
+  }
+  document.documentElement.classList.add('js')
+  for (const tab of tabs) tab.addEventListener('click', () => select(tab.dataset.os))
+  select(platform ?? 'windows')
 
   const pending = new URLSearchParams(location.search).get('pending')
   if (pending in NAMES) {
@@ -64,7 +73,7 @@
   fetch('/api/releases', { headers: { accept: 'application/json' } })
     .then(response => (response.ok ? response.json() : Promise.reject(new Error(String(response.status)))))
     .then(releases => {
-      for (const card of document.querySelectorAll('[data-platform]')) {
+      for (const card of panels) {
         const release = releases[card.dataset.platform]
         if (release) card.querySelector('[data-version]').textContent = describe(release)
         else markUnavailable(card)

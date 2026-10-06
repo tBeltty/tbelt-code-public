@@ -6,6 +6,7 @@
 #        scripts/release-notes.sh unreleased       succeed when [Unreleased] has entries
 #        scripts/release-notes.sh cut [YYYY-MM-DD] move [Unreleased] into a new version
 #        scripts/release-notes.sh missing          list commits with no changelog line
+#        scripts/release-notes.sh features         check README.md lists the new features
 #
 # `cut` names the version <root package.json version>.<YYYYMMDD of date>, adding
 # .2, .3, ... for further releases on the same day, writes the section and its
@@ -20,6 +21,11 @@
 # `Changelog: none` (no user-visible change) or when a later commit's message
 # has `Changelog-for: <sha>` (its lines were added afterwards). Exits non-zero
 # when it prints anything.
+#
+# `features` fails when [Unreleased] has an "Added" entry but README.md has not
+# changed since the last `Release <version>` commit. Add the feature to the
+# README Features list, or put the line `README: none` in a commit message
+# since that release.
 set -euo pipefail
 
 root=$(git rev-parse --show-toplevel)
@@ -111,8 +117,19 @@ case "${1:-}" in
     done
     [[ "$found" == 0 ]]
     ;;
+  features)
+    added=$(section Unreleased | awk '/^### /{on=($0=="### Added")} on && /^- /{print}')
+    [[ -n "$added" ]] || exit 0
+    last=$(git log -1 --format=%H --grep='^Release ' || true)
+    range=${last:+$last..}HEAD
+    [[ -n "$(git log --format=%H "$range" -- README.md)" ]] && exit 0
+    git log --format=%B "$range" | grep -q -x 'README: none' && exit 0
+    echo 'release-notes: [Unreleased] has Added entries but README.md has not changed since the last release; update its Features list, or add "README: none" to a commit message' >&2
+    printf '%s\n' "$added" >&2
+    exit 1
+    ;;
   *)
-    echo 'usage: release-notes.sh version | notes <version> | unreleased | cut [date] | missing' >&2
+    echo 'usage: release-notes.sh version | notes <version> | unreleased | cut [date] | missing | features' >&2
     exit 2
     ;;
 esac

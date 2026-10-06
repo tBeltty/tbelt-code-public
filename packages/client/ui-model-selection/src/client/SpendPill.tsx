@@ -2,7 +2,8 @@
  * Composer spend reading under the composer card: the budget Session's priced
  * spend, with its limit when one is set. Hovering names the month's spend and
  * limit and the model calls left uncounted for want of a price; a click opens
- * the Spending section of Settings while a settings shell provides it. Nothing
+ * the Spending section of Settings while a settings shell provides it. The reading
+ * turns to the warning color once the chat or the month has spent 80% of its limit. Nothing
  * renders until the Session has spent, has an uncounted call, or has a limit.
  */
 import { useEffect, useState } from 'react'
@@ -11,6 +12,21 @@ import { Tooltip } from '@deepseek-ai/dsh-client-ui-primitives'
 import type { PropsLocale } from '@deepseek-ai/dsh-client-ui-slots'
 import type { SpendPillInjected } from './slots.ts'
 import css from './SpendPill.module.css'
+
+/** Fraction of a limit at which the reading turns to the warning color before the limit is reached. */
+export const SPEND_WARNING_FRACTION = 0.8
+
+/**
+ * Whether a scope has spent at least {@link SPEND_WARNING_FRACTION} of its limit without reaching it.
+ * @param scope - one scope's spend and limit.
+ * @returns `true` only when a limit is set and spend is in the warning band.
+ */
+export function nearLimit(scope: SpendScopeSummary): boolean {
+  return scope.limitUsd !== undefined
+    && scope.limitUsd > 0
+    && scope.spentUsd < scope.limitUsd
+    && scope.spentUsd >= scope.limitUsd * SPEND_WARNING_FRACTION
+}
 
 /**
  * Format a spend figure in US dollars to the cent, keeping a non-zero amount
@@ -44,6 +60,8 @@ export function spendTitle(summary: SpendSummaryReading, t: PropsLocale<'model'>
   if (summary.session.unpricedCalls > 0) {
     lines.push(t('spend.unpriced', { count: summary.session.unpricedCalls }))
   }
+  if (nearLimit(summary.session)) lines.push(t('spend.nearSession'))
+  if (nearLimit(summary.monthly)) lines.push(t('spend.nearMonth'))
   return lines.join(' · ')
 }
 
@@ -73,6 +91,7 @@ export function SpendPill({ read, subscribe, spendSettings, t }: SpendPillInject
   const { session } = summary
   if (session.spentUsd === 0 && session.unpricedCalls === 0 && session.limitUsd === undefined) return null
   const reached = session.limitUsd !== undefined && session.spentUsd >= session.limitUsd
+  const near = nearLimit(session) || nearLimit(summary.monthly)
   const label = (
     <>
       <span className={css.amount}>{scopeReading(session, t)}</span>
@@ -82,7 +101,7 @@ export function SpendPill({ read, subscribe, spendSettings, t }: SpendPillInject
   const title = spendTitle(summary, t)
   const open = spendSettings()
   return (
-    <div className={css.root} data-composer-spend data-reached={reached || undefined}>
+    <div className={css.root} data-composer-spend data-reached={reached || undefined} data-near={(near && !reached) || undefined}>
       <Tooltip label={title} side="top" delayMs={300}>
         {open === undefined
           ? <span className={css.pill} aria-label={title}>{label}</span>

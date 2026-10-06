@@ -4,7 +4,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 import type { ComponentProps } from 'react'
 import type { SpendSummaryReading } from '@deepseek-ai/dsh-api-remotes/client'
 import { SessionId } from '@deepseek-ai/dsh-session/types'
-import { formatSpend, SpendPill } from '../src/client/SpendPill.tsx'
+import { formatSpend, nearLimit, SpendPill } from '../src/client/SpendPill.tsx'
 import { en } from '../src/client/locales.ts'
 
 const t: ComponentProps<typeof SpendPill>['t'] = (key, params) => {
@@ -71,6 +71,19 @@ describe('composer spend reading', () => {
     expect(root?.getAttribute('data-reached')).toBe('true')
     expect(root?.textContent).toBe('$2.03 / $2.00')
     expect(screen.getByLabelText(/3 calls used a model with no price and are not counted$/)).toBeTruthy()
+  })
+
+  it('warns from 80% of a limit until it is reached', async () => {
+    expect(nearLimit({ spentUsd: 1.59, limitUsd: 2, unpricedCalls: 0 })).toBe(false)
+    expect(nearLimit({ spentUsd: 1.6, limitUsd: 2, unpricedCalls: 0 })).toBe(true)
+    expect(nearLimit({ spentUsd: 2, limitUsd: 2, unpricedCalls: 0 })).toBe(false)
+    expect(nearLimit({ spentUsd: 5, unpricedCalls: 0 })).toBe(false)
+    expect(nearLimit({ spentUsd: 0, limitUsd: 0, unpricedCalls: 0 })).toBe(false)
+    const { view } = await renderPill(summary({ spentUsd: 1.7, limitUsd: 2 }, { spentUsd: 17, limitUsd: 20 }))
+    const root = view.container.querySelector('[data-composer-spend]')
+    expect(root?.getAttribute('data-near')).toBe('true')
+    expect(root?.getAttribute('data-reached')).toBeNull()
+    expect(screen.getByLabelText(/This session is close to its spend limit · This month is close to its spend limit$/)).toBeTruthy()
   })
 
   it('opens the Spending settings on click while a settings shell is present', async () => {

@@ -143,40 +143,42 @@
       <img class="screenshot" src="/assets/app-inicio.png" alt="The tBelt Code start screen, with the workspace picker and the message box" width="1280" height="800" loading="lazy" decoding="async">
     </section>
 
-    <section class="download" id="download" aria-labelledby="download-title">
-      <h2 id="download-title">Download</h2>
+    <section class="start" id="download" aria-labelledby="download-title">
+      <p class="badge">Get started</p>
+      <h2 id="download-title">Install it, pick a model, open a project.</h2>
       <p class="notice" data-pending hidden></p>
-      <ul class="platforms">
-        <li class="platform" data-platform="windows">
-          <div class="platform-name">
-            <h3>Windows</h3>
-            <p>Windows 10 or 11, 64-bit</p>
-          </div>
+      <div class="installer">
+        <div class="os-tabs" role="group" aria-label="Operating system">
+          <button type="button" data-os="windows">Windows</button>
+          <button type="button" data-os="mac">macOS</button>
+          <button type="button" data-os="linux">Linux</button>
+        </div>
+        <div class="os-panel" data-platform="windows">
+          <h3>Windows <span>10 or 11, 64-bit</span></h3>
           <p class="platform-version" data-version>Checking for the latest version</p>
           <a class="button button-primary" href="/download/windows" data-download>Download .exe</a>
-          <p class="platform-help">The installer is not signed. If Windows shows "Windows protected your PC", choose <em>More info</em>, then <em>Run anyway</em>. The app installs later versions itself.</p>
-        </li>
-        <li class="platform" data-platform="mac">
-          <div class="platform-name">
-            <h3>macOS</h3>
-            <p>macOS 12 or later, Apple silicon only.</p>
-          </div>
+          <p class="platform-help">If Windows shows "Windows protected your PC", choose <em>More info</em>, then <em>Run anyway</em>. The app installs later versions itself.</p>
+        </div>
+        <div class="os-panel" data-platform="mac">
+          <h3>macOS <span>12 or later, Apple silicon</span></h3>
           <p class="platform-version" data-version>Checking for the latest version</p>
           <a class="button button-primary" href="/download/mac" data-download>Download .dmg</a>
-          <p class="platform-help">Open the disk image and drag tBelt Code into Applications. The app is not signed, so macOS blocks the first launch: go to System Settings, then Privacy &amp; Security, and choose <em>Open Anyway</em>. Or run <code>xattr -dr com.apple.quarantine "/Applications/tBelt Code.app"</code> once. The app does not update itself on macOS: download each new version here and replace the old one.</p>
-        </li>
-        <li class="platform" data-platform="linux">
-          <div class="platform-name">
-            <h3>Linux</h3>
-            <p>AppImage, x86-64. Runs on Ubuntu, Debian, Fedora, Arch and most other distributions.</p>
-          </div>
+          <p class="platform-help">Drag tBelt Code into Applications. macOS blocks the first launch: open System Settings, then Privacy &amp; Security, and choose <em>Open Anyway</em>. Or run <code>xattr -dr com.apple.quarantine "/Applications/tBelt Code.app"</code> once. The app does not update itself on macOS; download each new version here.</p>
+        </div>
+        <div class="os-panel" data-platform="linux">
+          <h3>Linux <span>AppImage, x86-64</span></h3>
           <p class="platform-version" data-version>Checking for the latest version</p>
           <a class="button button-primary" href="/download/linux" data-download>Download AppImage</a>
-          <p class="platform-help">Make it executable, then run it: <code>chmod +x tbelt-code-*.AppImage &amp;&amp; ./tbelt-code-*.AppImage</code>. On Ubuntu 22.04 and later, install <code>libfuse2</code> first. The app updates itself while the file stays where you put it.</p>
-        </li>
-      </ul>
-      <p class="requirement">To start, add a model under Settings, then Models. Use an API key from a hosted provider, or the address of a local Ollama or LM Studio server.</p>
-      <p class="requirement" id="beta">tBelt Code is in a closed beta. Expect rough edges and changes between versions. Your sessions stay on your computer, so nothing is lost when you update. If something breaks, <a href="https://github.com/tBeltty/tbelt-code-public/issues/new/choose">open an issue</a> with your version, system and the steps that led to it.</p>
+          <p class="platform-help">Run <code>chmod +x tbelt-code-*.AppImage &amp;&amp; ./tbelt-code-*.AppImage</code>. Ubuntu 22.04 and later also need <code>libfuse2</code>. The app updates itself while the file stays where you put it.</p>
+        </div>
+      </div>
+      <p class="start-line">No account needed. Add your own API key, or the address of a local Ollama or LM Studio server, under Settings, then Models.</p>
+      <p class="signing">The installers are not signed, so your system shows a warning on first launch.</p>
+      <div class="actions actions-center">
+        <a class="button button-primary" href="https://github.com/tBeltty/tbelt-code-public"><svg class="gh" viewBox="0 0 16 16" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27s1.36.09 2 .27c1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8z"/></svg>Star on GitHub</a>
+        <a class="text-link" href="https://github.com/tBeltty/tbelt-code-public/issues/new/choose">Report an issue →</a>
+      </div>
+      <p class="requirement" id="beta">tBelt Code is in a closed beta. Expect rough edges and changes between versions. Your sessions stay on your computer, so nothing is lost when you update. If something breaks, open an issue with your version, system and the steps that led to it.</p>
     </section>
   </main>
 

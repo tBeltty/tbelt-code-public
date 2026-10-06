@@ -4,6 +4,12 @@ Notable changes to tBelt Code, newest first. The format follows [Keep a Changelo
 
 ## [Unreleased]
 
+## [0.2.0-rc.2.20261006.3] - 2026-10-06
+
+### Added
+
+- The spend reading under the composer turns amber at 80% of the session or monthly limit, before the limit stops the agent.
+
 ## [0.2.0-rc.2.20261006.2] - 2026-10-06
 
 ### Added
@@ -96,7 +102,8 @@ Notable changes to tBelt Code, newest first. The format follows [Keep a Changelo
 - Downloads no longer return an older installer.
 - A key that ran out of credit or hit its spending limit is reported as a quota problem instead of an invalid API key.
 
-[Unreleased]: https://github.com/tBeltty/tbelt-code-public/compare/v0.2.0-rc.2.20261006.2...HEAD
+[Unreleased]: https://github.com/tBeltty/tbelt-code-public/compare/v0.2.0-rc.2.20261006.3...HEAD
+[0.2.0-rc.2.20261006.3]: https://github.com/tBeltty/tbelt-code-public/releases/tag/v0.2.0-rc.2.20261006.3
 [0.2.0-rc.2.20261006.2]: https://github.com/tBeltty/tbelt-code-public/releases/tag/v0.2.0-rc.2.20261006.2
 [0.2.0-rc.2.20261006]: https://github.com/tBeltty/tbelt-code-public/releases/tag/v0.2.0-rc.2.20261006
 [0.2.0-rc.2.20261004]: https://github.com/tBeltty/tbelt-code-public/releases/tag/v0.2.0-rc.2.20261004

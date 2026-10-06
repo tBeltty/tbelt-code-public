@@ -1,7 +1,8 @@
 /** Test-owned workspaces face: the renderer standard-kit observable plus recorded actions. */
 import { createSnapshotStore } from '@deepseek-ai/dsh-client-store'
 import type {
-  IWorkspaces, WorkspaceId, WorkspaceSnapshot, WorkspaceView,
+  IWorkspaces, WorkspaceCreateWorktreeValue, WorkspaceId, WorkspaceInspectWorktreeValue, WorkspaceListWorktreesValue,
+  WorkspaceRemoveWorktreeValue, WorkspaceSnapshot, WorkspaceView,
 } from '@deepseek-ai/dsh-api-workspace-controller/client'
 import type { SessionId } from '@deepseek-ai/dsh-session/types'
 import type { SnapshotStore } from '@deepseek-ai/dsh-client-store'
@@ -111,6 +112,70 @@ export class TestWorkspaces implements IWorkspaces {
   async delete(workspaceId: WorkspaceId): Promise<void> {
     this.calls.push({ method: 'delete', args: [workspaceId] })
     await (this.stubs.get('delete')?.(workspaceId) as Promise<void> | undefined)
+  }
+
+  /**
+   * Create a worktree Workspace (recorded). The default echoes a Workspace named after the requested branch.
+   * @param workspaceId - Workspace whose repository gets the worktree.
+   * @param options - branch name seed and base ref.
+   * @returns the stubbed or echoed worktree Workspace.
+   */
+  async createWorktree(
+    workspaceId: WorkspaceId,
+    options?: { readonly name?: string; readonly baseRef?: string },
+  ): Promise<WorkspaceCreateWorktreeValue> {
+    this.calls.push({ method: 'createWorktree', args: [workspaceId, options] })
+    const stub = this.stubs.get('createWorktree')
+    if (stub !== undefined) return await (stub(workspaceId, options) as Promise<WorkspaceCreateWorktreeValue>)
+    const branch = options?.name ?? 'worktree'
+    return {
+      workspace: {
+        workspaceId: `${workspaceId}-${branch}` as WorkspaceId,
+        path: `/${branch}`,
+        title: branch,
+        sessionIds: [],
+        createdAt: '2026-01-01T00:00:00.000Z',
+        updatedAt: '2026-01-01T00:00:00.000Z',
+      },
+      worktree: { branch, baseRef: options?.baseRef ?? 'HEAD', warnings: [] },
+    }
+  }
+
+  /**
+   * List the worktrees of a repository (recorded; default none).
+   * @param workspaceId - Workspace inside the repository.
+   * @returns the stubbed listing, empty by default.
+   */
+  async listWorktrees(workspaceId: WorkspaceId): Promise<WorkspaceListWorktreesValue> {
+    this.calls.push({ method: 'listWorktrees', args: [workspaceId] })
+    const stub = this.stubs.get('listWorktrees')
+    if (stub !== undefined) return await (stub(workspaceId) as Promise<WorkspaceListWorktreesValue>)
+    return { worktrees: [] }
+  }
+
+  /**
+   * Inspect whether a Workspace is a linked worktree (recorded; default not linked).
+   * @param workspaceId - Workspace to inspect.
+   * @returns the stubbed inspection.
+   */
+  async inspectWorktree(workspaceId: WorkspaceId): Promise<WorkspaceInspectWorktreeValue> {
+    this.calls.push({ method: 'inspectWorktree', args: [workspaceId] })
+    const stub = this.stubs.get('inspectWorktree')
+    if (stub !== undefined) return await (stub(workspaceId) as Promise<WorkspaceInspectWorktreeValue>)
+    return { linked: false, uncommitted: [] }
+  }
+
+  /**
+   * Remove a worktree and its Workspace (recorded; default succeeds without touching the list).
+   * @param workspaceId - Workspace over the worktree.
+   * @param options - `force` discards uncommitted changes.
+   * @returns the stubbed receipt.
+   */
+  async removeWorktree(workspaceId: WorkspaceId, options?: { readonly force?: boolean }): Promise<WorkspaceRemoveWorktreeValue> {
+    this.calls.push({ method: 'removeWorktree', args: [workspaceId, options] })
+    const stub = this.stubs.get('removeWorktree')
+    if (stub !== undefined) return await (stub(workspaceId, options) as Promise<WorkspaceRemoveWorktreeValue>)
+    return { deleted: true, branchDeleted: false }
   }
 
   /**

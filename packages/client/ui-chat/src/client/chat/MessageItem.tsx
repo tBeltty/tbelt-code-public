@@ -8,6 +8,8 @@ import type { ModelRetryNode, TurnErrorNode, UserMessageNode } from '../contract
 import { CompactionItem } from './CompactionItem.tsx'
 import { ContextInjectionRow } from './ContextInjectionRow.tsx'
 import { MessageIconActions } from './MessageIconActions.tsx'
+import { SentQuoteChip } from '../quote/QuoteChip.tsx'
+import { splitQuotedMessage } from '../quote/quotes.ts'
 import css from './MessageItem.module.css'
 
 type UserImage = Extract<UserMessageNode['content'][number], { type: 'image' }>
@@ -185,6 +187,7 @@ function UserStyleBubble({
   const compactImages = attachments.length > 1
   const truncated = (total: number): string => t('json.truncated', { total })
   const showBubble = text !== '' || rest.length > 0
+  const { quotes, body } = splitQuotedMessage(text)
   return (
     <div
       className={css.userRow}
@@ -219,7 +222,8 @@ function UserStyleBubble({
           </div>
         )}
         {showBubble && <div className={css.bubble}>
-          {projectUserText(text, referenceLabels, skillNames, 'skill', references)}
+          {quotes.map((quote, index) => <SentQuoteChip key={index} text={quote} />)}
+          {projectUserText(body, referenceLabels, skillNames, 'skill', references)}
           {rest.map((block, i) => <JsonBlock key={i} label={t('message.extraBlock')} payload={block} truncatedLabel={truncated} />)}
         </div>}
         {referenceLabels.length > 0 && (

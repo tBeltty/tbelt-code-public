@@ -4,7 +4,10 @@ import { Service, type Context } from '@deepseek-ai/cordis'
 import type { SessionId } from '@deepseek-ai/dsh-session/types'
 import type { RemoteFailure } from '@deepseek-ai/dsh-typert-protocol'
 import type { WorkspaceId } from '@deepseek-ai/dsh-workspace/types'
-import type { WorkspaceView } from '../types.ts'
+import type {
+  WorkspaceCreateWorktreeValue, WorkspaceInspectWorktreeValue, WorkspaceListWorktreesValue, WorkspaceRemoveWorktreeValue,
+  WorkspaceView,
+} from '../types.ts'
 import type { ClientWorkspaceModel, WorkspaceSnapshot } from './model.ts'
 
 /** Structured create failure for callers that distinguish Host business errors. */
@@ -28,6 +31,23 @@ export class WorkspaceArchiveError extends Error {
   /** @param rpcError - Host business or folded carrier failure. */
   constructor(readonly rpcError: RemoteFailure) {
     super(`workspace session archive failed: ${rpcError.code}: ${rpcError.message}`)
+  }
+}
+
+/**
+ * A worktree command failed on the Host. `rpcError.code` distinguishes
+ * `workspace/worktree-dirty` (its details list the entries a removal would
+ * lose), `workspace/worktree-unavailable`, and `workspace/worktree-failed`.
+ */
+export class WorkspaceWorktreeError extends Error {
+  override readonly name = 'WorkspaceWorktreeError'
+
+  /**
+   * @param operation - the failed command.
+   * @param rpcError - Host business or folded carrier failure.
+   */
+  constructor(operation: string, readonly rpcError: RemoteFailure) {
+    super(`workspace worktree ${operation} failed: ${rpcError.code}: ${rpcError.message}`)
   }
 }
 
@@ -71,6 +91,39 @@ export interface IWorkspaces {
    * @param workspaceId - target Workspace.
    */
   delete(workspaceId: WorkspaceId): Promise<void>
+  /**
+   * Create a linked git worktree of a Workspace's repository and register a Workspace over it.
+   * @param workspaceId - Workspace whose directory is the repository.
+   * @param options - branch name seed and base ref; both default on the Host.
+   * @returns the new Workspace and its branch.
+   * @throws {WorkspaceWorktreeError} when the Host cannot create it.
+   */
+  createWorktree(
+    workspaceId: WorkspaceId,
+    options?: { readonly name?: string; readonly baseRef?: string },
+  ): Promise<WorkspaceCreateWorktreeValue>
+  /**
+   * List every worktree of a Workspace's repository.
+   * @param workspaceId - Workspace inside the repository.
+   * @returns the worktrees, primary checkout first.
+   * @throws {WorkspaceWorktreeError} when the Host cannot list them.
+   */
+  listWorktrees(workspaceId: WorkspaceId): Promise<WorkspaceListWorktreesValue>
+  /**
+   * Read whether a Workspace is a linked worktree and what removing it would lose.
+   * @param workspaceId - Workspace to inspect.
+   * @returns `linked: false` when the plain `delete` applies.
+   * @throws {WorkspaceWorktreeError} when the Host cannot inspect it.
+   */
+  inspectWorktree(workspaceId: WorkspaceId): Promise<WorkspaceInspectWorktreeValue>
+  /**
+   * Remove a linked worktree, its merged branch, and its Workspace registration.
+   * @param workspaceId - Workspace over the worktree.
+   * @param options - `force` discards uncommitted changes instead of refusing as `workspace/worktree-dirty`.
+   * @returns the removed branch and whether it was deleted.
+   * @throws {WorkspaceWorktreeError} when the Host refuses or git fails.
+   */
+  removeWorktree(workspaceId: WorkspaceId, options?: { readonly force?: boolean }): Promise<WorkspaceRemoveWorktreeValue>
   /**
    * Move a Workspace within the Host registry order.
    * @param workspaceId - Workspace to move.
@@ -148,6 +201,40 @@ export class WorkspaceController extends Service implements IWorkspaces {
   async delete(workspaceId: WorkspaceId): Promise<void> {
     const result = await this.model.delete(workspaceId)
     if (!result.ok) throw commandError('delete', result.error)
+  }
+
+  async createWorktree(
+    workspaceId: WorkspaceId,
+    options: { readonly name?: string; readonly baseRef?: string } = {},
+  ): Promise<WorkspaceCreateWorktreeValue> {
+    const result = await this.model.createWorktree({
+      workspaceId,
+      ...options.name === undefined ? {} : { name: options.name },
+      ...options.baseRef === undefined ? {} : { baseRef: options.baseRef },
+    })
+    if (!result.ok) throw new WorkspaceWorktreeError('create', result.error)
+    return result.value
+  }
+
+  async listWorktrees(workspaceId: WorkspaceId): Promise<WorkspaceListWorktreesValue> {
+    const result = await this.model.listWorktrees(workspaceId)
+    if (!result.ok) throw new WorkspaceWorktreeError('list', result.error)
+    return result.value
+  }
+
+  async inspectWorktree(workspaceId: WorkspaceId): Promise<WorkspaceInspectWorktreeValue> {
+    const result = await this.model.inspectWorktree(workspaceId)
+    if (!result.ok) throw new WorkspaceWorktreeError('inspect', result.error)
+    return result.value
+  }
+
+  async removeWorktree(
+    workspaceId: WorkspaceId,
+    options: { readonly force?: boolean } = {},
+  ): Promise<WorkspaceRemoveWorktreeValue> {
+    const result = await this.model.removeWorktree(workspaceId, options.force === true)
+    if (!result.ok) throw new WorkspaceWorktreeError('remove', result.error)
+    return result.value
   }
 
   async insertBefore(workspaceId: WorkspaceId, beforeWorkspaceId?: WorkspaceId): Promise<void> {

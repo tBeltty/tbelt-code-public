@@ -1,4 +1,4 @@
-/** Native file-action contribution shared by delivery cards and change review. */
+/** Native file-action contribution shared by delivery cards, change review, and the Artifacts tab. */
 import type { PresentedOpenFailure } from './present-open.ts'
 import type { PresentedAction } from '../presented.ts'
 
@@ -19,6 +19,12 @@ declare module '@deepseek-ai/dsh-client-ui-slots' {
     }
     /** The same file actions owned by a changed-file review tab. */
     'deliverables.review.file.actions': {
+      kind: 'list'
+      scope: 'session'
+      owner: SlotMap['deliverables.file.actions']['owner']
+    }
+    /** The same file actions on the delivery cards the Artifacts tab lists. */
+    'deliverables.artifacts.file.actions': {
       kind: 'list'
       scope: 'session'
       owner: SlotMap['deliverables.file.actions']['owner']

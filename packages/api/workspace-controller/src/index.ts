@@ -6,20 +6,29 @@ import { Remote, TypertRemoteService } from '@deepseek-ai/dsh-typert-protocol'
 import { WorkspaceCommands } from './commands.ts'
 import { DirectoryPickerController } from './directory-picker.ts'
 import { WorkspaceFeed, workspaceView } from './feed.ts'
+import { WorktreeCommands } from './worktrees.ts'
 import { defaultWorkspaceDirectory, validateDocumentsDirectory } from './default-directory.ts'
 import type {
   WorkspaceArchiveSessionRequest,
   WorkspaceArchiveValue,
   WorkspaceCreateRequest,
   WorkspaceCreateValue,
+  WorkspaceCreateWorktreeRequest,
+  WorkspaceCreateWorktreeValue,
   WorkspaceDeleteRequest,
   WorkspaceDeleteValue,
   WorkspaceFollowFrame,
   WorkspaceInsertBeforeRequest,
   WorkspaceInsertSessionBeforeRequest,
+  WorkspaceInspectWorktreeRequest,
+  WorkspaceInspectWorktreeValue,
+  WorkspaceListWorktreesRequest,
+  WorkspaceListWorktreesValue,
   WorkspaceOrderValue,
   WorkspacePinSessionRequest,
   WorkspacePinValue,
+  WorkspaceRemoveWorktreeRequest,
+  WorkspaceRemoveWorktreeValue,
   WorkspaceRenameRequest,
   WorkspaceUnarchiveSessionRequest,
   WorkspaceUnpinSessionRequest,
@@ -58,6 +67,7 @@ export class WorkspaceController extends TypertRemoteService {
 
   private readonly config: ResolvedConfig
   private readonly commands: WorkspaceCommands
+  private readonly worktrees: WorktreeCommands
   private readonly feed: WorkspaceFeed
 
   /**
@@ -69,6 +79,7 @@ export class WorkspaceController extends TypertRemoteService {
     this.config = WorkspaceController.Config(config)
     if (this.config.documentsDirectory !== undefined) validateDocumentsDirectory(this.config.documentsDirectory)
     this.commands = new WorkspaceCommands(ctx)
+    this.worktrees = new WorktreeCommands(ctx, this.commands)
     this.feed = new WorkspaceFeed(ctx)
     // This package is the Loader entry for both Remote owners it hosts: the
     // directory-picking seam is abstract and never an entry itself. The child
@@ -184,6 +195,46 @@ export class WorkspaceController extends TypertRemoteService {
   @Remote('unpinSession')
   unpinSession(request: WorkspaceUnpinSessionRequest): Promise<WorkspacePinValue> {
     return this.commands.unpinSession(request)
+  }
+
+  /**
+   * Create a linked git worktree beside a Workspace's repository and register a Workspace over it.
+   * @param request - source Workspace and optional name and base ref.
+   * @returns the new Workspace and its branch; sessions started there write only to the worktree.
+   */
+  @Remote('createWorktree')
+  createWorktree(request: WorkspaceCreateWorktreeRequest): Promise<WorkspaceCreateWorktreeValue> {
+    return this.worktrees.create(request)
+  }
+
+  /**
+   * List every worktree of a Workspace's repository.
+   * @param request - Workspace inside the repository.
+   * @returns the worktrees, primary checkout first, with their registered Workspaces.
+   */
+  @Remote('listWorktrees')
+  listWorktrees(request: WorkspaceListWorktreesRequest): Promise<WorkspaceListWorktreesValue> {
+    return this.worktrees.list(request)
+  }
+
+  /**
+   * Report whether a Workspace is a linked worktree and what removing it would lose.
+   * @param request - Workspace to inspect.
+   * @returns the worktree state; `linked: false` when the plain registration delete applies.
+   */
+  @Remote('inspectWorktree')
+  inspectWorktree(request: WorkspaceInspectWorktreeRequest): Promise<WorkspaceInspectWorktreeValue> {
+    return this.worktrees.inspect(request)
+  }
+
+  /**
+   * Remove a linked worktree and its Workspace registration, keeping Sessions and their logs.
+   * @param request - Workspace to remove and whether to discard uncommitted changes.
+   * @returns the removed branch and whether it was deleted.
+   */
+  @Remote('removeWorktree')
+  removeWorktree(request: WorkspaceRemoveWorktreeRequest): Promise<WorkspaceRemoveWorktreeValue> {
+    return this.worktrees.remove(request)
   }
 
   /**

@@ -21,8 +21,9 @@ import type {} from '@deepseek-ai/dsh-client-ui-renderer/client'
 import type {} from '@deepseek-ai/dsh-client-ui-session/client'
 import type {} from '@deepseek-ai/dsh-client-ui-settings/client'
 import type {} from '@deepseek-ai/dsh-client-ui-workspace/client'
+import type { ShortcutBinding, ShortcutCommandId } from '@deepseek-ai/dsh-client-shortcuts/client'
 import type {
-  ChatNodeInjected, ChatScrollPosition, ChatViewInjected, QuotaNoticeInjected, QuotaNoticeState, TurnTailOwnerProps,
+  ChatNodeInjected, ChatScrollPosition, ChatViewInjected, QuotaNoticeInjected, QuotaNoticeState, QuoteShortcut, TurnTailOwnerProps,
 } from './contract/slots.ts'
 import type { ChatSnapshot } from './contract/snapshot.ts'
 import { EMPTY_CHAT_SNAPSHOT } from './contract/snapshot.ts'
@@ -43,6 +44,11 @@ import { PerformanceUsageRow, type PerformanceUsageRowInjected } from './setting
 import { PerformanceUsagePolicy } from './performance-usage.ts'
 import { useTurnDataValue } from './chat/use-turn-data.ts'
 import { bindDisclosure } from './chat/use-disclosure.ts'
+import { createChatQuotes, formatQuotes, NO_QUOTES } from './quote/quotes.ts'
+import { QuoteDock, type QuoteDockInjected } from './quote/QuoteChip.tsx'
+
+/** Fixed Quote shortcut: Command+L on macOS, Control+L elsewhere. */
+const QUOTE_BINDING: ShortcutBinding = { code: 'KeyL', modifiers: ['primary'] }
 
 const CHAT_NODE_INJECT: ChatNodeInjected = {
   hooks: {
@@ -117,6 +123,7 @@ export function apply(ctx: Context): void {
   ctx.effect(() => ctx.locale.register(NS, { zh, en }), 'ui-chat: dictionaries')
   const t = ctx.locale.bind(NS)
   const chatStore = createChatStore()
+  const quotes = createChatQuotes()
   const chatScrollPositions = new Map<SessionId, ChatScrollPosition>()
   const chatSettings = ctx.configForms.get<ChatSettings>(CHAT_SETTINGS_NAMESPACE)
   const linkOpening = createSnapshotStore(chatSettings.getSnapshot().value?.linkOpening ?? DEFAULT_LINK_OPENING)
@@ -174,6 +181,38 @@ export function apply(ctx: Context): void {
       setTranscriptView: (mode) => { transcriptView.setMode(mode) },
     }),
   }, TranscriptViewRow))
+
+  const quoteShortcut = (): QuoteShortcut | undefined => {
+    const shortcuts = ctx.get('shortcuts')
+    return shortcuts === undefined
+      ? undefined
+      : { keys: shortcuts.describeBinding(QUOTE_BINDING).keys, mac: shortcuts.platform === 'macos' }
+  }
+  ctx.inject(['shortcuts'], (scope) => {
+    scope.effect(() => scope.shortcuts.registerFixed({
+      id: 'chat.quote' as ShortcutCommandId, label: () => t('quote.action'),
+      keys: scope.shortcuts.describeBinding(QUOTE_BINDING).keys, bindings: [QUOTE_BINDING], group: 'input',
+    }), 'ui-chat: fixed quote reference')
+  })
+  // Unsent quotes travel as the leading part of the next plain message, so the
+  // model receives them and the Session log records them.
+  ctx.inject(['conversation'], (scope) => {
+    scope.effect(() => scope.conversation.prefixes.register((sessionId) => {
+      const pending = quotes.store.getSnapshot()[sessionId] ?? NO_QUOTES
+      if (pending.length === 0) return undefined
+      return {
+        text: formatQuotes(pending.map(quote => quote.text)),
+        commit: () => { quotes.remove(sessionId, pending.map(quote => quote.id)) },
+      }
+    }), 'ui-chat: quotes in composer messages')
+    scope.slots.inject('conversation.input.dock', () => scope.slots.register({
+      name: 'conversation.input.dock', id: 'chat.quotes', order: 20, locale: NS,
+      inject: (): QuoteDockInjected => ({
+        hooks: { quotes: quotes.store },
+        removeQuote: (sessionId, id) => { quotes.remove(sessionId, [id]) },
+      }),
+    }, QuoteDock))
+  })
 
   ctx.slots.inject('conversation.view', () => {
     const disposeView = ctx.slots.register({
@@ -246,6 +285,8 @@ export function apply(ctx: Context): void {
             },
             read: () => chatScrollPositions.get(sessionId) ?? null,
           },
+          quote: (text) => { quotes.add(sessionId, text) },
+          quoteShortcut: quoteShortcut(),
           forkAt: (seq) => {
             const turn = [...chat.getSnapshot().timeline.turns.values()].find(turn => turn.end?.seq === seq)
             const messageId = turn?.data.get('turn-tail')?.closing?.finalNode.messageId

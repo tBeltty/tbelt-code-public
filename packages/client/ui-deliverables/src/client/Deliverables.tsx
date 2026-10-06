@@ -1,8 +1,10 @@
 /** The changed-files card, shown only while the Host serves the turn's summary, and explicitly declared files for a closing turn. */
-import { useEffect, useState } from 'react'
+import { useEffect, useState, type ReactNode } from 'react'
 import type { TurnTailOwnerProps } from '@deepseek-ai/dsh-client-ui-chat/client'
 import { Button, IconChevronDownOutlineRegular, IconChevronUpOutlineRegular } from '@deepseek-ai/dsh-client-ui-primitives'
-import type { GlobalStandardProps, InjectFace, PropsLocale, PropsRenderSlots, PropsRuntime, SessionStandardProps } from '@deepseek-ai/dsh-client-ui-slots'
+import type {
+  GlobalStandardProps, InjectFace, PropsLocale, PropsRenderSlots, PropsRuntime, SessionStandardProps, SlotMap,
+} from '@deepseek-ai/dsh-client-ui-slots'
 import type { ObservableSnapshot } from '@deepseek-ai/dsh-client-store'
 import type { PresentedOpenController } from './present-open.ts'
 import type { ChangesDiffStore } from './changes-diff.ts'
@@ -15,7 +17,11 @@ import { presentedFileUrl } from '../presented.ts'
 import { PresentedFileCard } from './PresentedFileCard.tsx'
 import css from './Deliverables.module.css'
 
-interface DeliverablesMatch { changes: ChangesTurnData | null; presented: readonly PresentedPath[] }
+/** One Turn's change announcement and delivered files. */
+export interface DeliverablesMatch { changes: ChangesTurnData | null; presented: readonly PresentedPath[] }
+
+/** Renders the native file actions of one delivery card into the surface's own action seat. */
+export type RenderFileActions = (owner: SlotMap['deliverables.file.actions']['owner']) => ReactNode
 
 const COLLAPSED_PRESENTED_COUNT = 4
 
@@ -55,7 +61,10 @@ export function selectDeliverables(owner: TurnTailOwnerProps): DeliverablesMatch
  */
 export function DeliverablesTail(props: PropsRuntime<'conversation.chat.turnTail'> & PropsLocale<typeof NS> & InjectFace<DeliverablesInjected> & PropsRenderSlots<'deliverables.file.actions'>) {
   const matched = selectDeliverables(props)
-  return matched === null ? null : <Deliverables {...props} matched={matched} />
+  const { renderSlot } = props
+  return matched === null
+    ? null
+    : <Deliverables {...props} matched={matched} renderFileActions={owner => renderSlot('deliverables.file.actions', owner)} />
 }
 
 /**
@@ -67,10 +76,11 @@ export function DeliverablesTail(props: PropsRuntime<'conversation.chat.turnTail
  */
 export function Deliverables({
   matched, openFile, t, sessionId, useSessions, openPresented, openChangesReview, usePresentedOpen, usePresentedHost,
-  useChangesDiff, loadChangesDiff, useChangesSummary, reloadPresentedHost, loadChangesSummary, useShowCodeDiff, renderSlot,
+  useChangesDiff, loadChangesDiff, useChangesSummary, reloadPresentedHost, loadChangesSummary, useShowCodeDiff, renderFileActions,
 }: Pick<TurnTailOwnerProps, 'openFile'> & {
   matched: DeliverablesMatch
-} & PropsLocale<typeof NS> & Pick<SessionStandardProps, 'sessionId'> & Pick<GlobalStandardProps, 'useSessions'> & InjectFace<DeliverablesInjected> & PropsRenderSlots<'deliverables.file.actions'>) {
+  renderFileActions: RenderFileActions
+} & PropsLocale<typeof NS> & Pick<SessionStandardProps, 'sessionId'> & Pick<GlobalStandardProps, 'useSessions'> & InjectFace<DeliverablesInjected>) {
   const [expanded, setExpanded] = useState(false)
   const showCodeDiff = useShowCodeDiff(value => value)
   const cwd = useSessions(state => state.byId[sessionId]?.cwd)
@@ -109,7 +119,7 @@ export function Deliverables({
           phase={states[presentedFileUrl(sessionId, file.seq, file.index)]}
           host={host === 'error' ? null : host} t={t}
           onPreview={() => { openFile(file.path) }}
-          actions={renderSlot('deliverables.file.actions', {
+          actions={renderFileActions({
             actionUrl: presentedFileUrl(sessionId, file.seq, file.index),
             available: host !== null && host !== 'error' && host.available,
             pending: states[presentedFileUrl(sessionId, file.seq, file.index)] === 'opening'

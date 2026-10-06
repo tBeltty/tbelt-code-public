@@ -458,7 +458,7 @@ describe('web e2e: shipped right Sidebar', () => {
 
       await expect.poll(async () => await tabTitles(column)).toEqual(['Start'])
       await expectTitleAlignment(column.locator('[data-dockkit-tab-title]'))
-      await expect.poll(async () => await column.locator('[data-sidebar-right-guide-entry]').count()).toBe(2)
+      await expect.poll(async () => await column.locator('[data-sidebar-right-guide-entry]').count()).toBe(3)
       expect(await column.locator('[data-sidebar-right-guide-entry="browser"]').count()).toBe(0)
       await column.locator('[data-sidebar-right-guide-entry="files"]').click()
 

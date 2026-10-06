@@ -8,13 +8,14 @@ Desktop product events use the optional [product analytics service](../product-a
 
 ## Summary
 
-Use this package to render a browser chat from recorded Session conversations, including historical images, localized actions, and restored scroll position. Work-details modes control reasoning previews and process visibility without hiding final answers; Verbose keeps completed-turn process rows visible. Local transcript and steering submissions appear immediately, remain in their original surface, and disappear atomically when authoritative Session records arrive, while queued submissions stay outside Chat. The package does not assemble or modify model requests.
+Use this package to render a browser chat from recorded Session conversations, including historical images, localized actions, and restored scroll position. Work-details modes control reasoning previews and process visibility without hiding final answers; Verbose keeps completed-turn process rows visible. Local transcript and steering submissions appear immediately, remain in their original surface, and disappear atomically when authoritative Session records arrive, while queued submissions stay outside Chat. The package does not assemble model requests; quotes the user adds become part of the next user message.
 
 File-mention providers receive the viewed Session ID with the closing-turn owner, so links into inherited history can address the fork itself.
 
 ## Table of Contents
 
 - [Reference previews](#reference-previews)
+- [Quotes](#quotes)
 - [Hidden Chat rows](#system-prompt-row)
 - [Command and failure rows](#command-and-failure-rows)
 - [Turn token usage](#turn-token-usage)
@@ -36,6 +37,15 @@ Chat supplies file and HTTP(S) navigation through one `MarkdownDelegateProvider`
 Standalone Markdown images show contained previews and open the shared image lightbox; local paths resolve against the viewed workspace after settlement. Image file links keep their sidebar activation and show a thumbnail after hover dwell or keyboard focus. Escape dismisses the thumbnail. Failed images retain a localized status and their description; no duplicate-image filtering is applied.
 
 Settings → General → Open chat links in selects the destination for ordinary clicks on Chat HTTP(S) links: In-App Sidebar (default) opens a new right-Sidebar Browser tab, while Default Browser opens an external tab. The setting follows Keyboard shortcuts and is shown only while the Sidebar Browser is available. If the Sidebar Browser is not registered, both choices use the external browser; modified clicks retain native behavior. The `ui-chat.linkOpening` preference persists on loopback browsers and stays process-local when settings cannot persist writes. Sent file references and skills confirmed by the message’s logged invocation also open in the right Sidebar. File paths use the viewed Session; skill names resolve through its current input-trigger source. Both use the prose file-link dotted underline on hover or focus. Sessions, directories, and command labels remain non-navigating references.
+
+<a id="quotes"></a>
+## Quotes
+
+Selecting text inside one assistant message shows a Quote action below the selection. Clicking it, or pressing Command+L on macOS or Control+L elsewhere while the action is visible, adds the text to the Session's unsent quotes and clears the selection; Escape hides the action. The shortcut is a fixed row in the shortcut reference and is unavailable without the shortcut service. Unsent quotes appear as removable chips above the composer and live only in browser memory for the Session.
+
+The next plain message that carries text or attachments sends each quote as a Markdown blockquote before the typed text, separated by blank lines; the quotes clear once the Host accepts the message, and commands never carry them. A sent user message whose leading blocks are all blockquotes and that continues with text shows those blocks as truncated chips before the text, with the full quote in a tooltip.
+
+-----
 
 <a id="system-prompt-row"></a>
 ## Hidden Chat rows
@@ -149,11 +159,11 @@ Active-Turn highlighting is approximate: `readVisibleTurn` binary-searches the c
 <a id="model-experience"></a>
 ## Model Experience
 
-None, as this package renders logged conversation state in the browser and registers nothing model-facing.
+Quotes reach the model as Markdown blockquotes at the start of the user message, for example `> quoted text` followed by a blank line and the typed text. They are recorded in the Session log as part of that `user/message`. Everything else in this package renders logged conversation state.
 
 #### KV Cache effect
 
-None; Chat presentation does not assemble or mutate provider requests.
+None; a quote adds tokens only to the new user message and leaves earlier request content unchanged.
 
 ## Known Limitations and Deferred Work
 

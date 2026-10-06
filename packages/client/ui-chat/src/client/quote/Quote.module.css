@@ -1,0 +1,94 @@
+/* Quote chips in sent bubbles and above the composer, and the selection action. */
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  max-width: min(260px, 100%);
+  margin-right: 6px;
+  padding: 0 6px;
+  border-radius: var(--dsw-radius-sm);
+  background: var(--dsw-alias-interactive-bg-hover);
+  color: var(--dsw-alias-label-secondary);
+  vertical-align: bottom;
+  white-space: nowrap;
+}
+
+.glyph {
+  flex: none;
+  color: var(--dsw-alias-label-tertiary);
+}
+
+.text {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.dock {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding: 0 4px 6px;
+}
+
+.dockChip {
+  height: 28px;
+  margin-right: 0;
+  padding-right: 2px;
+  border: 0.5px solid var(--dsw-alias-border-l2);
+  background: var(--dsw-alias-button-floating-fill);
+  font-size: var(--dsh-content-font-size-secondary, 13px);
+}
+
+.remove {
+  display: inline-grid;
+  flex: none;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  border: 0;
+  border-radius: var(--dsw-radius-sm);
+  background: transparent;
+  color: var(--dsw-alias-label-tertiary);
+  cursor: pointer;
+}
+
+.remove:hover {
+  background: var(--dsw-alias-interactive-bg-hover);
+  color: var(--dsw-alias-label-primary);
+}
+
+.selectionAction {
+  position: fixed;
+  z-index: 20;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 28px;
+  padding: 0 10px;
+  border: 0.5px solid var(--dsw-alias-border-l2);
+  border-radius: var(--dsw-radius-md);
+  background: var(--dsw-alias-bg-layer-3);
+  box-shadow: var(--dsw-elevation-soft);
+  color: var(--dsw-alias-label-primary);
+  font: inherit;
+  font-size: 12px;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.selectionAction:hover {
+  background: var(--dsw-alias-interactive-bg-hover);
+}
+
+.remove:focus-visible,
+.selectionAction:focus-visible {
+  outline: var(--dsw-focus-ring-width) solid var(--dsw-focus-ring-color, var(--dsw-alias-state-business-primary));
+  outline-offset: 2px;
+}
+
+.keys {
+  color: var(--dsw-alias-label-tertiary);
+}

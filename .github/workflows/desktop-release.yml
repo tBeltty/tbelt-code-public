@@ -1,4 +1,5 @@
 name: Desktop release
+run-name: Desktop release ${{ inputs.target }}${{ !inputs.upload && ' (no upload)' || '' }}
 
 # Build one desktop installer and, when the update bucket is configured, upload
 # it so installed apps update themselves. Started by hand only; it builds the

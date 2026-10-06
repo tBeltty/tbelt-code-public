@@ -50,6 +50,12 @@ declare module '@deepseek-ai/dsh-typert-protocol' {
       readonly sessionId: SessionId
       readonly beforeSessionId?: SessionId
     }
+    /** The worktree service is not mounted, git is missing, or the Workspace directory is not a repository checkout. */
+    'workspace/worktree-unavailable': { readonly workspaceId: WorkspaceId }
+    /** A removal was refused because the worktree holds uncommitted or untracked changes. */
+    'workspace/worktree-dirty': { readonly workspaceId: WorkspaceId; readonly entries: readonly string[] }
+    /** The Workspace is not a removable linked worktree, or git refused the operation. */
+    'workspace/worktree-failed': { readonly workspaceId: WorkspaceId }
     /** The verb needs an interaction the composed backend does not serve. */
     'directory-picker/unavailable': { readonly capability: string }
     /** The target is not fully qualified, or the backend cannot list it. */
@@ -147,6 +153,80 @@ export interface WorkspaceUnpinSessionRequest {
 /** Complete pinned Session set after a mutation, most recently pinned first. */
 export interface WorkspacePinValue {
   readonly pinnedSessionIds: readonly SessionId[]
+}
+
+/** New linked worktree requested from the repository a Workspace points at. */
+export interface WorkspaceCreateWorktreeRequest {
+  /** Workspace whose directory is the repository (or one of its worktrees). */
+  readonly workspaceId: WorkspaceId
+  /** Name the branch and directory are derived from; generated when omitted. */
+  readonly name?: string
+  /** Ref the new branch starts from; the configured default when omitted. */
+  readonly baseRef?: string
+}
+
+/** The Workspace registered over a freshly created worktree. */
+export interface WorkspaceCreateWorktreeValue {
+  readonly workspace: WorkspaceView
+  readonly worktree: {
+    readonly branch: string
+    readonly baseRef: string
+    /** Non-fatal problems from linking, copying, or setup commands. */
+    readonly warnings: readonly string[]
+  }
+}
+
+/** Worktree listing requested for the repository of one Workspace. */
+export interface WorkspaceListWorktreesRequest {
+  readonly workspaceId: WorkspaceId
+}
+
+/** One worktree of a repository. */
+export interface WorkspaceWorktreeEntry {
+  readonly path: string
+  readonly branch?: string
+  readonly isPrimary: boolean
+  readonly locked: boolean
+  readonly prunable: boolean
+  /** The Workspace registered over this directory, when there is one. */
+  readonly workspaceId?: WorkspaceId
+}
+
+/** Every worktree of the repository, primary checkout first. */
+export interface WorkspaceListWorktreesValue {
+  readonly worktrees: readonly WorkspaceWorktreeEntry[]
+}
+
+/** Worktree state requested before offering its removal. */
+export interface WorkspaceInspectWorktreeRequest {
+  readonly workspaceId: WorkspaceId
+}
+
+/**
+ * What removing a Workspace would do to its directory. A Workspace that is not
+ * a linked worktree (or a host without the worktree service) reports
+ * `linked: false`, so callers fall back to the plain registration delete.
+ */
+export interface WorkspaceInspectWorktreeValue {
+  readonly linked: boolean
+  readonly branch?: string
+  /** `git status --porcelain` entries a removal would lose; empty when clean. */
+  readonly uncommitted: readonly string[]
+}
+
+/** Linked worktree and its Workspace registration to remove. */
+export interface WorkspaceRemoveWorktreeRequest {
+  readonly workspaceId: WorkspaceId
+  /** Remove even when the worktree holds uncommitted changes. */
+  readonly force?: boolean
+}
+
+/** Receipt after a worktree and its Workspace registration are removed. */
+export interface WorkspaceRemoveWorktreeValue {
+  readonly deleted: true
+  readonly branch?: string
+  /** True when the branch was fully merged and was deleted with the worktree. */
+  readonly branchDeleted: boolean
 }
 
 /** Complete reconnect baseline for Workspace browser state. */

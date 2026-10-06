@@ -16,6 +16,7 @@ import {
 } from '../src/changes.ts'
 import { ChangesDiffStore } from '../src/client/changes-diff.ts'
 import { ChangesSummaryStore } from '../src/client/changes-summary.ts'
+import { DiffCommentStore, formatDiffComment, formatDiffComments } from '../src/client/diff-comments.ts'
 import { PresentedOpenController } from '../src/client/present-open.ts'
 import {
   ReviewTab, type ReviewInjected, type ReviewTabProps,
@@ -145,10 +146,13 @@ describe('ReviewTab', () => {
     revision?: number
     address?: string
     cwd?: string | undefined
+    comments?: DiffCommentStore
+    sendResult?: string | null
   } = {}) {
     const summaries = options.summaries ?? new ChangesSummaryStore()
     const diffs = options.diffs ?? new ChangesDiffStore()
     const controller = options.controller ?? new PresentedOpenController()
+    const comments = options.comments ?? new DiffCommentStore()
     const store = createReviewStore().create()
     const aborter = new AbortController()
     const tabActions = {
@@ -161,6 +165,10 @@ describe('ReviewTab', () => {
       loadChangesDiff: vi.fn<ReviewInjected['loadChangesDiff']>(() => Promise.resolve()),
       reloadPresentedHost: vi.fn<ReviewInjected['reloadPresentedHost']>(() => Promise.resolve()),
       openChanged: vi.fn<ReviewInjected['openChanged']>(() => Promise.resolve(null)),
+      addComment: vi.fn<ReviewInjected['addComment']>((sessionId, filePath, line, body) => { comments.add(sessionId, filePath, line, body) }),
+      updateComment: vi.fn<ReviewInjected['updateComment']>((sessionId, id, body) => { comments.update(sessionId, id, body) }),
+      removeComment: vi.fn<ReviewInjected['removeComment']>((sessionId, id) => { comments.remove(sessionId, id) }),
+      sendComments: vi.fn<ReviewInjected['sendComments']>(() => Promise.resolve(options.sendResult ?? null)),
     }
     const sessions: SessionListState = {
       ids: [SESSION],
@@ -183,12 +191,13 @@ describe('ReviewTab', () => {
       useChangesDiff: hookOf(diffs.state),
       usePresentedOpen: hookOf(controller.state),
       usePresentedHost: hookOf(controller.host),
+      useDiffComments: hookOf(comments.state),
       t: makeTranslate(options.locale ?? en),
       ...injected,
     } as ReviewTabProps
     const view = render(<ReviewTab {...runtime} />)
     return {
-      view, injected, tabActions, store, aborter, summaries, diffs, controller,
+      view, injected, tabActions, store, aborter, summaries, diffs, controller, comments,
       rerender: () => { view.rerender(<ReviewTab {...runtime} />) },
     }
   }
@@ -407,5 +416,112 @@ describe('ReviewTab', () => {
     const error = vi.spyOn(console, 'error').mockImplementation(() => undefined)
     expect(() => mount({ address: 'dsh-resource://file/session/viewed/a.ts' })).toThrow('not a review address')
     error.mockRestore()
+  })
+
+  describe('line comments', () => {
+    const ready = (options: { split?: boolean; wrap?: boolean; sendResult?: string | null } = {}) => {
+      const summaries = new ChangesSummaryStore()
+      const diffs = new ChangesDiffStore()
+      summaries.state.set({ [SUMMARY_URL]: summary })
+      diffs.state.set({ [changesDiffUrl(SESSION, 5, 0)]: text })
+      const mounted = mount({ summaries, diffs, ...options.sendResult === undefined ? {} : { sendResult: options.sendResult } })
+      if (options.split !== true) act(() => { mounted.store.actions.toggledSplit(TAB) })
+      if (options.wrap === true) act(() => { mounted.store.actions.toggledWrap(TAB) })
+      return mounted
+    }
+    const typeInto = (view: ReturnType<typeof render>, body: string) => {
+      fireEvent.change(view.getByRole('textbox'), { target: { value: body } })
+    }
+
+    it('adds, edits, and removes a comment under a new-side line in the unified view', () => {
+      const { view, injected, comments } = ready()
+      expect(view.container.querySelector('[data-diff-comment-add="1"]')).toBeTruthy()
+      fireEvent.click(view.container.querySelector('[data-diff-comment-add="2"]') as Element)
+      expect(view.getByRole('button', { name: en['comment.save'] }).hasAttribute('disabled')).toBe(true)
+      typeInto(view, '  rename this  ')
+      fireEvent.click(view.getByRole('button', { name: en['comment.save'] }))
+      expect(injected.addComment).toHaveBeenCalledWith(SESSION, 'src/app/main.ts', 2, 'rename this')
+      expect(view.container.querySelector('[data-diff-comments="2"]')?.textContent).toContain('rename this')
+      fireEvent.click(view.getByRole('button', { name: en['comment.edit'] }))
+      typeInto(view, 'rename it')
+      fireEvent.keyDown(view.getByRole('textbox'), { key: 'Enter', ctrlKey: true })
+      expect(comments.unsent(SESSION).map(comment => comment.body)).toEqual(['rename it'])
+      fireEvent.click(view.getByRole('button', { name: en['comment.edit'] }))
+      fireEvent.keyDown(view.getByRole('textbox'), { key: 'Escape' })
+      expect(view.queryByRole('textbox')).toBeNull()
+      fireEvent.click(view.getByRole('button', { name: en['comment.remove'] }))
+      expect(comments.unsent(SESSION)).toEqual([])
+      expect(view.container.querySelector('[data-diff-comments]')).toBeNull()
+    })
+
+    it('draws the comment in the right column with a hidden copy in the left one', () => {
+      const { view } = ready({ split: true })
+      fireEvent.click(view.container.querySelector('[data-diff-comment-add="2"]') as Element)
+      expect(view.container.querySelectorAll('[data-diff-side="left"] [data-diff-comment-add]')).toHaveLength(0)
+      expect(view.container.querySelectorAll('[data-diff-side="right"] [data-diff-comments]')).toHaveLength(1)
+      expect(view.container.querySelectorAll('[data-diff-side="left"] [data-diff-comments-ghost]')).toHaveLength(1)
+      typeInto(view, 'ok')
+      fireEvent.click(view.getByRole('button', { name: en['comment.save'] }))
+      fireEvent.click(view.getByRole('button', { name: en['comment.edit'] }))
+      expect(view.container.querySelectorAll('[data-diff-side="left"] [data-diff-comments-ghost]')).toHaveLength(1)
+    })
+
+    it('draws the comment in the wrapped split view', () => {
+      const { view } = ready({ split: true, wrap: true })
+      fireEvent.click(view.container.querySelector('[data-diff-comment-add="3"]') as Element)
+      expect(view.container.querySelectorAll('[data-diff-comments]')).toHaveLength(1)
+    })
+
+    it('sends the unsent comments, marks them sent, and shows a failure line', async () => {
+      const { view, injected, comments } = ready()
+      act(() => {
+        comments.add(SESSION, 'src/app/main.ts', 3, 'one')
+        comments.add(SESSION, 'notes.txt', 1, 'other file')
+      })
+      const send = view.getByRole('button', { name: en['review.sendCommentsAria'].replace('{count}', '2') })
+      fireEvent.click(send)
+      await act(() => Promise.resolve())
+      expect(injected.sendComments).toHaveBeenCalledWith(SESSION)
+      cleanup()
+      const failed = ready({ sendResult: 'refused (busy)' })
+      act(() => { failed.comments.add(SESSION, 'src/app/main.ts', 3, 'one') })
+      fireEvent.click(failed.view.getByRole('button', { name: en['review.sendCommentsAria'].replace('{count}', '1') }))
+      await act(() => Promise.resolve())
+      expect(failed.view.container.querySelector('[data-review-send-error]')?.textContent).toBe('refused (busy)')
+      act(() => { failed.comments.markSent(SESSION, failed.comments.unsent(SESSION).map(comment => comment.id)) })
+      expect(failed.view.container.querySelector('[data-diff-comment][data-sent]')).toBeTruthy()
+      expect(failed.view.queryByRole('button', { name: /Send/ })).toBeNull()
+    })
+
+    it('shows no gutter button on files without a text diff', () => {
+      const summaries = new ChangesSummaryStore()
+      const diffs = new ChangesDiffStore()
+      summaries.state.set({ [SUMMARY_URL]: summary })
+      diffs.state.set({ [changesDiffUrl(SESSION, 5, 0)]: { kind: 'binary', path: 'p', display: 'p' } })
+      const { view } = mount({ summaries, diffs })
+      expect(view.container.querySelector('[data-diff-comment-add]')).toBeNull()
+    })
+  })
+})
+
+describe('diff comment text', () => {
+  it('formats comments with escaped quotes, backslashes, and line breaks', () => {
+    const comment = { id: 'a', filePath: 'src/a.ts', lineNumber: 7, body: 'say "hi"\\\nbye\r' }
+    expect(formatDiffComment(comment)).toBe('File: src/a.ts\nLine: 7\nUser comment: "say \\"hi\\"\\\\\\nbye\\r"')
+    expect(formatDiffComments([comment, { ...comment, id: 'b', lineNumber: 8, body: 'x' }])).toBe(
+      `${formatDiffComment(comment)}\n\nFile: src/a.ts\nLine: 8\nUser comment: "x"`)
+  })
+
+  it('keeps sent comments, makes an edited one unsent, and numbers ids per store', () => {
+    const store = new DiffCommentStore()
+    store.add(SESSION, 'a.ts', 1, 'one')
+    store.add(SESSION, 'a.ts', 2, 'two')
+    const [first, second] = store.unsent(SESSION)
+    store.markSent(SESSION, [first!.id, second!.id])
+    expect(store.unsent(SESSION)).toEqual([])
+    store.update(SESSION, second!.id, 'two again')
+    expect(store.unsent(SESSION).map(comment => comment.body)).toEqual(['two again'])
+    expect(store.state.getSnapshot()[SESSION]?.[0]?.sentAt).toBeDefined()
+    expect(store.unsent(SessionId('other'))).toEqual([])
   })
 })

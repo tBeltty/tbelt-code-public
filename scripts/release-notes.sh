@@ -5,12 +5,21 @@
 #        scripts/release-notes.sh notes <version>  that version's section body
 #        scripts/release-notes.sh unreleased       succeed when [Unreleased] has entries
 #        scripts/release-notes.sh cut [YYYY-MM-DD] move [Unreleased] into a new version
+#        scripts/release-notes.sh missing          list commits with no changelog line
 #
 # `cut` names the version <root package.json version>.<YYYYMMDD of date>, adding
 # .2, .3, ... for further releases on the same day, writes the section and its
 # link reference, and prints the version. date defaults to today (UTC).
 # Exits non-zero when CHANGELOG.md has no released version, no such section,
 # or (for `unreleased` and `cut`) no unreleased entries.
+#
+# `missing` checks the commits since the last `Release <version>` commit and
+# prints `<short sha> <subject>` for each one that changes app code (apps/,
+# packages/, python/ or native/, ignoring tests and Markdown) without touching
+# CHANGELOG.md. A commit is also covered when its message has the line
+# `Changelog: none` (no user-visible change) or when a later commit's message
+# has `Changelog-for: <sha>` (its lines were added afterwards). Exits non-zero
+# when it prints anything.
 set -euo pipefail
 
 root=$(git rev-parse --show-toplevel)
@@ -23,6 +32,14 @@ section() {
     /^\[[^]]+\]: / { if (found) exit }
     found { print }
   ' "$changelog" | sed -e '/./,$!d'
+}
+
+# App code paths that can change what a user sees; tests and Markdown are excluded.
+touches_app() {
+  git diff-tree --no-commit-id --name-only -r "$1" |
+    grep -E '^(apps|packages|python|native)/' |
+    grep -v -E '(\.(spec|test|e2e)\.[cm]?[jt]sx?$|/tests?/|/__tests__/|\.md$)' |
+    grep -q .
 }
 
 has_entries() {
@@ -75,8 +92,27 @@ case "${1:-}" in
     } > "$changelog"
     printf '%s\n' "$version"
     ;;
+  missing)
+    last=$(git log -1 --format=%H --grep='^Release ' || true)
+    range=${last:+$last..}HEAD
+    covered=$(git log --format=%B "$range" | sed -n 's/^Changelog-for: *\([0-9a-fA-F]\{7,40\}\).*/\1/p')
+    found=0
+    for sha in $(git rev-list --no-merges "$range"); do
+      git diff-tree --no-commit-id --name-only -r "$sha" | grep -q -x 'CHANGELOG.md' && continue
+      git log -1 --format=%B "$sha" | grep -q -x 'Changelog: none' && continue
+      touches_app "$sha" || continue
+      skip=false
+      for prefix in $covered; do
+        [[ "$sha" == "$prefix"* ]] && { skip=true; break; }
+      done
+      $skip && continue
+      git log -1 --format='%h %s' "$sha"
+      found=1
+    done
+    [[ "$found" == 0 ]]
+    ;;
   *)
-    echo 'usage: release-notes.sh version | notes <version> | unreleased | cut [date]' >&2
+    echo 'usage: release-notes.sh version | notes <version> | unreleased | cut [date] | missing' >&2
     exit 2
     ;;
 esac

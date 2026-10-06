@@ -12,7 +12,8 @@
     "src/default-workspace.ts",
     "src/directory-picker.ts",
     "src/feed.ts",
-    "src/default-directory.ts"
+    "src/default-directory.ts",
+    "src/worktrees.ts"
   ],
   "references": [
     { "path": "../../../vendor/cordis" },
@@ -23,6 +24,7 @@
     { "path": "../../typert/protocol" },
     { "path": "../../util/deque" },
     { "path": "../../util/native-command" },
-    { "path": "../../workspace/workspace" }
+    { "path": "../../workspace/workspace" },
+    { "path": "../../workspace/worktree" }
   ]
 }

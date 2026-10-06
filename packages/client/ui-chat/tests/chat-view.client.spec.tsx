@@ -455,6 +455,8 @@ function makeHarness(
     forkAt,
     // Absent-service default; mention tests override with a real resolver.
     fileMentions: () => undefined,
+    quote: vi.fn(),
+    quoteShortcut: undefined,
     codeRunner: () => undefined,
     t,
   }

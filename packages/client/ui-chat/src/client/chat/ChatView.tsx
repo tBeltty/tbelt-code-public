@@ -21,6 +21,7 @@ import { TurnNavigator } from './TurnNavigator.tsx'
 import { RunningStatus } from './RunningStatus.tsx'
 import { mergeTurnRailItems } from './turn-rail-items.ts'
 import { useChatScroll } from './use-chat-scroll.ts'
+import { QuoteSelectionAction } from '../quote/QuoteSelectionAction.tsx'
 import { fileMediaUrl, resolveWorkspacePath } from '@deepseek-ai/dsh-util-workspace-path'
 import css from './ChatView.module.css'
 
@@ -101,7 +102,7 @@ const ChatNodeList = memo(function ChatNodeList({ entries, useChatGroup, pending
 export function ChatView({
   useSession, useChat, useChatNode, useChatNodeProcess, useChatGroup, useConversation, useSessions, useStore, actions, renderSlot,
   sessionId, openFile, openSkill, openExternalLink, loadOlder, loadThrough, loadImage, inspectCall, chatScroll, forkAt, fileMentions,
-  codeRunner, usePresentation, useProjection, t,
+  quote, quoteShortcut, codeRunner, usePresentation, useProjection, t,
 }: ChatViewSlotProps) {
   const order = useChat(s => s.order)
   const groupedEntries = useConversation(snapshot => snapshot.views.grouped('chat')?.entries)
@@ -297,6 +298,7 @@ export function ChatView({
           </button>
         </div>
       )}
+      <QuoteSelectionAction container={scroll.columnRef} quote={quote} shortcut={quoteShortcut} t={t} />
       {fileOpenError !== null && (
         <FileOpenErrorDialog
           message={fileOpenError.message}

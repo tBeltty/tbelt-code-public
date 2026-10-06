@@ -1,0 +1,17 @@
+/* Comment gutter button, saved comments, and editor under diff lines. */
+.add { position: absolute; left: 4px; display: none; width: 16px; height: 16px; margin: 3px 0 0; padding: 0; border: 0; border-radius: var(--dsw-radius-sm); background: var(--dsw-alias-button-primary-fill); color: var(--dsw-alias-label-primary-foreground); cursor: pointer; font: inherit; line-height: 16px; text-align: center; }
+.add::before { content: '+'; }
+.block { position: sticky; left: 0; display: flex; flex-direction: column; gap: 8px; box-sizing: border-box; width: 100cqw; max-width: 44em; padding: 8px 16px; white-space: normal; font: var(--dsw-font-xs-13); line-height: 20px; }
+.block[data-diff-comments-ghost] { visibility: hidden; pointer-events: none; }
+.item { display: flex; align-items: flex-start; gap: 4px; min-width: 0; padding: 6px 8px; border: 0.5px solid var(--dsw-alias-border-l2); border-left: 2px solid var(--dsw-alias-state-business-primary); border-radius: var(--dsw-radius-md); background: var(--dsw-alias-bg-layer-2); color: var(--dsw-alias-label-primary); }
+.item[data-sent] { border-left-color: var(--dsw-alias-border-l3); }
+.body { flex: 1; min-width: 0; margin: 0; white-space: pre-wrap; overflow-wrap: anywhere; }
+.sent { flex: none; color: var(--dsw-alias-label-tertiary); font-size: 11px; line-height: 24px; }
+.iconButton { display: inline-flex; flex: none; align-items: center; justify-content: center; width: 24px; height: 24px; padding: 0; border: 0; border-radius: var(--dsw-radius-sm); background: transparent; color: var(--dsw-alias-label-secondary); cursor: pointer; }
+.iconButton:hover { background: var(--dsw-alias-interactive-bg-hover); color: var(--dsw-alias-label-primary); }
+/* Fixed height keeps the hidden copy in the other column the same height as the editor. */
+.editor { display: flex; flex-direction: column; gap: 8px; box-sizing: border-box; height: 120px; }
+.textarea { flex: 1 1 auto; box-sizing: border-box; width: 100%; min-height: 0; padding: 8px 10px; border: 0.5px solid var(--dsw-alias-border-l3); border-radius: var(--dsw-radius-md); background: var(--dsw-alias-bg-layer-1); color: var(--dsw-alias-label-primary); font: inherit; resize: none; }
+.textarea::placeholder { color: var(--dsw-alias-label-tertiary); }
+.textarea:focus-visible { outline: var(--dsw-focus-ring-width) solid var(--dsw-focus-ring-color, var(--dsw-alias-state-business-primary)); outline-offset: 2px; }
+.actions { display: flex; flex: none; justify-content: flex-end; gap: 8px; }

@@ -2,7 +2,7 @@
 
 The tBelt Code download site, served by Cloudflare Pages from this folder.
 
-- `public/` holds the static page, styles, and images.
+- `public/` holds the static page, styles, and images, plus `robots.txt`, `sitemap.xml` and `favicon.ico`. `assets/og.png` is the 1200x630 share card that link previews show.
 - `functions/download/[platform].js` answers `/download/windows`, `/download/mac`, and `/download/linux` with a redirect to the newest installer in the update bucket, or to the download section when that platform has no published release.
 - `functions/api/releases.js` answers `/api/releases` with the version, size, and date of each platform's newest installer; the page fills its download cards from it.
 - `shared/releases.js` reads the electron-builder channel metadata that [upload-target.ts](../apps/desktop/scripts/upload-target.ts) writes: `nightly*.yml` and, for stable versions, `latest*.yml` under `dsh-desk/feeds/<target>/`, whose absolute URLs point at `dsh-desk/bin/<target>/`. Releases uploaded before that layout, under `_/harness/desktop/stable/<target>/`, still count; the newest version across both wins. A new release appears on the site within five minutes of its upload, with no site change.

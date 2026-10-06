@@ -1,5 +1,5 @@
 /** Shared file comparison for the turn-tail hover preview and Sidebar review. */
-import { useMemo, useRef } from 'react'
+import { Fragment, useMemo, useRef } from 'react'
 import type { ReactNode, UIEvent } from 'react'
 import { Button, languageForPath, useCodeHighlighter } from '@deepseek-ai/dsh-client-ui-primitives'
 import type { CodeHighlighter, HighlightSpan } from '@deepseek-ai/dsh-client-ui-primitives'
@@ -8,7 +8,27 @@ import type { WorkspaceDiffHunk } from '@deepseek-ai/dsh-workspace-changes/types
 import type { ChangesDiff } from '../changes.ts'
 import type { ChangesDiffState } from './changes-diff.ts'
 import type { NS } from './locales.ts'
+import { AddCommentButton, LineComments, type DiffCommenting } from './DiffComments.tsx'
 import css from './FileDiff.module.css'
+
+/** The line number cell; with commenting on, a new-side number carries the button that opens a comment. */
+function NumberCell({ no, commenting, t }: {
+  no: number | undefined
+  commenting: DiffCommenting | undefined
+} & PropsLocale<typeof NS>): ReactNode {
+  if (commenting === undefined || no === undefined) return <span className={css.number}>{no ?? ''}</span>
+  return <span className={`${css.number} ${css.commentable}`}>{no}<AddCommentButton commenting={commenting} line={no} t={t} /></span>
+}
+
+/** The comments of one new-side line, drawn under its row. */
+function CommentsAfter({ no, commenting, ghost, t }: {
+  no: number | undefined
+  commenting: DiffCommenting | undefined
+  ghost?: boolean
+} & PropsLocale<typeof NS>): ReactNode {
+  if (commenting === undefined || no === undefined) return null
+  return <LineComments commenting={commenting} line={no} t={t} {...ghost === true ? { ghost } : {}} />
+}
 
 /** Maximum rendered lines per comparison. */
 export const MAX_RENDERED_LINES = 5000
@@ -135,14 +155,16 @@ function noteOf(diff: Extract<ChangesDiff, { kind: 'text' }>): 'diff.created' | 
 /**
  * Render a file comparison with the same states and highlighting in previews and review tabs.
  * Addition-only and deletion-only comparisons use one column without changing the requested layout.
- * @param props - comparison state, layout choices, retry action, and localized copy.
+ * @param props - comparison state, layout choices, retry action, optional line comments, and localized copy.
  * @returns the comparison or its loading, unavailable, or error state.
  */
-export function FileDiff({ state, split, wrap, retry, t }: {
+export function FileDiff({ state, split, wrap, retry, commenting, t }: {
   state: ChangesDiffState | undefined
   split: boolean
   wrap: boolean
   retry: () => void
+  /** Line comments on the modified side; absent in read-only previews. */
+  commenting?: DiffCommenting | undefined
 } & PropsLocale<typeof NS>): ReactNode {
   if (state === undefined || state === 'loading') return <p className={css.status} role="status">{t('diff.loading')}</p>
   if (state === 'missing') return <p className={css.status}>{t('diff.missing')}</p>
@@ -154,7 +176,7 @@ export function FileDiff({ state, split, wrap, retry, t }: {
   const hasAdditions = state.hunks.some(hunk => hunk.lines.some(line => line.startsWith('+')))
   const hasDeletions = state.hunks.some(hunk => hunk.lines.some(line => line.startsWith('-')))
   const oneSided = hasAdditions !== hasDeletions
-  return <TextDiff diff={state} split={split && !oneSided} wrap={wrap} t={t} />
+  return <TextDiff diff={state} split={split && !oneSided} wrap={wrap} commenting={commenting} t={t} />
 }
 
 /** The kind a paired row carries: a deletion or addition on either side, otherwise context. */
@@ -172,8 +194,13 @@ function hunkHeader(hunk: WorkspaceDiffHunk): string {
  * runs under the other and both sides show the same rows and columns of text.
  * Every line is one fixed-height row, which keeps the sides aligned.
  * The columns suppress elastic overscroll while retaining native in-range scrolling.
+ * A comment under a new-side line is drawn in the right column and as a hidden copy in the left, so both keep the same rows.
  */
-function SplitColumns({ hunks, highlights }: { hunks: readonly WorkspaceDiffHunk[]; highlights: readonly HunkHighlights[] }): ReactNode {
+function SplitColumns({ hunks, highlights, commenting, t }: {
+  hunks: readonly WorkspaceDiffHunk[]
+  highlights: readonly HunkHighlights[]
+  commenting: DiffCommenting | undefined
+} & PropsLocale<typeof NS>): ReactNode {
   const paired = useMemo(() => hunks.map(hunk => ({ header: hunkHeader(hunk), rows: splitRows(hunk) })), [hunks])
   const columns = useRef<Record<'left' | 'right', HTMLDivElement | null>>({ left: null, right: null })
   const offsets = useRef({ left: { scrollLeft: 0, scrollTop: 0 }, right: { scrollLeft: 0, scrollTop: 0 } })
@@ -203,10 +230,13 @@ function SplitColumns({ hunks, highlights }: { hunks: readonly WorkspaceDiffHunk
                 const cell = row[side]
                 const spans = cell === undefined ? undefined : highlights[position]?.[side === 'left' ? 'old' : 'new']?.get(cell.no)
                 return (
-                  <div key={at} className={`${css.sideLine} ${cell === undefined ? css.empty : css[cell.kind]}`} data-diff-line={splitRowKind(row)}>
-                    <span className={css.number}>{cell?.no ?? ''}</span>
-                    <DiffText text={cell?.text ?? ''} spans={spans} />
-                  </div>
+                  <Fragment key={at}>
+                    <div className={`${css.sideLine} ${cell === undefined ? css.empty : css[cell.kind]}`} data-diff-line={splitRowKind(row)}>
+                      <NumberCell no={cell?.no} commenting={side === 'right' ? commenting : undefined} t={t} />
+                      <DiffText text={cell?.text ?? ''} spans={spans} />
+                    </div>
+                    <CommentsAfter no={row.right?.no} commenting={commenting} ghost={side === 'left'} t={t} />
+                  </Fragment>
                 )
               })}
             </section>
@@ -218,7 +248,12 @@ function SplitColumns({ hunks, highlights }: { hunks: readonly WorkspaceDiffHunk
 }
 
 /** The hunks of a text comparison with their line numbers, unified or side by side. */
-function TextDiff({ diff, split, wrap, t }: { diff: Extract<ChangesDiff, { kind: 'text' }>; split: boolean; wrap: boolean } & PropsLocale<typeof NS>): ReactNode {
+function TextDiff({ diff, split, wrap, commenting, t }: {
+  diff: Extract<ChangesDiff, { kind: 'text' }>
+  split: boolean
+  wrap: boolean
+  commenting: DiffCommenting | undefined
+} & PropsLocale<typeof NS>): ReactNode {
   const note = noteOf(diff)
   const { hunks, truncated } = useMemo(() => renderedHunks(diff.hunks), [diff.hunks])
   const highlighter = useCodeHighlighter(languageForPath(diff.path))
@@ -228,28 +263,34 @@ function TextDiff({ diff, split, wrap, t }: { diff: Extract<ChangesDiff, { kind:
       {note !== undefined && <p className={css.note} data-diff-note={hunks.length === 0 ? 'empty' : 'metadata'}>{t(note)}</p>}
       {diff.coarse && <p className={css.note} data-diff-coarse>{t('diff.coarse')}</p>}
       {truncated && <p className={css.note} data-diff-truncated>{t('diff.truncated', { count: String(MAX_RENDERED_LINES) })}</p>}
-      {split && !wrap ? <SplitColumns hunks={hunks} highlights={highlights} /> : hunks.map((hunk, position) => {
+      {split && !wrap ? <SplitColumns {...{ hunks, highlights, commenting, t }} /> : hunks.map((hunk, position) => {
         const highlighted = highlights[position]
         return <section key={position} className={css.hunk}>
           <div className={css.hunkHeader} data-diff-hunk-header>{hunkHeader(hunk)}</div>
           {split ? splitRows(hunk).map((row, at) => (
-            <div key={at} className={css.splitLine} data-diff-line={splitRowKind(row)}>
-              <span className={`${css.cell} ${row.left === undefined ? css.empty : css[row.left.kind]}`}>
-                <span className={css.number}>{row.left?.no ?? ''}</span>
-                <DiffText text={row.left?.text ?? ''} spans={row.left === undefined ? undefined : highlighted?.old?.get(row.left.no)} />
-              </span>
-              <span className={`${css.cell} ${row.right === undefined ? css.empty : css[row.right.kind]}`}>
-                <span className={css.number}>{row.right?.no ?? ''}</span>
-                <DiffText text={row.right?.text ?? ''} spans={row.right === undefined ? undefined : highlighted?.new?.get(row.right.no)} />
-              </span>
-            </div>
+            <Fragment key={at}>
+              <div className={css.splitLine} data-diff-line={splitRowKind(row)}>
+                <span className={`${css.cell} ${row.left === undefined ? css.empty : css[row.left.kind]}`}>
+                  <span className={css.number}>{row.left?.no ?? ''}</span>
+                  <DiffText text={row.left?.text ?? ''} spans={row.left === undefined ? undefined : highlighted?.old?.get(row.left.no)} />
+                </span>
+                <span className={`${css.cell} ${row.right === undefined ? css.empty : css[row.right.kind]}`}>
+                  <NumberCell no={row.right?.no} commenting={commenting} t={t} />
+                  <DiffText text={row.right?.text ?? ''} spans={row.right === undefined ? undefined : highlighted?.new?.get(row.right.no)} />
+                </span>
+              </div>
+              <CommentsAfter no={row.right?.no} commenting={commenting} t={t} />
+            </Fragment>
           )) : hunkRows(hunk).map((row, at) => (
-            <div key={at} className={`${css.line} ${css[row.kind]}`} data-diff-line={row.kind}>
-              <span className={css.number}>{row.old ?? ''}</span>
-              <span className={css.number}>{row.new ?? ''}</span>
-              <span className={css.sign}>{row.kind === 'add' ? '+' : row.kind === 'del' ? '-' : ' '}</span>
-              <DiffText text={row.text} spans={row.kind === 'add' ? highlighted?.new?.get(row.new as number) : highlighted?.old?.get(row.old as number)} />
-            </div>
+            <Fragment key={at}>
+              <div className={`${css.line} ${css[row.kind]}`} data-diff-line={row.kind}>
+                <span className={css.number}>{row.old ?? ''}</span>
+                <NumberCell no={row.new} commenting={commenting} t={t} />
+                <span className={css.sign}>{row.kind === 'add' ? '+' : row.kind === 'del' ? '-' : ' '}</span>
+                <DiffText text={row.text} spans={row.kind === 'add' ? highlighted?.new?.get(row.new as number) : highlighted?.old?.get(row.old as number)} />
+              </div>
+              <CommentsAfter no={row.new} commenting={commenting} t={t} />
+            </Fragment>
           ))}
         </section>
       })}

@@ -7,14 +7,17 @@ import { useEffect, useMemo, useState } from 'react'
 import type { ReactNode } from 'react'
 import {
   IconChevronDownOutlineRegular, IconCompareSplitOutlineRegular, IconInspectOutlineRegular,
-  IconNowrapFillRegular, IconWrapFillRegular, Menu, PathLabel, Tooltip,
+  Button, IconNowrapFillRegular, IconWrapFillRegular, Menu, PathLabel, Tooltip,
 } from '@deepseek-ai/dsh-client-ui-primitives'
 import type { InjectFace, PropsLocale, PropsRenderSlots, PropsRuntime, PropsStore } from '@deepseek-ai/dsh-client-ui-slots'
 import type { ObservableSnapshot } from '@deepseek-ai/dsh-client-store'
+import type { SessionId } from '@deepseek-ai/dsh-session/types'
 import { fileAddressFor } from '@deepseek-ai/dsh-util-workspace-path'
 import type { WorkspaceChangedFile } from '@deepseek-ai/dsh-workspace-changes/types'
 import { changedFileUrl, changesDiffUrl, changesSummaryUrl, parseChangesReviewAddress } from '../changes.ts'
 import type { ChangesDiffStore } from './changes-diff.ts'
+import type { DiffCommentState } from './diff-comments.ts'
+import type { DiffCommenting, DiffCommentEditor } from './DiffComments.tsx'
 import type { ChangesSummaryStore } from './changes-summary.ts'
 import type { PresentedOpenController } from './present-open.ts'
 import type { ChangesReviewParams } from './review-definition.ts'
@@ -33,11 +36,23 @@ export interface ReviewInjected {
     changesDiff: ObservableSnapshot<ReturnType<ChangesDiffStore['state']['getSnapshot']>>
     presentedOpen: ObservableSnapshot<ReturnType<PresentedOpenController['state']['getSnapshot']>>
     presentedHost: ObservableSnapshot<ReturnType<PresentedOpenController['host']['getSnapshot']>>
+    diffComments: ObservableSnapshot<DiffCommentState>
   }
   loadChangesSummary: ChangesSummaryStore['load']
   loadChangesDiff: ChangesDiffStore['load']
   reloadPresentedHost: PresentedOpenController['loadHost']
   openChanged: PresentedOpenController['openChanged']
+  /** Add a line comment on a file of the Session. */
+  addComment: (sessionId: SessionId, filePath: string, lineNumber: number, body: string) => void
+  /** Replace a comment's text. */
+  updateComment: (sessionId: SessionId, id: string, body: string) => void
+  /** Delete a comment. */
+  removeComment: (sessionId: SessionId, id: string) => void
+  /**
+   * Send the Session's unsent comments as one message.
+   * @returns null when the message was accepted or there was nothing to send; a failure line otherwise.
+   */
+  sendComments: (sessionId: SessionId) => Promise<string | null>
 }
 
 /** The body's composed props: the tab it draws, its store, its injected face, and its copy. */
@@ -67,7 +82,8 @@ function Counts({ file, t }: { file: WorkspaceChangedFile } & PropsLocale<typeof
  */
 export function ReviewTab({
   useTabInfo, sessionId, useSessions, useStore, actions, useChangesSummary, useChangesDiff, usePresentedOpen, usePresentedHost,
-  loadChangesSummary, loadChangesDiff, reloadPresentedHost, openChanged, t, renderSlot,
+  useDiffComments, loadChangesSummary, loadChangesDiff, reloadPresentedHost, openChanged,
+  addComment, updateComment, removeComment, sendComments, t, renderSlot,
 }: ReviewTabProps): ReactNode {
   const { tab } = useTabInfo()
   const { navigation, signal } = tab
@@ -104,6 +120,31 @@ export function ReviewTab({
   }, [file, diffState, sessionId, seq, index, loadChangesDiff])
   const phase = usePresentedOpen(value => file === undefined ? undefined : value[changedFileUrl(sessionId, seq, index)])
   const [menuOpen, setMenuOpen] = useState(false)
+  const sessionComments = useDiffComments(value => value[sessionId])
+  const [editor, setEditor] = useState<DiffCommentEditor | undefined>(undefined)
+  const [sending, setSending] = useState(false)
+  const [failure, setFailure] = useState<string | undefined>(undefined)
+  const shownPath = file?.path
+  // An open editor belongs to the file it was opened on.
+  useEffect(() => { setEditor(undefined) }, [shownPath])
+  const unsent = sessionComments?.filter(comment => comment.sentAt === undefined).length ?? 0
+  const commenting: DiffCommenting | undefined = file === undefined ? undefined : {
+    comments: sessionComments?.filter(comment => comment.filePath === file.display) ?? [],
+    editor,
+    onOpen: (line) => { setEditor({ line }) },
+    onEdit: (comment) => { setEditor({ line: comment.lineNumber, id: comment.id }) },
+    onClose: () => { setEditor(undefined) },
+    onSubmit: (open, body) => {
+      if (open.id === undefined) addComment(sessionId, file.display, open.line, body)
+      else updateComment(sessionId, open.id, body)
+      setEditor(undefined)
+    },
+    onRemove: (id) => { removeComment(sessionId, id); setEditor(undefined) },
+  }
+  const send = (): void => {
+    setSending(true)
+    void sendComments(sessionId).then((line) => { setFailure(line ?? undefined) }).finally(() => { setSending(false) })
+  }
   const split = state?.split === true
   const wrap = state?.wrap === true
   const native = host !== null && host !== 'error' && host.available && phase !== 'nativeUnavailable'
@@ -128,6 +169,8 @@ export function ReviewTab({
             onSelect={(id) => { actions.selected(tab.id, Number(id)); setMenuOpen(false) }} />}
         {file !== undefined && <span className={css.counts}><Counts file={file} t={t} /></span>}
         <span className={css.tools}>
+          {unsent > 0 && <Button size="sm" variant="primary" disabled={sending} aria-label={t('review.sendCommentsAria', { count: String(unsent) })}
+            data-review-send onClick={send}>{t('review.sendComments', { count: String(unsent) })}</Button>}
           <Tooltip label={t(split ? 'review.unified' : 'review.split')} side="bottom" delayMs={500}>
             <button type="button" className={css.tool} aria-pressed={split} aria-label={t('review.splitAria')} data-review-tool="split"
               onClick={() => { actions.toggledSplit(tab.id) }}>
@@ -151,9 +194,10 @@ export function ReviewTab({
           })}
         </span>
       </div>
+      {failure !== undefined && <p className={diffCss.status} role="alert" data-review-send-error>{failure}</p>}
       {summaryState === 'loading' && <p className={diffCss.status} role="status">{t('diff.loading')}</p>}
       {summaryState === 'missing' && <p className={diffCss.status}>{t('diff.missing')}</p>}
-      {file !== undefined && <FileDiff state={diffState} split={split} wrap={wrap} t={t}
+      {file !== undefined && <FileDiff state={diffState} split={split} wrap={wrap} commenting={commenting} t={t}
         retry={() => { void loadChangesDiff(sessionId, seq, index) }} />}
     </div>
   )

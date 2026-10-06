@@ -269,8 +269,23 @@ export interface ChatViewInjected {
   }
   forkAt: (seq: number) => void
   fileMentions: (owner: TurnTailOwnerProps) => MarkdownFileMentions | undefined
+  /**
+   * Add selected assistant text to this Session's unsent quotes; the next plain message carries them.
+   * @param text - Selected text.
+   */
+  quote: (text: string) => void
+  /** Fixed Quote shortcut keycaps and whether its modifier is Command; undefined without a shortcut service. */
+  quoteShortcut: QuoteShortcut | undefined
   /** Read the current fenced-code runner; called during render, so it returns a stable identity. */
   codeRunner: () => MarkdownCodeRunner | undefined
+}
+
+/** The fixed keyboard shortcut that quotes the current selection. */
+export interface QuoteShortcut {
+  /** Platform keycaps shown on the Quote action. */
+  readonly keys: readonly string[]
+  /** Whether the primary modifier is Command rather than Control. */
+  readonly mac: boolean
 }
 
 /** Full Chat view props. */

@@ -1581,12 +1581,18 @@ importers:
       '@deepseek-ai/dsh-storage-domain':
         specifier: workspace:*
         version: link:../../storage/storage-domain
+      '@deepseek-ai/dsh-subprocess-local':
+        specifier: workspace:*
+        version: link:../../subprocess/subprocess-local
       '@deepseek-ai/dsh-typert-protocol':
         specifier: workspace:*
         version: link:../../typert/protocol
       '@deepseek-ai/dsh-workspace':
         specifier: workspace:*
         version: link:../../workspace/workspace
+      '@deepseek-ai/dsh-worktree':
+        specifier: workspace:*
+        version: link:../../workspace/worktree
 
   packages/api/workspace-files:
     dependencies:
@@ -2804,6 +2810,9 @@ importers:
       '@deepseek-ai/dsh-workspace-changes':
         specifier: workspace:*
         version: link:../../deliverables/workspace-changes
+      '@deepseek-ai/dsh-worktree':
+        specifier: workspace:*
+        version: link:../../workspace/worktree
       '@deepseek-ai/schemastery':
         specifier: link:../../../vendor/schemastery
         version: link:../../../vendor/schemastery
@@ -3349,6 +3358,9 @@ importers:
       '@deepseek-ai/dsh-client-product-analytics':
         specifier: workspace:*
         version: link:../product-analytics
+      '@deepseek-ai/dsh-client-shortcuts':
+        specifier: workspace:*
+        version: link:../shortcuts
       '@deepseek-ai/dsh-client-store':
         specifier: workspace:*
         version: link:../store

@@ -833,6 +833,36 @@ describe('workspaces action face', () => {
     }
   })
 
+  it('records the worktree verbs with inert defaults and honors stubs', async () => {
+    const runtime = await SlotTestRuntime.create()
+    try {
+      const ws = runtime.workspaces
+      const repo = 'repo' as WorkspaceId
+      const created = await ws.createWorktree(repo, { name: 'feature', baseRef: 'main' })
+      expect(created.workspace).toMatchObject({ workspaceId: 'repo-feature', title: 'feature' })
+      expect(created.worktree).toEqual({ branch: 'feature', baseRef: 'main', warnings: [] })
+      expect((await ws.createWorktree(repo)).worktree).toMatchObject({ branch: 'worktree', baseRef: 'HEAD' })
+      await expect(ws.listWorktrees(repo)).resolves.toEqual({ worktrees: [] })
+      await expect(ws.inspectWorktree(repo)).resolves.toEqual({ linked: false, uncommitted: [] })
+      await expect(ws.removeWorktree(repo, { force: true })).resolves.toEqual({ deleted: true, branchDeleted: false })
+
+      ws.stub('createWorktree', async () => created)
+      ws.stub('listWorktrees', async () => ({ worktrees: [{ path: '/repo', isPrimary: true, locked: false, prunable: false }] }))
+      ws.stub('inspectWorktree', async () => ({ linked: true, uncommitted: ['?? a'] }))
+      ws.stub('removeWorktree', async () => ({ deleted: true as const, branch: 'feature', branchDeleted: true }))
+      expect((await ws.createWorktree(repo)).worktree.branch).toBe('feature')
+      expect((await ws.listWorktrees(repo)).worktrees).toHaveLength(1)
+      expect((await ws.inspectWorktree(repo)).linked).toBe(true)
+      expect((await ws.removeWorktree(repo)).branchDeleted).toBe(true)
+      expect(ws.calls.map(call => call.method)).toEqual([
+        'createWorktree', 'createWorktree', 'listWorktrees', 'inspectWorktree', 'removeWorktree',
+        'createWorktree', 'listWorktrees', 'inspectWorktree', 'removeWorktree',
+      ])
+    } finally {
+      await runtime.dispose()
+    }
+  })
+
   it('records every IWorkspaces verb with inert defaults and honors stubs', async () => {
     const runtime = await SlotTestRuntime.create()
     const ws = runtime.workspaces

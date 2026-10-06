@@ -239,6 +239,9 @@ export function apply(ctx: Context): void {
     notifyArchivedNotOpenable: () => { notify({ kind: 'archivedNotOpenable' }) },
     renameWorkspace: async (workspaceId, title) => { await workspaces.rename(workspaceId, title) },
     deleteWorkspace: async (workspaceId) => { await workspaces.delete(workspaceId) },
+    createWorktreeWorkspace: async workspaceId => (await workspaces.createWorktree(workspaceId)).workspace,
+    inspectWorktree: workspaceId => workspaces.inspectWorktree(workspaceId),
+    removeWorktree: async (workspaceId, { force }) => { await workspaces.removeWorktree(workspaceId, { force }) },
     insertWorkspaceBefore: async (workspaceId, beforeWorkspaceId) => {
       await workspaces.insertBefore(workspaceId, beforeWorkspaceId)
     },

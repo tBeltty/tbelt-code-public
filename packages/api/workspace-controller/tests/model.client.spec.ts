@@ -7,14 +7,22 @@ import type {
   WorkspaceArchiveValue,
   WorkspaceCreateRequest,
   WorkspaceCreateValue,
+  WorkspaceCreateWorktreeRequest,
+  WorkspaceCreateWorktreeValue,
   WorkspaceDeleteRequest,
   WorkspaceDeleteValue,
   WorkspaceFollowFrame,
   WorkspaceInsertBeforeRequest,
   WorkspaceInsertSessionBeforeRequest,
+  WorkspaceInspectWorktreeRequest,
+  WorkspaceInspectWorktreeValue,
+  WorkspaceListWorktreesRequest,
+  WorkspaceListWorktreesValue,
   WorkspaceOrderValue,
   WorkspacePinSessionRequest,
   WorkspacePinValue,
+  WorkspaceRemoveWorktreeRequest,
+  WorkspaceRemoveWorktreeValue,
   WorkspaceRenameRequest,
   WorkspaceUnarchiveSessionRequest,
   WorkspaceUnpinSessionRequest,
@@ -77,6 +85,23 @@ class FakeWorkspaceRemote implements WorkspaceRemote {
     Promise.resolve(remoteOk({ workspace: { ...workspace(String(request.workspaceId)), title: request.title } }))
   onDelete: (_request: WorkspaceDeleteRequest) => Promise<RemoteResult<WorkspaceDeleteValue>> = () =>
     Promise.resolve(remoteOk({ deleted: true }))
+  onCreateWorktree: (
+    request: WorkspaceCreateWorktreeRequest,
+  ) => Promise<RemoteResult<WorkspaceCreateWorktreeValue>> = request => Promise.resolve(remoteOk({
+    workspace: workspace('wt'),
+    worktree: { branch: request.name ?? 'wt', baseRef: 'HEAD', warnings: [] },
+  }))
+  onListWorktrees: (
+    _request: WorkspaceListWorktreesRequest,
+  ) => Promise<RemoteResult<WorkspaceListWorktreesValue>> = () => Promise.resolve(remoteOk({ worktrees: [] }))
+  onInspectWorktree: (
+    _request: WorkspaceInspectWorktreeRequest,
+  ) => Promise<RemoteResult<WorkspaceInspectWorktreeValue>> = () =>
+    Promise.resolve(remoteOk({ linked: true, branch: 'wt', uncommitted: [] }))
+  onRemoveWorktree: (
+    _request: WorkspaceRemoveWorktreeRequest,
+  ) => Promise<RemoteResult<WorkspaceRemoveWorktreeValue>> = () =>
+    Promise.resolve(remoteOk({ deleted: true, branch: 'wt', branchDeleted: true }))
   onInsertBefore: (
     request: WorkspaceInsertBeforeRequest,
   ) => Promise<RemoteResult<WorkspaceOrderValue>> = request =>
@@ -116,6 +141,26 @@ class FakeWorkspaceRemote implements WorkspaceRemote {
   delete(request: WorkspaceDeleteRequest): Promise<RemoteResult<WorkspaceDeleteValue>> {
     this.record('delete', request)
     return this.onDelete(request)
+  }
+
+  createWorktree(request: WorkspaceCreateWorktreeRequest): Promise<RemoteResult<WorkspaceCreateWorktreeValue>> {
+    this.record('createWorktree', request)
+    return this.onCreateWorktree(request)
+  }
+
+  listWorktrees(request: WorkspaceListWorktreesRequest): Promise<RemoteResult<WorkspaceListWorktreesValue>> {
+    this.record('listWorktrees', request)
+    return this.onListWorktrees(request)
+  }
+
+  inspectWorktree(request: WorkspaceInspectWorktreeRequest): Promise<RemoteResult<WorkspaceInspectWorktreeValue>> {
+    this.record('inspectWorktree', request)
+    return this.onInspectWorktree(request)
+  }
+
+  removeWorktree(request: WorkspaceRemoveWorktreeRequest): Promise<RemoteResult<WorkspaceRemoveWorktreeValue>> {
+    this.record('removeWorktree', request)
+    return this.onRemoveWorktree(request)
   }
 
   insertBefore(request: WorkspaceInsertBeforeRequest): Promise<RemoteResult<WorkspaceOrderValue>> {
@@ -189,6 +234,36 @@ describe('ClientWorkspaceModel', () => {
     ))
     await expect(model.initializeDefault()).resolves.toMatchObject({ ok: false })
     expect(model.getSnapshot()).toBe(before)
+  })
+
+  it('merges a created worktree Workspace and drops a removed one', async () => {
+    const remote = new FakeWorkspaceRemote()
+    const model = modelFor(remote)
+    baseline(model, [workspace('repo')])
+
+    await expect(model.createWorktree({ workspaceId: wid('repo'), name: 'feature' })).resolves.toMatchObject({ ok: true })
+    expect(model.getSnapshot().items.map(item => item.workspaceId).sort()).toEqual(['repo', 'wt'])
+    expect(remote.calls.at(-1)).toEqual({ method: 'createWorktree', request: { workspaceId: 'repo', name: 'feature' } })
+
+    await expect(model.removeWorktree(wid('wt'), true)).resolves.toMatchObject({ ok: true })
+    expect(remote.calls.at(-1)).toEqual({ method: 'removeWorktree', request: { workspaceId: 'wt', force: true } })
+    expect(model.getSnapshot().items.map(item => item.workspaceId)).toEqual(['repo'])
+  })
+
+  it('leaves the list unchanged when worktree commands fail and relays the read-only ones', async () => {
+    const remote = new FakeWorkspaceRemote()
+    const model = modelFor(remote)
+    baseline(model, [workspace('repo'), workspace('wt')])
+    const failure = new RemoteError('workspace/worktree-failed', 'refused', { workspaceId: wid('repo') })
+    remote.onCreateWorktree = () => Promise.resolve(workspaceError(failure))
+    remote.onRemoveWorktree = () => Promise.resolve(workspaceError(failure))
+    await expect(model.createWorktree({ workspaceId: wid('repo') })).resolves.toMatchObject({ ok: false })
+    await expect(model.removeWorktree(wid('wt'), false)).resolves.toMatchObject({ ok: false })
+    expect(remote.calls.at(-1)).toEqual({ method: 'removeWorktree', request: { workspaceId: 'wt' } })
+    expect(model.getSnapshot().items).toHaveLength(2)
+
+    await expect(model.listWorktrees(wid('repo'))).resolves.toEqual({ ok: true, value: { worktrees: [] } })
+    await expect(model.inspectWorktree(wid('wt'))).resolves.toMatchObject({ ok: true, value: { linked: true } })
   })
 
   it('replaces reconnect state and applies ordered increments', () => {

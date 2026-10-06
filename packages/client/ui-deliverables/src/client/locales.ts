@@ -1,10 +1,17 @@
-/** `deliverables` namespace dictionaries: cards, comparison tab, and file-mention copy. */
+/** `deliverables` namespace dictionaries: cards, comparison tab, Artifacts page, and file-mention copy. */
 
 /** Dictionary namespace owned by this plugin. */
 export const NS = 'deliverables'
 
 /** Simplified Chinese dictionary (the key-set source of truth). */
 export const zh = {
+  'artifacts.title': '产物',
+  'artifacts.description': '本会话交付和修改的文件',
+  'artifacts.open': '查看本会话的产物',
+  'artifacts.openCountAria': '查看本会话的产物，已交付 {count} 个文件',
+  'artifacts.turn': '第 {turn} 轮',
+  'artifacts.emptyTitle': '还没有产物',
+  'artifacts.emptyBody': '代理交付或修改文件后，它们会按轮次显示在这里。',
   'presented.nativeUnavailable': '此文件没有可用的主机路径，请在侧边栏预览',
   'presented.revealError': '无法在文件管理器中显示，请重试',
   'presented.directoryError': '无法打开所在文件夹，请重试',
@@ -62,6 +69,15 @@ export const zh = {
   'review.wrapAria': '自动换行',
   'review.openFile': '在侧边栏打开整个文件',
   'review.openFileAria': '在侧边栏打开 {name}',
+  'comment.add': '添加评论',
+  'comment.placeholder': '添加评论…',
+  'comment.cancel': '取消',
+  'comment.save': '保存',
+  'comment.edit': '编辑评论',
+  'comment.remove': '删除评论',
+  'comment.sent': '已发送',
+  'review.sendComments': '发送 {count} 条评论',
+  'review.sendCommentsAria': '把 {count} 条行评论发送给智能体',
   'diff.loading': '正在读取改动…',
   'diff.missing': '这轮改动的内容已不可用',
   'diff.error': '无法读取改动',
@@ -76,6 +92,13 @@ export const zh = {
 
 /** English dictionary (same key set). */
 export const en: Record<DeliverablesKey, string> = {
+  'artifacts.title': 'Artifacts',
+  'artifacts.description': 'Files this session delivered and changed',
+  'artifacts.open': 'Show this session’s artifacts',
+  'artifacts.openCountAria': 'Show this session’s artifacts, {count} delivered files',
+  'artifacts.turn': 'Turn {turn}',
+  'artifacts.emptyTitle': 'No artifacts yet',
+  'artifacts.emptyBody': 'Files the agent delivers or changes appear here, grouped by turn.',
   'presented.nativeUnavailable': 'This file has no available Host path. Preview it in the sidebar.',
   'presented.revealError': 'Could not show in file manager. Try again.',
   'presented.directoryError': 'Could not open containing folder. Try again.',
@@ -133,6 +156,15 @@ export const en: Record<DeliverablesKey, string> = {
   'review.wrapAria': 'Line wrap',
   'review.openFile': 'Open the whole file in the sidebar',
   'review.openFileAria': 'Open {name} in sidebar',
+  'comment.add': 'Add a comment',
+  'comment.placeholder': 'Add a comment…',
+  'comment.cancel': 'Cancel',
+  'comment.save': 'Save',
+  'comment.edit': 'Edit comment',
+  'comment.remove': 'Delete comment',
+  'comment.sent': 'Sent',
+  'review.sendComments': 'Send {count}',
+  'review.sendCommentsAria': 'Send {count} line comments to the agent',
   'diff.loading': 'Reading changes…',
   'diff.missing': 'The contents of this turn’s changes are no longer available',
   'diff.error': 'Could not read the changes',

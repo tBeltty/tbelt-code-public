@@ -1,0 +1,9 @@
+/* The pane body is a block scroller with a definite height; the Turn list is its one scroller. */
+.root { display: flex; flex: 1 1 auto; flex-direction: column; height: 100%; min-height: 0; overflow-y: auto; color: var(--dsw-alias-label-primary); font-size: var(--dsh-content-font-size-secondary, 13px); line-height: 1.5; }
+.turns { display: flex; flex-direction: column; gap: 20px; margin: 0; padding: 16px; list-style: none; }
+.turn { display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+.turnTitle { margin: 0; color: var(--dsw-alias-label-tertiary); font-size: 12px; font-weight: 500; line-height: 18px; }
+.empty { display: flex; flex: 1; flex-direction: column; align-items: center; justify-content: center; gap: 6px; padding: 24px; text-align: center; }
+.emptyIcon { width: 28px; height: 28px; margin-bottom: 4px; color: var(--dsw-alias-label-tertiary); }
+.emptyTitle { margin: 0; font-size: 13px; font-weight: 500; line-height: 20px; }
+.emptyBody { max-width: 280px; margin: 0; color: var(--dsw-alias-label-tertiary); font-size: 12px; line-height: 18px; }

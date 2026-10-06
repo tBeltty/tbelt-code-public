@@ -23,6 +23,8 @@ import type { WorkspaceId } from '@deepseek-ai/dsh-workspace/types'
 import { createChatStore } from '../src/client/stores.ts'
 import { CHAT_SETTINGS_NAMESPACE, type ChatSettings } from '../src/chat-settings.ts'
 import type { LinkOpeningRowInjected } from '../src/client/settings/LinkOpeningRow.tsx'
+import type { QuoteDockInjected } from '../src/client/quote/QuoteChip.tsx'
+import { ComposerMessagePrefixRegistry } from '../../ui-conversation/src/client/input/prefixes.ts'
 
 usePinnedBrowserLanguages('zh-CN')
 
@@ -203,6 +205,61 @@ describe('Chat inject API', () => {
       })
     })
     await b.runtime.dispose()
+  })
+
+  it('carries selected quotes in the next plain message and removes them once it is accepted', async () => {
+    const b = await bench()
+    try {
+      const { injected } = b.chatViewApi(b.rootReference)
+      const prefixes = b.runtime.ctx.get('conversation')!.prefixes as ComposerMessagePrefixRegistry
+      expect(prefixes.collect(ROOT)).toEqual([])
+      injected.quote('  first line\r\n\r\n\r\nsecond  ')
+      injected.quote('other')
+      injected.quote('   ')
+      const dock = b.runtime.slots.entries('conversation.input.dock').find(entry => entry.options.id === 'chat.quotes')!
+      const injectedFace: object = dock.inject!()
+      const face = injectedFace as QuoteDockInjected
+      expect(face.hooks.quotes.getSnapshot()[ROOT]?.map(quote => quote.text)).toEqual(['first line\n\nsecond', 'other'])
+      const [prefix] = prefixes.collect(ROOT)
+      expect(prefix?.text).toBe('> first line\n>\n> second\n\n> other')
+      prefix?.commit()
+      expect(prefixes.collect(ROOT)).toEqual([])
+      expect(face.hooks.quotes.getSnapshot()[ROOT]).toBeUndefined()
+
+      injected.quote('kept')
+      injected.quote('dropped')
+      const [kept, dropped] = face.hooks.quotes.getSnapshot()[ROOT]!
+      face.removeQuote(ROOT, dropped!.id)
+      face.removeQuote(ROOT, dropped!.id)
+      expect(prefixes.collect(ROOT).map(entry => entry.text)).toEqual(['> kept'])
+      face.removeQuote(ROOT, kept!.id)
+      expect(prefixes.collect(ROOT)).toEqual([])
+      expect(injected.quoteShortcut).toBeUndefined()
+
+      await b.chat.dispose()
+      injected.quote('after unload')
+      expect(prefixes.collect(ROOT)).toEqual([])
+      expect(b.runtime.slots.entries('conversation.input.dock').map(entry => entry.options.id)).not.toContain('chat.quotes')
+    } finally {
+      await b.runtime.dispose()
+    }
+  })
+
+  it('describes and reserves the fixed Quote shortcut through the shortcut service', async () => {
+    const registerFixed = vi.fn<(command: { id: string; label: () => string }) => () => void>(() => () => {})
+    const describeBinding = vi.fn(() => ({ keys: ['⌘', 'L'] }))
+    const b = await bench()
+    try {
+      b.runtime.ctx.provide('shortcuts', { platform: 'macos', registerFixed, describeBinding } as never)
+      const quoteRow = () => registerFixed.mock.calls.map(([command]) => command).filter(command => command.id === 'chat.quote')
+      await vi.waitFor(() => { expect(quoteRow()).toHaveLength(1) })
+      expect(quoteRow()[0]).toMatchObject({ keys: ['⌘', 'L'], bindings: [{ code: 'KeyL', modifiers: ['primary'] }], group: 'input' })
+      expect(quoteRow()[0]!.label()).toBe('引用')
+      const { injected } = b.chatViewApi(b.rootReference)
+      expect(injected.quoteShortcut).toEqual({ keys: ['⌘', 'L'], mac: true })
+    } finally {
+      await b.runtime.dispose()
+    }
   })
 
   it('addresses file paths under the Session\'s scope and opens them in the right Sidebar', async () => {

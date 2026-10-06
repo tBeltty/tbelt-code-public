@@ -261,6 +261,19 @@ export type WorkspaceBrowserInjected = {
   /** Delete only a Host Workspace registration; directory and Session logs remain. */
   deleteWorkspace: (workspaceId: WorkspaceId) => Promise<void>
   /**
+   * Create a linked git worktree of a Workspace's repository, registered as its own Workspace
+   * (rejects with the Host's message when the directory is not a repository or git fails).
+   * @returns the new Workspace, so the caller can start a Session in it.
+   */
+  createWorktreeWorkspace: (workspaceId: WorkspaceId) => Promise<WorkspaceView>
+  /** Read whether a Workspace is a linked worktree and what removing it would lose. */
+  inspectWorktree: (workspaceId: WorkspaceId) => Promise<WorktreeInspection>
+  /**
+   * Remove a linked worktree with its Workspace registration. Without `force` the Host refuses
+   * while the worktree holds uncommitted changes.
+   */
+  removeWorktree: (workspaceId: WorkspaceId, options: { readonly force: boolean }) => Promise<void>
+  /**
    * Reorder a Workspace in the durable registry display order.
    * Omitted anchor appends to the end.
    */
@@ -269,6 +282,16 @@ export type WorkspaceBrowserInjected = {
   unarchiveSession: (sessionId: SessionId) => Promise<void>
   /** Adopt a picked host directory as a real Workspace before targeting a Session. */
   createWorkspace: (input: { path: string }) => Promise<WorkspaceView>
+}
+
+/** What removing a Workspace would do to its directory, from the Host. */
+export interface WorktreeInspection {
+  /** True when the Workspace is a linked git worktree rather than a primary checkout or plain folder. */
+  readonly linked: boolean
+  /** Branch checked out in the worktree, absent when detached. */
+  readonly branch?: string | undefined
+  /** `git status --porcelain` entries a removal would discard. */
+  readonly uncommitted: readonly string[]
 }
 
 /** The browser's declared viewing store handle, shared with the row actions that write view state. */

@@ -71,6 +71,9 @@
     },
     {
       "path": "../../util/workspace-path"
+    },
+    {
+      "path": "../../api/session-controller/tsconfig.client.json"
     }
   ]
 }

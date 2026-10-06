@@ -10,7 +10,12 @@ import type {
   WorkspaceBaseline,
   WorkspaceCreateRequest,
   WorkspaceCreateValue,
+  WorkspaceCreateWorktreeRequest,
+  WorkspaceCreateWorktreeValue,
   WorkspaceDeleteValue,
+  WorkspaceInspectWorktreeValue,
+  WorkspaceListWorktreesValue,
+  WorkspaceRemoveWorktreeValue,
   WorkspaceInsertSessionBeforeRequest,
   WorkspaceOrderValue,
   WorkspacePinSessionRequest,
@@ -131,6 +136,47 @@ export class ClientWorkspaceModel implements WorkspaceFollowSink {
    */
   async delete(workspaceId: WorkspaceId): Promise<RemoteResult<WorkspaceDeleteValue>> {
     const result = await this.remote.delete({ workspaceId })
+    if (result.ok) this.remove(workspaceId, true)
+    return result
+  }
+
+  /**
+   * Create a linked worktree of a Workspace's repository and merge the Workspace registered over it.
+   * @param input - source Workspace and optional name and base ref.
+   * @returns generated Remote result.
+   */
+  async createWorktree(input: WorkspaceCreateWorktreeRequest): Promise<RemoteResult<WorkspaceCreateWorktreeValue>> {
+    const result = await this.remote.createWorktree(input)
+    if (result.ok) this.upsert(result.value.workspace)
+    return result
+  }
+
+  /**
+   * Read every worktree of a Workspace's repository.
+   * @param workspaceId - Workspace inside the repository.
+   * @returns generated Remote result.
+   */
+  listWorktrees(workspaceId: WorkspaceId): Promise<RemoteResult<WorkspaceListWorktreesValue>> {
+    return this.remote.listWorktrees({ workspaceId })
+  }
+
+  /**
+   * Read whether a Workspace is a linked worktree and what removing it would lose.
+   * @param workspaceId - Workspace to inspect.
+   * @returns generated Remote result.
+   */
+  inspectWorktree(workspaceId: WorkspaceId): Promise<RemoteResult<WorkspaceInspectWorktreeValue>> {
+    return this.remote.inspectWorktree({ workspaceId })
+  }
+
+  /**
+   * Remove a linked worktree with its Workspace and drop the row locally.
+   * @param workspaceId - Workspace over the worktree.
+   * @param force - discard uncommitted changes.
+   * @returns generated Remote result.
+   */
+  async removeWorktree(workspaceId: WorkspaceId, force: boolean): Promise<RemoteResult<WorkspaceRemoveWorktreeValue>> {
+    const result = await this.remote.removeWorktree({ workspaceId, ...force ? { force: true } : {} })
     if (result.ok) this.remove(workspaceId, true)
     return result
   }

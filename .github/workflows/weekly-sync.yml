@@ -1,0 +1,57 @@
+name: Weekly sync
+
+# Runs only in the public repository, where hosted minutes are free. Checks out
+# the repository named by the SYNC_REPO secret with SYNC_TOKEN and runs
+# scripts/weekly-sync.sh there, which opens a draft pull request in it. The job
+# never builds the app or runs the quality gate. Without both secrets it skips.
+#
+# Repository secrets:
+#   SYNC_REPO   owner/name of the repository that receives the pull request
+#   SYNC_TOKEN  fine-grained token for it: Contents and Pull requests, read and write
+on:
+  schedule:
+    - cron: '0 6 * * 1'
+  workflow_dispatch:
+    inputs:
+      target:
+        description: Branch, tag or commit to sync to (leave empty for the latest)
+        required: false
+
+permissions:
+  contents: read
+
+concurrency:
+  group: weekly-sync
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    if: ${{ !github.event.repository.private }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      SYNC_REPO: ${{ secrets.SYNC_REPO }}
+      SYNC_TOKEN: ${{ secrets.SYNC_TOKEN }}
+    steps:
+      - name: Check configuration
+        id: config
+        run: |
+          if [[ -z "$SYNC_REPO" || -z "$SYNC_TOKEN" ]]; then
+            echo '::notice::SYNC_REPO and SYNC_TOKEN are not both set; skipping.'
+            echo 'ready=false' >> "$GITHUB_OUTPUT"
+          else
+            echo 'ready=true' >> "$GITHUB_OUTPUT"
+          fi
+
+      - uses: actions/checkout@v4
+        if: steps.config.outputs.ready == 'true'
+        with:
+          repository: ${{ secrets.SYNC_REPO }}
+          token: ${{ secrets.SYNC_TOKEN }}
+
+      - name: Sync
+        if: steps.config.outputs.ready == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.SYNC_TOKEN }}
+          TARGET: ${{ inputs.target }}
+        run: scripts/weekly-sync.sh

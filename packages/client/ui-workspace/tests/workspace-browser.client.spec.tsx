@@ -131,6 +131,9 @@ function mount(overrides: Partial<WorkspaceBrowserProps> = {}) {
     notifyArchivedNotOpenable: vi.fn(),
     renameWorkspace: vi.fn(async () => {}),
     deleteWorkspace: vi.fn(async () => {}),
+    createWorktreeWorkspace: vi.fn(async () => workspace('worktree', [])),
+    inspectWorktree: vi.fn(async () => ({ linked: false, uncommitted: [] })),
+    removeWorktree: vi.fn(async () => {}),
     unarchiveSession: vi.fn(async () => {}),
     insertWorkspaceBefore: vi.fn(async () => {}),
     createWorkspace: vi.fn(async () => workspace('created', [])),
@@ -2393,6 +2396,121 @@ describe('WorkspaceBrowser', () => {
     fireEvent.click(screen.getByRole('button', { name: '关闭' }))
     expect(deleteWorkspace).not.toHaveBeenCalled()
     expect(screen.queryByRole('dialog', { name: '删除工作区' })).toBeNull()
+  })
+
+  it('creates a worktree Workspace from the menu and starts a Session in it', async () => {
+    let resolveCreate!: (created: ReturnType<typeof workspace>) => void
+    const createWorktreeWorkspace = vi.fn(() => new Promise<ReturnType<typeof workspace>>((resolve) => { resolveCreate = resolve }))
+    const startSession = vi.fn()
+    mount({
+      useWorkspaces: hook(workspaceState([workspace('alpha', [], 'Alpha')])),
+      createWorktreeWorkspace,
+      startSession,
+    })
+    const open = () => {
+      fireEvent.click(screen.getByRole('button', { name: '工作区“Alpha”的操作' }))
+      fireEvent.click(screen.getByRole('menuitem', { name: '在新工作树中开始会话' }))
+    }
+    open()
+    expect(createWorktreeWorkspace).toHaveBeenCalledWith(wid('alpha'))
+    expect(screen.getByRole('status').textContent).toBe('正在创建工作树…')
+    // A second request while one is running is ignored.
+    open()
+    expect(createWorktreeWorkspace).toHaveBeenCalledOnce()
+    fireEvent.keyDown(document, { key: 'Escape' })
+    expect(screen.getByRole('status')).toBeTruthy()
+    await act(async () => { resolveCreate(workspace('worktree', [], 'Worktree')) })
+    expect(startSession).toHaveBeenCalledWith(wid('worktree'))
+    expect(screen.queryByRole('status')).toBeNull()
+  })
+
+  it.each([
+    { reason: new Error('not a repository'), shown: 'not a repository' },
+    { reason: 'git missing', shown: 'git missing' },
+  ])('shows a worktree creation failure and lets it be dismissed', async ({ reason, shown }) => {
+    const createWorktreeWorkspace = vi.fn(async () => { throw reason })
+    const startSession = vi.fn()
+    mount({
+      useWorkspaces: hook(workspaceState([workspace('alpha', [], 'Alpha')])),
+      createWorktreeWorkspace,
+      startSession,
+    })
+    fireEvent.click(screen.getByRole('button', { name: '工作区“Alpha”的操作' }))
+    fireEvent.click(screen.getByRole('menuitem', { name: '在新工作树中开始会话' }))
+    await waitFor(() => { expect(screen.getByRole('alert').textContent).toBe(shown) })
+    expect(startSession).not.toHaveBeenCalled()
+    fireEvent.keyDown(document, { key: 'Escape' })
+    expect(screen.queryByRole('alert')).toBeNull()
+  })
+
+  it('removes a clean linked worktree through the worktree action', async () => {
+    const inspectWorktree = vi.fn(async () => ({ linked: true, branch: 'feature', uncommitted: [] }))
+    const removeWorktree = vi.fn(async () => {})
+    const deleteWorkspace = vi.fn(async () => {})
+    mount({
+      useWorkspaces: hook(workspaceState([workspace('alpha', [], 'Alpha')])),
+      inspectWorktree, removeWorktree, deleteWorkspace,
+    })
+    fireEvent.click(screen.getByRole('button', { name: '工作区“Alpha”的操作' }))
+    fireEvent.click(screen.getByRole('menuitem', { name: '删除工作区' }))
+    const dialog = await screen.findByRole('dialog', { name: '删除工作树' })
+    expect(inspectWorktree).toHaveBeenCalledWith(wid('alpha'))
+    expect(dialog.textContent).toContain('分支“feature”合并后会一并删除')
+    fireEvent.click(screen.getByRole('button', { name: '删除工作树' }))
+    expect(removeWorktree).toHaveBeenCalledWith(wid('alpha'), { force: false })
+    expect(deleteWorkspace).not.toHaveBeenCalled()
+    expect(screen.getByRole('status').textContent).toBe('正在删除工作树…')
+  })
+
+  it('lists uncommitted changes and discards them only through the explicit button', async () => {
+    const inspectWorktree = vi.fn(async () => ({ linked: true, uncommitted: ['?? scratch.txt', ' M src/a.ts'] }))
+    const removeWorktree = vi.fn(async () => {})
+    mount({
+      useWorkspaces: hook(workspaceState([workspace('alpha', [], 'Alpha')])),
+      inspectWorktree, removeWorktree,
+    })
+    fireEvent.click(screen.getByRole('button', { name: '工作区“Alpha”的操作' }))
+    fireEvent.click(screen.getByRole('menuitem', { name: '删除工作区' }))
+    const dialog = await screen.findByRole('dialog', { name: '删除工作树' })
+    expect(dialog.textContent).toContain('此工作树有未提交的更改')
+    expect(dialog.textContent).toContain('?? scratch.txt')
+    expect(dialog.textContent).toContain(' M src/a.ts')
+    fireEvent.click(screen.getByRole('button', { name: '放弃更改并删除' }))
+    expect(removeWorktree).toHaveBeenCalledWith(wid('alpha'), { force: true })
+  })
+
+  it('falls back to the plain delete when the worktree state cannot be read', async () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
+    const inspectWorktree = vi.fn(async () => { throw new Error('git unavailable') })
+    const deleteWorkspace = vi.fn(async () => {})
+    mount({
+      useWorkspaces: hook(workspaceState([workspace('alpha', [], 'Alpha')])),
+      inspectWorktree, deleteWorkspace,
+    })
+    fireEvent.click(screen.getByRole('button', { name: '工作区“Alpha”的操作' }))
+    fireEvent.click(screen.getByRole('menuitem', { name: '删除工作区' }))
+    await waitFor(() => { expect(warn).toHaveBeenCalledWith('worktree inspection rejected:', expect.any(Error)) })
+    fireEvent.click(screen.getByRole('button', { name: '删除工作区' }))
+    expect(deleteWorkspace).toHaveBeenCalledWith(wid('alpha'))
+    warn.mockRestore()
+  })
+
+  it('ignores a worktree answer that arrives after the dialog closed', async () => {
+    let resolveInspection!: (value: { linked: boolean; uncommitted: string[] }) => void
+    const inspectWorktree = vi.fn(() => new Promise<{ linked: boolean; uncommitted: string[] }>((resolve) => {
+      resolveInspection = resolve
+    }))
+    mount({
+      useWorkspaces: hook(workspaceState([workspace('alpha', [], 'Alpha')])),
+      inspectWorktree,
+    })
+    fireEvent.click(screen.getByRole('button', { name: '工作区“Alpha”的操作' }))
+    fireEvent.click(screen.getByRole('menuitem', { name: '删除工作区' }))
+    fireEvent.click(screen.getByRole('button', { name: '取消' }))
+    await act(async () => { resolveInspection({ linked: true, uncommitted: [] }) })
+    fireEvent.click(screen.getByRole('button', { name: '工作区“Alpha”的操作' }))
+    fireEvent.click(screen.getByRole('menuitem', { name: '删除工作区' }))
+    expect(screen.getByRole('dialog', { name: '删除工作区' })).toBeTruthy()
   })
 
   it('search hides drag affordances (rows are not draggable during search)', () => {

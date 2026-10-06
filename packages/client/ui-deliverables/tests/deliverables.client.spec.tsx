@@ -26,6 +26,8 @@ import type { ChatFileMentions, TurnTailOwnerProps } from '@deepseek-ai/dsh-clie
 import { makeTranslate, stubConfigForm } from '@deepseek-ai/dsh-client-test-runtime'
 import { Deliverables, DeliverablesTail, selectDeliverables, type DeliverablesInjected } from '../src/client/Deliverables.tsx'
 import type { ReviewInjected } from '../src/client/ReviewTab.tsx'
+import type { ArtifactsButtonInjected } from '../src/client/ArtifactsButton.tsx'
+import type { SidebarRightTabDefinition } from '@deepseek-ai/dsh-client-ui-sidebar-right/client'
 import { ChangesDiffStore } from '../src/client/changes-diff.ts'
 import { ChangesSummaryStore } from '../src/client/changes-summary.ts'
 import { changesSummaryUrl, type ChangesSummary } from '../src/changes.ts'
@@ -46,6 +48,7 @@ function openProps(controller = new PresentedOpenController(), summaries = new C
   return {
     SessionProvider: ({ children }: { children?: import('react').ReactNode }) => <>{children}</>,
     renderSlot: renderFileActions,
+    renderFileActions: (owner: Parameters<typeof renderFileActions>[1]) => renderFileActions('deliverables.file.actions', owner),
     useChangesDiff: <T,>(select: (state: ReturnType<typeof diffs.state.getSnapshot>) => T): T => select(diffs.state.getSnapshot()),
     loadChangesDiff: vi.fn((...args: Parameters<ChangesDiffStore['load']>) => diffs.load(...args)),
     useShowCodeDiff: <T,>(select: (value: boolean) => T): T => select(true),
@@ -751,13 +754,16 @@ describe('plugin registration', () => {
         'conversation.chat.turnTail': { kind: 'list', scope: 'session' },
         'tool.call.toolview': { kind: 'keyed', scope: 'session' },
         'sidebar.right.pane.tab': { kind: 'keyed', scope: 'session' },
+        'conversation.session.header.utilities': { kind: 'list', scope: 'session' },
       },
     } as never, () => null)
-    const registerTab = vi.fn(() => () => { registered = undefined })
-    let registered: unknown
+    const types: SidebarRightTabDefinition[] = []
     let browserType: object | undefined = {}
     ctx.provide('sidebarRightTabs', {
-      register: (definition: unknown) => { registered = definition; return registerTab() },
+      register: (definition: SidebarRightTabDefinition) => {
+        types.push(definition)
+        return () => { types.splice(types.indexOf(definition), 1) }
+      },
       get: (kind: string) => kind === 'browser' ? browserType : undefined,
     } as never)
     const openResource = vi.fn()
@@ -773,6 +779,12 @@ describe('plugin registration', () => {
       session,
     } as never)
     ctx.provide('remote.session', session as never)
+    let prefixProvider: ((sessionId: SessionId) => { text: string; commit: () => void } | undefined) | undefined
+    ctx.provide('conversation', { prefixes: { register: (provider: typeof prefixProvider) => { prefixProvider = provider; return () => { prefixProvider = undefined } } } } as never)
+    type PromptResult = { ok: true } | { ok: false; error: { message: string; code: string } }
+    const prompt = vi.fn<(parts: unknown, mode: string) => Promise<PromptResult>>(() => Promise.resolve({ ok: true }))
+    let bound = true
+    ctx.provide('sessions', { binding: () => bound ? { session: { prompt } } : undefined } as never)
     ctx.provide('configForms', { developerTools: { enabled: createSnapshotStore(true) }, get: () => stubConfigForm().scope } as never)
     await ctx.plugin({ inject: localeInject, apply: applyLocale }).await()
 
@@ -792,9 +804,22 @@ describe('plugin registration', () => {
     expect(windowOpen).toHaveBeenCalledExactlyOnceWith('http://localhost:5173/', '_blank', 'noopener,noreferrer')
     windowOpen.mockRestore()
     expect(entry?.inject).toBeDefined()
+    const registered = types[0]
     expect(registered).toMatchObject({ kind: 'changes-review', patterns: ['dsh-resource://changes-review/**'] })
-    const [tabEntry] = ctx.slots.entries('sidebar.right.pane.tab')
+    expect(types[1]).toMatchObject({ kind: 'artifacts', priority: 'builtin' })
+    expect(types[1]?.title('')).toBe('Artifacts')
+    const [tabEntry, artifactsEntry] = ctx.slots.entries('sidebar.right.pane.tab')
     expect(tabEntry?.options.key).toBe('@deepseek-ai/dsh-client-ui-deliverables')
+    expect(artifactsEntry?.options.key).toBe('@deepseek-ai/dsh-client-ui-deliverables/artifacts')
+    const [button] = ctx.slots.entries('conversation.session.header.utilities')
+    expect(button?.options.id).toBe('artifacts')
+    const buttonFace: ArtifactsButtonInjected = button!.inject!(SessionId('child-session') as never) as never
+    // A Session this window has not bound has no index to read.
+    bound = false
+    expect(buttonFace.artifacts(SessionId('child-session'))).toBeUndefined()
+    bound = true
+    buttonFace.openArtifacts()
+    expect(openTab).toHaveBeenLastCalledWith('artifacts')
 
     // The prose face is live while the plugin is: a produced turn yields a
     // resolver whose matches open through the owner-supplied opener.
@@ -840,7 +865,7 @@ describe('plugin registration', () => {
     expect(face.hooks.presentedOpen.getSnapshot()['api/changes.open?sessionId=child-session&seq=5&index=0']).toBe('opened')
     face.openChangesReview({ sessionId: SessionId('child-session'), seq: 5, turn: 3 }, 1)
     expect(openResource).toHaveBeenCalledWith('dsh-resource://changes-review/session/child-session/5/3', { params: { index: 1 } })
-    expect((registered as { title(address: string): string }).title('dsh-resource://changes-review/session/child-session/5/3')).toBe('Review · turn 3')
+    expect(registered?.title('dsh-resource://changes-review/session/child-session/5/3')).toBe('Review · turn 3')
     const tabFace = tabEntry!.inject!(SessionId('child-session') as never) as unknown as ReviewInjected
     fetcher.mockResolvedValueOnce(Response.json({ turn: 3, files: [], total: 0, added: 0, deleted: 0 }))
     await tabFace.loadChangesSummary(SessionId('child-session'), 6)
@@ -854,6 +879,28 @@ describe('plugin registration', () => {
     expect(fetcher).toHaveBeenCalledTimes(readsAfterHover)
     expect(tabFace.hooks.changesDiff.getSnapshot()['api/changes.diff?sessionId=child-session&seq=5&index=1']).toEqual({ kind: 'binary', path: 'src/a.ts', display: 'src/a.ts' })
     expect(tabFace.hooks.presentedHost).toBe(face.hooks.presentedHost)
+    // Line comments reach the model through the composer prefix or the send action, and only once.
+    const viewed = SessionId('child-session')
+    expect(prefixProvider?.(viewed)).toBeUndefined()
+    expect(await tabFace.sendComments(viewed)).toBeNull()
+    tabFace.addComment(viewed, 'src/a.ts', 4, 'first')
+    tabFace.addComment(viewed, 'src/b.ts', 9, 'second')
+    const prefix = prefixProvider?.(viewed)
+    expect(prefix?.text).toBe('File: src/a.ts\nLine: 4\nUser comment: "first"\n\nFile: src/b.ts\nLine: 9\nUser comment: "second"')
+    prefix?.commit()
+    expect(prefixProvider?.(viewed)).toBeUndefined()
+    const [, secondComment] = tabFace.hooks.diffComments.getSnapshot()[viewed] ?? []
+    tabFace.updateComment(viewed, secondComment!.id, 'second again')
+    tabFace.removeComment(viewed, secondComment!.id)
+    tabFace.addComment(viewed, 'src/c.ts', 1, 'third')
+    prompt.mockResolvedValueOnce({ ok: false, error: { message: 'busy', code: 'session/busy' } })
+    expect(await tabFace.sendComments(viewed)).toBe('busy (session/busy)')
+    expect(await tabFace.sendComments(viewed)).toBeNull()
+    expect(prompt).toHaveBeenLastCalledWith([{ type: 'text', text: 'File: src/c.ts\nLine: 1\nUser comment: "third"' }], 'queue')
+    expect(await tabFace.sendComments(viewed)).toBeNull()
+    tabFace.addComment(viewed, 'src/d.ts', 2, 'fourth')
+    bound = false
+    expect(await tabFace.sendComments(viewed)).toBe('unknown session: child-session')
     fetcher.mockResolvedValueOnce(Response.json({ name: 'desktop', available: true, fileManager: 'finder' }))
     await tabFace.reloadPresentedHost()
     fetcher.mockResolvedValueOnce(new Response(null, { status: 204 }))
@@ -875,7 +922,8 @@ describe('plugin registration', () => {
     expect(ctx.slots.entries('conversation.chat.turnTail')).toHaveLength(0)
     expect(ctx.slots.entries('tool.call.toolview')).toHaveLength(0)
     expect(ctx.slots.entries('sidebar.right.pane.tab')).toHaveLength(0)
-    expect(registered).toBeUndefined()
+    expect(ctx.slots.entries('conversation.session.header.utilities')).toHaveLength(0)
+    expect(types).toEqual([])
     // Fiber teardown retracts the service: the consumer's ctx.get sees the off state.
     expect((ctx as { get(name: string): unknown }).get('chatFileMentions')).toBeUndefined()
   })

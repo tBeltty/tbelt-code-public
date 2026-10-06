@@ -144,6 +144,12 @@
     - id: settings-controller
       name: '@deepseek-ai/dsh-api-settings-controller'
 
+    # Linked git worktrees for "New session in worktree"; per-project
+    # `directory`, `baseRef`, `sharedPaths`, `copyPaths`, and `setup` go under
+    # this row's `config` in the user's cordis.yml overlay.
+    - id: worktrees
+      name: '@deepseek-ai/dsh-worktree'
+
     # Workspace commands and reconnect-safe projection over Typert Remote.
     - id: workspace-controller
       name: '@deepseek-ai/dsh-api-workspace-controller'

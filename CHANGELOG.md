@@ -4,6 +4,15 @@ Notable changes to tBelt Code, newest first. The format follows [Keep a Changelo
 
 ## [Unreleased]
 
+## [0.2.0-rc.2.20261006.2] - 2026-10-06
+
+### Added
+
+- Select text in an assistant message and press Command+L (Control+L elsewhere) to quote it. Quotes wait above the composer and go with your next message.
+- An Artifacts page in the right sidebar lists the files each turn delivered or changed. A button in the session header opens it and shows the count.
+- Start a session in a new git worktree from the workspace menu. Removing a worktree lists its uncommitted changes first.
+- Line comments in the change review: click the + next to a line number to leave a note, and send the notes to the agent from the review header or with your next message.
+
 ## [0.2.0-rc.2.20261006] - 2026-10-06
 
 ### Added
@@ -26,6 +35,19 @@ Notable changes to tBelt Code, newest first. The format follows [Keep a Changelo
 ### Added
 
 - Shell commands in the chat have a Run button. The command runs in a terminal in the side panel with your permissions, so you can type a password if it asks for one, and the agent reads the output when it finishes. The agent offers these when its sandbox blocks a command or the command needs sudo.
+- Skills in a project's `.claude/skills` folder load on their own. A skill whose header leaves out its name or description still loads, named after its folder and described by its first paragraph.
+
+### Changed
+
+- The agent checks your skills before it starts each task and follows the ones that apply. When it hands work to a subagent, it tells the subagent which skills to use.
+- Plans and plain-text files have their own icons in tabs and cards.
+- Every screen and message in the app says tBelt Code.
+- New installs keep their default workspace in `~/Documents/tbelt-code`. App data and logs from an earlier version move to tBelt Code folders on first launch.
+
+### Fixed
+
+- `/clear` no longer fails in every session with an error saying an operation is still active.
+- Automatic compaction no longer stops after its first warning on models with a small context window, such as many local models.
 
 ## [0.2.0-rc.2.20261003] - 2026-10-03
 
@@ -74,7 +96,8 @@ Notable changes to tBelt Code, newest first. The format follows [Keep a Changelo
 - Downloads no longer return an older installer.
 - A key that ran out of credit or hit its spending limit is reported as a quota problem instead of an invalid API key.
 
-[Unreleased]: https://github.com/tBeltty/tbelt-code-public/compare/v0.2.0-rc.2.20261006...HEAD
+[Unreleased]: https://github.com/tBeltty/tbelt-code-public/compare/v0.2.0-rc.2.20261006.2...HEAD
+[0.2.0-rc.2.20261006.2]: https://github.com/tBeltty/tbelt-code-public/releases/tag/v0.2.0-rc.2.20261006.2
 [0.2.0-rc.2.20261006]: https://github.com/tBeltty/tbelt-code-public/releases/tag/v0.2.0-rc.2.20261006
 [0.2.0-rc.2.20261004]: https://github.com/tBeltty/tbelt-code-public/releases/tag/v0.2.0-rc.2.20261004
 [0.2.0-rc.2.20261003]: https://github.com/tBeltty/tbelt-code-public/releases/tag/v0.2.0-rc.2.20261003

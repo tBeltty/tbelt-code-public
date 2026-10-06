@@ -51,6 +51,7 @@ async function bench() {
       'sidebar.right.tab.document.unpreviewable': { kind: 'list', scope: 'session' },
       'deliverables.file.actions': { kind: 'list', scope: 'session' },
       'deliverables.review.file.actions': { kind: 'list', scope: 'session' },
+      'deliverables.artifacts.file.actions': { kind: 'list', scope: 'session' },
     },
   } as never, () => null)
   const list = createSnapshotStore<SessionListState>({ ids: [], byId: {}, phase: 'ready', projectionsBySession: {} })
@@ -175,6 +176,7 @@ describe('open-in-app browser half', () => {
     expect(header?.component).toBe(OpenPathAction)
     expect(empty?.component).toBe(OpenPathEmptyAction)
     expect(ctx.slots.entries('deliverables.file.actions')).toHaveLength(1)
+    expect(ctx.slots.entries('deliverables.artifacts.file.actions')).toHaveLength(1)
     expect(header?.options).toMatchObject({ id: 'open-in-app' })
     const face = (header?.inject as unknown as () => OpenPathInjected)()
     const emptyFace = (empty?.inject as unknown as () => OpenPathInjected)()
@@ -193,6 +195,7 @@ describe('open-in-app browser half', () => {
     expect(ctx.slots.entries('sidebar.right.tab.document.actions').map(entry => entry.options.id)).not.toContain('open-in-app')
     expect(ctx.slots.entries('sidebar.right.tab.document.unpreviewable').map(entry => entry.options.id)).not.toContain('open-in-app')
     expect(ctx.slots.entries('deliverables.file.actions')).toHaveLength(0)
+    expect(ctx.slots.entries('deliverables.artifacts.file.actions')).toHaveLength(0)
   })
 
   it('adapts the Session directory, shares the controller with the file tree, and removes both on teardown', async () => {

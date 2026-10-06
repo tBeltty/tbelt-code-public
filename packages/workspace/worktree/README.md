@@ -95,6 +95,7 @@ The sandbox side registers an extra-roots provider with `ctx.sandboxPolicy`. For
 
 - [Sandbox policy](../../sandbox/sandbox-policy/README.md) — the seam that carries the extra writable roots.
 - [Subprocess capability](../../subprocess/README.md) — how git and setup commands run.
+- [Workspace controller](../../api/workspace-controller/README.md#worktrees) — the Remote commands and client service that create and remove worktrees for a GUI.
 - [Workspace changes](../../deliverables/workspace-changes/README.md) — turn summaries, which read a worktree like any repository.
 - Workspace subsystem — how projects and worktrees relate.
 - Session worktrees decision — why roots come from host state.

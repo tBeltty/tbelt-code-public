@@ -140,7 +140,7 @@ export const AssistantMarkdown = memo(function AssistantMarkdown({
     }
   }
   return (
-    <div className={css.root} data-streaming={streaming || undefined}>
+    <div className={css.root} data-streaming={streaming || undefined} data-chat-quote-source="">
       <div className={css.body}>
         {rendered}
         {interrupted && (groupPart === undefined || groupPart === 'response'

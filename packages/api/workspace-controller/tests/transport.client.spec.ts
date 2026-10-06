@@ -17,6 +17,7 @@ import {
   WorkspaceController,
   WorkspaceCreateError,
   type WorkspaceFollowSink,
+  WorkspaceWorktreeError,
 } from '../src/client/index.ts'
 import type { WorkspaceFollowFrame, WorkspaceId } from '../src/types.ts'
 import { FOLLOW, baseline, err, followGenerations, workspace, workspaceWorld } from './remote/workspace.client.ts'
@@ -353,6 +354,51 @@ describe('WorkspaceController', () => {
     expect(mock.log.requests('workspace/pinSession')).toEqual([{ sessionId: 'session' }])
     expect(mock.log.requests('workspace/unpinSession')).toEqual([{ sessionId: 'session' }])
     expect(mock.log.requests('workspace/delete')).toEqual([{ workspaceId: 'one' }])
+  })
+
+  it('sends worktree commands as request objects and returns their values', async ({ mock, start }) => {
+    const { remote, client } = await gatewayClient(mock, start)
+    const model = new ClientWorkspaceModel(remote.workspace)
+    model.replaceBaseline({ items: [workspace('one')], archivedSessionIds: [], pinnedSessionIds: [] })
+    const controller = new WorkspaceController(client.ctx, model)
+
+    await expect(controller.createWorktree(wid('one'), { name: 'feature', baseRef: 'main' })).resolves.toMatchObject({
+      workspace: { workspaceId: 'worktree' }, worktree: { branch: 'feature', baseRef: 'main' },
+    })
+    await expect(controller.createWorktree(wid('one'))).resolves.toMatchObject({ worktree: { branch: 'wt' } })
+    await expect(controller.listWorktrees(wid('one'))).resolves.toEqual({ worktrees: [] })
+    await expect(controller.inspectWorktree(wid('one'))).resolves.toEqual({ linked: false, uncommitted: [] })
+    await expect(controller.removeWorktree(wid('worktree'), { force: true })).resolves.toEqual({ deleted: true, branchDeleted: false })
+    await expect(controller.removeWorktree(wid('worktree'))).resolves.toMatchObject({ deleted: true })
+    expect(mock.log.requests('workspace/createWorktree')).toEqual([
+      { workspaceId: 'one', name: 'feature', baseRef: 'main' }, { workspaceId: 'one' },
+    ])
+    expect(mock.log.requests('workspace/listWorktrees')).toEqual([{ workspaceId: 'one' }])
+    expect(mock.log.requests('workspace/inspectWorktree')).toEqual([{ workspaceId: 'one' }])
+    expect(mock.log.requests('workspace/removeWorktree')).toEqual([
+      { workspaceId: 'worktree', force: true }, { workspaceId: 'worktree' },
+    ])
+  })
+
+  it('reports worktree failures with the Host failure attached', async ({ mock, start }) => {
+    const { remote, client } = await gatewayClient(mock, start)
+    const controller = new WorkspaceController(client.ctx, new ClientWorkspaceModel(remote.workspace))
+    const dirty = new RemoteError('workspace/worktree-dirty', 'dirty', { workspaceId: wid('one'), entries: ['?? a.txt'] })
+    const unavailable = new RemoteError('workspace/worktree-unavailable', 'no git', { workspaceId: wid('one') })
+
+    mock.remote.workspace.removeWorktree.mockResolvedValueOnce(err(dirty))
+    const removal = controller.removeWorktree(wid('one'))
+    await expect(removal).rejects.toBeInstanceOf(WorkspaceWorktreeError)
+    await expect(removal).rejects.toMatchObject({
+      rpcError: { code: 'workspace/worktree-dirty', details: { entries: ['?? a.txt'] } },
+    })
+    await expect(removal).rejects.toThrow('workspace worktree remove failed: workspace/worktree-dirty: dirty')
+    mock.remote.workspace.createWorktree.mockResolvedValueOnce(err(unavailable))
+    await expect(controller.createWorktree(wid('one'))).rejects.toThrow('workspace worktree create failed')
+    mock.remote.workspace.listWorktrees.mockResolvedValueOnce(err(unavailable))
+    await expect(controller.listWorktrees(wid('one'))).rejects.toThrow('workspace worktree list failed')
+    mock.remote.workspace.inspectWorktree.mockResolvedValueOnce(err(unavailable))
+    await expect(controller.inspectWorktree(wid('one'))).rejects.toThrow('workspace worktree inspect failed')
   })
 
   it('maps generated business failures to the command facade errors', async ({ mock, start }) => {

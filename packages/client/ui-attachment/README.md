@@ -69,7 +69,7 @@ The plugin waits for `conversation.input.attachments`, `conversation.message.ima
 Read these pages when the attachment surface is not enough. They move from the slots this package fills to the conversation shell that owns the input flow.
 
 - [ui-conversation](../ui-conversation/README.md) — declares the attachment slots and owns the composer and image intake.
-- [Web client architecture](../../../.agents/notes/implemented/architecture/2026-07-19-gui-web-client-architecture.md) — how browser plugin rows load and register slots.
+- Web client architecture — how browser plugin rows load and register slots.
 - [Client package map](../README.md) — adjacent browser UI packages.
 
 -----

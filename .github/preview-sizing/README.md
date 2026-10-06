@@ -2,7 +2,7 @@
 
 ## Summary
 
-The [preview workflow](../workflows/build-preview-cloudflare.yml) builds pull-request previews on standard GitHub-hosted `ubuntu-24.04`. Runner sizing compares complete job cost, not price per minute or core count alone.
+The preview workflow builds pull-request previews on standard GitHub-hosted `ubuntu-24.04`. Runner sizing compares complete job cost, not price per minute or core count alone.
 
 ## Table of Contents
 
@@ -30,4 +30,4 @@ Runner selection does not alter pull-request events, per-PR cancellation, immuta
 
 ## Dev Note
 
-The [runner decision](../../.agents/notes/implemented/process/2026-09-06-preview-hosted-runner-sizing.md) records measurements, cost estimates, and image/CPU variation. The build-only experiment does not verify production deployment.
+The runner decision records measurements, cost estimates, and image/CPU variation. The build-only experiment does not verify production deployment.

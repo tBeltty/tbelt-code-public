@@ -28,8 +28,8 @@ This family runs files, ordinary processes, terminals and sandbox enforcement on
 <a id="related-documentation"></a>
 ## Related documentation
 
-- [SSH subsystem](../../docs/subsystems/ssh.md) — shared execution coordinates and transport ownership.
-- [POSIX SSH decision](../../.agents/notes/implemented/architecture/2026-09-11-posix-ssh-runtime.md) — alternatives, consequences and verification requirements.
+- SSH subsystem — shared execution coordinates and transport ownership.
+- POSIX SSH decision — alternatives, consequences and verification requirements.
 
 <a id="dev-note"></a>
 ## Dev Note

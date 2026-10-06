@@ -48,7 +48,7 @@ Two fields: the database path and the journal mode. `:memory:` opens an in-proce
 | `path` | required | SQLite database file path, or `:memory:` |
 | `journalMode` | `wal` | Journal mode: `wal`, `delete`, `truncate`, or `persist` |
 
-`wal` suits local disks; a rollback-journal mode (`delete`/`truncate`/`persist`) fits filesystems where WAL's shared-memory files do not work, such as network mounts. The generated [configuration catalog](../../../docs/config-catalog.md#deepseek-aidsh-storage-sqlite) is the exhaustive source for every accepted field and its JSDoc.
+`wal` suits local disks; a rollback-journal mode (`delete`/`truncate`/`persist`) fits filesystems where WAL's shared-memory files do not work, such as network mounts. The generated configuration catalog is the exhaustive source for every accepted field and its JSDoc.
 
 ### Observable behavior
 
@@ -93,10 +93,10 @@ Opening the database creates the parent as `0o700`, exclusively creates a missin
 
 Read these pages when this backend's view is not enough: the subsystem reference is the authoritative contract, and the sibling backend shows the alternative medium.
 
-- [Storage subsystem](../../../docs/subsystems/storage.md) — the backend contract, domain semantics, and generated API.
+- Storage subsystem — the backend contract, domain semantics, and generated API.
 - [Storage package map](../README.md) — the family's packages and their repository position.
 - [JSON storage backend](../storage-json/README.md) — the human-readable medium for small, inspectable data.
-- [domain KV storage Agent Note](../../../.agents/notes/proposed/architecture/2026-07-24-domain-kv-storage-and-workspace.md) — the design behind the backend family and the deferred session-backend migration.
+- domain KV storage Agent Note — the design behind the backend family and the deferred session-backend migration.
 
 -----
 

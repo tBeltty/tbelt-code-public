@@ -57,7 +57,7 @@ You can verify success by watching the conversation continue past the point wher
 
 ### Tuning when condensation starts
 
-All settings are optional. With context window `W`, effective request output cap `O`, and headroom `B`, the default trigger is `floor(min(W × 0.8, W − O − B))`, where `B = min(65,536, floor((W − O) × 0.25))` tokens. Retention keeps the newest 16% of `W − O` verbatim. Headroom also caps the summary output, so it scales with the window: an 8K local model with no output cap compacts at 6,144 tokens with a 2,048-token summary, while message budgets `W − O` of 256K and above keep the 64K headroom. Local endpoints such as Ollama or LM Studio rarely report their window, so enter the model's real context window in its settings; otherwise the route's default capacity applies. The table below lists every setting; the generated [configuration catalog](../../../docs/config-catalog.md#deepseek-aidsh-compaction-basic) also includes their types.
+All settings are optional. With context window `W`, effective request output cap `O`, and headroom `B`, the default trigger is `floor(min(W × 0.8, W − O − B))`, where `B = min(65,536, floor((W − O) × 0.25))` tokens. Retention keeps the newest 16% of `W − O` verbatim. Headroom also caps the summary output, so it scales with the window: an 8K local model with no output cap compacts at 6,144 tokens with a 2,048-token summary, while message budgets `W − O` of 256K and above keep the 64K headroom. Local endpoints such as Ollama or LM Studio rarely report their window, so enter the model's real context window in its settings; otherwise the route's default capacity applies. The table below lists every setting; the generated configuration catalog also includes their types.
 
 | Field | Default | Meaning |
 |---|---|---|
@@ -148,11 +148,11 @@ The transaction validates the surface span and the durable lock, appends `compac
 Read these pages when the package-level contract is not enough; they move from the shared seam to the optional companions and the decision evidence.
 
 - [Compaction seam](../compaction/README.md) — the condensation contract this backend implements.
-- [Compaction subsystem reference](../../../docs/subsystems/compaction.md) — the condensation vocabulary, results, and service behavior.
+- Compaction subsystem reference — the condensation vocabulary, results, and service behavior.
 - [Tool-result pruner](../compaction-tool-result-pruner/README.md) — the optional companion that trims oversized tool outputs first.
 - [Human /compact command](../command-compact/README.md) — on-demand condensation without waiting for pressure.
 - [Token meter](../../llm/token-meter/README.md) — the measurement service that decides when to condense.
-- [Generated configuration catalog](../../../docs/config-catalog.md#deepseek-aidsh-compaction-basic) — every accepted config field and its source declaration.
+- Generated configuration catalog — every accepted config field and its source declaration.
 
 -----
 

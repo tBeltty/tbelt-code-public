@@ -84,7 +84,7 @@ A container can copy both directories into an immutable image layer and set `DSH
 
 #### What the model sees
 
-The model sees the generated [`load_workspace_dependencies` schema](../../../docs/tool-catalog.md#deepseek-aidsh-tool-workspace-dependencies).
+The model sees the generated `load_workspace_dependencies` schema.
 
 #### Token effect
 
@@ -121,6 +121,6 @@ Append-only tool result in the turn history; no prompt section is added.
 <details>
 <summary>Working context for maintainers — click to expand</summary>
 
-Placement and carrier choices are recorded in the [shared-runtime Agent Note](../../../.agents/notes/implemented/architecture/2026-09-17-shared-office-runtime.md).
+Placement and carrier choices are recorded in the shared-runtime Agent Note.
 
 </details>

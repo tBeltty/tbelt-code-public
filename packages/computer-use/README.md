@@ -29,7 +29,7 @@ Choose one provider and mount the shared registration service.
 <a id="related-documentation"></a>
 ## Related documentation
 
-- [Computer use](../../docs/subsystems/computer-use.md) — capability ownership and provider choices.
+- Computer use — capability ownership and provider choices.
 - [Experimental packages](../experimental/README.md) — Cua Driver MCP and native providers.
 
 <a id="dev-note"></a>

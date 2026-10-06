@@ -57,7 +57,7 @@ Choose it when one repository serves several concurrent sessions. A single sessi
 | `timeoutMs`, `outputMaxBytes`, `setupTimeoutMs` | 60 s, 8 MiB, 10 min | Bounds for one git command and one setup command |
 | `grantGitAccess` | `true` | Contribute the git directories a confined `git commit` needs |
 
-The generated [configuration catalog](../../../docs/config-catalog.md#deepseek-aidsh-worktree) is the exhaustive source for every accepted field.
+The generated configuration catalog is the exhaustive source for every accepted field.
 
 `ctx.worktrees.create({ repoPath, name?, baseRef? })` returns the new path, branch, qualified base ref, starting commit, primary checkout, and warnings. A failed copy, link, or setup command becomes a warning and the worktree stays usable. `list(repoPath)` reports every worktree with its branch, head, primary, locked, and prunable state. `uncommittedChanges(path)` lists what a removal would lose. `remove({ path, force?, keepBranch? })` refuses the primary checkout and locked worktrees, and refuses uncommitted changes unless `force` is set. It deletes the branch only when it is fully merged.
 
@@ -96,8 +96,8 @@ The sandbox side registers an extra-roots provider with `ctx.sandboxPolicy`. For
 - [Sandbox policy](../../sandbox/sandbox-policy/README.md) — the seam that carries the extra writable roots.
 - [Subprocess capability](../../subprocess/README.md) — how git and setup commands run.
 - [Workspace changes](../../deliverables/workspace-changes/README.md) — turn summaries, which read a worktree like any repository.
-- [Workspace subsystem](../../../docs/subsystems/workspace.md) — how projects and worktrees relate.
-- [Session worktrees decision](../../../.agents/notes/proposed/architecture/2026-10-05-session-worktrees.md) — why roots come from host state.
+- Workspace subsystem — how projects and worktrees relate.
+- Session worktrees decision — why roots come from host state.
 
 <a id="model-experience"></a>
 ## Model Experience

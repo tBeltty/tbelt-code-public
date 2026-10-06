@@ -52,7 +52,7 @@ The Host owns preparation across page and Session changes: check resources, down
 <a id="further-exploration"></a>
 ## Further Exploration
 
-[Voice input subsystem](../../../docs/subsystems/voice-input.md)
+Voice input subsystem
 
 -----
 

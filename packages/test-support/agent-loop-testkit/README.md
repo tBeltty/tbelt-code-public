@@ -98,7 +98,7 @@ Read these pages when the package-level behavior is not enough. They move from t
 - [Agent loop package](../../core/agent-loop/README.md) — the concrete loop this helper mounts for production behavior.
 - [Session package](../../core/session/README.md) — the durable event log used by production Inbox behavior.
 - [LLM package](../../llm/llm/README.md) — the LLM runtime and adapter interface the helper prepares.
-- [Testing policy](../../../docs/testing.md) — the coverage tiers these tests serve.
+- Testing policy — the coverage tiers these tests serve.
 - [Test-support group map](../README.md) — sibling harnesses and support packages.
 
 -----

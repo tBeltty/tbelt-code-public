@@ -96,9 +96,9 @@ The hub is a pure registration table with two faces, designed so backends and da
 
 Read these pages when the hub's view is not enough: the subsystem reference is the authoritative contract, and the Agent Note records the family design and its deferred work.
 
-- [Storage subsystem](../../../docs/subsystems/storage.md) — the backend contract, domain semantics, change events, and generated API.
+- Storage subsystem — the backend contract, domain semantics, change events, and generated API.
 - [Storage package map](../README.md) — the family's packages and their repository position.
-- [domain KV storage Agent Note](../../../.agents/notes/proposed/architecture/2026-07-24-domain-kv-storage-and-workspace.md) — the design behind the hub, the domain form, and the session-backend migration.
+- domain KV storage Agent Note — the design behind the hub, the domain form, and the session-backend migration.
 
 -----
 
@@ -126,7 +126,7 @@ Independent of live requests: the hub never touches a request prefix, so it cann
 
 These limits define what the hub cannot do. They are current package constraints, not a task backlog.
 
-- **`kv` is the only data shape** — a backend implements one facet; the `log` facet for session event logs is deferred to the session-backend migration ([Agent Note](../../../.agents/notes/proposed/architecture/2026-07-24-domain-kv-storage-and-workspace.md)).
+- **`kv` is the only data shape** — a backend implements one facet; the `log` facet for session event logs is deferred to the session-backend migration (Agent Note).
 - **Forms resolve lazily** — reading `ctx.storage.domain` before the domain plugin mounts throws `form-not-mounted`; assemblies order plugins accordingly rather than silently deferring.
 
 <a id="dev-note"></a>

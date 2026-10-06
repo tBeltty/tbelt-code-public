@@ -46,7 +46,7 @@ Every session the server creates uses the provider and model configured here. Bo
 | `model` | — | Model for every session's agent |
 | `sessionListPageSize` | `100` | Maximum summaries returned in one `session/list` page |
 
-The generated [configuration catalog](../../../docs/config-catalog.md#deepseek-aidsh-acp) is the exhaustive source for every accepted field and its JSDoc.
+The generated configuration catalog is the exhaustive source for every accepted field and its JSDoc.
 
 ### Start a server
 
@@ -91,7 +91,7 @@ The server is an automation transport with an intentionally standard public prot
 - **Truthful capability and configuration state.** `initialize` advertises only mounted support, topology changes publish complete configuration options, and a prompt pins the exact route it admitted.
 - **Quiescence before settlement.** Prompt and close operations settle only after their owned admission, Agent activity, ordered updates, descendants, persistence, and disposal have reached the required terminal state.
 
-The decision history lives in the [ACP as an automation-only protocol note](../../../.agents/notes/implemented/simplification/2026-07-23-acp-automation-only-protocol.md) and the [multi-session note](../../../.agents/notes/archived/feature/2026-06-14-acp-multi-session.md).
+The decision history lives in the ACP as an automation-only protocol note and the multi-session note.
 
 ### Source map
 
@@ -120,9 +120,9 @@ Each session module owns its Agent handle, MCP mounts, future and turn-pinned mo
 Read these pages when the package-level contract is not enough. They move from the matching client to the design records behind the automation contract.
 
 - [dsh-subagent-acp](../../subagent/subagent-acp/README.md) — the out-of-process ACP client that spawns and drives this server.
-- [ACP as an automation-only protocol](../../../.agents/notes/implemented/simplification/2026-07-23-acp-automation-only-protocol.md) — the design record for the automation contract and its wire boundaries.
-- [Multiplex concurrent ACP sessions over one connection](../../../.agents/notes/archived/feature/2026-06-14-acp-multi-session.md) — per-session isolation, ownership, and teardown decisions.
-- [Extension cookbook](../../../docs/cookbook/extension-cookbook.md) — this package as the automation-only worked example for extension authors.
+- ACP as an automation-only protocol — the design record for the automation contract and its wire boundaries.
+- Multiplex concurrent ACP sessions over one connection — per-session isolation, ownership, and teardown decisions.
+- Extension cookbook — this package as the automation-only worked example for extension authors.
 
 -----
 

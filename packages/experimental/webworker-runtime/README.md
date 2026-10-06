@@ -32,7 +32,7 @@ Three build artifacts and one source-owned process layer:
 
 Acceptance lives in `apps/web/tests/preview-boot.e2e.ts`, which serves the real built pages and drives the pre-boot chooser plus Worker activation in headless Chromium. The empty selection exercises first-run startup. The `vfs-example` overlay supplies ordinary workspace files and plaintext persistence artifacts for cold Workspace/Session discovery, tool presentation, subagent navigation, and history paging without a model request. The [packer](../webworker-packer/README.md) prepares current-generation successors from committed historical logs in Node; those source logs remain byte-identical in the overlay. The fixture generator owns the acceptance test's current projection cache. The chooser reserves WebFS as a separate user-authorized source; that provider does not read the built-in fixture.
 
-The [built-bundle import sweep](tests/compile/transform-corpus-check.ts) checks bare Node imports after the library build. Its Dockkit exception accepts Node’s unknown-`.css`-extension refusal for any stylesheet rather than one pinned path; another extension, error code, or message, and an unexpectedly successful exempt import, remain errors. See the [stylesheet exemption decision](../../../.agents/notes/implemented/bug-fix/2026-09-10-built-bundle-css-exemption.md).
+The [built-bundle import sweep](tests/compile/transform-corpus-check.ts) checks bare Node imports after the library build. Its Dockkit exception accepts Node’s unknown-`.css`-extension refusal for any stylesheet rather than one pinned path; another extension, error code, or message, and an unexpectedly successful exempt import, remain errors. See the stylesheet exemption decision.
 
 -----
 

@@ -65,11 +65,11 @@ The model supplies `query` (a literal keyword or phrase) and optionally `type` (
 <a id="further-exploration"></a>
 ## Further Exploration
 
-- [Memory subsystem](../../../docs/subsystems/memory.md) — the storage domain, Markdown artifacts, and both write paths.
+- Memory subsystem — the storage domain, Markdown artifacts, and both write paths.
 - [memory group map](../README.md) — the sibling group page and its package table.
 - [dsh-memory-storage](../memory-storage/README.md) — `listEntries`/`readEntry`, the read API this tool calls.
 - [dsh-memory-recall](../memory-recall/README.md) — the always-on index injection this tool complements.
-- [Generated tool catalog](../../../docs/tool-catalog.md#deepseek-aidsh-tool-recall-memory) — the `recall_memory` schema the model receives.
+- Generated tool catalog — the `recall_memory` schema the model receives.
 
 -----
 
@@ -80,7 +80,7 @@ The model supplies `query` (a literal keyword or phrase) and optionally `type` (
 
 #### What the model sees
 
-The generated [`recall_memory` schema](../../../docs/tool-catalog.md#deepseek-aidsh-tool-recall-memory): an object with a required `query` field and optional `type`/`scope` filters, plus a description stating the match is literal, not semantic.
+The generated `recall_memory` schema: an object with a required `query` field and optional `type`/`scope` filters, plus a description stating the match is literal, not semantic.
 
 #### Token effect
 

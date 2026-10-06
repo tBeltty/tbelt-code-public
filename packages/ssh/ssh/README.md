@@ -71,8 +71,8 @@ The helper starts with `--disable-sigusr1`, so a same-user process signal cannot
 <a id="further-exploration"></a>
 ## Further Exploration
 
-- [SSH subsystem](../../../docs/subsystems/ssh.md) — execution coordinates, transport semantics and lifecycle ownership.
-- [POSIX SSH decision](../../../.agents/notes/implemented/architecture/2026-09-11-posix-ssh-runtime.md) — rationale, alternatives and required verification.
+- SSH subsystem — execution coordinates, transport semantics and lifecycle ownership.
+- POSIX SSH decision — rationale, alternatives and required verification.
 
 -----
 

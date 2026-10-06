@@ -129,7 +129,7 @@ The `agent/pre-step` listener throws `LlmError(message, 'SPEND_LIMIT')`. The age
 
 - [`/budget` command](../command-budget/README.md) — the human-facing view and editor for both limits.
 - [Token meter](../../llm/token-meter/README.md) — the usage accounting these prices are applied to.
-- [Storage subsystem](../../../docs/subsystems/storage.md#declaring-a-domain) — the domain mechanism the ledger uses.
+- Storage subsystem — the domain mechanism the ledger uses.
 - [Settings package](../../settings/settings/README.md) — how `monthlyLimitUsd` is edited and persisted.
 
 -----

@@ -44,7 +44,7 @@ The running helper canonicalizes the policy root and asks its loaded sandbox pro
 <a id="further-exploration"></a>
 ## Further Exploration
 
-- [Process sandbox subsystem](../../../docs/subsystems/sandbox.md) — policy meanings and enforcement disclosure.
+- Process sandbox subsystem — policy meanings and enforcement disclosure.
 - [Local sandbox provider](../../sandbox/sandbox-local/README.md) — backends and platform limitations inherited on the remote host.
 
 -----

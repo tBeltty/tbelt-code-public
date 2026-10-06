@@ -39,6 +39,9 @@ jobs:
       - name: Filenames
         run: scripts/check-expected-filenames.sh
 
+      - name: No telemetry by default
+        run: scripts/check-no-default-telemetry.sh
+
   primary:
     name: Quality gate (Linux)
     if: ${{ github.event_name == 'workflow_dispatch' && !github.event.repository.private }}

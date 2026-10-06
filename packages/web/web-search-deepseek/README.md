@@ -51,7 +51,7 @@ Load the web service and the provider; the key resolves from `ctx.credentials` w
 | `maxTokens` | `4096` | Positive-integer upper bound on generated tokens for the Messages request |
 | `maxUses` | `5` | Positive-integer maximum `web_search` server-tool uses per request |
 
-The generated [configuration catalog](../../../docs/config-catalog.md#deepseek-aidsh-web-search-deepseek) lists every accepted field. Each search captures options from the live Config references.
+The generated configuration catalog lists every accepted field. Each search captures options from the live Config references.
 
 <a id="authentication"></a>
 ### Authentication
@@ -109,12 +109,12 @@ Each search captures the current Config values into provider options — endpoin
 
 Read these pages when the package-level contract is not enough. They move from the shared vocabulary to the service, the model-facing tools, and the design rationale.
 
-- [Web subsystem](../../../docs/subsystems/web.md) — the exhaustive search request/result vocabulary and error codes.
+- Web subsystem — the exhaustive search request/result vocabulary and error codes.
 - [Web package map](../README.md) — the eight-package family and each role.
 - [dsh-web](../web/README.md) — the web service this provider registers into.
 - [dsh-tool-web](../tool-web/README.md) — the model-facing `web_search` tool that renders this provider's sources.
-- [Generated configuration catalog](../../../docs/config-catalog.md#deepseek-aidsh-web-search-deepseek) — every accepted config field and its source declaration.
-- [Web capability seam decision](../../../.agents/notes/implemented/architecture/2026-06-24-web-capability-seam.md) — why search and fetch share one provider-selection service.
+- Generated configuration catalog — every accepted config field and its source declaration.
+- Web capability seam decision — why search and fetch share one provider-selection service.
 
 -----
 

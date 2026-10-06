@@ -48,7 +48,7 @@ The `./wave` helper validates canonical 16 kHz mono PCM16 WAV for the Remote con
 <a id="further-exploration"></a>
 ## Further Exploration
 
-[Voice input subsystem](../../../docs/subsystems/voice-input.md)
+Voice input subsystem
 
 -----
 

@@ -28,7 +28,7 @@ The Webhook family receives authenticated provider events and runs trusted progr
 <a id="related-documentation"></a>
 ## Related documentation
 
-Provider adapters authenticate and normalize deliveries. Rules own arbitrary conditions and external calls, then return `null` or one Session request. The [Webhook subsystem reference](../../docs/subsystems/webhook.md) owns the shared types and timing guarantees.
+Provider adapters authenticate and normalize deliveries. Rules own arbitrary conditions and external calls, then return `null` or one Session request. The Webhook subsystem reference owns the shared types and timing guarantees.
 
 <a id="dev-note"></a>
 ## Dev Note

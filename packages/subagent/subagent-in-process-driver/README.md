@@ -82,10 +82,10 @@ The required request signal covers both startup and the live run. Before publica
 
 Read these pages when the package-level contract is not enough; they move from the shared subagent model to the backends built on this driver and the delegation-policy decision.
 
-- [Subagent subsystem](../../../docs/subsystems/subagent.md) — start requests, results, provider contract, and in-process depth and seed.
+- Subagent subsystem — start requests, results, provider contract, and in-process depth and seed.
 - [dsh-subagent-spawn-in-process](../subagent-spawn-in-process/README.md) — the fresh-child backend built on this driver.
 - [dsh-subagent-fork-in-process](../subagent-fork-in-process/README.md) — the seeded-child backend built on this driver.
-- [Delegation-policy decision](../../../.agents/notes/implemented/feature/2026-07-25-subagent-policy-inheritance.md) — how parent sandbox and approval policy reach the child.
+- Delegation-policy decision — how parent sandbox and approval policy reach the child.
 
 -----
 
@@ -110,7 +110,7 @@ Independent of the parent request cache. The child's later history is append-onl
 
 #### What the model sees
 
-A structured run adds the structured-output instruction below. It also adds a child-scoped `structured_output` definition with the requested schema and the exact description `Report your final structured result. Call this exactly once, when your answer is complete; the arguments must match this tool's parameter schema exactly.` This runtime-only definition is outside the generated shipped [tool package map](../../../docs/tool-catalog.md#tool-package-map). Its canonical acknowledgement is `{ recorded: true }`, rendered as `Structured output recorded.`; a later call becomes ``Error: structured output already recorded: the run is complete, so `<tool>` is not executed``.
+A structured run adds the structured-output instruction below. It also adds a child-scoped `structured_output` definition with the requested schema and the exact description `Report your final structured result. Call this exactly once, when your answer is complete; the arguments must match this tool's parameter schema exactly.` This runtime-only definition is outside the generated shipped tool package map. Its canonical acknowledgement is `{ recorded: true }`, rendered as `Structured output recorded.`; a later call becomes ``Error: structured output already recorded: the run is complete, so `<tool>` is not executed``.
 
 ##### Structured-output instruction
 

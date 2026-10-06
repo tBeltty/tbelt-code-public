@@ -50,7 +50,7 @@ Open Plugins in the Web sidebar and enable Automation tasks, marked by an alarm 
 <a id="further-exploration"></a>
 ## Further Exploration
 
-- [Schedule subsystem](../../../docs/subsystems/schedule.md) — durable tasks, occurrence resolution, and delivery.
+- Schedule subsystem — durable tasks, occurrence resolution, and delivery.
 - [Schedule service](../../schedule/schedule/README.md) — Host task storage, activation, and the record format.
 - [Web bundle](../../bundle/web-app/README.md) — the composition this bundle adds the rows to.
 

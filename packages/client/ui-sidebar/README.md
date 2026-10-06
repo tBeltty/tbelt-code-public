@@ -47,7 +47,7 @@ On Windows Electron, `html[data-windows-titlebar]` fixes the sidebar toggle in t
 
 ### macOS desktop
 
-Under `html[data-platform='darwin']` (set only by the desktop preload) the expanded column opens with a 52px top strip that clears the hiddenInset traffic lights and carries the collapse toggle; the strip and the logo row below each mark themselves `data-window-drag`, so each row's own box is the window's drag region (ui-web base.css declares the one darwin drag rule), and the brand wordmark is not a New Session shortcut there — the dedicated New Session button keeps the action — and collapsing hides the column entirely instead of leaving the rail. The package registers `HeaderLeadingControls` into the frame's `shell.leading` window-chrome seat (ui-layout), which mounts it — the open-sidebar and New Session controls beside the traffic lights — only while the column is hidden, over every main panel. Rationale and the window-integration contract: the [macOS hidden-titlebar Agent Note](../../../.agents/notes/implemented/feature/2026-09-13-macos-hidden-titlebar-vibrancy.md).
+Under `html[data-platform='darwin']` (set only by the desktop preload) the expanded column opens with a 52px top strip that clears the hiddenInset traffic lights and carries the collapse toggle; the strip and the logo row below each mark themselves `data-window-drag`, so each row's own box is the window's drag region (ui-web base.css declares the one darwin drag rule), and the brand wordmark is not a New Session shortcut there — the dedicated New Session button keeps the action — and collapsing hides the column entirely instead of leaving the rail. The package registers `HeaderLeadingControls` into the frame's `shell.leading` window-chrome seat (ui-layout), which mounts it — the open-sidebar and New Session controls beside the traffic lights — only while the column is hidden, over every main panel. Rationale and the window-integration contract: the macOS hidden-titlebar Agent Note.
 
 ### Scrollbars
 
@@ -80,7 +80,7 @@ These pages cover the surfaces that fill the shell's seats and the composition m
 - [ui-settings](../ui-settings/README.md) — the settings domain base registering the trigger row at `sidebar.settings`.
 - [ui-layout](../ui-layout/README.md) — the layout owner whose rail and column state the collapse uses.
 - [ui-theme](../ui-theme/README.md) — the scrollbar token indirection the shell rebinds.
-- [Slot system standard](../../../.agents/notes/implemented/architecture/2026-07-22-slot-type-chain-implementation.md) — the composition model behind the seats.
+- Slot system standard — the composition model behind the seats.
 
 -----
 

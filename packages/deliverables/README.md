@@ -30,10 +30,10 @@ The deliverables family records what a turn hands to the user as durable Session
 <a id="related-documentation"></a>
 ## Related documentation
 
-- [Deliverables subsystem](../../docs/subsystems/deliverables.md) — the `PresentedFile` and `WorkspaceChangesSummary` vocabulary, the two durable events, and the summary service.
+- Deliverables subsystem — the `PresentedFile` and `WorkspaceChangesSummary` vocabulary, the two durable events, and the summary service.
 - [Web deliverables](../client/ui-deliverables/README.md) — the turn-tail cards and file mentions that render these events.
-- [Present declares workspace source files](../../.agents/notes/implemented/feature/2026-09-08-present-workspace-source-files.md) — the delivery decision.
-- [Turn changed-files card](../../.agents/notes/implemented/feature/2026-09-11-turn-changed-files-card.md) — the snapshot design and coverage rules.
+- Present declares workspace source files — the delivery decision.
+- Turn changed-files card — the snapshot design and coverage rules.
 
 -----
 

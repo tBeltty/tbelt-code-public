@@ -7,7 +7,7 @@ kind: "package-group"
 
 ## Summary
 
-The experimental group contains prototype capabilities whose contracts can change and carry no support promise. All current packages publish under their `@deepseek-ai/dsh-experimental-*` names, including the opt-in Agent Teams composition, Auto review, Cua Driver providers, browser-use backends, cross-realm Inspector, CPython PTC backend, and browser-worker preview libraries. Released products outside this group must not depend on experimental packages. The dsh installation ships the Agent Teams, voice input, Auto review, and Schedule packages as optional bundles switched on from the Web sidebar's Plugins page ([decision](../../.agents/notes/implemented/architecture/2026-09-21-experimental-capabilities-as-optional-bundles.md)); the other packages are libraries or explicit compositions.
+The experimental group contains prototype capabilities whose contracts can change and carry no support promise. All current packages publish under their `@deepseek-ai/dsh-experimental-*` names, including the opt-in Agent Teams composition, Auto review, Cua Driver providers, browser-use backends, cross-realm Inspector, CPython PTC backend, and browser-worker preview libraries. Released products outside this group must not depend on experimental packages. The dsh installation ships the Agent Teams, voice input, Auto review, and Schedule packages as optional bundles switched on from the Web sidebar's Plugins page (decision); the other packages are libraries or explicit compositions.
 
 ## Table of Contents
 
@@ -49,11 +49,11 @@ The experimental group contains prototype capabilities whose contracts can chang
 <a id="related-documentation"></a>
 ## Related documentation
 
-- [Experimental publication decision](../../.agents/notes/implemented/process/2026-09-12-experimental-publication-denylist.md) — public defaults and private exceptions.
-- [Computer use](../../docs/subsystems/computer-use.md) — desktop provider choices.
-- [Browser use](../../docs/subsystems/browser-use.md) — browser provider choices and Session ownership.
-- [Agent Teams subsystem](../../docs/subsystems/agent-team.md) — durable Team types and the `ctx.agentTeams` service API.
-- [Experimental subtree rules](AGENTS.md) — what experimental status does and does not relax.
+- Experimental publication decision — public defaults and private exceptions.
+- Computer use — desktop provider choices.
+- Browser use — browser provider choices and Session ownership.
+- Agent Teams subsystem — durable Team types and the `ctx.agentTeams` service API.
+- Experimental subtree rules — what experimental status does and does not relax.
 
 -----
 

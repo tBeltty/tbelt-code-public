@@ -49,7 +49,7 @@ Load the web service, at least one backend, and this package; both tools registe
 | `searchTimeoutMs` | `30000` | Cooperative tool-call timeout budget (ms) for `web_search` |
 | `fetchMaxOutputChars` | `200000` | Cap on source characters converted synchronously and on one complete `web_fetch` output |
 
-The generated [configuration catalog](../../../docs/config-catalog.md#deepseek-aidsh-tool-web) is the exhaustive source for every accepted field and its JSDoc. `searchMaxQueries` bounds the accepted array before exact-string deduplication and provider fan-out; validation rejects an oversized array before any search starts. The timeout budgets attach to each tool definition and are enforced by [`@deepseek-ai/dsh-tool-call-timeout-policy`](../../guard/timeout-policy/README.md); the model-facing schemas expose no timeout argument.
+The generated configuration catalog is the exhaustive source for every accepted field and its JSDoc. `searchMaxQueries` bounds the accepted array before exact-string deduplication and provider fan-out; validation rejects an oversized array before any search starts. The timeout budgets attach to each tool definition and are enforced by [`@deepseek-ai/dsh-tool-call-timeout-policy`](../../guard/timeout-policy/README.md); the model-facing schemas expose no timeout argument.
 
 ### Using web_search
 
@@ -124,13 +124,13 @@ Each tool attaches structured metadata to its result (`output.presentationMeta`)
 
 Read these pages when the package-level contract is not enough. They move from the shared vocabulary to the service, the generated catalogs, and the design rationale.
 
-- [Web subsystem](../../../docs/subsystems/web.md) — the exhaustive search/fetch requests and results, provider availability, and error codes.
+- Web subsystem — the exhaustive search/fetch requests and results, provider availability, and error codes.
 - [Web package map](../README.md) — the eight-package family and each role.
 - [dsh-web](../web/README.md) — the web service the tools execute through.
-- [Generated tool catalog](../../../docs/tool-catalog.md#deepseek-aidsh-tool-web) — the exact `web_search` and `web_fetch` schemas.
+- Generated tool catalog — the exact `web_search` and `web_fetch` schemas.
 - [dsh-tool-call-timeout-policy](../../guard/timeout-policy/README.md) — the deployment policy that enforces each tool's timeout budget.
-- [Generated configuration catalog](../../../docs/config-catalog.md#deepseek-aidsh-tool-web) — every accepted config field and its source declaration.
-- [Web capability seam decision](../../../.agents/notes/implemented/architecture/2026-06-24-web-capability-seam.md) — why search and fetch share one provider-selection service.
+- Generated configuration catalog — every accepted config field and its source declaration.
+- Web capability seam decision — why search and fetch share one provider-selection service.
 
 -----
 
@@ -173,7 +173,7 @@ Prefix-stable while visible tools, scope, and guidance text are unchanged. Confi
 
 #### What the model sees
 
-The model sees the generated [`web_search` and `web_fetch` schemas](../../../docs/tool-catalog.md#deepseek-aidsh-tool-web). Result-count and timeout budgets are deployment settings, not model arguments.
+The model sees the generated `web_search` and `web_fetch` schemas. Result-count and timeout budgets are deployment settings, not model arguments.
 
 #### Token effect
 
@@ -247,8 +247,8 @@ Append-only; newly visible content follows the reusable request prefix and does 
 These limits define when the tools are incomplete or need deployment cooperation. They are current package constraints.
 
 - **There is no batch-wide native-search counter** — `searchMaxQueries` bounds `ctx.web.search` calls, but a provider may perform several native searches inside each call; for example a model-backed provider configured with `maxUses` can permit up to `searchMaxQueries × maxUses` native searches, and `searchMaxResults` limits only the combined sources returned to the caller. Deployments control cost through these independent consumer and provider settings because the service does not know provider-internal search units.
-- **HTML→markdown conversion omits inputs it cannot safely represent** — [turndown](https://github.com/mixmark-io/turndown) converts at most `fetchMaxOutputChars` source characters through a real DOM. A 512-level nesting guard and conversion exceptions produce a fixed omission marker instead of raw HTML; table `colspan` remains unsupported because GFM has no spanning-cell representation ([archived dependency decision](../../../.agents/notes/archived/simplification/2026-07-26-turndown-for-tool-web-html-markdown.md)).
-- **The model-facing API is minimal by design, with promotions deferred** — `max_results` stays a config bound (not a model argument), and `web_fetch` takes only `url` (no `format`/`prompt`/LLM-summarization mode); both are named later steps in [the seam Agent Note](../../../.agents/notes/implemented/architecture/2026-06-24-web-capability-seam.md).
+- **HTML→markdown conversion omits inputs it cannot safely represent** — [turndown](https://github.com/mixmark-io/turndown) converts at most `fetchMaxOutputChars` source characters through a real DOM. A 512-level nesting guard and conversion exceptions produce a fixed omission marker instead of raw HTML; table `colspan` remains unsupported because GFM has no spanning-cell representation (archived dependency decision).
+- **The model-facing API is minimal by design, with promotions deferred** — `max_results` stays a config bound (not a model argument), and `web_fetch` takes only `url` (no `format`/`prompt`/LLM-summarization mode); both are named later steps in the seam Agent Note.
 - **Public fetches do not request approval** — the shipped `cordis`, `code`, and `standard` presets expose `web_fetch` in every sandbox and approval mode. The HTTP provider blocks non-public destinations, but a model can send data to a public URL. Deployments that need per-call confirmation must add a `tools/pre-execute` policy or disable fetch.
 
 <a id="dev-note"></a>

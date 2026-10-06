@@ -70,7 +70,7 @@ A stored log the current build cannot faithfully interpret is refused with a dir
 <details>
 <summary>Implementation internals — click to expand</summary>
 
-This section explains how the seam realizes durable storage and how backends plug in; the observable contract is covered in [Use this package](#use-this-package) and the generated [Cordis API](../../../docs/subsystems/persistence.md#cordis-surface).
+This section explains how the seam realizes durable storage and how backends plug in; the observable contract is covered in [Use this package](#use-this-package) and the generated Cordis API.
 
 ### Design concept
 
@@ -102,7 +102,7 @@ Each `session/event` for the writer's session copies into that handle's internal
 
 ### Stored-record validation
 
-The seam's shared helpers validate current logical records identified by `SESSION_FORMAT_VERSION`, and appends write only the current format ([rationale](../../../.agents/notes/implemented/architecture/2026-08-31-released-session-format-migrations.md)). Historical decoding and immutable successor publication belong inside each provider before it returns a handle. Every backend runs `storage-contract` validation on handle reads and write-open priming, refusing an unknown event type as `SessionFormatUnsupportedError` and a malformed current record as `SessionPersistenceCorruptionError`, with the raw-log `SessionLocation` attached when the backend keeps one artifact per session.
+The seam's shared helpers validate current logical records identified by `SESSION_FORMAT_VERSION`, and appends write only the current format (rationale). Historical decoding and immutable successor publication belong inside each provider before it returns a handle. Every backend runs `storage-contract` validation on handle reads and write-open priming, refusing an unknown event type as `SessionFormatUnsupportedError` and a malformed current record as `SessionPersistenceCorruptionError`, with the raw-log `SessionLocation` attached when the backend keeps one artifact per session.
 
 </details>
 -----
@@ -112,8 +112,8 @@ The seam's shared helpers validate current logical records identified by `SESSIO
 
 Read these pages when the package-level contract is not enough. They move from the shared durability model to the shipped backends and the decision evidence.
 
-- [Session persistence subsystem](../../../docs/subsystems/persistence.md) — the full service contract, handle semantics, flush checkpoint, crash recovery, and generated Cordis API.
-- [Handle-based persistence Agent Note](../../../.agents/notes/implemented/architecture/2026-08-27-handle-based-session-persistence.md) — the seam design and its ownership model.
+- Session persistence subsystem — the full service contract, handle semantics, flush checkpoint, crash recovery, and generated Cordis API.
+- Handle-based persistence Agent Note — the seam design and its ownership model.
 - [JSONL persistence backend](../session-persistence-jsonl/README.md) — the shipped per-session-file backend.
 - [Session checkpoint policy](../session-checkpoint-policy/README.md) — the plugin that flushes through `session/flush` at semantic boundaries.
 - [Session package map](../README.md) — adjacent persistence, projection, title, and telemetry packages.

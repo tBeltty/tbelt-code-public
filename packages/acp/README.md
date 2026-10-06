@@ -30,8 +30,8 @@ The acp group provides one package: a server that lets programs and automation r
 ## Related documentation
 
 - [dsh-subagent-acp](../subagent/subagent-acp/README.md) — the out-of-process ACP client that spawns and drives this server.
-- [ACP as an automation-only protocol](../../.agents/notes/implemented/simplification/2026-07-23-acp-automation-only-protocol.md) — the design record for the automation contract and its wire boundaries.
-- [Multiplex concurrent ACP sessions over one connection](../../.agents/notes/archived/feature/2026-06-14-acp-multi-session.md) — per-session isolation, ownership, and teardown decisions.
+- ACP as an automation-only protocol — the design record for the automation contract and its wire boundaries.
+- Multiplex concurrent ACP sessions over one connection — per-session isolation, ownership, and teardown decisions.
 
 <a id="dev-note"></a>
 ## Dev Note

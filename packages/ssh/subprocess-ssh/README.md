@@ -52,7 +52,7 @@ Remote execution delegates to [`subprocess-local`](../../subprocess/subprocess-l
 <a id="further-exploration"></a>
 ## Further Exploration
 
-- [Subprocess subsystem](../../../docs/subsystems/subprocess.md) — spawn, collection, terminal and lifetime APIs.
+- Subprocess subsystem — spawn, collection, terminal and lifetime APIs.
 - [SSH sandbox provider](../sandbox-ssh/README.md) — remote file-effect confinement.
 
 -----

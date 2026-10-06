@@ -47,7 +47,7 @@ The only plugin field is `root`, which holds the unit files and directories. It 
 |---|---|---|
 | `root` | required | Directory holding `<unit>.json` files and `<unit>/` trees; created `0o700` on demand |
 
-The generated [configuration catalog](../../../docs/config-catalog.md#deepseek-aidsh-storage-json) is the exhaustive source for every accepted field and its JSDoc.
+The generated configuration catalog is the exhaustive source for every accepted field and its JSDoc.
 
 ### Observable behavior
 
@@ -105,10 +105,10 @@ A `per-record` table document at `<root>/<unit>/<table>/<key>.json` has the form
 
 Read these pages when this backend's view is not enough: the subsystem reference is the authoritative contract, and the sibling backend shows the alternative medium.
 
-- [Storage subsystem](../../../docs/subsystems/storage.md) — the backend contract, domain semantics, and generated API.
+- Storage subsystem — the backend contract, domain semantics, and generated API.
 - [Storage package map](../README.md) — the family's packages and their repository position.
 - [SQLite storage backend](../storage-sqlite/README.md) — the point-update medium for high-frequency data.
-- [domain KV storage Agent Note](../../../.agents/notes/proposed/architecture/2026-07-24-domain-kv-storage-and-workspace.md) — the design behind the backend family and its deferred work.
+- domain KV storage Agent Note — the design behind the backend family and its deferred work.
 
 -----
 

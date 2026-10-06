@@ -83,9 +83,9 @@ One relation powers both directions: registration views inherit DOWN the chain (
 
 The package-level contract is enough for most consumers; read these when you need the surrounding domain and the design rationale.
 
-- [Scoped registration subsystem](../../../docs/subsystems/scope.md) — the identity, carrier, and layer types.
-- [Agent-scope contexts Agent Note](../../../.agents/notes/implemented/architecture/2026-07-08-agent-scope-contexts.md) — the security non-goals and context design.
-- [Agent-scope runtime design Agent Note](../../../.agents/notes/implemented/architecture/2026-07-12-agent-scope-runtime-design.md) — how the loop builds per-agent scopes.
+- Scoped registration subsystem — the identity, carrier, and layer types.
+- Agent-scope contexts Agent Note — the security non-goals and context design.
+- Agent-scope runtime design Agent Note — how the loop builds per-agent scopes.
 - [Core group map](../README.md) — how the core packages compose.
 
 -----

@@ -151,7 +151,7 @@ Read these pages when the package-level contract is not enough. They move from t
 - [ui-session](../../client/ui-session/README.md) — the production adapter that derives standard Slot sources from the Controller doubles.
 - [UI slots package](../../client/ui-slots/README.md) — the `SlotRegistry` contract the bench mounts.
 - [UI renderer package](../../client/ui-renderer/README.md) — the renderer the bench installs.
-- [Testing policy](../../../docs/testing.md) — the coverage tiers and browser snapshot lane.
+- Testing policy — the coverage tiers and browser snapshot lane.
 - [Test-support group map](../README.md) — sibling harnesses and support packages.
 
 -----

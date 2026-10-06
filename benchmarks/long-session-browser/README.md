@@ -12,4 +12,4 @@ Three fresh browser processes and scaffold worlds produce raw samples and median
 
 The fixture reserves an empty system head before the first user message, with each user message inside its step. It contains mixed-language prompts, prose, reasoning, 20 code fences, and 40 synthetic tool results. Every historical Assistant includes a compact stream built by the production accumulator from matching reasoning, text, tool arguments, usage, and finish chunks. No model, tool, external network, recorded Session, or private Harness home supplies its content. Streaming uses 120 text deltas at 16 ms replay pacing through the real composer, agent loop, transport, and persistence.
 
-The [decision record](../../.agents/notes/implemented/testing/2026-09-06-frontend-performance-budgets.md) owns calibration, exclusions, and alternatives. The larger [manual diagnostic](../../apps/web/tests/complex-history.perf.ts) remains separate.
+The decision record owns calibration, exclusions, and alternatives. The larger [manual diagnostic](../../apps/web/tests/complex-history.perf.ts) remains separate.

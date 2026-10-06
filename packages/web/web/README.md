@@ -44,7 +44,7 @@ Load the service and let a single mounted backend auto-select, or pin a provider
 | `searchProvider` | (unset) | Pinned search provider id; unset auto-selects when exactly one is usable. Volatile: a settings surface changes it for the next search without a remount |
 | `fetchProvider` | (unset) | Pinned fetch provider id; unset auto-selects when exactly one is usable |
 
-The generated [configuration catalog](../../../docs/config-catalog.md#deepseek-aidsh-web) is the exhaustive source for every accepted field and its JSDoc.
+The generated configuration catalog is the exhaustive source for every accepted field and its JSDoc.
 
 ### Searching and fetching
 
@@ -58,7 +58,7 @@ const result = await ctx.web.search({ query: 'tbelt code', maxResults: 8 })
 const page = await ctx.web.fetch({ url: 'https://example.com' })
 ```
 
-Both calls accept an optional `AbortSignal` that is forwarded to the provider for cancellation. The normalized request and result shapes are the contract callers build on; the vocabulary section of the [web subsystem](../../../docs/subsystems/web.md) reference describes them exhaustively.
+Both calls accept an optional `AbortSignal` that is forwarded to the provider for cancellation. The normalized request and result shapes are the contract callers build on; the vocabulary section of the web subsystem reference describes them exhaustively.
 
 ### Provider selection
 
@@ -115,7 +115,7 @@ The package is built on one deliberate separation:
 
 ### Data model
 
-The request and result types define the normalized vocabulary callers build on — one `Search` pair and one `Fetch` pair — and the exhaustive fields and JSDoc live in [`src/types.ts`](src/types.ts) and the [web subsystem](../../../docs/subsystems/web.md) reference. Two deliberate choices shape them: `WebFetchBody` is a closed union (`html` | `text`) owned here, so adding a kind breaks compilation until every consumer handles it; `WebError` extends `HarnessError` with an open-string `code`, so consumers must tolerate provider-specific values. Source fields stay optional because not every provider returns all of them.
+The request and result types define the normalized vocabulary callers build on — one `Search` pair and one `Fetch` pair — and the exhaustive fields and JSDoc live in [`src/types.ts`](src/types.ts) and the web subsystem reference. Two deliberate choices shape them: `WebFetchBody` is a closed union (`html` | `text`) owned here, so adding a kind breaks compilation until every consumer handles it; `WebError` extends `HarnessError` with an open-string `code`, so consumers must tolerate provider-specific values. Source fields stay optional because not every provider returns all of them.
 
 ### Selection flow
 
@@ -130,12 +130,12 @@ At call time the service resolves the provider — configured id first, then the
 
 Read these pages when the package-level contract is not enough. They move from the shared vocabulary to the shipped backends, the model-facing tools, and the design rationale.
 
-- [Web subsystem](../../../docs/subsystems/web.md) — the exhaustive search/fetch requests and results, provider availability, and error codes.
+- Web subsystem — the exhaustive search/fetch requests and results, provider availability, and error codes.
 - [Web package map](../README.md) — the eight-package family and each role.
 - [dsh-tool-web](../tool-web/README.md) — the model-facing `web_search` and `web_fetch` tools over this service.
 - [dsh-web-fetch-http](../web-fetch-http/README.md) — the shipped anonymous HTTP(S) fetch backend.
-- [Generated configuration catalog](../../../docs/config-catalog.md#deepseek-aidsh-web) — every accepted config field and its source declaration.
-- [Web capability seam decision](../../../.agents/notes/implemented/architecture/2026-06-24-web-capability-seam.md) — why search and fetch share one provider-selection service.
+- Generated configuration catalog — every accepted config field and its source declaration.
+- Web capability seam decision — why search and fetch share one provider-selection service.
 
 -----
 
@@ -155,8 +155,8 @@ No direct invalidation; the named consumer owns any request-prefix changes.
 
 These limits define when the service is incomplete on its own. They are current package constraints.
 
-- **No observation surface** — there is no provider-change event and no capability-status query beyond the provider listing for key entry; availability is observable only by running a search or fetch and routing the thrown code, and the no-provider failure is the generic `WEB_PROVIDER_UNAVAILABLE` with no per-provider reason enumeration ([Agent Note](../../../.agents/notes/archived/simplification/2026-07-04-drop-unconsumed-web-observation-surface.md)).
-- **Search requests carry only `query` and `maxResults`** — provider-neutral controls (recency, domain filters, regional hints, search depth) are deferred until the backends can honor them ([seam Agent Note](../../../.agents/notes/implemented/architecture/2026-06-24-web-capability-seam.md)).
+- **No observation surface** — there is no provider-change event and no capability-status query beyond the provider listing for key entry; availability is observable only by running a search or fetch and routing the thrown code, and the no-provider failure is the generic `WEB_PROVIDER_UNAVAILABLE` with no per-provider reason enumeration (Agent Note).
+- **Search requests carry only `query` and `maxResults`** — provider-neutral controls (recency, domain filters, regional hints, search depth) are deferred until the backends can honor them (seam Agent Note).
 - **`WebFetchBody` has no `pdf` arm** — text-extractable PDF support is named deferred work; the closed union makes adding it a compile-enforced change across the web packages.
 - **Provider-backed page extraction is out of scope of `fetch()`** — a Firecrawl/Tavily-style `web_extract` capability is deferred rather than widening the fetch operation.
 

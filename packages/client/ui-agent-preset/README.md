@@ -44,7 +44,7 @@ Known shipped presets offer mode details and usage examples in a read-only dialo
 
 - [Scope](../../core/scope/README.md) — Registration isolation.
 - [Agent](../../core/agent/README.md) — Session runtime.
-- [Cordis](../../../docs/cordis-primer.md) — Plugin configuration and lifecycle.
+- Cordis — Plugin configuration and lifecycle.
 
 <a id="model-experience"></a>
 ## Model Experience

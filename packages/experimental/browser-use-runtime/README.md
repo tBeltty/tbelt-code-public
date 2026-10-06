@@ -58,9 +58,9 @@ No runtime invariant companion is published: resource ownership and pending work
 <a id="further-exploration"></a>
 ## Further Exploration
 
-- [Browser use](../../../docs/subsystems/browser-use.md) — provider selection and Session ownership.
+- Browser use — provider selection and Session ownership.
 - [MCP client](../../mcp/mcp-client/README.md) — discovery, cancellation, and result admission.
-- [Browser ownership decision](../../../.agents/notes/implemented/architecture/2026-09-12-browser-use-provider-registration.md) — registration-only service and resource lifetime.
+- Browser ownership decision — registration-only service and resource lifetime.
 
 -----
 

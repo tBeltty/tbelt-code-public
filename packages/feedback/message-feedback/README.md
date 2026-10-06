@@ -64,7 +64,7 @@ Cold material mutations emit `feedback/committed` after flush with a borrowed re
 
 No runtime invariant companion is published: the service derives feedback directly from validated canonical events and owns no independently mutable projection.
 
-See the [feedback subsystem](../../../docs/subsystems/feedback.md), [Session persistence](../../../docs/subsystems/persistence.md), and [browser consumer](../../client/ui-message-feedback/README.md) for their respective APIs.
+See the feedback subsystem, Session persistence, and [browser consumer](../../client/ui-message-feedback/README.md) for their respective APIs.
 
 <a id="model-experience"></a>
 ## Model Experience

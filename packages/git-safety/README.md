@@ -32,9 +32,9 @@ The `git-safety/` group gives every agent-initiated file edit a durable, recover
 
 Start with the filesystem subsystem for the `fs/edit-intent` waterfall this group listens on.
 
-- [Filesystem subsystem reference](../../docs/subsystems/filesystem.md) — the `fs/*` waterfalls and provider contract this group's listener composes with.
+- Filesystem subsystem reference — the `fs/*` waterfalls and provider contract this group's listener composes with.
 - [`fs/` group README](../fs/README.md) — the filesystem capability family's package map.
-- [Cordis waterfall semantics](../../docs/cordis-primer.md#cordis-waterfall-semantics) — how a single-decision waterfall composes multiple listeners, and why registration order matters here.
+- Cordis waterfall semantics — how a single-decision waterfall composes multiple listeners, and why registration order matters here.
 
 <a id="dev-note"></a>
 ## Dev Note

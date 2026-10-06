@@ -38,4 +38,4 @@ Use `sdk-minimal` in that command to extend this example, or `sdk` to extend the
 
 The same runtime wheel packages the `web` profile and its frontend assets for direct CLI use: `dsh web` starts that separate application. A Python SDK client cannot select `web` because it has no JSON-RPC server row.
 
-See the [Python SDK tutorial](../../../docs/user/guide/python-sdk.md) and [SDK reference](../README.md).
+See the Python SDK tutorial and [SDK reference](../README.md).

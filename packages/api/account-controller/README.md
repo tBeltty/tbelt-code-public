@@ -34,7 +34,7 @@ The controller forwards operations to the account service and maintains no indep
 <a id="further-exploration"></a>
 ## Further Exploration
 
-The [credentials subsystem](../../../docs/subsystems/credentials.md) owns storage APIs; the [architecture](../../../docs/architecture.md) explains application composition.
+The credentials subsystem owns storage APIs; the architecture explains application composition.
 
 <a id="model-experience"></a>
 ## Model Experience
@@ -54,4 +54,4 @@ No model request prefix changes.
 <a id="dev-note"></a>
 ### Dev Note
 
-The [desktop login decision](../../../.agents/notes/implemented/architecture/2026-09-14-deepseek-account-login.md) records cancellation and storage ownership.
+The desktop login decision records cancellation and storage ownership.

@@ -45,7 +45,7 @@ Load the web service and the provider. The key is read at each search from the `
 | `baseURL` | `https://api.search.brave.com` | Endpoint base; `/res/v1/web/search` is appended |
 | `count` | (unset) | Default result count when a request carries no `maxResults`; 1–20 |
 
-The generated [configuration catalog](../../../docs/config-catalog.md#deepseek-aidsh-web-search-brave) is the exhaustive source for every accepted field and its JSDoc.
+The generated configuration catalog is the exhaustive source for every accepted field and its JSDoc.
 
 ### What a search returns
 
@@ -87,7 +87,7 @@ A rejected key surfaces as `WEB_PROVIDER_AUTH`, a quota, plan, or rate limit as 
 <a id="further-exploration"></a>
 ## Further Exploration
 
-- [Web subsystem](../../../docs/subsystems/web.md) — the exhaustive search request/result vocabulary and error codes.
+- Web subsystem — the exhaustive search request/result vocabulary and error codes.
 - [Web package map](../README.md) — the eight-package family and each role.
 - [dsh-web](../web/README.md) — the web service this provider registers into.
 - [dsh-tool-web](../tool-web/README.md) — the model-facing `web_search` tool that renders this provider's sources.

@@ -81,7 +81,7 @@ Chat diff cards keep nine rows before folding, enough for a file header, one rem
 
 An Auto denial takes precedence over keyed specialized views. Its generic row preserves the call identity, omits raw arguments, and normalizes the stored reason only for display: trim surrounding whitespace and collapse line separators to spaces, with localized fallback for an empty result. Session and SDK error details keep the original reason.
 
-Recorded tool details cover goal and schedule tools, Cordis inspection, workflow and Ralph reports, Session event/search/trace queries, agent and teammate controls, background jobs, persistent terminals, and LSP navigation. These expanded bodies read successful logged results, preserve generic input/output for failures or unsupported data, and keep Inspect available. Dates include the viewer's time zone, and statuses reflect the call result rather than current session state. Session traces preserve descendant indentation. LSP results open filesystem paths through the Host callback and display other URIs as text. The browser adapter consumes recorded producer text and JSON; Host service objects and presenter callbacks do not cross into the Client. [Compact tool details](../../../.agents/notes/implemented/architecture/2026-09-10-compact-tool-details.md) records the presentation trade-offs.
+Recorded tool details cover goal and schedule tools, Cordis inspection, workflow and Ralph reports, Session event/search/trace queries, agent and teammate controls, background jobs, persistent terminals, and LSP navigation. These expanded bodies read successful logged results, preserve generic input/output for failures or unsupported data, and keep Inspect available. Dates include the viewer's time zone, and statuses reflect the call result rather than current session state. Session traces preserve descendant indentation. LSP results open filesystem paths through the Host callback and display other URIs as text. The browser adapter consumes recorded producer text and JSON; Host service objects and presenter callbacks do not cross into the Client. Compact tool details records the presentation trade-offs.
 
 Expanded status dots and labels use static semantic colors. Receipt and job-output headers keep neutral text and omit the status while expanded. An interruption receipt confirms only that interruption was requested.
 
@@ -105,8 +105,8 @@ These pages cover the conversation host, the view slots, and the card models.
 - [ui-skill](../ui-skill/README.md) — a business-owned registration for the `skill` tool.
 - [ui-user-questions](../ui-user-questions/README.md) — the question panels the `ask_user_question` row reopens.
 - [Auto review](../../experimental/auto-review/README.md) — the structured denial identity and user-visible reason owner.
-- [Conversation subsystem](../../../docs/subsystems/conversation.md) — how a business-owned feature registers a Conversation node.
-- [Slot system standard](../../../.agents/notes/implemented/architecture/2026-07-22-slot-type-chain-implementation.md) — the composition model behind the keyed slot.
+- Conversation subsystem — how a business-owned feature registers a Conversation node.
+- Slot system standard — the composition model behind the keyed slot.
 
 -----
 

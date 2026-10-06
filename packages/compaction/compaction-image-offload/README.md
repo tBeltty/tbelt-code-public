@@ -60,7 +60,7 @@ No runtime invariant companion is published: the pure projection rejects invalid
 <a id="further-exploration"></a>
 ## Further Exploration
 
-- [Dedicated image-offload events](../../../.agents/notes/implemented/architecture/2026-09-10-image-offload-events.md) — durable selections, ownership, and rejected alternatives.
+- Dedicated image-offload events — durable selections, ownership, and rejected alternatives.
 - [compaction seam](../compaction/README.md) — the neighboring summary and text-pruning operations.
 - [compaction-tool-result-pruner](../compaction-tool-result-pruner/README.md) — the sibling executor that trims tool outputs while preserving image selections.
 - [dsh-llm](../../llm/llm/README.md) — `ImageBlock.offloaded`, `IMAGE_OFFLOAD_REQUIRED`, and the placeholder projection.

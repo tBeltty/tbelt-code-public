@@ -37,7 +37,7 @@ Add this row to an agent preset to fix how every agent joined to that preset see
 |---|---|---|
 | `mode` | required | `native` — every schema; `ptc` — `run_code` plus generated SDK; `both` — both forms |
 
-The generated [configuration catalog](../../../docs/config-catalog.md#deepseek-aidsh-agent-tool-presentation) is the exhaustive source for every accepted field. `mode` is required rather than defaulted because a preset without this row inherits the deployment default.
+The generated configuration catalog is the exhaustive source for every accepted field. `mode` is required rather than defaulted because a preset without this row inherits the deployment default.
 
 ### What PTC mode requires
 
@@ -84,7 +84,7 @@ The package-level contract is enough for most consumers; read these when you nee
 - [tools package](../tools/README.md) — the tool presentation modes and `presentAs` API.
 - [agent-presets package](../../preset/agent-preset-registry/README.md) — how presets compose agents and their standing mounts.
 - [Node ptc-runtime package](../../ptc-runtime/ptc-runtime-node/README.md) — the TypeScript runtime a PTC mode needs.
-- [PTC mode executor-collapse note](../../../.agents/notes/implemented/bug-fix/2026-08-07-ptc-executor-collapse.md) — why the announced and callable surfaces stay the same.
+- PTC mode executor-collapse note — why the announced and callable surfaces stay the same.
 - [Core group map](../README.md) — how the core packages compose.
 
 -----

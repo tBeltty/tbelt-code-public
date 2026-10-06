@@ -87,11 +87,11 @@ This section explains the design decisions behind the tool; the observable behav
 <a id="further-exploration"></a>
 ## Further Exploration
 
-- [Memory subsystem](../../../docs/subsystems/memory.md) — the storage domain, Markdown artifacts, and both write paths.
+- Memory subsystem — the storage domain, Markdown artifacts, and both write paths.
 - [memory group map](../README.md) — the sibling group page and its package table.
 - [dsh-memory-storage](../memory-storage/README.md) — the write API this tool calls.
 - [dsh-command-remember](../command-remember/README.md) — the explicit write path, over the same write API.
-- [Generated tool catalog](../../../docs/tool-catalog.md#deepseek-aidsh-tool-remember) — the `remember_fact` schema the model receives.
+- Generated tool catalog — the `remember_fact` schema the model receives.
 
 -----
 
@@ -102,7 +102,7 @@ This section explains the design decisions behind the tool; the observable behav
 
 #### What the model sees
 
-The generated [`remember_fact` schema](../../../docs/tool-catalog.md#deepseek-aidsh-tool-remember): an object with required `name`, `type`, `description`, `content`, and `projectScope` fields, plus a description explaining when to use it and that content is screened for secrets.
+The generated `remember_fact` schema: an object with required `name`, `type`, `description`, `content`, and `projectScope` fields, plus a description explaining when to use it and that content is screened for secrets.
 
 #### Token effect
 

@@ -71,9 +71,9 @@ The ordinary Slot design is one table: declaration = render authorization = runt
 These pages cover the engine, the renderer, and the composition model.
 
 - [ui-renderer](../ui-renderer/README.md) — the React slot renderer implementing this package's install contract.
-- [Slot system standard](../../../.agents/notes/implemented/architecture/2026-07-22-slot-type-chain-implementation.md) — the definitive composition model.
-- [Component Factories](../../../.agents/notes/implemented/architecture/2026-09-10-component-factories-and-local-slots.md) — reusable definitions, local Component selection, and occurrence lifetimes.
-- [Web client architecture](../../../.agents/notes/implemented/architecture/2026-07-19-gui-web-client-architecture.md) — the loading chain and object layer this registry plugs into.
+- Slot system standard — the definitive composition model.
+- Component Factories — reusable definitions, local Component selection, and occurrence lifetimes.
+- Web client architecture — the loading chain and object layer this registry plugs into.
 
 -----
 

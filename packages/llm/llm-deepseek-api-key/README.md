@@ -45,7 +45,7 @@ Registrations and listeners dispose with the plugin. Shared Host wiring supplies
 <a id="further-exploration"></a>
 ## Further Exploration
 
-[LLM streaming](../../../docs/subsystems/llm-streaming.md) · [Messages](../llm-deepseek/README.md)
+LLM streaming · [Messages](../llm-deepseek/README.md)
 
 <a id="model-experience"></a>
 ## Model Experience

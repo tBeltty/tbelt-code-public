@@ -123,9 +123,9 @@ Once mounted with `@deepseek-ai/dsh-settings-file` in the composition, editing t
 <a id="further-exploration"></a>
 ## Further Exploration
 
-- [Permission rules subsystem reference](../../../docs/subsystems/permission-rules.md) — the rule table, precedence, and settings integration.
-- [Settings subsystem reference](../../../docs/subsystems/settings.md) — namespace registration, resolution, and hot reload this package builds on.
-- [Permission presets subsystem](../../../docs/subsystems/permission-presets.md) — the coarse sandbox/approval tier this rule table layers above, never extends.
+- Permission rules subsystem reference — the rule table, precedence, and settings integration.
+- Settings subsystem reference — namespace registration, resolution, and hot reload this package builds on.
+- Permission presets subsystem — the coarse sandbox/approval tier this rule table layers above, never extends.
 - [`destructive-command-policy/`](../destructive-command-policy/README.md) — the always-on shell-command classifier this package consults for any shell-executing call no rule matches.
 
 -----

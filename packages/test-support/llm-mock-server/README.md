@@ -132,7 +132,7 @@ Read these pages when the package-level contract is not enough. They move from t
 
 - [LLM package](../../llm/llm/README.md) — the provider stream contract and retry policy this server exercises.
 - [llm-replay](../llm-replay/README.md) — the keyless counterpart that replays recorded success transcripts instead of faulting.
-- [Testing policy](../../../docs/testing.md) — the coverage tiers and recovery tests this server serves.
+- Testing policy — the coverage tiers and recovery tests this server serves.
 - [Test-support group map](../README.md) — sibling harnesses and support packages.
 
 -----

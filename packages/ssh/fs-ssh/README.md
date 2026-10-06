@@ -46,7 +46,7 @@ The helper reuses [`fs-local`](../../fs/fs-local/README.md) and [`fs-sandbox`](.
 <a id="further-exploration"></a>
 ## Further Exploration
 
-- [Filesystem subsystem](../../../docs/subsystems/filesystem.md) — shared operations and error meanings.
+- Filesystem subsystem — shared operations and error meanings.
 - [SSH connection](../ssh/README.md) — deployment and disconnection behavior.
 
 -----

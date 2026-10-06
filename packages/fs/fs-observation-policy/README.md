@@ -88,12 +88,12 @@ Observed state is dropped on plugin disposal (HMR safety) and is never persisted
 
 Read these pages when the package-level contract is not enough. They move from the policy to the contract, tools, and backends it composes with.
 
-- [Filesystem subsystem](../../../docs/subsystems/filesystem.md) — exhaustive provider contract, policy events, and error taxonomy.
+- Filesystem subsystem — exhaustive provider contract, policy events, and error taxonomy.
 - [dsh-fs](../fs/README.md) — the `ctx.fs` contract and the `fs/*` event vocabulary.
 - [tool-fs](../tool-fs/README.md) — the model-facing tools that dispatch the `fs/*` events.
 - [fs-local](../fs-local/README.md) — the host-filesystem backend this policy guards.
 - [fs-sandbox](../fs-sandbox/README.md) — the sandbox-enforcing backend this policy composes with.
-- [Fsspec-style seam-split Agent Note](../../../.agents/notes/implemented/simplification/2026-06-26-fsspec-style-fs-seam.md) — why the policy is an event plugin rather than a provider method.
+- Fsspec-style seam-split Agent Note — why the policy is an event plugin rather than a provider method.
 
 -----
 
@@ -124,7 +124,7 @@ These limits define when the policy is a poor fit or needs special operational c
 - **Observed state does not survive a session resume** — persistence of the record is deferred, so a resumed session must re-read files before guarded writes and edits.
 - **Actors without an agent session can never satisfy the policy** — their edits throw `FS_NOT_OBSERVED` and their writes always resolve `createIfAbsent`, so a non-agent caller cannot overwrite an existing file through the gate.
 - **Direct `ctx.fs` reads emit no `fs/observed`** — a file read outside the `read` tool stays unobserved, and a later guarded edit rejects with `FS_NOT_OBSERVED` until the tool reads it.
-- **Authorization is version freshness, not view completeness** — any windowed read authorizes a full-file overwrite of an unchanged file, deliberately weaker than a full-view rule ([seam-split Agent Note](../../../.agents/notes/implemented/simplification/2026-06-26-fsspec-style-fs-seam.md)).
+- **Authorization is version freshness, not view completeness** — any windowed read authorizes a full-file overwrite of an unchanged file, deliberately weaker than a full-view rule (seam-split Agent Note).
 
 <a id="dev-note"></a>
 ### Dev Note

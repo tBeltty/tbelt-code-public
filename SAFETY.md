@@ -12,7 +12,7 @@ The sandbox, the confirmation prompts and the per-session access levels lower th
 
 ## What leaves your computer
 
-Your messages and the code a session reads go to the model provider you configure, under that provider's terms. tBelt Code sends no telemetry and no session content anywhere else, and it does not upload sessions to DeepSeek by default, whichever provider you use. The app also checks tbelt.online for new versions.
+Your messages and the code a session reads go to the model provider you configure, under that provider's terms. tBelt Code sends no telemetry, usage analytics or session content anywhere else, whichever provider you use. The app also checks tbelt.online for new versions.
 
 No provider is configured until you add one. If you want no request to reach a given provider, do not configure it, and block its API host in your firewall for extra assurance.
 

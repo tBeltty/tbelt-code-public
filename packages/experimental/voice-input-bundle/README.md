@@ -42,7 +42,7 @@ The static `cordis.patch.yml` adds the four voice rows, selects `sensevoice-loca
 <a id="further-exploration"></a>
 ## Further Exploration
 
-[Voice input subsystem](../../../docs/subsystems/voice-input.md)
+Voice input subsystem
 
 -----
 

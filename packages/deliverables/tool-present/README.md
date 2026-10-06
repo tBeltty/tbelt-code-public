@@ -63,9 +63,9 @@ The pure `./types` entry declares `PresentedFile` and the Session event without 
 <a id="further-exploration"></a>
 ## Further Exploration
 
-- [Filesystem subsystem](../../../docs/subsystems/filesystem.md) — provider paths and errors.
+- Filesystem subsystem — provider paths and errors.
 - [Web deliverables](../../client/ui-deliverables/README.md) — source-file opening and cards.
-- [Delivery decision](../../../.agents/notes/implemented/feature/2026-09-08-present-workspace-source-files.md) — Session ownership and required-on-read events.
+- Delivery decision — Session ownership and required-on-read events.
 
 <a id="model-experience"></a>
 ## Model Experience
@@ -74,7 +74,7 @@ The pure `./types` entry declares `PresentedFile` and the Session event without 
 
 #### What the model sees
 
-The [present schema](../../../docs/tool-catalog.md#present) asks for existing accessible files: “Declare existing files as final deliverables for the user. Use it when the user needs a separate file, especially Office documents, spreadsheets, and slide decks; prefer your final response when that suffices. The user opens the current files; their contents are not copied.” The `files` parameter asks for the 1-2 most important deliverables and at most 4 per call. Results report `Presented <path>` for each file; the program result and durable event contain paths and optional descriptions.
+The present schema asks for existing accessible files: “Declare existing files as final deliverables for the user. Use it when the user needs a separate file, especially Office documents, spreadsheets, and slide decks; prefer your final response when that suffices. The user opens the current files; their contents are not copied.” The `files` parameter asks for the 1-2 most important deliverables and at most 4 per call. Results report `Presented <path>` for each file; the program result and durable event contain paths and optional descriptions.
 
 #### Token effect
 
@@ -88,7 +88,7 @@ The tool schema is static for the mount lifetime. Delivery result text extends t
 
 #### What the model sees
 
-The [preview schema](../../../docs/tool-catalog.md#preview) takes one `target`, a file path or a loopback URL, and tells the model to start a dev server in the background before previewing it and never to show results with `open`, `xdg-open`, `start`, or a browser command. The result reads `Showing <target> in the preview panel`; the program result contains `path` or the normalized `url`.
+The preview schema takes one `target`, a file path or a loopback URL, and tells the model to start a dev server in the background before previewing it and never to show results with `open`, `xdg-open`, `start`, or a browser command. The result reads `Showing <target> in the preview panel`; the program result contains `path` or the normalized `url`.
 
 #### Token effect
 

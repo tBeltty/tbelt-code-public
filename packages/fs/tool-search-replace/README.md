@@ -82,13 +82,13 @@ Parsing, exact/fuzzy matching, and application are pure in-memory transforms dec
 
 Read these pages when the package-level contract is not enough.
 
-- [Filesystem subsystem](../../../docs/subsystems/filesystem.md) — exhaustive provider contract, policy events, and error taxonomy.
+- Filesystem subsystem — exhaustive provider contract, policy events, and error taxonomy.
 - [dsh-fs](../fs/README.md) — the `ctx.fs` contract this tool consumes.
 - [tool-str-replace-editor](../tool-str-replace-editor/README.md) — the single-hunk `view`/`create`/`str_replace`/`insert` alternative this tool's mutation flow mirrors.
 - [tool-fs](../tool-fs/README.md) — the alternative `read`/`write`/`edit` tool suite.
 - [fs-observation-policy](../fs-observation-policy/README.md) — the policy plugin that guards mutations through the `fs/*` events.
 - [fs-sandbox](../fs-sandbox/README.md) — the sandbox-enforcing backend that fences mutations.
-- [Generated tool catalog](../../../docs/tool-catalog.md#deepseek-aidsh-tool-search-replace) — the exhaustive schema this package registers.
+- Generated tool catalog — the exhaustive schema this package registers.
 
 -----
 
@@ -99,7 +99,7 @@ Read these pages when the package-level contract is not enough.
 
 #### What the model sees
 
-The generated [`search_replace` schema](../../../docs/tool-catalog.md#deepseek-aidsh-tool-search-replace): a required absolute `path` string and a required `diff` string describing one or more concatenated SEARCH/REPLACE blocks.
+The generated `search_replace` schema: a required absolute `path` string and a required `diff` string describing one or more concatenated SEARCH/REPLACE blocks.
 
 #### Token effect
 

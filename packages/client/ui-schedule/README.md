@@ -73,7 +73,7 @@ No runtime invariant companion is published because the catalogs render Host-own
 ## Further Exploration
 
 - [Schedule](../../schedule/schedule/README.md) owns persistence, dispatch, and deletion semantics.
-- [Slots](../../../docs/subsystems/slots.md) documents injected hooks and panel contributions.
+- Slots documents injected hooks and panel contributions.
 
 <a id="model-experience"></a>
 ## Model Experience

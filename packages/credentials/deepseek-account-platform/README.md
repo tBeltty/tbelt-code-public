@@ -71,7 +71,7 @@ No runtime invariant companion is published: account presence reads the credenti
 <a id="further-exploration"></a>
 ## Further Exploration
 
-The [credentials subsystem](../../../docs/subsystems/credentials.md) owns storage APIs; the [architecture](../../../docs/architecture.md) explains application composition.
+The credentials subsystem owns storage APIs; the architecture explains application composition.
 
 The attemptTimeoutMs limit includes initialization, browser waiting, and exchange. Initialization does not extend its absolute deadline; the server TTL may only shorten the remaining time. Credential persistence admitted before expiry completes without cancellation.
 
@@ -93,7 +93,7 @@ No model request prefix changes.
 <a id="dev-note"></a>
 ### Dev Note
 
-The [desktop login decision](../../../.agents/notes/implemented/architecture/2026-09-14-deepseek-account-login.md) records cancellation and storage ownership.
+The desktop login decision records cancellation and storage ownership.
 
 The first profile read after sign-in uses the sanitized user returned by auth_exchange. A null or malformed user falls back to current; subsequent refreshes and Host restarts also query current. Failed current requests retain the latest successful profile for the same credential in Host memory; credential changes and disposal clear it. A ready current response whose stable account ID first becomes available or changes notifies watch subscribers, so identity consumers re-read getPlatformSession; refreshes that repeat the same ID stay silent. Exchange registers the submitted device information.
 

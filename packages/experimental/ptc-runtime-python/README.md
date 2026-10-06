@@ -87,10 +87,10 @@ Completion values and binding arguments cross as exact JSON: values serialize wi
 Read these when the runtime contract is not enough. They move from the seam definition to the design record and the companion backend.
 
 - [PTC runtime seam](../../ptc-runtime/ptc-runtime/README.md) — the abstract contract this backend implements.
-- [fd-3 protocol Agent Note](../../../.agents/notes/implemented/architecture/2026-07-31-ptc-runtime-python-fd3-protocol.md) — design rationale and wire contract.
-- [Settlement-fixes Agent Note](../../../.agents/notes/archived/bug-fix/2026-07-31-code-runtime-python-settlement-fixes.md) — settlement, metering, and containment fixes and their regression cases.
+- fd-3 protocol Agent Note — design rationale and wire contract.
+- Settlement-fixes Agent Note — settlement, metering, and containment fixes and their regression cases.
 - [Node process backend](../../ptc-runtime/ptc-runtime-node/README.md) — the released TypeScript sibling.
-- [PTC runtime subsystem reference](../../../docs/subsystems/ptc-runtime.md) — request/result vocabulary, bindings, and failure taxonomy.
+- PTC runtime subsystem reference — request/result vocabulary, bindings, and failure taxonomy.
 
 -----
 

@@ -93,7 +93,7 @@ Read these pages when the package-level contract is not enough. They move from t
 
 - [llm-replay](../llm-replay/README.md) — the keyless model fixture smoke compositions mount to run without a provider key.
 - [Agent package](../../core/agent/README.md) — the root agent `runFixtureTurn` drives.
-- [Testing policy](../../../docs/testing.md) — the keyless snapshot and smoke tiers.
+- Testing policy — the keyless snapshot and smoke tiers.
 - [Test-support group map](../README.md) — sibling harnesses and support packages.
 
 -----

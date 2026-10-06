@@ -45,7 +45,7 @@ The only required configuration is the guidance text the agent follows while pla
 |---|---|---|
 | `section` | required | Guidance rendered as the `plan:policy` prompt section while plan mode is active |
 
-The generated [configuration catalog](../../../docs/config-catalog.md#deepseek-aidsh-plan-mode) is the exhaustive source for every accepted field and its JSDoc.
+The generated configuration catalog is the exhaustive source for every accepted field and its JSDoc.
 
 <a id="model-and-human-interactions"></a>
 ### Entering and leaving plan mode
@@ -114,11 +114,11 @@ The review intent carries the originating tool-call id, so the Web client can re
 
 Read these pages when the package-level contract is not enough. They move from the subsystem semantics to the generated catalogs and the design decision.
 
-- [Plan mode subsystem reference](../../../docs/subsystems/plan.md) — how plan mode behaves, its configuration, and the exit tool's contract.
+- Plan mode subsystem reference — how plan mode behaves, its configuration, and the exit tool's contract.
 - [plan/ package map](../README.md) — the group and its single package.
-- [exit_plan_mode tool catalog entry](../../../docs/tool-catalog.md#deepseek-aidsh-plan-mode) — the exact schema the model receives.
-- [Generated configuration catalog](../../../docs/config-catalog.md#deepseek-aidsh-plan-mode) — every accepted config field and its meaning.
-- [Plan-specific collaboration state](../../../.agents/notes/implemented/simplification/2026-07-22-plan-specific-collaboration-state.md) — the design decision behind plan mode.
+- exit_plan_mode tool catalog entry — the exact schema the model receives.
+- Generated configuration catalog — every accepted config field and its meaning.
+- Plan-specific collaboration state — the design decision behind plan mode.
 
 -----
 
@@ -163,7 +163,7 @@ The user block is append-only conversation growth. Entering or leaving plan mode
 
 #### What the model sees
 
-The [`exit_plan_mode` schema](../../../docs/tool-catalog.md#deepseek-aidsh-plan-mode) remains available in both states; execution outside plan mode fails, while an approved in-mode review returns the canonical `{ approved: true }` value and renders the existing confirmation text. Rejection remains a failed call carrying review feedback; non-empty feedback is followed by the instruction to present the complete revised plan with `exit_plan_mode` and keep any chat reply to one line. A dismissed review is a failed call naming the user's takeover.
+The `exit_plan_mode` schema remains available in both states; execution outside plan mode fails, while an approved in-mode review returns the canonical `{ approved: true }` value and renders the existing confirmation text. Rejection remains a failed call carrying review feedback; non-empty feedback is followed by the instruction to present the complete revised plan with `exit_plan_mode` and keep any chat reply to one line. A dismissed review is a failed call naming the user's takeover.
 
 #### Token effect
 

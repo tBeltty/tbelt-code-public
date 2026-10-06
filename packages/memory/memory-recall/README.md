@@ -56,7 +56,7 @@ Mount this package alongside `ctx.memoryStorage`'s dependency chain, on any host
 <a id="further-exploration"></a>
 ## Further Exploration
 
-- [Memory subsystem](../../../docs/subsystems/memory.md) — the storage domain, Markdown artifacts, and both write paths this package reads from.
+- Memory subsystem — the storage domain, Markdown artifacts, and both write paths this package reads from.
 - [memory group map](../README.md) — the sibling group page and its package table.
 - [dsh-memory-storage](../memory-storage/README.md) — `listEntries`/`readIndex`, the read API this package calls.
 - [dsh-session-reference](../../context/session-reference/README.md) — the package whose `agent/pre-step` registration and framing this package mirrors.

@@ -29,8 +29,8 @@ Mount the plugin in a Cordis composition with the application identity; override
 - name: '@deepseek-ai/dsh-otel'
 - name: '@deepseek-ai/dsh-host-product-telemetry-otel'
   config:
-    endpoint: https://dsh-otel-collector.deepseeksvc.com/v1/logs
-    serviceName: deepseek-harness
+    endpoint: https://collector.example.com/v1/logs
+    serviceName: example-app
     serviceVersion: !!js process.env.DSH_APP_VERSION
     compression: gzip
     scheduledDelayMillis: 30000
@@ -38,7 +38,7 @@ Mount the plugin in a Cordis composition with the application identity; override
 
 | Field | Default | Meaning |
 |---|---|---|
-| `endpoint` | `https://dsh-otel-collector.deepseeksvc.com/v1/logs` | Full HTTP(S) logs URL |
+| `endpoint` | required | Full HTTP(S) logs URL |
 | `serviceName`, `serviceVersion` | required | Application identity on the OTel resource |
 | `channel` | `dsh_otel_report` | Collector `x-channel` header |
 | `compression` | SDK environment | `gzip` or `none`; omission honors OTel compression environment variables |
@@ -48,7 +48,7 @@ Mount the plugin in a Cordis composition with the application identity; override
 | `exportTimeoutMillis` | `20000` | Processor batch export deadline |
 | `shutdownTimeoutMillis` | `21000` | Drain deadline; expiry cancels pending exports and reports possible loss |
 
-The default endpoint routes explicitly submitted events to the production product collector. Test and custom deployments must override it. Only `x-channel` and SDK protocol headers reach the collector; ambient OTel headers and client certificates are not inherited.
+The endpoint has no default, and the shipped Desktop composition mounts this plugin disabled. Only `x-channel` and SDK protocol headers reach the collector; ambient OTel headers and client certificates are not inherited.
 
 The 30-second interval batches product events; the exporter has a 15-second retry window inside the processor’s 20-second batch deadline. The 21-second drain deadline covers SDK `forceFlush()` work that the processor deadline does not cover. Expiry cancels active HTTP requests and retry waits, then awaits transport cleanup before disposal completes. An unreachable collector can delay disposal for the full 21 seconds. A full 2,048-record queue requires four 512-record batches and may not drain before that deadline. Interactive compositions needing a shorter exit should override these budgets; neither configuration guarantees delivery.
 
@@ -75,9 +75,9 @@ The adapter injects `otel` and creates an independent ordinary-event channel thr
 <a id="further-exploration"></a>
 ## Further Exploration
 
-- [Product telemetry](../../../docs/subsystems/product-telemetry.md) — consumer types and service reference.
+- Product telemetry — consumer types and service reference.
 - [Session telemetry](../../session/session-telemetry-otel/README.md) — separate feedback-authorized Session reporting.
-- [Testing policy](../../../docs/testing.md) — Loader composition and network fixtures.
+- Testing policy — Loader composition and network fixtures.
 
 -----
 

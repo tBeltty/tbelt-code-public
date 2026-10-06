@@ -100,7 +100,7 @@ This section explains the design decisions behind the command; the observable be
 <a id="further-exploration"></a>
 ## Further Exploration
 
-- [Memory subsystem](../../../docs/subsystems/memory.md) — the storage domain, Markdown artifacts, and both write paths.
+- Memory subsystem — the storage domain, Markdown artifacts, and both write paths.
 - [memory group map](../README.md) — the sibling group page and its package table.
 - [dsh-memory-storage](../memory-storage/README.md) — the write API this command calls.
 - [dsh-tool-remember](../tool-remember/README.md) — the automatic write path, over the same write API.

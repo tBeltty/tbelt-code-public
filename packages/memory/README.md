@@ -34,7 +34,7 @@ The memory group gives an agent durable, typed recall across sessions: facts abo
 <a id="related-documentation"></a>
 ## Related documentation
 
-- [Memory subsystem reference](../../docs/subsystems/memory.md) — entry identity, categories, the durable record shape, and the storage domain.
+- Memory subsystem reference — entry identity, categories, the durable record shape, and the storage domain.
 
 -----
 

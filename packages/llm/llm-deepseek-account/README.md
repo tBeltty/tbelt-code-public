@@ -46,7 +46,7 @@ A failed request the shared transport classifies as `QUOTA` is rewritten to `ACC
 <a id="further-exploration"></a>
 ## Further Exploration
 
-[LLM streaming](../../../docs/subsystems/llm-streaming.md) · [Messages](../llm-deepseek/README.md)
+LLM streaming · [Messages](../llm-deepseek/README.md)
 
 <a id="model-experience"></a>
 ## Model Experience

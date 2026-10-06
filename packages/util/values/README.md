@@ -70,8 +70,8 @@ The JSON validator uses an explicit work stack and tracks only the active ancest
 ## Further Exploration
 
 - [Utility package map](../README.md) — adjacent stateless helpers.
-- [Session subsystem](../../../docs/subsystems/session.md) — durable events that require lossless JSON.
-- [Tools subsystem](../../../docs/subsystems/tools.md) — schema validation and canonical tool results built on `JsonValue`.
+- Session subsystem — durable events that require lossless JSON.
+- Tools subsystem — schema validation and canonical tool results built on `JsonValue`.
 
 -----
 

@@ -42,7 +42,7 @@ Each child receives only the immutable objective, its current round and cap, a s
 | `maxHandoffChars` | `16384` | Maximum serialized characters in one round report. |
 | `maxResultChars` | `16384` | Maximum characters in the complete successful parent result. |
 
-The generated [configuration catalog](../../../docs/config-catalog.md#deepseek-aidsh-tool-ralph) is the exhaustive source for every accepted field. The configured provider must exist, support structured output, and report `inheritsParentContext: false`; a call against a provider that violates this fails loudly before any round starts.
+The generated configuration catalog is the exhaustive source for every accepted field. The configured provider must exist, support structured output, and report `inheritsParentContext: false`; a call against a provider that violates this fails loudly before any round starts.
 
 -----
 
@@ -56,7 +56,7 @@ This section explains the fixed-script design and the validation and lifecycle m
 
 ### Design concept
 
-The loop is a deployment-owned fixed script: the model supplies data only and cannot alter the loop, provider route, schema, or handoff validation. The tool is an ordinary plugin over `ctx.workflowEngine` and `ctx.subagents` — no Ralph mode or fresh-agent loop is added to `agent-loop`, and the same-session goal domain stays independent. The [harness-level goal-based execution Agent Note](../../../.agents/notes/implemented/feature/2026-07-16-harness-level-loop.md) owns the policy and deferred work.
+The loop is a deployment-owned fixed script: the model supplies data only and cannot alter the loop, provider route, schema, or handoff validation. The tool is an ordinary plugin over `ctx.workflowEngine` and `ctx.subagents` — no Ralph mode or fresh-agent loop is added to `agent-loop`, and the same-session goal domain stays independent. The harness-level goal-based execution Agent Note owns the policy and deferred work.
 
 ### Fixed script and routing
 
@@ -90,12 +90,12 @@ The pending call is a `generic` card titled `ralph` with the immutable objective
 
 Read these pages when the tool-level contract is not enough. They move from the shared workflow model to the engine, the subagent seam, and the adjacent goal domain.
 
-- [Workflow subsystem](../../../docs/subsystems/workflow.md) — the seam contract behind the fixed loop.
+- Workflow subsystem — the seam contract behind the fixed loop.
 - [Workflow seam](../workflow/README.md) — the run and result vocabulary.
 - [PTC workflow engine](../workflow-ptc/README.md) — the engine that executes the fixed script.
 - [subagent seam](../../subagent/subagent/README.md) — the fresh-child provider contract.
 - [Goal group](../../goal/goal/README.md) — same-session goal tools for ordinary long-running objectives.
-- [Harness-level goal-based execution Agent Note](../../../.agents/notes/implemented/feature/2026-07-16-harness-level-loop.md) — the policy, provider requirements, and deferred work.
+- Harness-level goal-based execution Agent Note — the policy, provider requirements, and deferred work.
 
 -----
 
@@ -126,7 +126,7 @@ Prefix-stable while the plugin scope and guidance text are unchanged. Activation
 
 #### What the model sees
 
-The generated [`ralph` schema](../../../docs/tool-catalog.md#deepseek-aidsh-tool-ralph) exposes one required `objective` string and one optional `maxRounds` number. Provider choice, handoff size, report schema, workflow script, and orchestration behavior are deployment-owned and absent from the call schema.
+The generated `ralph` schema exposes one required `objective` string and one optional `maxRounds` number. Provider choice, handoff size, report schema, workflow script, and orchestration behavior are deployment-owned and absent from the call schema.
 
 #### Token effect
 

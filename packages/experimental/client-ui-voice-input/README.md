@@ -44,7 +44,7 @@ Native MediaRecorder captures audio and Web Audio converts it to the Host PCM fo
 <a id="further-exploration"></a>
 ## Further Exploration
 
-[Voice input subsystem](../../../docs/subsystems/voice-input.md)
+Voice input subsystem
 
 -----
 

@@ -45,7 +45,7 @@ Load the package with a default mode; the fail-safe default is `read-only`, and 
 | `mode` | `read-only` | The deployment default mode a session starts from, validated at load |
 | `workspaceRoot` | `process.cwd()` | Absolute fallback root for agentless calls or sessions without a cwd; relative values fail at load. Normal agent calls use the session's immutable cwd |
 
-The generated [configuration catalog](../../../docs/config-catalog.md#deepseek-aidsh-sandbox-policy) is the exhaustive source for every accepted field and its JSDoc.
+The generated configuration catalog is the exhaustive source for every accepted field and its JSDoc.
 
 ### Extra writable roots
 
@@ -98,9 +98,9 @@ The `sandbox:policy` contribution states the mode's capability-neutral file-effe
 
 Start with the subsystem reference for the shared vocabulary, then the seam contract and the cross-family decision.
 
-- [Process sandbox subsystem](../../../docs/subsystems/sandbox.md) — modes, per-call policy, and enforcement semantics.
+- Process sandbox subsystem — modes, per-call policy, and enforcement semantics.
 - [Sandbox seam package](../sandbox/README.md) — the confinement contract every enforcing capability implements.
-- [Cross-family file sandbox decision](../../../.agents/notes/implemented/feature/2026-07-14-cross-family-fs-sandbox.md) — why one shared policy home exists.
+- Cross-family file sandbox decision — why one shared policy home exists.
 
 -----
 

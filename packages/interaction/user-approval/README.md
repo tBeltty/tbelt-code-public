@@ -43,7 +43,7 @@ The effective policy is the one set for the session, falling back to the configu
 |---|---|---|
 | `policy` | `ask` | Default for sessions without an `approval/policy` override |
 
-The generated [configuration catalog](../../../docs/config-catalog.md#deepseek-aidsh-user-approval) is the exhaustive source for every accepted field and its JSDoc. `setPolicy(agent, policy)` switches a live agent and queues a "changed by the user" message for its next model step; `setApprovalPolicy(session, policy)` is the direct durable write path used by session initialization.
+The generated configuration catalog is the exhaustive source for every accepted field and its JSDoc. `setPolicy(agent, policy)` switches a live agent and queues a "changed by the user" message for its next model step; `setApprovalPolicy(session, policy)` is the direct durable write path used by session initialization.
 
 ### Requesting a decision
 
@@ -92,9 +92,9 @@ The system-prompt contribution `approval:policy` states the complete current mea
 
 Read these pages when the package-level contract is not enough. They move from the approval vocabulary to the consumers and the design rationale.
 
-- [Approval subsystem reference](../../../docs/subsystems/approval.md) — the shared request/outcome vocabulary and the `ctx.approval` Cordis surface.
-- [Approval seam Agent Note](../../../.agents/notes/implemented/feature/2026-07-06-approval-seam.md) — design rationale for the seam.
-- [Sandbox Agent Note](../../../.agents/notes/implemented/feature/2026-07-06-sandbox.md) — how the sandboxed bash tool consumes approvals for escalated retries.
+- Approval subsystem reference — the shared request/outcome vocabulary and the `ctx.approval` Cordis surface.
+- Approval seam Agent Note — design rationale for the seam.
+- Sandbox Agent Note — how the sandboxed bash tool consumes approvals for escalated retries.
 - [Interaction group map](../README.md) — adjacent permission preset and question packages.
 
 -----

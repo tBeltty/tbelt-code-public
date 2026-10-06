@@ -4,6 +4,23 @@ Notable changes to tBelt Code, newest first. The format follows [Keep a Changelo
 
 ## [Unreleased]
 
+## [0.2.0-rc.2.20261006] - 2026-10-06
+
+### Added
+
+- Native notifications when an agent finishes a turn or waits for your approval. They are skipped while the window is focused, and Settings > General has switches for them.
+- The computer stays awake while agents run. A General setting turns it off.
+- The session list has an attention filter with a count of sessions that wait for you or finished while you were away.
+- A worktree plugin creates, lists and removes git worktrees for sessions, so several agents can edit one repository in parallel. Settings are per project in `cordis.yml`.
+- Plugins can add writable folders to `workspace-write`, so a confined `git commit` works inside a linked worktree.
+- Bug and feedback issue forms for beta testers.
+
+### Changed
+
+- The site explains how to open the unsigned builds on each system and how updates work.
+- The README accepts issues and pull requests.
+- The app no longer ships with usage analytics or feedback upload turned on, and no collector address is built in. Nothing but model requests, your configured web search and update checks leaves your computer.
+
 ## [0.2.0-rc.2.20261004] - 2026-10-04
 
 ### Added
@@ -57,7 +74,8 @@ Notable changes to tBelt Code, newest first. The format follows [Keep a Changelo
 - Downloads no longer return an older installer.
 - A key that ran out of credit or hit its spending limit is reported as a quota problem instead of an invalid API key.
 
-[Unreleased]: https://github.com/tBeltty/tbelt-code-public/compare/v0.2.0-rc.2.20261004...HEAD
+[Unreleased]: https://github.com/tBeltty/tbelt-code-public/compare/v0.2.0-rc.2.20261006...HEAD
+[0.2.0-rc.2.20261006]: https://github.com/tBeltty/tbelt-code-public/releases/tag/v0.2.0-rc.2.20261006
 [0.2.0-rc.2.20261004]: https://github.com/tBeltty/tbelt-code-public/releases/tag/v0.2.0-rc.2.20261004
 [0.2.0-rc.2.20261003]: https://github.com/tBeltty/tbelt-code-public/releases/tag/v0.2.0-rc.2.20261003
 [0.2.0-rc.2.20261002]: https://github.com/tBeltty/tbelt-code-public/releases/tag/v0.2.0-rc.2.20261002

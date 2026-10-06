@@ -35,7 +35,7 @@ The plugin creates one agent per `sessionId` on first use. A registered model ad
 |---|---|---|
 | `maxTokensAsSuccess` | `false` | Report max-token turn/subagent termination as a successful SDK result |
 
-The profile composition owns each root agent's tools. `input`, `output`, and `exit` are runtime-only transport hooks for tests; production uses process stdio and `process.exit`. The generated [configuration catalog](../../../docs/config-catalog.md#deepseek-aidsh-sdk-jsonrpc-server) is the exhaustive source for every accepted field.
+The profile composition owns each root agent's tools. `input`, `output`, and `exit` are runtime-only transport hooks for tests; production uses process stdio and `process.exit`. The generated configuration catalog is the exhaustive source for every accepted field.
 
 ### stdout is the protocol
 
@@ -92,7 +92,7 @@ Read these pages when the plugin contract is not enough. They move from the wire
 - [TypeScript SDK client](../client/README.md) — the client that drives this plugin.
 - [SDK application bundle](../../bundle/sdk-app/README.md) — the `dsh --profile sdk` application that boots this plugin.
 - [Python SDK](../../../python/README.md) — the Python client that drives the same server.
-- [SDK runtime distribution decision](../../../.agents/notes/implemented/architecture/2026-07-10-single-file-executable-sdk-runtime-distribution.md) — why the packaged runtime serves a closed plugin tree.
+- SDK runtime distribution decision — why the packaged runtime serves a closed plugin tree.
 
 -----
 

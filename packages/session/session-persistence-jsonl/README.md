@@ -47,7 +47,7 @@ Choose this backend when consumers benefit from one artifact per session — nav
 
 Live-event write batching is not configuration: the batching window is the seam's internal scheduling policy inside each write handle.
 
-The generated [configuration catalog](../../../docs/config-catalog.md#deepseek-aidsh-session-persistence-jsonl) is the exhaustive source for every accepted field and its JSDoc.
+The generated configuration catalog is the exhaustive source for every accepted field and its JSDoc.
 
 ### On-disk layout
 
@@ -81,7 +81,7 @@ The current-generation scanner applies the current codec owner’s structural ad
 
 Historical body preparation completes the parent catalog through [V3→V4](../session-format-v3-to-v4/README.md). It finds candidate direct children from headers, reads each child's own descriptor through historical codecs, and retains compact evidence plus source revisions. It neither prepares child catalogs nor publishes child successors. Unreadable or unsupported headers, including corrupt Zstandard header frames, are omitted from discovery and `list()`. Direct access to a corrupt compressed header still rejects; header I/O and cancellation errors propagate. Child decoding and descriptor-field failures produce warnings naming the child path and retain header identity through `subagent/catalog` when the parent has no complete entry; healthy children and existing parent catalog entries remain available. Opening a damaged child still reports that child's error. Missing, unsupported, or multiple descriptors likewise produce unknown-mode membership without inventing a label. Published unknown entries remain browsable; child history reads retry the actual log and resolve its mode from a valid descriptor. Preparation rechecks membership and inspected source revisions before returning, reuse, and publication, including failed child reads so a repaired child invalidates stale preparation. Source drift retries a read open once and refuses a write open. Cancellation still aborts the operation. Current V4 opens bypass discovery and validate catalog fields, uniqueness, and current delivery ownership before exposing events.
 
-Historical `stat` and `list` revisions require metadata work proportional to the root’s Session count. Fresh body preparation scans all selected headers and decodes direct-child bodies; memo reuse still scans membership and checks revisions. Read-only access never publishes an upgrade, so cold processes and evicted preparations repeat that work. Current V4 body reads and revisions avoid the historical corpus scan. See the [measured costs and diagnostic command](../../../.agents/notes/implemented/architecture/2026-08-31-released-session-format-migrations.md#catalog-scan-measurements).
+Historical `stat` and `list` revisions require metadata work proportional to the root’s Session count. Fresh body preparation scans all selected headers and decodes direct-child bodies; memo reuse still scans membership and checks revisions. Read-only access never publishes an upgrade, so cold processes and evicted preparations repeat that work. Current V4 body reads and revisions avoid the historical corpus scan. See the measured costs and diagnostic command.
 
 -----
 
@@ -99,7 +99,7 @@ The backend owns its complete storage runtime (`src/storage.ts`): `JsonlSessionH
 
 ### Physical encoding
 
-The default artifact is a standard concatenation of independent [Zstandard frames](../../../.agents/notes/implemented/architecture/2026-07-19-zstandard-jsonl-session-logs.md): one checksummed frame containing only the header line, then one checksummed frame per durable append batch, using Node's built-in Zstandard API at its default compression level (no level knob). The current format writes one event per row; `sourceEventSeqs` uses a lossless storage representation in which consecutive runs of at least three sequence numbers become `[start, end]` pairs, any other list stays verbatim, and reading expands the exact in-memory array. Historical migration reuses one Zstandard decoder, passes parsed rows through stateful format stages, and streams current records through one compression context in about 1 MiB main-thread slices while retaining only final current events, bounded decoder state, and the required sequence-remap table. Listing reads and validates only the header frame. `compression: 'none'` keeps the same storage-form logical lines without frame compression. A root belongs to one encoding: startup discovery and targeted lookup reject generations with the other suffix; format migration preserves the configured encoding, while compression conversion, mixed-root fallback, and dual write remain unsupported. Frozen v0 and v1 codecs retain their packed-row decoders solely for historical generations.
+The default artifact is a standard concatenation of independent Zstandard frames: one checksummed frame containing only the header line, then one checksummed frame per durable append batch, using Node's built-in Zstandard API at its default compression level (no level knob). The current format writes one event per row; `sourceEventSeqs` uses a lossless storage representation in which consecutive runs of at least three sequence numbers become `[start, end]` pairs, any other list stays verbatim, and reading expands the exact in-memory array. Historical migration reuses one Zstandard decoder, passes parsed rows through stateful format stages, and streams current records through one compression context in about 1 MiB main-thread slices while retaining only final current events, bounded decoder state, and the required sequence-remap table. Listing reads and validates only the header frame. `compression: 'none'` keeps the same storage-form logical lines without frame compression. A root belongs to one encoding: startup discovery and targeted lookup reject generations with the other suffix; format migration preserves the configured encoding, while compression conversion, mixed-root fallback, and dual write remain unsupported. Frozen v0 and v1 codecs retain their packed-row decoders solely for historical generations.
 
 ### Source map
 
@@ -123,11 +123,11 @@ The default artifact is a standard concatenation of independent [Zstandard frame
 
 Read these pages when the package-level contract is not enough. They move from the shared persistence model to the sibling backend and the physical-format decisions.
 
-- [Session persistence subsystem](../../../docs/subsystems/persistence.md) — backend-neutral service semantics and provider relationships.
+- Session persistence subsystem — backend-neutral service semantics and provider relationships.
 - [Session persistence seam](../session-persistence/README.md) — the service contract this backend implements.
-- [Project-session directory decision](../../../.agents/notes/implemented/architecture/2026-07-24-project-session-directories.md) — the layout tradeoff behind project and session directories.
-- [Zstandard JSONL session logs](../../../.agents/notes/implemented/architecture/2026-07-19-zstandard-jsonl-session-logs.md) — the checksummed-frame encoding rationale.
-- [Released Session format migrations](../../../.agents/notes/implemented/architecture/2026-08-31-released-session-format-migrations.md) — immutable generations, adjacent migration edges, and publication rules.
+- Project-session directory decision — the layout tradeoff behind project and session directories.
+- Zstandard JSONL session logs — the checksummed-frame encoding rationale.
+- Released Session format migrations — immutable generations, adjacent migration edges, and publication rules.
 
 -----
 

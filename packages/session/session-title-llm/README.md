@@ -82,7 +82,7 @@ A generation validates the config once at registration; each revision frames the
 Read these pages when the generation policy is not enough. They move from the service it plugs into to the provider plugins that consume it.
 
 - [Session title service](../session-title/README.md) — the title service, fallback behavior, and provider registration contract.
-- [Session title subsystem](../../../docs/subsystems/session-title.md) — durable title state and the auxiliary request record.
+- Session title subsystem — durable title state and the auxiliary request record.
 - [First-message title provider](../session-title-first-prompt-llm/README.md) — titles from the first eligible human message.
 - [All-messages title provider](../session-title-all-prompts-llm/README.md) — titles from every eligible human message.
 - [Session package map](../README.md) — adjacent persistence, projection, title, and telemetry packages.

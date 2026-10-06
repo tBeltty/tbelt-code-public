@@ -7,7 +7,7 @@ kind: "package-group"
 
 ## Summary
 
-The `client/` group provides the browser experience for the dsh web GUI, including conversation, navigation, settings, approvals, file access, and other interactive features. Choose packages from this family when adding browser-visible behavior; use [`host/`](../host/README.md) for server-side page delivery and host integration. Packages cover both the shared browser foundation and focused UI features, while each child README owns its configuration and behavior. Authoring rules live in [AGENTS.md](AGENTS.md), and the related documentation below explains cross-package composition.
+The `client/` group provides the browser experience for the dsh web GUI, including conversation, navigation, settings, approvals, file access, and other interactive features. Choose packages from this family when adding browser-visible behavior; use [`host/`](../host/README.md) for server-side page delivery and host integration. Packages cover both the shared browser foundation and focused UI features, while each child README owns its configuration and behavior. Authoring rules live in AGENTS.md, and the related documentation below explains cross-package composition.
 
 ## Table of Contents
 
@@ -93,9 +93,9 @@ The kernel packages boot and serve the page; the UI feature packages present it.
 
 Start with the subsystem reference and the two notes that own the cross-package composition decisions, then the host half that serves this page.
 
-- [Client modules subsystem](../../docs/subsystems/client-modules.md) — the web plugin table: `dsh.client` declarations, the boot graph wire, and the bundle route.
-- [Slot system standard](../../.agents/notes/implemented/architecture/2026-07-22-slot-type-chain-implementation.md) — the definitive slot model: registration, props shares, and stores.
-- [Web client architecture note](../../.agents/notes/implemented/architecture/2026-07-19-gui-web-client-architecture.md) — the loading chain, object layer, and client services.
+- Client modules subsystem — the web plugin table: `dsh.client` declarations, the boot graph wire, and the bundle route.
+- Slot system standard — the definitive slot model: registration, props shares, and stores.
+- Web client architecture note — the loading chain, object layer, and client services.
 - [Host group map](../host/README.md) — the host half that serves this browser half.
 
 <a id="dev-note"></a>

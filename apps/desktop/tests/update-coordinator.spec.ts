@@ -49,7 +49,10 @@ afterEach(() => { for (const item of coordinators.splice(0)) item.dispose() })
 
 function fixture() {
   const events = new EventEmitter()
-  const checkForUpdates = vi.fn(async () => ({
+  const checkForUpdates = vi.fn(async (): Promise<{
+    isUpdateAvailable: boolean
+    updateInfo: { version: string; releaseNotes?: string; releaseName?: string }
+  }> => ({
     isUpdateAvailable: true,
     updateInfo: { version: '1.1.0-rc.2' },
   }))

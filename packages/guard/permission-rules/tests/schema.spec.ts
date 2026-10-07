@@ -95,6 +95,13 @@ describe('validateRuleTable: bad glob is rejected at validation time', () => {
     expect(() => { validateRuleTable(rules) }).toThrow(/match\.tool/)
   })
 
+  it('rejects an unbalanced bracket group in match.agent', () => {
+    const rules: PermissionRule[] = [
+      { priority: 0, match: { tool: 'bash', agent: 'review[' }, outcome: 'deny' },
+    ]
+    expect(() => { validateRuleTable(rules) }).toThrow(/match\.agent/)
+  })
+
   it('rejects an unbalanced brace group in match.commandPattern', () => {
     const rules: PermissionRule[] = [
       { priority: 0, match: { tool: 'tool-bash', commandPattern: 'rm -rf {a,b' }, outcome: 'deny' },

@@ -19,10 +19,15 @@
       "default": "./lib/index.js"
     },
     "./src/*": "./src/*",
-    "./package.json": "./package.json"
+    "./package.json": "./package.json",
+    "./markdown": {
+      "types": "./lib/types/markdown.d.ts",
+      "default": "./lib/markdown.js"
+    }
   },
   "files": [
     "lib/index.js",
+    "lib/markdown.js",
     "skills",
     "lib/types/**/*.d.ts"
   ],
@@ -30,10 +35,12 @@
   "peerDependencies": {
     "@deepseek-ai/cordis": "workspace:~",
     "@deepseek-ai/cordis-plugin-loader": "workspace:~",
-    "@deepseek-ai/dsh-agent-preset-registry": "workspace:*"
+    "@deepseek-ai/dsh-agent-preset-registry": "workspace:*",
+    "@deepseek-ai/dsh-permission-rules": "workspace:*"
   },
   "dependencies": {
-    "@deepseek-ai/schemastery": "workspace:~"
+    "@deepseek-ai/schemastery": "workspace:~",
+    "js-yaml": "^4.2.0"
   },
   "devDependencies": {
     "@deepseek-ai/cordis": "workspace:~",
@@ -45,6 +52,6 @@
     "@deepseek-ai/dsh-skill-filesystem": "workspace:*",
     "@deepseek-ai/schemastery": "workspace:~",
     "@types/js-yaml": "^4.0.9",
-    "js-yaml": "^4.2.0"
+    "@deepseek-ai/dsh-permission-rules": "workspace:*"
   }
 }

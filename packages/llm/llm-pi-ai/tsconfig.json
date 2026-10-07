@@ -49,6 +49,12 @@
     },
     {
       "path": "../../settings/settings"
+    },
+    {
+      "path": "../../storage/storage"
+    },
+    {
+      "path": "../../storage/storage-domain"
     }
   ]
 }

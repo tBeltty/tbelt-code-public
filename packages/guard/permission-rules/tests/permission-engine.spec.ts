@@ -198,6 +198,23 @@ describe('permission engine — real composition', () => {
     expect(decisions[0]?.data).toMatchObject({ tool: 'bash', outcome: 'allow', matched: { kind: 'rule', priority: 0 } })
   })
 
+  it('a match.agent rule applies only to the agent whose preset the session projection reports', async () => {
+    const rule: PermissionRule = { priority: 0, match: { tool: 'bash', agent: 'reviewer', commandPattern: 'git push*' }, outcome: 'deny', description: 'reviewers never push' }
+    const ctx = await boot([rule])
+    const presets = new Map<string, string>([['reviewer-session', 'reviewer'], ['coder-session', 'coder']])
+    ctx.provide('sessionProjections', { stateOf: (session: { id: string }) => presets.get(session.id) } as never)
+
+    const reviewer = agentWithOpenTurn(ctx, 'reviewer-session')
+    const denied = await call(ctx, { command: 'git status && git push origin main' }, reviewer)
+    expect(denied.isError).toBe(true)
+    expect(ran(ctx)).toBe(false)
+
+    const coder = agentWithOpenTurn(ctx, 'coder-session')
+    const allowed = await call(ctx, { command: 'git push origin main' }, coder)
+    expect(allowed.isError).toBe(false)
+    expect(ran(ctx)).toBe(true)
+  })
+
   it('NEGATIVE CONTROL: a deny rule is genuinely unloosenable by an adversarial tools/pre-execute listener that force-allows', async () => {
     const ctx = await boot([DENY_RULE])
     // An adversarial (or merely buggy) listener that claims `allow` and never
@@ -214,5 +231,32 @@ describe('permission engine — real composition', () => {
     expect(ran(ctx)).toBe(false)
     if (!result.isError) throw new Error('expected denial')
     expect(result.error.message).toContain('wipes the filesystem root')
+  })
+})
+
+describe('contributed rules', () => {
+  const deny: PermissionRule = { priority: 0, match: { tool: 'bash', commandPattern: 'git push*' }, outcome: 'deny' }
+
+  it('enforces a contribution until its disposer runs, without listing it in get()', async () => {
+    const ctx = await boot([])
+    const agent = agentWithOpenTurn(ctx, 'contributed-session')
+    const dispose = ctx.permissionRules.contribute([deny])
+    expect(ctx.permissionRules.get()).toEqual([])
+    expect((await call(ctx, { command: 'git push' }, agent)).isError).toBe(true)
+    expect((await call(ctx, { command: 'git push' }, agent)).isError).toBe(true)
+    dispose()
+    expect((await call(ctx, { command: 'git push' }, agent)).isError).toBe(false)
+  })
+
+  it('evaluates contributions after configured rules', async () => {
+    const ctx = await boot([{ priority: 5, match: { tool: 'bash', commandPattern: 'git push*' }, outcome: 'allow' }])
+    const agent = agentWithOpenTurn(ctx, 'ordered-session')
+    ctx.permissionRules.contribute([deny])
+    expect((await call(ctx, { command: 'git push' }, agent)).isError).toBe(false)
+  })
+
+  it('rejects an invalid contribution', async () => {
+    const ctx = await boot([])
+    expect(() => ctx.permissionRules.contribute([deny, deny])).toThrow(/priority/)
   })
 })

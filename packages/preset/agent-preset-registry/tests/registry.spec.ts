@@ -365,3 +365,10 @@ it('reports every process-global service published by a preset', async () => {
   await declare(ctx, { id: 'leaks', plugins: [{ name: 'cordis:leaks' }] })
   expect((await ctx.agentPresets.resolve('leaks')).broken).toContain('presetAlpha, presetZulu')
 })
+
+it('reads the declaration a preset id currently has', async () => {
+  const ctx = await setup()
+  await declare(ctx, contribution('standard'))
+  expect(ctx.agentPresets.definitionOf('standard')).toEqual(contribution('standard'))
+  expect(ctx.agentPresets.definitionOf('missing')).toBeUndefined()
+})

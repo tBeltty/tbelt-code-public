@@ -30,6 +30,8 @@ import type { LlmDiscoveredModel, LlmModelDiscoveryOperation, LlmModelPricing } 
 import { attributionHeaders } from '@deepseek-ai/dsh-llm'
 import type { Api, Model } from '@earendil-works/pi-ai'
 import { catalogModels } from './catalog.ts'
+import { metadataPricing } from './metadata.ts'
+import type { ModelMetadata, ModelMetadataLookup } from './metadata.ts'
 
 /**
  * Protocols whose model listing this module can read. OpenAI protocols use
@@ -208,12 +210,17 @@ function listingUrl(baseURL: string, api: string): string {
  * is checked first so an honest server is turned away without transferring
  * anything; the accumulated total is what actually enforces the bound, because
  * a server that under-declares (or streams) tells us nothing up front.
+ * @param response - a 2xx reply whose body is read once.
+ * @param url - the requested URL, named in the refusal.
+ * @param maxBytes - largest body accepted; defaults to the listing ceiling.
+ * @returns the decoded body text.
+ * @throws LlmError coded `DISCOVERY_FAILED` when the body outgrows `maxBytes`.
  */
-async function readBounded(response: Response, url: string): Promise<string> {
+export async function readBounded(response: Response, url: string, maxBytes: number = MAX_RESPONSE_BYTES): Promise<string> {
   const oversized = (): LlmError =>
-    new LlmError(`${url} answered with more than ${MAX_RESPONSE_BYTES} bytes`, 'DISCOVERY_FAILED')
+    new LlmError(`${url} answered with more than ${maxBytes} bytes`, 'DISCOVERY_FAILED')
   const declared = Number(response.headers.get('content-length') ?? Number.NaN)
-  if (Number.isFinite(declared) && declared > MAX_RESPONSE_BYTES) {
+  if (Number.isFinite(declared) && declared > maxBytes) {
     await response.body?.cancel()
     throw oversized()
   }
@@ -227,7 +234,7 @@ async function readBounded(response: Response, url: string): Promise<string> {
       const { done, value } = await reader.read()
       if (done) break
       total += value.byteLength
-      if (total > MAX_RESPONSE_BYTES) throw oversized()
+      if (total > maxBytes) throw oversized()
       chunks.push(value)
     }
   } finally {
@@ -346,6 +353,8 @@ export interface StoredModelDiscoveryProfile {
  * @param storedProfile - Host-owned headers and lazy credential resolution for
  *   the named route. It is read only on the path that reaches the network; the
  *   credential is resolved only when the draft carries none.
+ * @param metadata - refreshed model metadata; it replaces the installed catalog's
+ *   capacities and prices for a catalog route and fills what a listing row omits.
  * @returns the advertised models in endpoint order.
  * @throws LlmError when the protocol has no readable listing, the endpoint
  *   refuses or fails the request, or the reply is not a model listing.
@@ -353,30 +362,34 @@ export interface StoredModelDiscoveryProfile {
 export async function discoverModels(
   request: LlmModelDiscoveryOperation,
   storedProfile?: () => StoredModelDiscoveryProfile | undefined,
+  metadata?: ModelMetadataLookup,
 ): Promise<readonly LlmDiscoveredModel[]> {
   // A catalog route already has its answer, and a better one: the installed
   // entries carry context windows, output caps, and list prices no listing
   // endpoint reports.
   if (request.provider !== undefined) {
-    const installed = catalogModels(request.provider)
+    const { provider } = request
+    const installed = catalogModels(provider)
     if (installed.size > 0) {
-      const described = (model: Model<Api>): LlmDiscoveredModel => ({
-        id: model.id,
-        name: model.name,
-        contextWindow: model.contextWindow,
-        maxTokens: model.maxTokens,
-        inputModalities: [...model.input],
-        ...model.cost.input === 0 && model.cost.output === 0
-          ? {}
+      const described = (model: Model<Api>): LlmDiscoveredModel => {
+        const refreshed = metadata?.lookup(provider, model.id)
+        const pricing = metadataPricing(refreshed) ?? (model.cost.input === 0 && model.cost.output === 0
+          ? undefined
           : {
-            pricing: {
-              input: model.cost.input,
-              output: model.cost.output,
-              ...model.cost.cacheRead > 0 ? { cacheRead: model.cost.cacheRead } : {},
-              ...model.cost.cacheWrite > 0 ? { cacheWrite: model.cost.cacheWrite } : {},
-            },
-          },
-      })
+            input: model.cost.input,
+            output: model.cost.output,
+            ...model.cost.cacheRead > 0 ? { cacheRead: model.cost.cacheRead } : {},
+            ...model.cost.cacheWrite > 0 ? { cacheWrite: model.cost.cacheWrite } : {},
+          })
+        return {
+          id: model.id,
+          name: model.name,
+          contextWindow: refreshed?.contextWindow ?? model.contextWindow,
+          maxTokens: refreshed?.maxTokens ?? model.maxTokens,
+          inputModalities: [...model.input],
+          ...pricing === undefined ? {} : { pricing },
+        }
+      }
       const fromCatalog = [...installed.values()].map(described)
       if (request.live !== true) return fromCatalog
       const route = routeEndpoint(installed.values())
@@ -391,7 +404,7 @@ export async function discoverModels(
       const listed = readListing(await interrogate({ ...request, baseURL, api }, storedProfile))
       return listed.map((model) => {
         const known = installed.get(model.id)
-        return known === undefined ? model : described(known)
+        return known === undefined ? fillFromMetadata(model, metadata?.lookup(provider, model.id)) : described(known)
       })
     }
   }
@@ -415,7 +428,23 @@ export async function discoverModels(
       'DISCOVERY_UNSUPPORTED',
     )
   }
-  return readListing(await interrogate({ ...request, baseURL: request.baseURL, api }, storedProfile))
+  const listed = readListing(await interrogate({ ...request, baseURL: request.baseURL, api }, storedProfile))
+  const { provider } = request
+  return provider === undefined ? listed : listed.map(model => fillFromMetadata(model, metadata?.lookup(provider, model.id)))
+}
+
+/** A listing row with the fields it omits taken from the refreshed directory. */
+function fillFromMetadata(model: LlmDiscoveredModel, refreshed: ModelMetadata | undefined): LlmDiscoveredModel {
+  if (refreshed === undefined) return model
+  const pricing = model.pricing ?? metadataPricing(refreshed)
+  const contextWindow = model.contextWindow ?? refreshed.contextWindow
+  const maxTokens = model.maxTokens ?? refreshed.maxTokens
+  return {
+    ...model,
+    ...contextWindow === undefined ? {} : { contextWindow },
+    ...maxTokens === undefined ? {} : { maxTokens },
+    ...pricing === undefined ? {} : { pricing },
+  }
 }
 
 /**

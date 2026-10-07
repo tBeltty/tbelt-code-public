@@ -58,7 +58,8 @@ for (const rule of ctx.permissionRules.get()) {
 |---|---|---|
 | `priority` | yes | Evaluation order; lower runs first. Must be unique across the table. |
 | `match.tool` | yes | Picomatch pattern (exact name or glob) matched against the tool's registry name. |
-| `match.commandPattern` | no | Picomatch pattern matched against a shell-executing tool's reconstructed command text. |
+| `match.commandPattern` | no | Picomatch pattern matched against a shell-executing tool's command text and against each command of a compound line. |
+| `match.agent` | no | Picomatch pattern matched against the calling agent's preset id; never matches an agent with no preset. |
 | `outcome` | yes | `deny`, `ask`, or `allow`. |
 | `risk` | no | `reversible` or `irreversible`; meaningful only when `outcome` is `ask`. Defaults to `irreversible`. |
 | `description` | no | Human-readable note for a configuration UI or audit log. |
@@ -81,6 +82,26 @@ An `ask` decision's risk tier controls whether a prior grant in the same session
 - **`reversible`** (an explicit, rule-table-only opt-in) asks through the same round-trip the first time a given call shape (tool name plus exact arguments) is seen in a session, then auto-approves a later identical call in that session without asking again.
 
 The auto-approval memory (`src/reversible-ask-cache.ts`) is written only from the code path reached when a decision's `riskTier` is `'reversible'` — an `irreversible` decision's call shape is never passed to it, so an irreversible action cannot be silently promoted to a remembered allow by anything short of a rule-table edit changing its `risk` field (an explicit, out-of-band settings-document change, not an in-session side effect of answering yes once). The memory is keyed by session and exact call shape: a grant for one command does not cover a different command matched by the same rule, and a grant in one session is invisible to another.
+
+### Compound command lines
+
+`commandPattern` is matched against the whole command text and against each command the shell parser finds in it (`a && b`, `a | b`, `a; b`), each rebuilt by joining its parsed arguments with single spaces. A `deny` or `ask` rule fires when the line or any one command matches, so `git push*` catches `git status && git push origin main`. An `allow` rule fires only when the line and every command match, so `git status*` does not approve `git status && rm -rf build`. A line that is not valid shell syntax is matched as whole text and no `allow` rule fires for it.
+
+### Per-agent rules
+
+`match.agent` limits a rule to agents whose preset id (the `agentPreset` session projection) matches. Without the projection service, or for an agent with no preset, a rule that names `agent` does not match.
+
+```yaml
+rules:
+  - priority: 10
+    match: { tool: bash, agent: reviewer, commandPattern: 'git push*' }
+    outcome: deny
+    description: reviewers never push
+```
+
+### Contributed rules
+
+`ctx.permissionRules.contribute(rules)` adds rules owned by another plugin, for example the `permission` block of an agent definition file. They are validated like the table (`priority` is unique within the contribution), evaluated after every configured rule in registration order, and removed by the returned disposer. `get()` lists configured rules only.
 
 ### Precedence
 
@@ -151,7 +172,7 @@ Append-only, and only ever after the model's own tool call already sits in the t
 
 <a id="known-limitations-and-deferred-work"></a>
 
-- **`match.commandPattern` matches raw command text, not `destructive-command-policy`'s AST-derived tokens.** The classifier itself (consulted separately, for any unmatched shell-executing call) is fully tokenized and shell-quoting/chain-splitting-aware; a `commandPattern` glob is not — it is matched with picomatch against the exact command string the model sent, so shell-quoting or chain-splitting differences that don't change the literal text are invisible to a `commandPattern` rule the same way they always were to a plain glob. This is a real, deliberate v1 gap: closing it would mean reconstructing canonical token text from the classifier's tokenizer before matching, a larger change than this task's wiring scope.
+- **`commandPattern` sees arguments joined by single spaces, not the original quoting.** Each command of a compound line is rebuilt from its parsed arguments, so `git  push   'origin'` is matched as `git push origin`. Command and process substitutions are matched as the placeholder `$(...)`, and shell variables as `${NAME}`.
 - **User-tier settings only — no project or managed/enterprise tier.** `@deepseek-ai/dsh-settings` resolves schema defaults, one composition `base`, and one user document section (see that package's own Known Limitations); this package adds nothing on top. A deployment cannot today declare a repo-local (`.dsh/permissions.yaml`-shaped) rule set that a user layer can tighten but not loosen, nor a managed/enterprise tier that no local edit can override — both are real, named headroom this package deliberately does not build for v1. Building the project tier honestly would mean: a second document source read at a fixed repo-relative path, merge semantics where a project-declared `deny` cannot be loosened by the user layer (the managed-tier-cannot-be-overridden principle at a smaller scope), and its own hot-reload watch — a materially larger storage and merge-policy surface than schema/validation, and a natural unit for a follow-up task rather than folded silently into this one.
 - **`ReversibleAskCache` entries are not cleared on session disposal.** The cache is keyed by `SessionId` and lives for the process lifetime of the owning plugin instance (`apply()`'s closure), not the session's own lifecycle — a long-running host process that creates and disposes many sessions accumulates one `Set<string>` per distinct session id seen, with no eviction. A real, deliberate v1 gap: bounding this needs a session-disposal hook this package does not currently listen for, a materially larger change than this task's risk-tiering scope.
 - **`match.commandPattern` is schema-valid on any tool, including a non-shell-executing one.** The schema itself has no registry of which tool names execute shell commands; a rule pairing `commandPattern` with a non-shell tool is accepted at validation time and simply never matches at enforcement time — `commandTextOf` (`src/engine.ts`) resolves command text only for the fixed shell-executing tool set, so `matchRule` treats such a rule as never applicable rather than rejecting it or matching on tool name alone.

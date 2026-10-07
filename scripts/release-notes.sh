@@ -7,6 +7,7 @@
 #        scripts/release-notes.sh cut [YYYY-MM-DD] move [Unreleased] into a new version
 #        scripts/release-notes.sh missing          list commits with no changelog line
 #        scripts/release-notes.sh features         check README.md lists the new features
+#        scripts/release-notes.sh features-pr [base]  same check on a branch before it merges
 #
 # `cut` names the version <root package.json version>.<YYYYMMDD of date>, adding
 # .2, .3, ... for further releases on the same day, writes the section and its
@@ -26,18 +27,36 @@
 # changed since the last `Release <version>` commit. Add the feature to the
 # README Features list, or put the line `README: none` in a commit message
 # since that release.
+#
+# `features-pr` applies the same rule to one branch: it fails when the commits
+# after <base> (default origin/main) add an "Added" entry under [Unreleased]
+# but neither change README.md nor carry `README: none` in a message. Running
+# it before the branch merges keeps `features` from failing at release time.
 set -euo pipefail
 
 root=$(git rev-parse --show-toplevel)
 changelog="$root/CHANGELOG.md"
 public_repo='https://github.com/tBeltty/tbelt-code-public'
 
+# Body of one version's section; reads the CHANGELOG file given as $2.
 section() {
   VERSION="$1" awk '
     /^## \[/ { if (found) exit; if (index($0, "## [" ENVIRON["VERSION"] "]") == 1) { found = 1; next } }
     /^\[[^]]+\]: / { if (found) exit }
     found { print }
-  ' "$changelog" | sed -e '/./,$!d'
+  ' "${2:-$changelog}" | sed -e '/./,$!d'
+}
+
+# "- ..." lines under [Unreleased] > "### Added" in the CHANGELOG file given as $1.
+added_entries() {
+  section Unreleased "$1" | awk '/^### /{on=($0=="### Added")} on && /^- /{print}'
+}
+
+# One-line failure for a missing README change: names the entries and the fix.
+features_failure() {
+  echo 'release-notes: README.md Features list not updated. Add these "Added" entries to the README.md Features list in a commit, or put the line "README: none" in a commit message if the README needs no change:' >&2
+  printf '%s\n' "$1" >&2
+  exit 1
 }
 
 # App code paths that can change what a user sees; tests and Markdown are excluded.
@@ -118,18 +137,28 @@ case "${1:-}" in
     [[ "$found" == 0 ]]
     ;;
   features)
-    added=$(section Unreleased | awk '/^### /{on=($0=="### Added")} on && /^- /{print}')
+    added=$(added_entries "$changelog")
     [[ -n "$added" ]] || exit 0
     last=$(git log -1 --format=%H --grep='^Release ' || true)
     range=${last:+$last..}HEAD
     [[ -n "$(git log --format=%H "$range" -- README.md)" ]] && exit 0
     git log --format=%B "$range" | grep -q -x 'README: none' && exit 0
-    echo 'release-notes: [Unreleased] has Added entries but README.md has not changed since the last release; update its Features list, or add "README: none" to a commit message' >&2
-    printf '%s\n' "$added" >&2
-    exit 1
+    features_failure "$added"
+    ;;
+  features-pr)
+    base=${2:-origin/main}
+    base_changelog=$(mktemp)
+    trap 'rm -f "$base_changelog"' EXIT
+    git show "$base:CHANGELOG.md" > "$base_changelog"
+    base_log=$(added_entries "$base_changelog")
+    new=$(comm -13 <(printf '%s\n' "$base_log" | sort) <(added_entries "$changelog" | sort))
+    [[ -n "$new" ]] || exit 0
+    [[ -n "$(git diff --name-only "$base...HEAD" -- README.md)" ]] && exit 0
+    git log --format=%B "$base..HEAD" | grep -q -x 'README: none' && exit 0
+    features_failure "$new"
     ;;
   *)
-    echo 'usage: release-notes.sh version | notes <version> | unreleased | cut [date] | missing | features' >&2
+    echo 'usage: release-notes.sh version | notes <version> | unreleased | cut [date] | missing | features | features-pr [base]' >&2
     exit 2
     ;;
 esac

@@ -20,6 +20,7 @@ import { credentialRef } from '@deepseek-ai/dsh-credentials'
 import type { CredentialRef } from '@deepseek-ai/dsh-credentials'
 import { MAX_TIMER_DELAY_MS } from '@deepseek-ai/dsh-timeout'
 import { resolveRetryPolicy, RetryPolicySchema } from '@deepseek-ai/dsh-llm'
+import type { ModelMetadataLookup } from './metadata.ts'
 import type { ResolvedRetryPolicy, RetryPolicyConfig } from '@deepseek-ai/dsh-llm'
 import { deepEqualJson } from '@deepseek-ai/dsh-util-values'
 import {
@@ -218,6 +219,23 @@ export interface ResolvedPiAiProviderProfile
   configuredMaxTokens: ReadonlyMap<string, number>
 }
 
+/**
+ * Optional refreshable model metadata. Off unless `enabled`; it names no
+ * default source, because a model directory is a third-party service the user
+ * must choose.
+ */
+export interface ModelMetadataConfig {
+  /** Fetch and apply the directory. Without it nothing is requested and nothing is cached. */
+  enabled?: boolean
+  /**
+   * HTTPS URL of a JSON directory in the models.dev `api.json` layout
+   * (see `metadata.ts`). Required when `enabled`; plain HTTP is accepted for loopback hosts only.
+   */
+  url?: string
+  /** Hours between refreshes while the app runs; a cached copy younger than this is not refetched on start. */
+  refreshIntervalHours?: number
+}
+
 /** Plugin configuration: the provider routes this instance owns. */
 export interface Config {
   /**
@@ -226,6 +244,8 @@ export interface Config {
    * and registers them the moment a settings section supplies profiles.
    */
   providers: Volatile<Record<string, PiAiProviderProfile>>
+  /** Optional refreshable model metadata; see {@link ModelMetadataConfig}. */
+  modelMetadata?: ModelMetadataConfig
 }
 
 /** Plain options accepted by the provider resolver. */
@@ -356,10 +376,52 @@ const profile = z.object({
   retryPolicy: RetryPolicySchema,
 })
 
+/** Default hours between metadata refreshes. */
+export const DEFAULT_METADATA_REFRESH_HOURS = 24
+
+const modelMetadataConfig: z<ModelMetadataConfig> = z.object({
+  enabled: z.boolean().default(false),
+  url: z.string(),
+  refreshIntervalHours: z.number().min(1).default(DEFAULT_METADATA_REFRESH_HOURS),
+})
+
 /** Runtime schema for {@link Config}. */
 export const Config = z.object({
   providers: z.dict(profile).default({}).volatile(),
+  modelMetadata: modelMetadataConfig.default({}),
 })
+
+/** The resolved source of refreshed model metadata. */
+export interface ModelMetadataSource {
+  /** Normalized directory URL. */
+  readonly url: string
+  /** Hours between refreshes. */
+  readonly intervalHours: number
+}
+
+/**
+ * Check a metadata configuration at load.
+ * @param config - the section as configured.
+ * @returns the source to fetch, or `undefined` while the section is disabled.
+ * @throws Error when it is enabled without a usable URL.
+ */
+export function resolveMetadataSource(config: ModelMetadataConfig | undefined): ModelMetadataSource | undefined {
+  if (config?.enabled !== true) return undefined
+  if (config.url === undefined || config.url.length === 0) {
+    throw new Error('llm-pi-ai: modelMetadata.enabled needs modelMetadata.url; no metadata source is built in')
+  }
+  let url: URL
+  try {
+    url = new URL(config.url)
+  } catch {
+    throw new Error(`llm-pi-ai: modelMetadata.url "${config.url}" is not a valid URL`)
+  }
+  const loopback = url.hostname === 'localhost' || url.hostname === '127.0.0.1' || url.hostname === '[::1]'
+  if (url.protocol !== 'https:' && !(url.protocol === 'http:' && loopback)) {
+    throw new Error('llm-pi-ai: modelMetadata.url must use https (http only for localhost)')
+  }
+  return { url: url.href, intervalHours: config.refreshIntervalHours ?? DEFAULT_METADATA_REFRESH_HOURS }
+}
 
 /**
  * Reject new or changed provider profiles that cannot be served. Unchanged
@@ -413,11 +475,13 @@ function assertValidHeaders(provider: string, headers: Readonly<Record<string, s
  * routes. An omitted dict resolves to the empty, dormant route set.
  * @param providers - configured provider profiles keyed by route.
  * @param validation - writes require a complete catalog; stored reads retain catalog diagnostics.
+ * @param metadata - refreshed model metadata applied beneath each entry and above the installed catalog.
  * @returns validated profiles in configuration order.
  */
 export function resolveProfiles(
   providers: Readonly<Record<string, PiAiProviderProfile>> | undefined,
   validation: 'strict' | 'deferred' = 'strict',
+  metadata?: ModelMetadataLookup,
 ): Map<string, ResolvedPiAiProviderProfile> {
   if (Array.isArray(providers)) {
     throw new Error('llm-pi-ai: providers is now a dict keyed by provider route, not an array of profiles')
@@ -479,6 +543,7 @@ export function resolveProfiles(
         ...source.modelOverrides === undefined ? {} : { modelOverrides: source.modelOverrides },
         ...source.compat === undefined ? {} : { compat: source.compat },
         defaultInput,
+        ...metadata === undefined ? {} : { metadata },
         defaultContextWindow: source.defaultContextWindow ?? DEFAULT_CONTEXT_WINDOW,
         defaultMaxTokens: source.defaultMaxTokens ?? DEFAULT_MAX_TOKENS,
       }, validation)

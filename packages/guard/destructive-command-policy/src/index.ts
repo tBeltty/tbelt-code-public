@@ -8,3 +8,5 @@
  */
 
 export * from './classify.ts'
+export { tokenizeShellLine } from './tokenize.ts'
+export type { ShellToken } from './tokenize.ts'

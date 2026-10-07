@@ -164,6 +164,12 @@ export class AgentPresetRegistry extends TypertRemoteService {
     return rows.sort((a, b) => (a.order ?? Infinity) - (b.order ?? Infinity) || a.id.localeCompare(b.id))
   }
 
+  /** Read the declaration a preset id currently has.
+   * @param id Preset identity.
+   * @returns The registered definition, or undefined when none supplies the id.
+   */
+  definitionOf(id: string): PresetDefinition | undefined { return this.definitions.get(id)?.config }
+
   /** Read the selection roster.
    * @returns Current presets, each marked when it is the default.
    */

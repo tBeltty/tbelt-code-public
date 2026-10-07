@@ -9,7 +9,8 @@ Download it from [tbelt.online](https://tbelt.online). It is a developer preview
 ## Features
 
 - Any provider: hosted APIs with your own key, or local models through Ollama or LM Studio.
-- Sandboxed commands with per-session access: Read Only, Workspace Write or Full. Destructive shell and git commands need confirmation.
+- Sandboxed commands with per-session access: Read Only, Workspace Write or Full. Destructive shell and git commands need confirmation, and permission rules can apply to a single agent preset.
+- Your own agents as Markdown files in `~/.dsh/presets`, with instructions and per-tool permissions in the front matter.
 - A checkpoint before every edit, restored with `/undo`.
 - Sessions in git worktrees, so several agents edit one repository in parallel.
 - Line comments in the change review, sent to the agent as notes.
@@ -20,7 +21,7 @@ Download it from [tbelt.online](https://tbelt.online). It is a developer preview
 - Point at an element in the preview and the agent knows exactly which one.
 - Run buttons on shell commands, executed in a terminal in the side panel.
 - Web search through Exa, Perplexity, Brave or Tavily, with your own key.
-- Model prices in the model picker, spend per chat and per month, and limits with `/budget`.
+- Model prices in the model picker, refreshable from a JSON directory you name, with spend per chat and per month and limits with `/budget`.
 - Native notifications and an attention filter for sessions that wait for you.
 - Automatic context compaction, including for local models with small context windows.
 - Memory per project or global with `/remember`, with secrets redacted.

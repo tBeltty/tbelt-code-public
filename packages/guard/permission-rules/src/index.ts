@@ -51,6 +51,8 @@
 import type { Context } from '@deepseek-ai/cordis'
 import type {} from '@deepseek-ai/dsh-settings'
 import type {} from '@deepseek-ai/dsh-user-approval'
+import type {} from '@deepseek-ai/dsh-session-projection'
+import type {} from '@deepseek-ai/dsh-agent-preset-registry'
 import type { PreToolDecision, ToolExecution } from '@deepseek-ai/dsh-tools'
 import { assertNever } from '@deepseek-ai/dsh-util-values'
 import { evaluateCall, reasonFor } from './engine.ts'
@@ -90,6 +92,22 @@ export interface PermissionRulesReader {
    * the composition entry while no settings provider is mounted.
    */
   get(): readonly PermissionRule[]
+  /**
+   * Add rules owned by another plugin, such as an agent definition file. They
+   * are evaluated after every configured rule, in registration order, each
+   * contribution in ascending `priority`; `get()` does not return them.
+   * @param rules - rules to add; validated like the configured table, with `priority` unique inside this contribution only.
+   * @returns a disposer that removes this contribution.
+   * @throws when the rules fail {@link validateRuleTable}.
+   */
+  contribute(rules: readonly PermissionRule[]): () => void
+}
+
+/** The calling agent's current preset id, read from the session projection when that service is mounted. */
+function presetOf(ctx: Context, exec: ToolExecution): string | undefined {
+  const session = exec.agent?.session
+  if (session === undefined) return undefined
+  return ctx.get('sessionProjections')?.stateOf(session, 'agentPreset') ?? undefined
 }
 
 /** Append the `permission/decision` audit event when a call was actually matched (never for an unmatched default allow). */
@@ -131,7 +149,29 @@ export function apply(ctx: Context, config: Config): void {
     }
     return current
   }
-  ctx.provide('permissionRules', { get: rules })
+  const contributions = new Set<readonly PermissionRule[]>()
+  let merged: { readonly base: readonly PermissionRule[]; readonly rules: readonly PermissionRule[] } | undefined
+  const effective = (): readonly PermissionRule[] => {
+    const base = rules()
+    if (contributions.size === 0) return base
+    if (merged?.base !== base) {
+      merged = { base, rules: [...base, ...[...contributions].flatMap(added => resolveRuleOrder(added))] }
+    }
+    return merged.rules
+  }
+  ctx.provide('permissionRules', {
+    get: rules,
+    contribute(added) {
+      validateRuleTable(added)
+      const owned = [...added]
+      contributions.add(owned)
+      merged = undefined
+      return () => {
+        contributions.delete(owned)
+        merged = undefined
+      }
+    },
+  })
   ctx.inject(['settings'], (child) => { child.effect(() => child.settings.configure({ auto: false }, ctx.fiber)) })
 
   // The unloosenable `deny` tier. Independently re-evaluates the live table
@@ -142,7 +182,7 @@ export function apply(ctx: Context, config: Config): void {
   // directly from the callback rather than deferred to a surrounding
   // listener.
   ctx.tools.guard((exec) => {
-    const decision = evaluateCall(rules(), exec.name, exec.arguments)
+    const decision = evaluateCall(effective(), exec.name, exec.arguments, presetOf(ctx, exec))
     if (decision.outcome !== 'deny') return undefined
     auditDecision(exec, decision.outcome, decision.matched)
     return reasonFor(decision, exec.name)
@@ -161,7 +201,7 @@ export function apply(ctx: Context, config: Config): void {
   // making this listener's own resolution irrelevant for `deny` — evaluating
   // it twice here would be dead logic, not defense in depth.
   ctx.on('tools/pre-execute', async (exec, next): Promise<PreToolDecision> => {
-    const decision = evaluateCall(rules(), exec.name, exec.arguments)
+    const decision = evaluateCall(effective(), exec.name, exec.arguments, presetOf(ctx, exec))
     if (decision.outcome === 'deny') return next()
     if (decision.outcome === 'allow') {
       auditDecision(exec, decision.outcome, decision.matched)

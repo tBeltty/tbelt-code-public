@@ -99,6 +99,24 @@ A provider pi-ai ships a login for can be signed into through the harness author
 
 A profile's `models` list replaces the route's installed catalog rather than extending it; each entry defaults its unset fields from the installed model of the same id, so narrowing a route to two models, correcting one capacity, or adding a model newer than the installed catalog are one-line edits. `modelOverrides` reshapes individual installed-catalog models without that cost — correct one model, keep the other thirty-seven — and is refused when set beside a `models` list, on a hand-declared route, or naming a model the catalog does not describe, because a silently unchanged model would be a typo someone hunts for later.
 
+### Refresh model metadata
+
+`modelMetadata` is off by default and names no source: with `enabled: true` and a `url`, the plugin downloads a JSON directory and uses its context windows, output caps, and list prices for models a route already serves. The URL is mandatory because a model directory is a third-party service the user picks; it must be HTTPS (plain HTTP only for `localhost`), and a missing or invalid URL fails the load. The document uses the models.dev `api.json` layout: provider ids at the top, each with a `models` map whose entries carry `name`, `limit.context`, `limit.output`, and `cost` (`input`, `output`, `cache_read`, `cache_write`, dollars per million tokens); a malformed entry is skipped. The directory is keyed by route key, so a route whose key matches a provider id in the document is refined and others are untouched, and it never adds a model or route.
+
+Per field the order is: the route's own `models` or `modelOverrides` entry (including its manual `pricing`), then the directory, then the installed pi-ai catalog. A model name always keeps the installed catalog's, and the directory names only a model the catalog does not describe. A zero input and output price in the directory reads as unknown and keeps the lower layer's. Discovery follows the same order for a catalog route, and fills only the fields a live listing row omits, so a price a provider publishes in its own listing stays ahead of the directory.
+
+The plugin refreshes on start when it has no cached copy or the copy is older than `refreshIntervalHours` (default 24), then on that interval while it runs. When `ctx.storageDomain` is mounted before this plugin, the last copy persists in the `llm_pi_ai_metadata` domain and loads on the next start, only if it came from the same URL; otherwise it lives in memory for the run. A failed refresh logs a warning and keeps the copy in force. Model requests never wait on a download, and a refreshed value reaches the next request that resolves the route.
+
+```yaml
+- id: llm
+  name: '@deepseek-ai/dsh-llm-pi-ai'
+  config:
+    modelMetadata:
+      enabled: true
+      url: https://models.dev/api.json
+      refreshIntervalHours: 24
+```
+
 ### Run with reasoning and wire compatibility
 
 `reasoningEfforts` declares a model's selectable thinking levels: each key is a level selectors offer, its value the spelling dispatch sends on the wire, so `max: ultra` renames a level for a gateway with its own vocabulary. Omitting the field keeps the installed catalog entry's capability; `false` declares a non-reasoning model. `compat` switches reshape the request for endpoints pi-ai cannot recognize — which role carries the system prompt, which field caps output, how a thinking level travels — configurable per route and per model. A model neither the entry nor the installed catalog sizes takes the route's `defaultContextWindow` and `defaultMaxTokens` fallbacks. Resolved model info carries a model's list price as `pricing`, in US dollars per million tokens: the entry's own `pricing` (`input`, `output`, and optional `cacheRead` and `cacheWrite`) when it names both input and output rates, otherwise the installed catalog's `cost`. A model whose resulting input and output prices are both zero, including every model neither the entry nor the installed catalog prices, publishes no price.
@@ -150,6 +168,8 @@ The adapter is built on immutable snapshots and per-operation resolution. Each o
 | [`src/stream.ts`](src/stream.ts) | pi-ai event conversion into harness `StreamChunk` values |
 | [`src/replay.ts`](src/replay.ts) | Versioned `ReplayEnvelope` storage and validation |
 | [`src/discovery.ts`](src/discovery.ts) | Endpoint interrogation for configuration surfaces |
+| [`src/metadata.ts`](src/metadata.ts) | Parsing, download, and in-memory store of the optional model directory |
+| [`src/metadata-refresh.ts`](src/metadata-refresh.ts) | Cache load, start-up refresh, and the refresh interval |
 
 ### Registration and directory
 
@@ -221,6 +241,7 @@ These limits define where the adapter stops and future work begins. They are cur
 - **Reset restores inherited configuration** — resetting a route supplied by a lower profile layer restores that route.
 - **Complete Config replacement can remove inherited dictionary entries** — a field reset instead restores its inherited value.
 - **`headers` can carry a credential the redactor never sees** — profile resolution rejects names and values Fetch cannot represent, but the dict remains plain strings; store credentials as `apiKeyEnv` references.
+- **Model metadata is configured in `cordis.yml` only** — no settings page toggles `modelMetadata`, and a change needs a restart. The directory is not a catalog: it does not add models, and it is read from one URL.
 - **Discovery does not change configured models** — adopt discovery results explicitly into the route configuration.
 - **Anthropic discovery reads at most 1,000 models** — the request uses the API's maximum page size but does not traverse `has_more`; entries beyond the first page must be added by hand.
 - **One wire protocol per route** — a mixed-protocol catalog route cannot host a model of the other protocol; splitting the provider across two route keys is the workaround.

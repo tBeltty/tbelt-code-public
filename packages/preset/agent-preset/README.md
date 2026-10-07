@@ -49,13 +49,40 @@ The package also ships the `skills/` directory that creator mode mounts through 
 
 Edit `agent-experience` in [skills/agent-experience/SKILL.md](skills/agent-experience/SKILL.md). The repository discovery path, `.agents/skills/agent-experience/SKILL.md`, is a relative symbolic link to this file; the published package contains the regular file.
 
+<a id="agent-definition-files"></a>
+### Agent definition files
+
+`@deepseek-ai/dsh-agent-preset/markdown` registers one preset per `*.md` file in its `dirs`. The file name without `.md` is the preset id (lowercase letters, digits and hyphens). The bundled Web profile scans `~/.dsh/presets` and extends `standard`.
+
+```markdown
+---
+name: Reviewer
+description: Reads changes and reports problems
+extends: standard
+permission:
+  edit: deny
+  bash:
+    "*": allow
+    "git push*": deny
+---
+You review changes. Do not edit files.
+```
+
+| Front matter | Default | Meaning |
+|---|---|---|
+| `extends` | plugin `extends` | Preset whose plugins the agent starts from; it must be declared before the plugin loads |
+| `name`, `description`, `order` | unset | Roster fields |
+| `permission` | none | Tool names (globs) mapped to `allow`, `ask` or `deny`, or to command patterns with those outcomes; `*` as a pattern matches every call of the tool. Later entries win |
+
+A non-empty body replaces the prefix of the base preset’s persona row, or adds one. Unknown front matter keys, such as `model`, make the plugin skip the file with a warning naming it; sessions pick their own model. Permission entries become `permission-rules` rules limited to this preset. A directory that does not exist contributes no agents, and edits apply after a restart.
+
 <a id="understand-the-implementation"></a>
 ## Understand the implementation
 
 <details>
 <summary>Implementation internals — click to expand</summary>
 
-[index.ts](src/index.ts) registers a definition and returns its disposer to Cordis. The plugin’s group marker preserves child `!!js` expressions until their own plugins load. The [registry](../agent-preset-registry/README.md) owns revision retention and release.
+[markdown.ts](src/markdown.ts) parses agent files and composes their definitions. [index.ts](src/index.ts) registers a definition and returns its disposer to Cordis. The plugin’s group marker preserves child `!!js` expressions until their own plugins load. The [registry](../agent-preset-registry/README.md) owns revision retention and release.
 
 </details>
 

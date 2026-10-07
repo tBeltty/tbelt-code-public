@@ -46,8 +46,20 @@ export type RiskTier = typeof RISK_TIERS[number]
 export interface PermissionRuleMatch {
   /** Picomatch pattern matched against the tool's registry name. */
   tool: string
-  /** Picomatch pattern matched against a shell-executing tool's command text, when present. */
+  /**
+   * Picomatch pattern matched against a shell-executing tool's command text,
+   * when present. A `deny` or `ask` rule also fires when any single command
+   * of a compound line (`a && b`, `a | b`, `a; b`) matches, so
+   * `git push*` catches `git status && git push origin main`. An `allow`
+   * rule fires only when every command of the line matches.
+   */
   commandPattern?: string
+  /**
+   * Picomatch pattern matched against the calling agent's preset id, when
+   * present. A rule that names `agent` never matches a call from an agent
+   * with no preset.
+   */
+  agent?: string
 }
 
 /**
@@ -90,6 +102,7 @@ export interface Config {
 const MatchSchema: z<PermissionRuleMatch> = z.object({
   tool: z.string().required(),
   commandPattern: z.string(),
+  agent: z.string(),
 })
 
 const RuleSchema: z<PermissionRule> = z.object({
@@ -199,6 +212,12 @@ export function validateRuleTable(rules: readonly PermissionRule[]): void {
       const commandReason = validateGlobPattern(rule.match.commandPattern)
       if (commandReason !== undefined) {
         throw new Error(`permission-rules: rule[${index}].match.commandPattern ("${rule.match.commandPattern}") is not a valid pattern: ${commandReason}`)
+      }
+    }
+    if (rule.match.agent !== undefined) {
+      const agentReason = validateGlobPattern(rule.match.agent)
+      if (agentReason !== undefined) {
+        throw new Error(`permission-rules: rule[${index}].match.agent ("${rule.match.agent}") is not a valid pattern: ${agentReason}`)
       }
     }
   })

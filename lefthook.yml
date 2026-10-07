@@ -29,5 +29,10 @@ pre-commit:
 
 pre-push:
   jobs:
+    # A new "Added" changelog entry needs a README Features change in the same
+    # branch, or the release script refuses to publish. Cheap git-only check.
+    - name: changelog needs README
+      run: scripts/release-notes.sh features-pr origin/main
+
     - name: typecheck
       run: pnpm run typecheck

@@ -9,7 +9,7 @@
  */
 
 import picomatch from 'picomatch'
-import { isDestructiveCommand } from '@deepseek-ai/dsh-destructive-command-policy'
+import { isDestructiveCommand, tokenizeShellLine } from '@deepseek-ai/dsh-destructive-command-policy'
 import type { PermissionRule, RiskTier, RuleOutcome } from './schema.ts'
 import type { PermissionDecisionMatch } from './types.ts'
 
@@ -60,6 +60,33 @@ function forCommandGlob(value: string): string {
 }
 
 /**
+ * Split a shell line into one text per command invocation (`a && b | c`
+ * yields `a`, `b`, `c`), each rebuilt by joining the command's parsed
+ * arguments with single spaces.
+ * @param command - the shell command text.
+ * @returns the per-command texts, or `undefined` when the line is not valid shell syntax or holds no command.
+ */
+export function commandSegments(command: string): string[] | undefined {
+  let commands: ReturnType<typeof tokenizeShellLine>
+  try {
+    commands = tokenizeShellLine(command)
+  } catch (_syntaxError: unknown) {
+    // Invalid POSIX syntax: callers fall back to whole-line matching and `allow` rules do not fire.
+    return undefined
+  }
+  if (commands.length === 0) return undefined
+  return commands.map(tokens => tokens.map(token => token.text).join(' '))
+}
+
+/** Whether `pattern` matches `command` itself or, per `rule.outcome`, its individual commands (see `PermissionRuleMatch`). */
+function commandMatches(rule: PermissionRule, pattern: string, command: string): boolean {
+  const matches = (text: string): boolean => picomatch.isMatch(forCommandGlob(text), forCommandGlob(pattern))
+  const segments = commandSegments(command)
+  if (rule.outcome === 'allow') return segments !== undefined && matches(command) && segments.every(matches)
+  return matches(command) || (segments?.some(matches) ?? false)
+}
+
+/**
  * Find the first rule (ascending `priority`, the table's resolved evaluation
  * order) whose match applies to this call. `match.tool` is a picomatch
  * pattern against the registry tool name (ordinary picomatch semantics — a
@@ -70,21 +97,28 @@ function forCommandGlob(value: string): string {
  * shell-executing call whose command text cannot be resolved: there is
  * nothing to validate the pattern against, and matching on the tool name
  * alone would silently widen the rule past its configured scope.
+ * `match.agent`, when present, is matched against the caller's preset id and
+ * never matches a call with no preset.
  * @param rules - the resolved table, already sorted ascending by `priority`.
  * @param toolName - the registry tool name of the pending call.
  * @param command - the call's command text, when resolvable.
+ * @param agentPreset - the calling agent's preset id, when it has one.
  * @returns the first matching rule, or `undefined`.
  */
 export function matchRule(
   rules: readonly PermissionRule[],
   toolName: string,
   command: string | undefined,
+  agentPreset?: string,
 ): PermissionRule | undefined {
   return rules.find((rule) => {
     if (!picomatch.isMatch(toolName, rule.match.tool)) return false
+    if (rule.match.agent !== undefined) {
+      if (agentPreset === undefined || !picomatch.isMatch(agentPreset, rule.match.agent)) return false
+    }
     if (rule.match.commandPattern === undefined) return true
     if (command === undefined) return false
-    return picomatch.isMatch(forCommandGlob(command), forCommandGlob(rule.match.commandPattern))
+    return commandMatches(rule, rule.match.commandPattern, command)
   })
 }
 
@@ -131,15 +165,17 @@ export interface PermissionDecision {
  * @param rules - the resolved rule table (ascending `priority`).
  * @param toolName - the registry tool name of the pending call.
  * @param args - the pending call's raw arguments.
+ * @param agentPreset - the calling agent's preset id, when it has one.
  * @returns the decision and the fact that produced it.
  */
 export function evaluateCall(
   rules: readonly PermissionRule[],
   toolName: string,
   args: unknown,
+  agentPreset?: string,
 ): PermissionDecision {
   const command = commandTextOf(toolName, args)
-  const rule = matchRule(rules, toolName, command)
+  const rule = matchRule(rules, toolName, command, agentPreset)
   if (rule !== undefined) {
     return {
       outcome: rule.outcome,

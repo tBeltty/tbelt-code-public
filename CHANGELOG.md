@@ -4,6 +4,18 @@ Notable changes to tBelt Code, newest first. The format follows [Keep a Changelo
 
 ## [Unreleased]
 
+## [0.2.0-rc.2.20261007] - 2026-10-07
+
+### Added
+
+- Define an agent in a Markdown file. Each `.md` file in `~/.dsh/presets` becomes an agent preset: the front matter sets its name, description, base preset and permissions, and the text becomes its instructions.
+- Model context windows, output limits and prices can be refreshed from a JSON directory you name in `cordis.yml` (`modelMetadata`). It is off by default, has no built-in source, and never overrides a price you set by hand.
+- Permission rules can be limited to one agent preset, so a reviewer can be kept from running `git push` while other agents run it freely.
+
+### Changed
+
+- A permission rule for a command such as `git push*` now also catches it inside a longer line like `git status && git push origin main`. An allow rule only applies when every command in the line matches.
+
 ## [0.2.0-rc.2.20261006.5] - 2026-10-06
 
 ### Changed
@@ -114,7 +126,8 @@ Notable changes to tBelt Code, newest first. The format follows [Keep a Changelo
 - Downloads no longer return an older installer.
 - A key that ran out of credit or hit its spending limit is reported as a quota problem instead of an invalid API key.
 
-[Unreleased]: https://github.com/tBeltty/tbelt-code-public/compare/v0.2.0-rc.2.20261006.5...HEAD
+[Unreleased]: https://github.com/tBeltty/tbelt-code-public/compare/v0.2.0-rc.2.20261007...HEAD
+[0.2.0-rc.2.20261007]: https://github.com/tBeltty/tbelt-code-public/releases/tag/v0.2.0-rc.2.20261007
 [0.2.0-rc.2.20261006.5]: https://github.com/tBeltty/tbelt-code-public/releases/tag/v0.2.0-rc.2.20261006.5
 [0.2.0-rc.2.20261006.4]: https://github.com/tBeltty/tbelt-code-public/releases/tag/v0.2.0-rc.2.20261006.4
 [0.2.0-rc.2.20261006.3]: https://github.com/tBeltty/tbelt-code-public/releases/tag/v0.2.0-rc.2.20261006.3

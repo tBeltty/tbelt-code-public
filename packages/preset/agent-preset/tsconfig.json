@@ -19,6 +19,9 @@
     },
     {
       "path": "../agent-preset-registry"
+    },
+    {
+      "path": "../../guard/permission-rules"
     }
   ]
 }

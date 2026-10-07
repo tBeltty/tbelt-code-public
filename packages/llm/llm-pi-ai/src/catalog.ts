@@ -15,6 +15,8 @@
 import { builtinProviders, getBuiltinModels, getBuiltinProviders } from '@earendil-works/pi-ai/providers/all'
 import type { BuiltinProvider } from '@earendil-works/pi-ai/providers/all'
 import type { LlmModelPricing } from '@deepseek-ai/dsh-llm'
+import { metadataPricing } from './metadata.ts'
+import type { ModelMetadataLookup } from './metadata.ts'
 import type {
   AnthropicMessagesCompat,
   Api,
@@ -668,6 +670,11 @@ export interface RouteCatalogRequest {
   modelOverrides?: Readonly<Record<string, PiAiModelOverride>>
   /** Route-level wire-compatibility switches, landing on each model whose protocol declares them; entries override per field. */
   compat?: PiAiCompatProfile
+  /**
+   * Refreshed model metadata. Per field it outranks the installed catalog and
+   * yields to the configured entry; it never adds a model.
+   */
+  metadata?: ModelMetadataLookup
   /** Context capacity for a model neither the entry nor the catalog sizes. */
   defaultContextWindow: number
   /** Output capability for a model neither the entry nor the catalog sizes. */
@@ -934,11 +941,13 @@ export function resolveRouteModels(
     // discloses nothing but ids still yields a serviceable route. The fallback
     // is a guess by construction, which is why it is a configurable route field
     // rather than a constant buried here.
-    const contextWindow = entry.contextWindow ?? base?.contextWindow ?? request.defaultContextWindow
+    const refreshed = request.metadata?.lookup(provider, entry.id)
+    const contextWindow = entry.contextWindow ?? refreshed?.contextWindow ?? base?.contextWindow
+      ?? request.defaultContextWindow
     if (!Number.isInteger(contextWindow) || contextWindow <= 0) {
       invalid(provider, `model "${entry.id}" contextWindow must be a positive integer`)
     }
-    const maxTokens = entry.maxTokens ?? base?.maxTokens ?? request.defaultMaxTokens
+    const maxTokens = entry.maxTokens ?? refreshed?.maxTokens ?? base?.maxTokens ?? request.defaultMaxTokens
     if (!Number.isInteger(maxTokens) || maxTokens <= 0) {
       invalid(provider, `model "${entry.id}" maxTokens must be a positive integer`)
     }
@@ -953,12 +962,12 @@ export function resolveRouteModels(
       // never enumerate.
       ...base,
       id: entry.id,
-      name: entry.name ?? base?.name ?? entry.id,
+      name: entry.name ?? base?.name ?? refreshed?.name ?? entry.id,
       api,
       provider,
       baseUrl,
       input: declaredInput(entry.input) ?? base?.input ?? [...request.defaultInput],
-      cost: modelCost(entry.pricing) ?? base?.cost ?? NO_COST,
+      cost: modelCost(entry.pricing) ?? modelCost(metadataPricing(refreshed)) ?? base?.cost ?? NO_COST,
       contextWindow,
       maxTokens,
       ...resolveModelReasoning(provider, entry, base),

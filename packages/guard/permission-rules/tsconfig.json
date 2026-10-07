@@ -28,6 +28,12 @@
       "path": "../../core/session"
     },
     {
+      "path": "../../session/session-projection"
+    },
+    {
+      "path": "../../preset/agent-preset-registry"
+    },
+    {
       "path": "../destructive-command-policy"
     }
   ]

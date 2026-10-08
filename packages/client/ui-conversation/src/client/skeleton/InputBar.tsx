@@ -28,13 +28,15 @@ import type {} from '@deepseek-ai/dsh-goal/client'
 // wire types: apiproxy's sessions contract declares it, and client-runtime's
 // api-remotes import already places it in every client program.
 import type { Translate } from '@deepseek-ai/dsh-client-ui-slots'
-import type { ComposerBarProps } from '../contract/slots.ts'
+import type { ComposerAttachment, ComposerBarProps } from '../contract/slots.ts'
+import type { DraftAttachmentId } from '../contract/input.ts'
 import { DraftEditor } from '../input/editor/DraftEditor.tsx'
 import {
   focusDraftEditor, installDraftFilePicker, installDraftKeymap, installDraftWheel,
   keepDraftFocus, revealDraftSelection,
 } from '../input/editor/view-binding.ts'
 import { resolveSubmitMode } from '../input/submission-policy.ts'
+import { pastedTextOf, pastedTextPreview } from '../input/pasted-text.ts'
 import { attachmentErrorText, imageSizeText } from '../image-labels.ts'
 import { ContextMeter } from './ContextMeter.tsx'
 import { observeControlRow } from './control-row-layout.ts'
@@ -42,11 +44,22 @@ import css from './InputBar.module.css'
 
 export type InputBarProps = ComposerBarProps
 
+/**
+ * Look up the text behind a pasted-text file attachment.
+ * @param attachments - draft attachments in input order.
+ * @param id - attachment to look up.
+ * @returns the pasted text, or `undefined` when the attachment is absent or not a pasted file.
+ */
+function pastedTextOfAttachment(attachments: readonly ComposerAttachment[], id: DraftAttachmentId): string | undefined {
+  const attachment = attachments.find(candidate => candidate.id === id)
+  return attachment?.kind === 'file' ? pastedTextOf(attachment.file) : undefined
+}
+
 export const InputBar = memo(function InputBar({
   useSession, useInput, inputActions, keyboard, addFiles, removeAttachment, resolveDraftAttachments,
   retryFileUpload,
   toggleCommandMenu, stop, t,
-  renderSlot, useBusyEnter, useFileUploads, useNotices, useLexicon, useMenuLauncher, useStopShortcut,
+  renderSlot, useBusyEnter, usePasteToFileChars, useFileUploads, useNotices, useLexicon, useMenuLauncher, useStopShortcut,
   useProjection, sessionId, variant, disabled: inert = false, blocked,
   workspacePickerOpen = false, onRequestWorkspace,
   placeholder, accessory,
@@ -54,6 +67,7 @@ export const InputBar = memo(function InputBar({
   const input = useInput(s => s)
   const notice = useNotices(s => s)
   const busyEnter = useBusyEnter(s => s)
+  const pasteToFileChars = usePasteToFileChars(s => s)
   const stopKeys = useStopShortcut(keys => keys)
   void useLexicon // hook seat stays bound by the inject compartment; text-ref decoration rides the shell's editor transforms
   const commandMenuOpen = useMenuLauncher(source => source === 'command')
@@ -202,34 +216,40 @@ export const InputBar = memo(function InputBar({
     return installDraftWheel(scrollRef)
   }, [])
 
-  // Intake pre-check: an addition that would break a projected image limit is
-  // refused as a whole batch, announced immediately, and never enters the
-  // rail. Only the image subset is limit-checked: generic files carry no
-  // client-side size or count limit and upload as soon as they are picked.
-  // The host enforces the same image limits at submit for callers that bypass
-  // this composer.
+  // Intake pre-check: an addition that would break a projected image count or
+  // total limit is refused as a whole batch, announced immediately, and never
+  // enters the rail. An image above the per-image limit is not refused: it
+  // joins the batch as a generic file, which stages by upload and reaches the
+  // agent as a path, and a toast says so. Generic files carry no client-side
+  // size or count limit. The host enforces the image limits at submit for
+  // callers that bypass this composer.
   const intakeFiles = useCallback((files: readonly File[], directories?: ReadonlySet<File>): void => {
     if (subagent !== null || addFiles === undefined || files.length === 0) return
+    const asFile = new Set<File>()
     const rejected = ((): string | null => {
       if (imageLimits !== undefined) {
         const mediaTypes = imageLimits.mediaTypes as readonly string[]
-        const images = files.filter(file => mediaTypes.includes(file.type))
+        const images = files.filter(file => mediaTypes.includes(file.type) && !directories?.has(file))
+        for (const file of images) {
+          if (file.size > imageLimits.maxImageBytes) asFile.add(file)
+        }
+        const embedded = images.filter(file => !asFile.has(file))
         const imageAttachments = attachments.filter(attachment => attachment.kind === 'image')
-        if (imageAttachments.length + images.length > imageLimits.maxImagesPerMessage) {
+        if (imageAttachments.length + embedded.length > imageLimits.maxImagesPerMessage) {
           return t('image.tooMany', { count: imageLimits.maxImagesPerMessage })
         }
-        if (images.some(file => file.size > imageLimits.maxImageBytes)) {
-          return t('image.fileTooLarge', { size: imageSizeText(imageLimits.maxImageBytes) })
-        }
         const total = imageAttachments.reduce((sum, attachment) => sum + attachment.file.size, 0)
-          + images.reduce((sum, file) => sum + file.size, 0)
+          + embedded.reduce((sum, file) => sum + file.size, 0)
         if (total > imageLimits.maxMessageImageBytes) {
           return t('image.totalTooLarge', { size: imageSizeText(imageLimits.maxMessageImageBytes) })
         }
       }
-      return addFiles(files, directories)
+      return addFiles(files, directories, asFile)
     })()
     if (rejected !== null) showToast(rejected)
+    else if (asFile.size > 0 && imageLimits !== undefined) {
+      showToast(t('image.sentAsFile', { size: imageSizeText(imageLimits.maxImageBytes) }))
+    }
   }, [subagent, addFiles, attachments, imageLimits, showToast, t])
 
   const canAcceptDrop = subagent === null && !locked && !machineBusy && addFiles !== undefined
@@ -245,11 +265,11 @@ export const InputBar = memo(function InputBar({
   // The keymap handlers read live bar state through this ref so the editor
   // registration survives re-renders without re-arming per keystroke.
   const gate = useRef({
-    locked, machineBusy, canSteerQueue, running, steeringAvailable, busyEnter,
+    locked, machineBusy, canSteerQueue, running, steeringAvailable, busyEnter, pasteToFileChars,
     intakeFiles, uploadsPending, showToast, t, canAcceptDrop,
   })
   gate.current = {
-    locked, machineBusy, canSteerQueue, running, steeringAvailable, busyEnter,
+    locked, machineBusy, canSteerQueue, running, steeringAvailable, busyEnter, pasteToFileChars,
     intakeFiles, uploadsPending, showToast, t, canAcceptDrop,
   }
 
@@ -390,6 +410,16 @@ export const InputBar = memo(function InputBar({
           onRemoveAttachment: (id) => { removeAttachment?.(id) },
           uploads,
           onRetryFile: (id) => { retryFileUpload?.(id) },
+          pastedPreview: (id) => {
+            const text = pastedTextOfAttachment(attachments, id)
+            return text === undefined ? undefined : pastedTextPreview(text)
+          },
+          onReinsertPastedText: (id) => {
+            const text = pastedTextOfAttachment(attachments, id)
+            if (text === undefined) return
+            keyboard?.paste(text)
+            removeAttachment?.(id)
+          },
           dropLimits: imageLimits === undefined ? undefined : {
             count: imageLimits.maxImagesPerMessage,
             size: imageSizeText(imageLimits.maxImageBytes),

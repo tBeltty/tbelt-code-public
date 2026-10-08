@@ -72,6 +72,10 @@ export interface ComposerAttachmentsOwnerProps {
   uploads: DraftFileUploads
   /** Restart one failed file upload. */
   onRetryFile: (id: DraftAttachmentId) => void
+  /** Preview lines of a pasted-text attachment; `undefined` for any other attachment. */
+  pastedPreview: (id: DraftAttachmentId) => string | undefined
+  /** Put a pasted-text attachment back into the draft as text and remove the attachment. */
+  onReinsertPastedText: (id: DraftAttachmentId) => void
   /** Display-ready limits for the drop invitation. */
   dropLimits?: { readonly count: number; readonly size: string } | undefined
 }
@@ -383,7 +387,7 @@ export interface ComposerBarInjected {
    * instead of uploads; `directories` names the members the drop source
    * identified as directories.
    */
-  addFiles: ((files: readonly File[], directories?: ReadonlySet<File>) => string | null) | undefined
+  addFiles: ((files: readonly File[], directories?: ReadonlySet<File>, asFile?: ReadonlySet<File>) => string | null) | undefined
   removeAttachment: ((id: DraftAttachmentId) => void) | undefined
   resolveDraftAttachments: ((ids: readonly DraftAttachmentId[]) => readonly ComposerAttachment[]) | undefined
   /** Restart one failed file upload; absent without a session. */
@@ -398,6 +402,8 @@ export interface ComposerBarInjected {
      * and the primary Send button use while the addressed agent is busy.
      */
     busyEnter: ObservableSnapshot<BusyEnterBehavior>
+    /** Live paste threshold in characters; longer pasted text becomes a file attachment, 0 disables it. */
+    pasteToFileChars: ObservableSnapshot<number>
     /** Live per-draft upload states for file-kind drafts. */
     fileUploads: ObservableSnapshot<DraftFileUploads>
     notices: ObservableSnapshot<InputNotice | null>

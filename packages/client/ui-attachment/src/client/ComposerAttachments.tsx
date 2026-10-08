@@ -19,7 +19,7 @@ interface ComposerRailItem extends AttachmentRailItem {
 
 /** Draft image previews, pending-file cards, drop target, and original-image preview. */
 export function ComposerAttachments({
-  attachments, canAcceptDrop, onAddFiles, onRemoveAttachment, uploads, onRetryFile, dropLimits, t,
+  attachments, canAcceptDrop, onAddFiles, onRemoveAttachment, uploads, onRetryFile, pastedPreview, onReinsertPastedText, dropLimits, t,
 }: ComposerAttachmentsProps) {
   const [preview, setPreview] = useState<ComposerImageAttachment | null>(null)
   const [dragActive, setDragActive] = useState(false)
@@ -55,6 +55,7 @@ export function ComposerAttachments({
               const attachment = item.attachment
               if (attachment.kind === 'file') {
                 const upload = uploads[attachment.id]
+                const preview = pastedPreview(attachment.id)
                 return (
                   <FileCard
                     name={attachment.file.name || t('file.label')}
@@ -66,6 +67,14 @@ export function ComposerAttachments({
                       ? { progress: upload.loaded / upload.total }
                       : {}}
                     labels={fileCardLabels(t, attachment.file.name)}
+                    {...preview !== undefined && {
+                      pasted: {
+                        preview,
+                        insertLabel: t('file.insertAsText'),
+                        insertAria: t('file.insertAsTextNamed', { name: attachment.file.name }),
+                        onInsert: () => { onReinsertPastedText(attachment.id) },
+                      },
+                    }}
                     onRemove={() => { onRemoveAttachment(attachment.id) }}
                     onRetry={() => { onRetryFile(attachment.id) }}
                   />

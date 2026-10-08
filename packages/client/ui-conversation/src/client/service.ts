@@ -316,9 +316,13 @@ export class ConversationController extends Service implements IConversation {
    * @param files - browser files to register.
    * @returns ordered draft descriptors.
    */
-  createDrafts(sessionId: SessionId, files: readonly File[]): readonly ComposerAttachment[] {
+  createDrafts(
+    sessionId: SessionId,
+    files: readonly File[],
+    asFile: ReadonlySet<File> = new Set(),
+  ): readonly ComposerAttachment[] {
     return files.map((file) => {
-      if (isImageMediaType(file.type)) {
+      if (isImageMediaType(file.type) && !asFile.has(file)) {
         const attachment = browserDraftAttachment(file)
         this.draftAttachments.set(attachment.id, attachment)
         probeDimensions(attachment)

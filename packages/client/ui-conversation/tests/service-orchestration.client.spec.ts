@@ -170,6 +170,20 @@ describe('ConversationController', () => {
     await b.runtime.dispose()
   })
 
+  it('creates a file draft for an image listed in asFile', async () => {
+    const b = await bench()
+    const big = new File([new Uint8Array(4)], 'big.png', { type: 'image/png' })
+    const small = new File([new Uint8Array(4)], 'small.png', { type: 'image/png' })
+    const created = vi.spyOn(URL, 'createObjectURL').mockReturnValue('blob:small')
+    try {
+      const drafts = b.root.createDrafts(b.runtime.sessions.binding('s1')!.session.sessionId, [big, small], new Set([big]))
+      expect(drafts.map(draft => draft.kind)).toEqual(['file', 'image'])
+    } finally {
+      created.mockRestore()
+    }
+    await b.runtime.dispose()
+  })
+
   it('releases an unsettled send preview during structural Session teardown', async () => {
     const b = await bench()
     const created = vi.spyOn(URL, 'createObjectURL').mockReturnValue('blob:detached')

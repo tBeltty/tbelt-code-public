@@ -41,6 +41,11 @@ const t = ((key: string, params?: Readonly<Record<string, unknown>>): string => 
     const name = params?.name
     return `移除文件 ${typeof name === 'string' ? name : ''}`
   }
+  if (key === 'file.insertAsText') return '作为文本插入'
+  if (key === 'file.insertAsTextNamed') {
+    const name = params?.name
+    return `将 ${typeof name === 'string' ? name : ''} 作为文本插入输入框`
+  }
   if (key === 'file.retry') {
     const name = params?.name
     return `重试上传 ${typeof name === 'string' ? name : ''}`
@@ -82,6 +87,8 @@ function props(overrides: Partial<ComposerAttachmentsOwnerProps> = {}): Composer
     onRemoveAttachment: () => {},
     uploads: {},
     onRetryFile: () => {},
+    pastedPreview: () => undefined,
+    onReinsertPastedText: () => {},
     t,
     ...overrides,
   } as unknown as ComposerAttachmentsProps
@@ -256,6 +263,23 @@ describe('ComposerAttachments file drafts', () => {
     expect(onRetryFile).toHaveBeenCalledWith('bad')
     fireEvent.click(view.getByRole('button', { name: '移除文件 ok.pdf' }))
     expect(onRemoveAttachment).toHaveBeenCalledWith('ok')
+  })
+
+  it('shows the preview of a pasted-text file and reinserts it on request', () => {
+    const onReinsertPastedText = vi.fn()
+    const view = render(<ComposerAttachments {...props({
+      attachments: [fileDraft('plain'), fileDraft('long', 'pasted-text-1.md')],
+      uploads: {
+        plain: { status: 'uploading', loaded: 0 },
+        long: { status: 'uploading', loaded: 0 },
+      },
+      pastedPreview: id => id === 'long' ? '第一行\n第二行' : undefined,
+      onReinsertPastedText,
+    })} />)
+    expect(view.container.querySelectorAll('pre')).toHaveLength(1)
+    expect(view.container.querySelector('pre')!.textContent).toBe('第一行\n第二行')
+    fireEvent.click(view.getByRole('button', { name: '将 pasted-text-1.md 作为文本插入输入框' }))
+    expect(onReinsertPastedText).toHaveBeenCalledWith('long')
   })
 
   it('treats a draft without upload state as uploading and keeps retry separate from remove', () => {

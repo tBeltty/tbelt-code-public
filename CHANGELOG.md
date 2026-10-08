@@ -4,6 +4,14 @@ Notable changes to tBelt Code, newest first. The format follows [Keep a Changelo
 
 ## [Unreleased]
 
+## [0.2.0-rc.2.20261008] - 2026-10-08
+
+### Added
+
+- Pasting more than 8000 characters into the message box attaches the text as a file instead. The card shows the first lines, and Insert as text puts it back in the message. `pasteToFileChars` in `cordis.yml` sets the limit; 0 turns it off.
+- An image larger than 30 MB is attached as a file instead of being refused: it uploads in the background and the agent receives its path. The limit is `maxImageBytes` in `cordis.yml`.
+- Uploading file cards show the upload percentage.
+
 ## [0.2.0-rc.2.20261007] - 2026-10-07
 
 ### Added
@@ -126,7 +134,8 @@ Notable changes to tBelt Code, newest first. The format follows [Keep a Changelo
 - Downloads no longer return an older installer.
 - A key that ran out of credit or hit its spending limit is reported as a quota problem instead of an invalid API key.
 
-[Unreleased]: https://github.com/tBeltty/tbelt-code-public/compare/v0.2.0-rc.2.20261007...HEAD
+[Unreleased]: https://github.com/tBeltty/tbelt-code-public/compare/v0.2.0-rc.2.20261008...HEAD
+[0.2.0-rc.2.20261008]: https://github.com/tBeltty/tbelt-code-public/releases/tag/v0.2.0-rc.2.20261008
 [0.2.0-rc.2.20261007]: https://github.com/tBeltty/tbelt-code-public/releases/tag/v0.2.0-rc.2.20261007
 [0.2.0-rc.2.20261006.5]: https://github.com/tBeltty/tbelt-code-public/releases/tag/v0.2.0-rc.2.20261006.5
 [0.2.0-rc.2.20261006.4]: https://github.com/tBeltty/tbelt-code-public/releases/tag/v0.2.0-rc.2.20261006.4

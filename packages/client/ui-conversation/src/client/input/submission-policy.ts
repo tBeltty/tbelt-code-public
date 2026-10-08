@@ -10,7 +10,9 @@ import type { ConfigForm } from '@deepseek-ai/dsh-client-ui-settings/client'
 import type {
   BusyEnterBehavior, ComposerSubmitGesture, InputSubmitMode,
 } from '../contract/composer-submission.ts'
-import { BUSY_ENTER_FIELD, DEFAULT_BUSY_ENTER_BEHAVIOR } from '../../submission-settings.ts'
+import {
+  BUSY_ENTER_FIELD, DEFAULT_BUSY_ENTER_BEHAVIOR, DEFAULT_PASTE_TO_FILE_CHARS,
+} from '../../submission-settings.ts'
 import type { ConversationSettings } from '../../submission-settings.ts'
 
 export { DEFAULT_BUSY_ENTER_BEHAVIOR } from '../../submission-settings.ts'
@@ -39,13 +41,16 @@ export function resolveSubmitMode(
 }
 
 /**
- * Busy-Enter preference shared by the composer bar inject face and its
- * Settings row: one live store the bar's submission gestures and Send label
- * read, backed by the Host user-settings document when one is composed.
+ * Composer preferences shared by the composer bar inject face and its
+ * Settings row: live stores the bar's submission gestures, Send label, and
+ * paste handling read, backed by the Host user-settings document when one is
+ * composed.
  */
 export class ComposerSubmissionPolicy {
   /** Reactive preference source for the composer bar and the Settings row. */
   readonly busyEnter: SnapshotStore<BusyEnterBehavior> = createSnapshotStore(DEFAULT_BUSY_ENTER_BEHAVIOR)
+  /** Pasted-text length, in characters, above which a paste becomes a file; 0 disables the conversion. */
+  readonly pasteToFileChars: SnapshotStore<number> = createSnapshotStore(DEFAULT_PASTE_TO_FILE_CHARS)
   private readonly unsubscribe: (() => void) | undefined
   private readonly host: ConfigForm<ConversationSettings> | undefined
 
@@ -80,7 +85,8 @@ export class ComposerSubmissionPolicy {
    */
   private adopt(host: ConfigForm<ConversationSettings>): void {
     const section = host.getSnapshot().value
-    if (section === undefined || this.busyEnter.getSnapshot() === section.busyEnter) return
-    this.busyEnter.set(section.busyEnter)
+    if (section === undefined) return
+    if (this.busyEnter.getSnapshot() !== section.busyEnter) this.busyEnter.set(section.busyEnter)
+    if (this.pasteToFileChars.getSnapshot() !== section.pasteToFileChars) this.pasteToFileChars.set(section.pasteToFileChars)
   }
 }

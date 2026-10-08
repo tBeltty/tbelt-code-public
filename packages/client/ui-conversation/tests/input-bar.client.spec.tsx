@@ -31,6 +31,7 @@ import type {
   ComposerAttachment, ComposerAttachmentsOwnerProps, DraftFileUploads, InputActivityOwnerProps,
 } from '../src/client/contract/slots.ts'
 import type { DraftAttachmentId } from '../src/client/contract/input.ts'
+import { pastedTextFile } from '../src/client/input/pasted-text.ts'
 import { InputBar } from '../src/client/skeleton/InputBar.tsx'
 import type { InputBarProps } from '../src/client/skeleton/InputBar.tsx'
 import { en, zh } from '../src/client/locales.ts'
@@ -103,6 +104,7 @@ interface BenchOptions {
   addFiles?: (files: readonly File[], directories?: ReadonlySet<File>) => string | null
   commandMenuOpen?: boolean
   busyEnter?: 'queue' | 'steer'
+  pasteToFileChars?: number
   toggleCommandMenu?: (selection: { start: number; end: number }) => void
 }
 
@@ -205,6 +207,7 @@ function bench(over?: BenchOptions) {
     }),
     toggleCommandMenu: over?.toggleCommandMenu ?? vi.fn(),
     useBusyEnter: bindSnapshotSelector(busyEnter),
+    usePasteToFileChars: bindSnapshotSelector(createSnapshotStore(over?.pasteToFileChars ?? 8000)),
     useStopShortcut: bindSnapshotSelector(stopShortcut),
     useNotices: bindSnapshotSelector(shell.notices),
     useLexicon: bindSnapshotSelector(shell.lexicon),
@@ -338,6 +341,72 @@ describe('composer placeholder visibility', () => {
   })
 })
 
+describe('long pasted text', () => {
+  const longText = 'x'.repeat(30)
+  const pasteText = (textarea: HTMLElement, text: string): void => {
+    fireEvent.paste(textarea, { clipboardData: { items: [], getData: () => text } })
+  }
+
+  it('becomes a named text file attachment above the threshold', () => {
+    const addFiles = vi.fn(() => null)
+    const { textarea, shell } = bench({ addFiles, pasteToFileChars: 20 })
+    pasteText(textarea, longText)
+    expect(addFiles).toHaveBeenCalledTimes(1)
+    const [files] = addFiles.mock.calls[0] as unknown as [File[]]
+    expect(files).toHaveLength(1)
+    expect(files[0]!.name).toMatch(/^pasted-text-\d+\.md$/)
+    expect(shell.snapshot.draft).toBe('')
+  })
+
+  it('stays inline at the threshold, when disabled with 0, and when the composer cannot attach files', async () => {
+    const addFiles = vi.fn(() => null)
+    const atLimit = bench({ addFiles, pasteToFileChars: 30 })
+    pasteText(atLimit.textarea, longText)
+    await vi.waitFor(() => { expect(atLimit.shell.snapshot.draft).toBe(longText) })
+    const off = bench({ addFiles, pasteToFileChars: 0 })
+    pasteText(off.textarea, longText)
+    await vi.waitFor(() => { expect(off.shell.snapshot.draft).toBe(longText) })
+    expect(addFiles).not.toHaveBeenCalled()
+  })
+
+  it('keeps the text inline for a subagent composer that refuses file intake', async () => {
+    const addFiles = vi.fn(() => null)
+    const { textarea, shell } = bench({
+      addFiles, pasteToFileChars: 20,
+      subagent: {
+        address: { parentSessionId: 'parent' as SessionId, childSessionId: SID, mode: 'continuable' },
+        parentAvailable: true,
+      },
+    })
+    pasteText(textarea, longText)
+    await vi.waitFor(() => { expect(shell.snapshot.draft).toBe(longText) })
+    expect(addFiles).not.toHaveBeenCalled()
+  })
+
+  it('previews the text and reinserts it into the draft while removing the attachment', async () => {
+    const file = pastedTextFile(`第一行\n\n第二行\n${'y'.repeat(200)}\n第四行`)
+    const id = 'pasted-1' as DraftAttachmentId
+    const view = bench({ attachments: [{ kind: 'file', id, file }], pasteToFileChars: 20 })
+    const owner = attachmentOwner(view.slotCalls)
+    expect(owner.pastedPreview(id)).toBe(`第一行\n第二行\n${'y'.repeat(120)}…`)
+    expect(owner.pastedPreview('other' as DraftAttachmentId)).toBeUndefined()
+    owner.onReinsertPastedText('other' as DraftAttachmentId)
+    expect(view.removeAttachment).not.toHaveBeenCalled()
+    owner.onReinsertPastedText(id)
+    await vi.waitFor(() => { expect(view.shell.snapshot.draft).toContain('第二行') })
+    expect(view.removeAttachment).toHaveBeenCalledWith(id)
+  })
+
+  it('ignores reinsertion for a plain file attachment', () => {
+    const id = 'plain-1' as DraftAttachmentId
+    const view = bench({ attachments: [{ kind: 'file', id, file: new File(['a'], 'a.txt') }] })
+    const owner = attachmentOwner(view.slotCalls)
+    expect(owner.pastedPreview(id)).toBeUndefined()
+    owner.onReinsertPastedText(id)
+    expect(view.removeAttachment).not.toHaveBeenCalled()
+  })
+})
+
 describe('image draft rail', () => {
   it('collects clipboard files while preserving text from a mixed paste', async () => {
     const addFiles = vi.fn(() => null)
@@ -352,7 +421,7 @@ describe('image draft rail', () => {
         getData: () => '同时粘贴的文字',
       },
     })
-    expect(addFiles).toHaveBeenCalledWith([image], undefined)
+    expect(addFiles).toHaveBeenCalledWith([image], undefined, new Set())
     // The paste lands inside the PASTE_COMMAND update; its commit is a microtask away.
     await vi.waitFor(() => { expect(shell.snapshot.draft).toBe('同时粘贴的文字') })
   })
@@ -377,7 +446,7 @@ describe('image draft rail', () => {
         getData: () => '',
       },
     })
-    expect(addFiles).toHaveBeenCalledWith([folder, emptyFile, withoutApi, withoutEntry], new Set([folder]))
+    expect(addFiles).toHaveBeenCalledWith([folder, emptyFile, withoutApi, withoutEntry], new Set([folder]), new Set())
   })
 
   it('pre-checks projected limits at intake: whole-batch refusal with product copy, none added', () => {
@@ -399,11 +468,18 @@ describe('image draft rail', () => {
     expect(overCount.view.getByRole('alert').textContent).toContain('一条消息最多添加 2 张图片')
     expect(overCount.props.addFiles).not.toHaveBeenCalled()
     cleanup()
-    // Per-file bytes.
+    // Per-file bytes: the image is diverted to the file route with a notice, not refused.
     const overFile = bench({ addFiles: vi.fn(() => null), imageLimits: limits })
-    intake(overFile, [png(1024 * 1024 + 1, 'big.png')])
-    expect(overFile.view.getByRole('alert').textContent).toContain('单张图片不能超过 1MB')
-    expect(overFile.props.addFiles).not.toHaveBeenCalled()
+    const big = png(1024 * 1024 + 1, 'big.png')
+    intake(overFile, [big])
+    expect(overFile.view.getByRole('alert').textContent).toContain('超过 1MB 的图片将作为文件上传')
+    expect(overFile.props.addFiles).toHaveBeenCalledWith([big], undefined, new Set([big]))
+    cleanup()
+    // Diverted images no longer count toward the per-message count or total.
+    const divertedBatch = bench({ addFiles: vi.fn(() => null), imageLimits: limits })
+    const batch = [png(1024 * 1024 + 1, 'x.png'), png(1024 * 1024 + 1, 'y.png'), png(1024 * 1024 + 1, 'z.png'), png(8, 'ok.png')]
+    intake(divertedBatch, batch)
+    expect(divertedBatch.props.addFiles).toHaveBeenCalledWith(batch, undefined, new Set(batch.slice(0, 3)))
     cleanup()
     // Aggregate bytes across the existing rail plus the new batch.
     const held = new File([new ArrayBuffer(1024 * 1024 * 1.5)], 'held.png', { type: 'image/png' })
@@ -417,7 +493,7 @@ describe('image draft rail', () => {
     const within = bench({ addFiles: vi.fn(() => null), imageLimits: limits })
     const fits = png(16, 'fits.png')
     intake(within, [fits])
-    expect(within.props.addFiles).toHaveBeenCalledWith([fits], undefined)
+    expect(within.props.addFiles).toHaveBeenCalledWith([fits], undefined, new Set())
     expect(within.view.queryByRole('alert')).toBeNull()
   })
 
@@ -440,7 +516,7 @@ describe('image draft rail', () => {
       new File([new ArrayBuffer(64)], 'b.pdf', { type: 'application/pdf' }),
     ]
     act(() => { attachmentOwner(result.slotCalls).onAddFiles(files) })
-    expect(addFiles).toHaveBeenCalledWith(files, undefined)
+    expect(addFiles).toHaveBeenCalledWith(files, undefined, new Set())
     expect(result.view.getByRole('alert').textContent).toContain('仅支持 PNG、JPG、WebP、GIF 格式的图片')
   })
 
@@ -466,7 +542,7 @@ describe('image draft rail', () => {
     const folder = new File([], 'project')
     const note = new File([Uint8Array.of(1)], 'notes.md', { type: 'text/markdown' })
     act(() => { attachmentOwner(result.slotCalls).onAddFiles([folder, note], new Set([folder])) })
-    expect(addFiles).toHaveBeenCalledWith([folder, note], new Set([folder]))
+    expect(addFiles).toHaveBeenCalledWith([folder, note], new Set([folder]), new Set())
     expect(result.view.getByRole('alert').textContent).toContain('只有桌面端支持添加文件夹')
   })
 

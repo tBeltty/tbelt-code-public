@@ -13,6 +13,54 @@
   text-align: left;
 }
 
+.pasted {
+  display: grid;
+  grid-template-columns: 28px minmax(0, 1fr);
+  grid-template-areas:
+    'icon body'
+    'preview preview'
+    'insert insert';
+  align-items: center;
+  width: 280px;
+  height: auto;
+  padding: 0 12px 10px;
+}
+
+.pasted .icon { grid-area: icon; }
+
+.pasted .body { grid-area: body; }
+
+.preview {
+  grid-area: preview;
+  overflow: hidden;
+  max-width: 100%;
+  margin: 0 0 6px;
+  color: var(--dsw-alias-label-secondary, rgba(0, 0, 0, 0.65));
+  font: inherit;
+  font-size: 12px;
+  line-height: 16px;
+  white-space: pre;
+  text-overflow: ellipsis;
+}
+
+.insert {
+  grid-area: insert;
+  justify-self: start;
+  padding: 2px 8px;
+  border: 0.5px solid var(--dsw-alias-border-l2, rgba(0, 0, 0, 0.12));
+  border-radius: var(--dsw-radius-md, 6px);
+  background: transparent;
+  color: var(--dsw-alias-label-primary);
+  font: inherit;
+  font-size: 12px;
+  line-height: 18px;
+  cursor: pointer;
+}
+
+.insert:hover {
+  background: var(--dsw-alias-fill-hover, rgba(0, 0, 0, 0.06));
+}
+
 .failed {
   border-color: var(--dsw-alias-state-error-primary, #d54941);
 }

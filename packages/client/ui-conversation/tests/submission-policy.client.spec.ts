@@ -57,17 +57,26 @@ describe('ComposerSubmissionPolicy', () => {
   it('adopts a Host preference without writing it back and leaves an identical write untouched', () => {
     const host = stubConfigForm<ConversationSettings>()
     const policy = new ComposerSubmissionPolicy(host.scope)
-    host.publish({ status: 'ready', value: { busyEnter: 'steer' }, revision: 1, writable: true })
+    host.publish({ status: 'ready', value: { busyEnter: 'steer', pasteToFileChars: 8000 }, revision: 1, writable: true })
     expect(policy.busyEnter.getSnapshot()).toBe('steer')
     policy.setBusyEnter('steer')
     expect(host.set).not.toHaveBeenCalled()
-    host.publish({ value: { busyEnter: 'steer' }, revision: 2 })
+    host.publish({ value: { busyEnter: 'steer', pasteToFileChars: 8000 }, revision: 2 })
     expect(policy.busyEnter.getSnapshot()).toBe('steer')
+  })
+
+  it('adopts the Host paste threshold and defaults to 8000 characters', () => {
+    const host = stubConfigForm<ConversationSettings>()
+    const policy = new ComposerSubmissionPolicy(host.scope)
+    expect(policy.pasteToFileChars.getSnapshot()).toBe(8000)
+    host.publish({ status: 'ready', value: { busyEnter: 'queue', pasteToFileChars: 0 }, revision: 1, writable: true })
+    expect(policy.pasteToFileChars.getSnapshot()).toBe(0)
+    expect(policy.busyEnter.getSnapshot()).toBe('queue')
   })
 
   it('adopts a section already standing at construction', () => {
     const host = stubConfigForm<ConversationSettings>()
-    host.publish({ status: 'ready', value: { busyEnter: 'steer' }, revision: 1, writable: true })
+    host.publish({ status: 'ready', value: { busyEnter: 'steer', pasteToFileChars: 8000 }, revision: 1, writable: true })
     const policy = new ComposerSubmissionPolicy(host.scope)
     expect(policy.busyEnter.getSnapshot()).toBe('steer')
   })

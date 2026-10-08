@@ -446,6 +446,7 @@ export function apply(ctx: Context, config: Config = Config({})): void {
           hooks: {
             stopShortcut,
             busyEnter: submissionPolicy.busyEnter,
+            pasteToFileChars: submissionPolicy.pasteToFileChars,
             fileUploads: ABSENT_FILE_UPLOADS,
             notices: ABSENT_NOTICES,
             lexicon: ABSENT_LEXICON,
@@ -459,7 +460,7 @@ export function apply(ctx: Context, config: Config = Config({})): void {
       const bridge = hostPathBridge()
       return {
         keyboard: shell,
-        addFiles: (files, directories = new Set()) => {
+        addFiles: (files, directories = new Set(), asFile = new Set()) => {
           if (sessions.binding(sessionId) === undefined) return t('file.sessionUnavailable')
           if (shell.snapshot.phase === 'adjudicating' || shell.snapshot.phase === 'submitting') {
             return t('attachment.dropBlocked')
@@ -472,7 +473,7 @@ export function apply(ctx: Context, config: Config = Config({})): void {
             if (bridge === undefined && directory) return t('attachment.directoryDesktopOnly')
             const path = bridge?.pathFor(file) ?? ''
             if (directory && path === '') return t('attachment.pathUnavailable')
-            if (path === '' || (!directory && isImageMediaType(file.type))) {
+            if (path === '' || (!directory && isImageMediaType(file.type) && !asFile.has(file))) {
               uploads.push(file)
               continue
             }
@@ -487,7 +488,7 @@ export function apply(ctx: Context, config: Config = Config({})): void {
             })
           }
           try {
-            const drafts = conversation.createDrafts(sessionId, uploads)
+            const drafts = conversation.createDrafts(sessionId, uploads, asFile)
             if (!shell.addFiles(references, drafts.map(draft => draft.id))) {
               conversation.releaseDraftAttachments(drafts)
               return t('attachment.dropBlocked')
@@ -522,6 +523,7 @@ export function apply(ctx: Context, config: Config = Config({})): void {
         hooks: {
           stopShortcut,
           busyEnter: submissionPolicy.busyEnter,
+          pasteToFileChars: submissionPolicy.pasteToFileChars,
           fileUploads: conversation.fileUploads,
           notices: shell.notices,
           lexicon: shell.lexicon,

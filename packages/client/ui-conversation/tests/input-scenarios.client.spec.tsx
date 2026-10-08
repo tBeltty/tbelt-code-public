@@ -176,6 +176,7 @@ async function scopedBench(register?: (inputTriggers: InputTriggerService) => vo
       previewUrl: `blob:${id}`,
     })),
     useBusyEnter: bindSnapshotSelector(createSnapshotStore<'queue' | 'steer'>('queue')),
+    usePasteToFileChars: bindSnapshotSelector(createSnapshotStore(8000)),
     toggleCommandMenu: (selection) => {
       const snapshot = shell.snapshot
       controller.toggleSource('command', {

@@ -5,6 +5,7 @@ import type { ComposerKeyboard } from '../../contract/draft-editor.ts'
 import type { ComposerBarProps } from '../../contract/slots.ts'
 import type { BusyEnterBehavior } from '../../contract/composer-submission.ts'
 import { resolveSubmitMode } from '../submission-policy.ts'
+import { pastedTextFile } from '../pasted-text.ts'
 import { registerComposerKeymap } from './keymap.ts'
 
 interface DraftViewGate {
@@ -14,6 +15,7 @@ interface DraftViewGate {
   running: boolean
   steeringAvailable: boolean
   busyEnter: BusyEnterBehavior
+  pasteToFileChars: number
   intakeFiles: (files: readonly File[], directories?: ReadonlySet<File>) => void
   uploadsPending: boolean
   showToast: (text: string) => void
@@ -138,7 +140,13 @@ export function installDraftKeymap(
     },
     intakeFiles: (files, directories) => { gate.current.intakeFiles(files, directories) },
     pasteText: (text) => {
-      if (gate.current.machineBusy || gate.current.locked) return
+      const g = gate.current
+      if (g.machineBusy || g.locked) return
+      // Text the composer cannot attach (no file intake, e.g. a subagent) stays inline.
+      if (g.pasteToFileChars > 0 && text.length > g.pasteToFileChars && g.canAcceptDrop) {
+        g.intakeFiles([pastedTextFile(text)])
+        return
+      }
       keyboard.paste(text)
     },
   })

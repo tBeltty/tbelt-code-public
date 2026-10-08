@@ -15,6 +15,8 @@ Download it from [tbelt.online](https://tbelt.online). It is a developer preview
 - Sessions in git worktrees, so several agents edit one repository in parallel.
 - Line comments in the change review, sent to the agent as notes.
 - Quote text from an assistant message into your next message.
+- Long pasted text becomes a file attachment with a preview, and one click puts it back as text.
+- Images over 30 MB attach as files, with an upload percentage, instead of being refused.
 - Plans with inline comments and versions, reviewed before you approve.
 - An Artifacts page listing the files each turn delivered or changed.
 - A side panel preview for HTML pages, images, PDFs and local dev servers.

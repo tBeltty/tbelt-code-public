@@ -30,8 +30,8 @@ export { commitPreparedImageFile, prepareImageFile, readImageFile, saveImageFile
 export type { PreparedImageFile } from './store.ts'
 export { readRequestImageFile, requestImageVariantId } from './request-image.ts'
 
-/** Default maximum encoded bytes for one submitted image; oversized sources are refused, not shrunk. */
-export const DEFAULT_MAX_IMAGE_BYTES = 20 * 1024 * 1024
+/** Default maximum encoded bytes for one submitted image; the composer sends larger images as files. */
+export const DEFAULT_MAX_IMAGE_BYTES = 30 * 1024 * 1024
 /** Default maximum images in one prompt. */
 export const DEFAULT_MAX_IMAGES_PER_MESSAGE = 20
 /** Default maximum aggregate image bytes in one prompt. */
@@ -61,7 +61,7 @@ export const MAX_IMAGE_COMPRESSION_CONCURRENCY = 8
 export interface Config {
   /** Explicit harness home; omitted follows `DSH_HOME`, then `~/.dsh`. */
   dshHome?: string
-  /** Maximum encoded bytes accepted for one submitted image. Default: 20 MiB. */
+  /** Maximum encoded bytes accepted for one submitted image. Default: 30 MiB. */
   maxImageBytes?: number
   /** Maximum image count accepted in one submitted message. Default: 20. */
   maxImagesPerMessage?: number

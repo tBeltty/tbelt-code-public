@@ -15,31 +15,44 @@ export interface FileCardLabels {
   readonly retry: string
 }
 
+/** Pasted-text details shown under a file card's name. */
+export interface FileCardPasted {
+  /** First lines of the pasted text. */
+  readonly preview: string
+  /** Label of the insert-as-text button. */
+  readonly insertLabel: string
+  /** Accessible name of the insert-as-text button. */
+  readonly insertAria: string
+  /** Put the text back into the draft and remove the attachment. */
+  readonly onInsert: () => void
+}
+
 /** Upload display state resolved by the owner. */
 export type FileCardState = 'uploading' | 'ready' | 'error'
 
 /** One pending file card: type glyph, name, size or upload status, remove, retry. */
 export function FileCard({
-  name, bytes, state, progress, labels, onRemove, onRetry,
+  name, bytes, state, progress, labels, pasted, onRemove, onRetry,
 }: {
   name: string
   bytes: number
   state: FileCardState
   progress?: number
   labels: FileCardLabels
+  pasted?: FileCardPasted
   onRemove: () => void
   onRetry: () => void
 }) {
   const extension = fileExtension(name).toUpperCase().slice(0, 8)
   const meta = state === 'uploading'
-    ? labels.uploading
+    ? progress === undefined ? labels.uploading : `${labels.uploading} ${String(Math.round(Math.min(1, Math.max(0, progress)) * 100))}%`
     : state === 'error'
       ? labels.failed
       : [extension, fileSizeText(bytes)].filter(part => part !== '').join(' ')
   const retryable = state === 'error'
   return (
     <div
-      className={`${css.card}${retryable ? ` ${css.failed}` : ''}`}
+      className={`${css.card}${pasted === undefined ? '' : ` ${css.pasted}`}${retryable ? ` ${css.failed}` : ''}`}
       title={name}
     >
       <span className={css.icon} aria-hidden>
@@ -68,6 +81,14 @@ export function FileCard({
       >
         <IconCloseFillRegular size={12} />
       </button>
+      {pasted !== undefined && (
+        <>
+          <pre className={css.preview}>{pasted.preview}</pre>
+          <button type="button" className={css.insert} aria-label={pasted.insertAria} onClick={pasted.onInsert}>
+            {pasted.insertLabel}
+          </button>
+        </>
+      )}
       {state === 'uploading' && (
         <span className={css.progressTrack} aria-hidden>
           <span

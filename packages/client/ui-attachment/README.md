@@ -23,7 +23,7 @@ This package renders everything the conversation UI shows about attachments: one
 <a id="use-this-package"></a>
 ## Use this package
 
-Mount this plugin alongside [`ui-conversation`](../ui-conversation/README.md) and [`ui-tool`](../ui-tool/README.md) when tool results need an image gallery. It waits for their slot declarations and registers its components into them. Users then see the mixed draft-attachment rail, DeepSeek Web file cards with upload controls, the drop overlay with its limits line, message images sized by count, the tool card's gallery, and the Escape/mask/close lightbox.
+Mount this plugin alongside [`ui-conversation`](../ui-conversation/README.md) and [`ui-tool`](../ui-tool/README.md) when tool results need an image gallery. It waits for their slot declarations and registers its components into them. Users then see the mixed draft-attachment rail, DeepSeek Web file cards with upload controls (a card for pasted text also shows a three-line preview and an Insert as text button), the drop overlay with its limits line, message images sized by count, the tool card's gallery, and the Escape/mask/close lightbox.
 
 ### Draft attachments
 

@@ -1,10 +1,11 @@
 /**
- * The first-run setup of one catalog provider on a single screen: the user
- * pastes an API key, the Host asks the provider which models that key can use
- * (which also checks the key), and the list appears below the field with no
- * model selected. Nothing is stored until the user starts with at least one
- * chosen model; the profile, the key and the default model are then written in
- * that order.
+ * The setup of one catalog provider on a single screen, shared by the
+ * first-run step and the Models page's add card: the user pastes an API key,
+ * the Host asks the provider which models that key can use (which also checks
+ * the key), and the list appears below the field with no model selected.
+ * Nothing is stored until the user confirms with at least one chosen model;
+ * the profile and the key are then written in that order, followed by the
+ * default model only where the caller asks for it.
  */
 
 import { useEffect, useRef, useState } from 'react'
@@ -40,7 +41,19 @@ export interface OnboardingProviderSetupProps {
   t: (key: keyof typeof en) => string
   /** Disable every control (read-only deployment). */
   readOnly: boolean
-  /** Called once the provider, its key and the default model are stored. */
+  /**
+   * Whether the first chosen model becomes the default model. The first-run
+   * step sets it because no model exists yet; adding a provider later leaves
+   * the user's current default alone.
+   */
+  setDefault: boolean
+  /** Copy key of the confirm button. */
+  submitLabelKey: keyof typeof en
+  /** Dismiss action shown beside the confirm button; absent where the step cannot be skipped from this panel. */
+  onCancel?: () => void
+  /** Called once per change with whether the save is in flight, so the owner can hold its surface still. */
+  onBusyChange?: (busy: boolean) => void
+  /** Called once the provider and its key are stored, and the default model where `setDefault` is set. */
   onDone: () => void
 }
 
@@ -67,8 +80,11 @@ export function OnboardingProviderSetup(props: OnboardingProviderSetupProps): Re
   // The model ids the profile write already stored; a retry after a refused
   // credential skips that write, whose revision is no longer current.
   const writtenFor = useRef<string | undefined>(undefined)
+  const { onBusyChange } = props
   const key = keyDraft.trim()
   const formatFailure = key.length === 0 ? undefined : apiKeyFailure(keyDraft)
+
+  useEffect(() => { onBusyChange?.(saving) }, [saving, onBusyChange])
 
   useEffect(() => {
     setPicked(new Set())
@@ -150,7 +166,7 @@ export function OnboardingProviderSetup(props: OnboardingProviderSetupProps): Re
       }
       // The provider is usable once its key is stored; a refused default only
       // leaves the composer's picker to choose, so it does not hold the step.
-      await operations.setDefaultModel(provider, first.id)
+      if (props.setDefault) await operations.setDefaultModel(provider, first.id)
       props.onDone()
     } finally {
       setSaving(false)
@@ -226,15 +242,24 @@ export function OnboardingProviderSetup(props: OnboardingProviderSetupProps): Re
         )
         : null}
       {failure === undefined ? null : <p className={styles['error']} role="alert">{failure}</p>}
-      {check.kind === 'found' && models.length > 0
+      {(check.kind === 'found' && models.length > 0) || props.onCancel !== undefined
         ? (
           <div className={onboardingStyles['setupFooter']}>
             <span className={onboardingStyles['status']}>
-              {picked.size === 0 ? t('onboardingPickModel') : `${String(picked.size)} ${t('onboardingSelected')}`}
+              {models.length === 0
+                ? null
+                : picked.size === 0 ? t('onboardingPickModel') : `${String(picked.size)} ${t('onboardingSelected')}`}
             </span>
-            <Button disabled={disabled || picked.size === 0} onClick={() => { void start() }}>
-              {saving ? t('applying') : t('onboardingStart')}
-            </Button>
+            {props.onCancel === undefined
+              ? null
+              : <Button variant="outline" disabled={saving} onClick={props.onCancel}>{t('cancel')}</Button>}
+            {models.length === 0
+              ? null
+              : (
+                <Button disabled={disabled || picked.size === 0} onClick={() => { void start() }}>
+                  {saving ? t('applying') : t(props.submitLabelKey)}
+                </Button>
+              )}
           </div>
         )
         : null}

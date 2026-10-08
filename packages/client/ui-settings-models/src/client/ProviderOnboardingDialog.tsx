@@ -215,6 +215,8 @@ export function ProviderOnboardingDialog(props: ProviderOnboardingDialogProps): 
               operations={operations}
               t={t}
               readOnly={!state.writable}
+              setDefault
+              submitLabelKey="onboardingStart"
               onDone={() => {
                 setPicked(undefined)
                 void controller.load()

@@ -1189,6 +1189,7 @@ describe('ModelsSection', () => {
     const pick = await screen.findByLabelText<HTMLSelectElement>(en.provider)
     expect([...pick.options].map(option => option.value)).toEqual(['anthropic', 'broken', 'plain'])
     expect(pick.value).toBe('anthropic')
+    fireEvent.click(screen.getByRole('button', { name: en.addWithoutKey }))
     // A dormant profile has no endpoint anywhere: the pi-ai placeholder
     // falls back to the provider-default wording.
     fireEvent.click(screen.getByText(en.customized))
@@ -1210,6 +1211,7 @@ describe('ModelsSection', () => {
     const { mutate, set } = await mountSection()
     fireEvent.click(screen.getByText(en.add))
     await screen.findByLabelText(en.provider)
+    fireEvent.click(screen.getByRole('button', { name: en.addWithoutKey }))
     fireEvent.click(screen.getByText(en.apply))
     await waitFor(() => { expect(mutate).toHaveBeenCalledOnce() })
     expect(mutate.mock.calls[0]).toEqual([
@@ -1241,6 +1243,7 @@ describe('ModelsSection', () => {
     const { face, controller, mirror } = await mountSection({ mutate, set })
     fireEvent.click(screen.getByText(en.add))
     await screen.findByLabelText(en.provider)
+    fireEvent.click(screen.getByRole('button', { name: en.addWithoutKey }))
     fireEvent.change(screen.getByLabelText<HTMLInputElement>(en.keyInput), { target: { value: 'sk-ant' } })
     fireEvent.click(screen.getByText(en.apply))
     await screen.findByText('credential store unavailable')
@@ -1268,6 +1271,7 @@ describe('ModelsSection', () => {
     fireEvent.click(screen.getByText(en.add))
     const pick = await screen.findByLabelText<HTMLSelectElement>(en.provider)
     fireEvent.change(pick, { target: { value: 'broken' } })
+    fireEvent.click(screen.getByRole('button', { name: en.addWithoutKey }))
     await screen.findByText(/unresolvable settings path/)
     fireEvent.change(pick, { target: { value: 'plain' } })
     await waitFor(() => {
@@ -1284,6 +1288,7 @@ describe('ModelsSection', () => {
     })
     fireEvent.click(screen.getByText(en.add))
     await screen.findByLabelText(en.provider)
+    fireEvent.click(screen.getByRole('button', { name: en.addWithoutKey }))
     fireEvent.change(screen.getByLabelText<HTMLInputElement>(en.keyInput), { target: { value: 'sk-x' } })
     fireEvent.click(screen.getByText(en.apply))
     await screen.findByText(/unknown pi-ai provider/)
@@ -1638,16 +1643,52 @@ describe('ModelsSection', () => {
     const pending = new Promise<void>((resolve) => { settle = resolve })
     const providerNamespace = wireNamespaces().find(view => view.ns === 'llm-pi-ai')!
     const mutate = vi.fn(() => pending.then(() => remoteOk(providerNamespace)))
-    await mountSection({ mutate })
+    const scripted = scriptedFace({ mutate })
+    scripted.face.llm.discoverModels.mockResolvedValue(remoteOk([{ id: 'claude-slow' }]))
+    await mountFace(scripted)
     fireEvent.click(screen.getByRole('button', { name: en.add }))
     fireEvent.change(screen.getByLabelText(en.keyInput), { target: { value: 'sk-slow' } })
-    fireEvent.click(screen.getByText(en.apply))
+    fireEvent.click(await screen.findByRole('checkbox', { name: 'claude-slow' }))
+    fireEvent.click(screen.getByRole('button', { name: en.addProviderStart }))
     await waitFor(() => { expect(screen.getByRole<HTMLButtonElement>('tab', { name: en.addCustom }).disabled).toBe(true) })
     expect(screen.getByRole<HTMLButtonElement>('tab', { name: en.addCatalog }).disabled).toBe(true)
     await act(async () => { settle!(); await pending })
-    // The apply closes the card once it lands; nothing was switched underneath it.
+    // The write closes the card once it lands; nothing was switched underneath it.
     await waitFor(() => { expect(screen.queryByRole('tablist')).toBeNull() })
     expect(mutate).toHaveBeenCalledOnce()
+  })
+
+  it('adds a catalog provider by pasting the key and choosing from the models it lists', async () => {
+    const providerNamespace = wireNamespaces().find(view => view.ns === 'llm-pi-ai')!
+    const mutate = vi.fn(() => Promise.resolve(remoteOk(providerNamespace)))
+    const scripted = scriptedFace({ mutate })
+    scripted.face.llm.discoverModels.mockResolvedValue(remoteOk([{ id: 'claude-a' }, { id: 'claude-b' }]))
+    const { set } = await mountFace(scripted)
+    fireEvent.click(screen.getByRole('button', { name: en.add }))
+    // No disclosure to open and no fetch button: the key alone starts the lookup.
+    expect(screen.queryByText(en.customized)).toBeNull()
+    expect(screen.queryByRole('button', { name: en.fetchModels })).toBeNull()
+    fireEvent.change(screen.getByLabelText(en.keyInput), { target: { value: 'sk-ant' } })
+    fireEvent.click(await screen.findByRole('checkbox', { name: 'claude-b' }))
+    fireEvent.click(screen.getByRole('button', { name: en.addProviderStart }))
+    await waitFor(() => { expect(set).toHaveBeenCalledWith('ANTHROPIC_API_KEY', 'sk-ant') })
+    expect(mutate).toHaveBeenCalledOnce()
+    const ops = (mutate.mock.calls[0] as unknown as [string, Array<{ path: string[]; value: unknown }>])[1]
+    expect(ops).toEqual([{
+      op: 'set',
+      path: ['providers', 'anthropic'],
+      value: { apiKeyEnv: 'ANTHROPIC_API_KEY', models: [{ id: 'claude-b' }] },
+    }])
+    await waitFor(() => { expect(screen.queryByRole('tablist')).toBeNull() })
+  })
+
+  it('closes the catalog add card on cancel without writing anything', async () => {
+    const { mutate, set } = await mountSection()
+    fireEvent.click(screen.getByRole('button', { name: en.add }))
+    fireEvent.click(screen.getByRole('button', { name: en.cancel }))
+    expect(screen.queryByLabelText(en.keyInput)).toBeNull()
+    expect(mutate).not.toHaveBeenCalled()
+    expect(set).not.toHaveBeenCalled()
   })
 
   it('locks the mode switch while the custom form is asking the endpoint for models', async () => {

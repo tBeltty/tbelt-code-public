@@ -223,18 +223,35 @@ describe('/clear real composition', () => {
   })
 
   it('is unavailable while the agent is not idle (negative control)', async () => {
-    const { agent } = await setupHarness()
+    const { ctx, agent } = await setupHarness()
     seedTurn(agent, 'busy')
     const blocker = agent.runMaintenance(signal => new Promise<void>((_resolve, reject) => {
       signal.addEventListener('abort', () => { reject(new Error(String(signal.reason))) })
     }))
     try {
-      await expect(clearNow(agent)).rejects.toThrow(ManualClearError)
+      await expect(clearNow(agent, ctx.tokenMeter)).rejects.toThrow(ManualClearError)
       // The blocked maintenance job left the surface untouched.
       expect(agent.session.surface.nodes.length).toBe(2)
     } finally {
       agent.cancel({ kind: 'disposed' })
       await blocker.catch(() => undefined)
     }
+  })
+
+  it('estimates tokens without reading tokenMeter from the agent context', async () => {
+    const { ctx, agent } = await setupHarness()
+    seedSystemPrompt(agent, 'system')
+    seedTurn(agent, 'one')
+    // The agent-loop context does not inject `tokenMeter`, so a read through it throws in the app.
+    const strictCtx = new Proxy(agent.ctx, {
+      get(target, prop, receiver) {
+        if (prop === 'tokenMeter') throw new Error('cannot get property "tokenMeter" without inject')
+        return Reflect.get(target, prop, receiver)
+      },
+    })
+    Object.defineProperty(agent, 'ctx', { value: strictCtx })
+    const execution = await ctx.commands.execute(agent, '/clear', [], new AbortController().signal)
+    if (execution === undefined) throw new Error('did not resolve /clear')
+    expect(execution.result.kind).toBe('success')
   })
 })

@@ -4,6 +4,16 @@ Notable changes to tBelt Code, newest first. The format follows [Keep a Changelo
 
 ## [Unreleased]
 
+## [0.2.0-rc.2.20261008.2] - 2026-10-08
+
+### Changed
+
+- Adding a provider in Settings now works like first-run setup: paste the API key, the models it can use appear right away, and you tick the ones to add. The "Customized settings" section and the Fetch models button are no longer needed for this. Providers that need no key have a "Set up without an API key" option.
+
+### Fixed
+
+- `/clear` no longer fails with `cannot get property "tokenMeter" without inject`.
+
 ## [0.2.0-rc.2.20261008] - 2026-10-08
 
 ### Added
@@ -134,7 +144,8 @@ Notable changes to tBelt Code, newest first. The format follows [Keep a Changelo
 - Downloads no longer return an older installer.
 - A key that ran out of credit or hit its spending limit is reported as a quota problem instead of an invalid API key.
 
-[Unreleased]: https://github.com/tBeltty/tbelt-code-public/compare/v0.2.0-rc.2.20261008...HEAD
+[Unreleased]: https://github.com/tBeltty/tbelt-code-public/compare/v0.2.0-rc.2.20261008.2...HEAD
+[0.2.0-rc.2.20261008.2]: https://github.com/tBeltty/tbelt-code-public/releases/tag/v0.2.0-rc.2.20261008.2
 [0.2.0-rc.2.20261008]: https://github.com/tBeltty/tbelt-code-public/releases/tag/v0.2.0-rc.2.20261008
 [0.2.0-rc.2.20261007]: https://github.com/tBeltty/tbelt-code-public/releases/tag/v0.2.0-rc.2.20261007
 [0.2.0-rc.2.20261006.5]: https://github.com/tBeltty/tbelt-code-public/releases/tag/v0.2.0-rc.2.20261006.5

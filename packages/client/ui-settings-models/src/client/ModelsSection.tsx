@@ -35,6 +35,7 @@ import { deriveKeyRef, protocolChoices, providerUsable } from './store.ts'
 import type { ModelsSettingsStore, ProviderRow } from './store.ts'
 import type { ModelsOperations } from './operations.ts'
 import type { SettingsSchemaOperations } from './schema-operations.ts'
+import { OnboardingProviderSetup } from './OnboardingProviderSetup.tsx'
 import { ProviderEditor, type ProviderEditorProps } from './ProviderEditor.tsx'
 import type { en } from './locales.ts'
 import styles from './ModelsSection.module.css'
@@ -244,6 +245,8 @@ function Loaded({ injected, renderSlot }: { injected: ModelsSectionFace; renderS
   /** Whether each add panel has a write or an interrogation in flight. */
   const [catalogBusy, setCatalogBusy] = useState(false)
   const [customBusy, setCustomBusy] = useState(false)
+  /** The catalog route whose add card skips the key check, for providers that authenticate some other way. */
+  const [keylessProvider, setKeylessProvider] = useState<string | undefined>(undefined)
   /** Base of the add card's tab and panel ids. */
   const addId = useId()
   const [deleteTarget, setDeleteTarget] = useState<EditorTarget | undefined>(undefined)
@@ -274,6 +277,7 @@ function Loaded({ injected, renderSlot }: { injected: ModelsSectionFace; renderS
     setCatalogBusy(false)
     setCustomBusy(false)
     setCustomTemplate(undefined)
+    setKeylessProvider(undefined)
   }
 
   const closeEditor = (changed: boolean, target: ProviderIdentity): void => {
@@ -593,20 +597,50 @@ function Loaded({ injected, renderSlot }: { injected: ModelsSectionFace; renderS
                         ))}
                       </select>
                     </div>
-                    <ProviderEditor
-                      key={draft.target.provider}
-                      provider={draft.target.provider}
-                      displayName={draft.target.displayName}
-                      hideTitle
-                      namespace={draft.namespace}
-                      schema={schema}
-                      settingsPath={draft.target.settingsPath}
-                      operations={operations}
-                      t={t}
-                      readOnly={!state.writable}
-                      onClose={(changed) => { closeEditor(changed, draft.target) }}
-                      onBusyChange={setCatalogBusy}
-                    />
+                    {draft.namespace.ns === 'llm-pi-ai' && keylessProvider !== draft.target.provider
+                      ? (
+                        <>
+                          <OnboardingProviderSetup
+                            key={draft.target.provider}
+                            provider={draft.target.provider}
+                            namespace={draft.namespace}
+                            settingsPath={draft.target.settingsPath}
+                            schema={schema}
+                            operations={operations}
+                            t={t}
+                            readOnly={!state.writable}
+                            setDefault={false}
+                            submitLabelKey="addProviderStart"
+                            onCancel={() => { closeEditor(false, draft.target) }}
+                            onBusyChange={setCatalogBusy}
+                            onDone={() => { closeEditor(true, draft.target) }}
+                          />
+                          <button
+                            type="button"
+                            className={styles['secondaryButton']}
+                            disabled={!state.writable || catalogBusy}
+                            onClick={() => { setKeylessProvider(draft.target.provider) }}
+                          >
+                            {t('addWithoutKey')}
+                          </button>
+                        </>
+                      )
+                      : (
+                        <ProviderEditor
+                          key={draft.target.provider}
+                          provider={draft.target.provider}
+                          displayName={draft.target.displayName}
+                          hideTitle
+                          namespace={draft.namespace}
+                          schema={schema}
+                          settingsPath={draft.target.settingsPath}
+                          operations={operations}
+                          t={t}
+                          readOnly={!state.writable}
+                          onClose={(changed) => { closeEditor(changed, draft.target) }}
+                          onBusyChange={setCatalogBusy}
+                        />
+                      )}
                     {addRow === undefined
                       ? null
                       : renderSlot(

@@ -386,6 +386,8 @@ describe('ProviderOnboardingDialog', () => {
         operations={h.props.operations}
         t={h.props.t}
         readOnly={false}
+        setDefault
+        submitLabelKey="onboardingStart"
         onDone={onDone}
       />,
     )

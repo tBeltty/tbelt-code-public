@@ -19,6 +19,7 @@ import type { CommandId } from '@deepseek-ai/dsh-commands/brand'
 import type { CommandInvocation, CommandResult } from '@deepseek-ai/dsh-commands'
 import { createUserMessage } from '@deepseek-ai/dsh-llm'
 import type { Message } from '@deepseek-ai/dsh-llm'
+import type { TokenMeter } from '@deepseek-ai/dsh-token-meter'
 // Type-only: the `ctx.goals` Context merge for the optional open-goal notice.
 import type {} from '@deepseek-ai/dsh-goal'
 // Type-only: the `ctx.tokenMeter` Context merge for the shadow-price estimate.
@@ -51,6 +52,8 @@ export interface ClearResult {
  * current history under one `context/clear` transaction. Requires an idle agent,
  * the same guarantee `/compact` and `/undo` rely on for a session mutation.
  * @param agent - agent whose session is reset.
+ * @param tokenMeter - meter that estimates the shadowed tokens. Passed in
+ * because `agent.ctx` does not inject `tokenMeter`.
  * @param sourceCommandId - initiating `/clear` command, when manual.
  * @returns the landed transaction, or `null` when there was nothing to clear.
  * @throws {@link ManualClearError} `busy` when other work owns the agent,
@@ -59,6 +62,7 @@ export interface ClearResult {
  */
 export async function clearNow(
   agent: Agent,
+  tokenMeter: TokenMeter,
   sourceCommandId?: CommandId,
 ): Promise<ClearResult | null> {
   let pending: Promise<ClearResult | null>
@@ -81,7 +85,7 @@ export async function clearNow(
       const liveMessages = session.deriveMessages()
       const shadowedMessages = keepsHead && liveMessages[0]?.role === 'system' ? liveMessages.slice(1) : liveMessages
       let shadowedTokenCount = 0
-      for (const message of shadowedMessages) shadowedTokenCount += agent.ctx.tokenMeter.estimateMessage(message)
+      for (const message of shadowedMessages) shadowedTokenCount += tokenMeter.estimateMessage(message)
       const shadowedText = renderMessages(shadowedMessages)
 
       const clearId = ClearId(randomUUID())
@@ -190,7 +194,7 @@ async function executeClear(ctx: Context, invocation: CommandInvocation): Promis
     : ''
 
   try {
-    const result = await clearNow(invocation.agent, invocation.commandId)
+    const result = await clearNow(invocation.agent, ctx.tokenMeter, invocation.commandId)
     if (result === null) return { kind: 'success', text: 'Nothing to clear yet.' }
     return {
       kind: 'success',

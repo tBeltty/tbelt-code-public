@@ -60,6 +60,8 @@ const ASSET_GLOBS = [
   'node_modules/**/*.yml',
   // web-app builds this path dynamically, so pkg cannot discover the static frontend.
   'node_modules/@deepseek-ai/dsh-web-frontend/dist/**/*',
+  // skill-authoring resolves its Markdown guide through import.meta.url.
+  'node_modules/@deepseek-ai/dsh-skill-authoring/assets/**/*',
   // skill-badge resolves both Markdown and image resources through import.meta.url.
   'node_modules/@deepseek-ai/dsh-skill-badge/assets/**/*',
   // The diagnosis provider extracts its PowerShell script for an external interpreter.

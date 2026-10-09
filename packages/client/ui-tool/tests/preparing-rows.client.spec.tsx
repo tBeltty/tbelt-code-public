@@ -16,8 +16,7 @@ import { DetailsRow } from '../src/client/tool/toolviews/details-row.tsx'
 import { TodoRow } from '../src/client/tool/toolviews/todo-row.tsx'
 import { AskQuestionRow } from '../src/client/tool/toolviews/ask-question-row.tsx'
 import { BashRow } from '../src/client/tool/toolviews/bash-sample.tsx'
-import { parsedToolCall } from '../src/client/tool/models/raw-tool-call.ts'
-import { toolRowModel } from '../src/client/tool/models/tool-call-model.ts'
+import { parsedToolCall, toolRowModel } from '@deepseek-ai/dsh-presentation-tool-call'
 
 afterEach(cleanup)
 

@@ -458,10 +458,10 @@ class InstalledBundleSmoke {
         consumerRoot,
         environment,
       )
-      if (version !== this.bundle.manifest.version) {
+      if (version !== `tBelt Code ${this.bundle.manifest.version}`) {
         throw new Error(
           `installed dsh --version returned ${JSON.stringify(version)}; `
-          + `expected ${this.bundle.manifest.version}`,
+          + `expected tBelt Code ${this.bundle.manifest.version}`,
         )
       }
       this.probeWeb(bin, consumerRoot, environment)

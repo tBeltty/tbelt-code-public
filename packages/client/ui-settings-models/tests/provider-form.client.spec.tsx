@@ -583,6 +583,56 @@ describe('endpoint interrogation', () => {
     })
   })
 
+  it('shows the model list and its fetch action without opening Customized settings', async () => {
+    await mountSection()
+    const row = screen.getByText('openai').closest('li')!
+    fireEvent.click(within_(row, en.edit))
+    const fetch = screen.getByRole('button', { name: en.fetchModels })
+    expect(fetch.closest('details')).toBeNull()
+    // Only the rows fold away, behind their own disclosure.
+    expect(screen.getByText(en.modelsEdit).closest('details')).not.toBeNull()
+  })
+
+  it.each([
+    ['INVALID_CREDENTIAL', en.onboardingKeyRejected],
+    ['QUOTA', en.onboardingKeyQuota],
+  ])('warns about a typed key the provider refuses (%s) without blocking the save', async (code, shown) => {
+    const discover = vi.fn(() => Promise.resolve({
+      ok: false as const,
+      error: new RemoteError('llm/model-discovery-rejected', 'refused', { settingsNs: 'llm-pi-ai', code }),
+    }))
+    await mountSection({ discover })
+    openEditor('openai')
+    fireEvent.change(screen.getByLabelText(en.keyInput), { target: { value: 'sk-typed' } })
+    expect((await screen.findByRole('alert')).textContent).toBe(shown)
+    expect(discover).toHaveBeenCalledWith('llm-pi-ai', { provider: 'openai', apiKey: 'sk-typed', live: true })
+    expect(screen.getByRole<HTMLButtonElement>('button', { name: en.apply }).disabled).toBe(false)
+  })
+
+  it('stays quiet about a key check that failed for another reason, and about a cleared key', async () => {
+    const discover = vi.fn(() => Promise.resolve(fail('the endpoint is down', 'llm/model-discovery-rejected')))
+    await mountSection({ discover })
+    openEditor('openai')
+    const key = screen.getByLabelText(en.keyInput)
+    fireEvent.change(key, { target: { value: 'sk-typed' } })
+    expect((await screen.findAllByRole('status')).length).toBeGreaterThan(0)
+    await waitFor(() => { expect(discover).toHaveBeenCalledWith('llm-pi-ai', { provider: 'openai', apiKey: 'sk-typed', live: true }) })
+    await waitFor(() => { expect(screen.queryByRole('alert')).toBeNull() })
+    fireEvent.change(key, { target: { value: '' } })
+    expect(screen.queryByText(en.onboardingKeyChecking)).toBeNull()
+  })
+
+  it('does not check the key of a hand-declared route against a provider', async () => {
+    const { discover } = await mountSection({
+      providers: { 'acme-gateway': { api: 'openai-completions', baseURL: 'https://gateway.acme.example/v1', models: [{ id: 'm' }] } },
+      declaredRoutes: ['acme-gateway'],
+    })
+    openEditor('acme-gateway')
+    fireEvent.change(screen.getByLabelText(en.keyInput), { target: { value: 'sk-typed' } })
+    await new Promise(resolve => setTimeout(resolve, 700))
+    expect(discover).not.toHaveBeenCalled()
+  })
+
   it('carries the protocol the profile already names', async () => {
     const discover = vi.fn(() => Promise.resolve(ok([])))
     await mountSection({

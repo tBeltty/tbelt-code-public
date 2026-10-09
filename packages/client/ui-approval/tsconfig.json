@@ -21,6 +21,9 @@
       "path": "../../llm/llm"
     },
     {
+      "path": "../../presentation/approval"
+    },
+    {
       "path": "../../typert/protocol"
     },
     {

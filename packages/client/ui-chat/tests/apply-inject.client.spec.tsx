@@ -214,14 +214,14 @@ describe('Chat inject API', () => {
       const prefixes = b.runtime.ctx.get('conversation')!.prefixes as ComposerMessagePrefixRegistry
       expect(prefixes.collect(ROOT)).toEqual([])
       injected.quote('  first line\r\n\r\n\r\nsecond  ')
-      injected.quote('other')
+      injected.quote('other', 'with a note')
       injected.quote('   ')
       const dock = b.runtime.slots.entries('conversation.input.dock').find(entry => entry.options.id === 'chat.quotes')!
       const injectedFace: object = dock.inject!()
       const face = injectedFace as QuoteDockInjected
       expect(face.hooks.quotes.getSnapshot()[ROOT]?.map(quote => quote.text)).toEqual(['first line\n\nsecond', 'other'])
       const [prefix] = prefixes.collect(ROOT)
-      expect(prefix?.text).toBe('> first line\n>\n> second\n\n> other')
+      expect(prefix?.text).toBe('> first line\n>\n> second\n\n> other\n\nwith a note')
       prefix?.commit()
       expect(prefixes.collect(ROOT)).toEqual([])
       expect(face.hooks.quotes.getSnapshot()[ROOT]).toBeUndefined()

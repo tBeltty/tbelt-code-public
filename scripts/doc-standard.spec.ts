@@ -103,6 +103,12 @@ const PACKAGE_LIBRARIES: Readonly<Record<string, string>> = {
   'packages/util/timeout': 'Zero-dependency timeout utility.',
   'packages/util/values': 'Stateless lossless-JSON and immutable-value helpers.',
   'packages/util/workspace-path': 'Zero-dependency Workspace path formatter.',
+  'packages/presentation/tool-call': 'Stateless tool call row presenter shared by the GUI and terminal clients.',
+  'packages/presentation/tool-card': 'Stateless shell, diff, read and search card presenter shared by the GUI and terminal clients.',
+  'packages/presentation/approval': 'Stateless approval prompt presenter shared by the GUI and terminal clients.',
+  'packages/presentation/plan': 'Stateless plan and todo progress presenter shared by the GUI and terminal clients.',
+  'packages/presentation/settings': 'Stateless provider setup presenter shared by the GUI and terminal clients.',
+  'packages/terminal-client/views': 'Stateless terminal views: transcript lines, composer, key decoding and approval prompt.',
 }
 
 function readFrontmatter(file: string): Record<string, unknown> {

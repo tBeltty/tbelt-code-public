@@ -34,7 +34,7 @@ jobs:
         run: |
           version=${TAG#v}
           scripts/release-notes.sh notes "$version" > "$RUNNER_TEMP/notes.md"
-          printf '\nDownload tBelt Code from https://tbelt.online.\n' >> "$RUNNER_TEMP/notes.md"
+          printf '\nDownload tBelt Code from https://code.tbelt.online.\n' >> "$RUNNER_TEMP/notes.md"
           prerelease=()
           [[ "$version" == *-* ]] && prerelease=(--prerelease)
           gh release create "$TAG" --verify-tag --title "tBelt Code $version" \

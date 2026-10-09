@@ -18,9 +18,9 @@ const catalog = { options: [], defaultPreset: 'read-only', defaultOptions: ['rea
 const directory = { store: createSnapshotStore({ value: catalog }), load: () => Promise.resolve(catalog) }
 
 /** Controller over a real mirror derived from the same scripted context. */
-function derivedController(remote: { settings: object }) {
+function derivedController(remote: { settings: object }, source: typeof directory = directory) {
   const ctx = { remote } as never
-  return new PermissionPresetSettingsController(new SettingsDescribeMirror(ctx), ctx, directory)
+  return new PermissionPresetSettingsController(new SettingsDescribeMirror(ctx), ctx, source)
 }
 
 afterEach(cleanup)
@@ -78,6 +78,27 @@ function mount(controller: PermissionPresetSettingsController) {
 }
 
 describe('PermissionRow', () => {
+  it('describes the chosen preset and each menu row, but not a preset the host renamed', async () => {
+    const renamed = {
+      ...catalog,
+      defaultOptions: [
+        { value: 'read-only', name: 'read-only' },
+        { value: 'workspace-write', name: 'Project Files' },
+      ],
+    }
+    const source = { store: createSnapshotStore({ value: renamed }), load: () => Promise.resolve(renamed) }
+    const controller = derivedController({
+      settings: {
+        describe: () => Promise.resolve(ok({ writable: true, hasDocument: false, namespaces: [view('read-only')] })),
+      },
+    }, source)
+    mount(controller)
+    fireEvent.click(await screen.findByRole('button', { name: /^仅可查看/ }))
+    expect(screen.getAllByText(zh['hint.readOnly']).length).toBeGreaterThan(0)
+    expect(screen.getByRole('menuitem', { name: 'Project Files' })).toBeTruthy()
+    expect(screen.queryByText(zh['hint.workspaceWrite'])).toBeNull()
+  })
+
   it('loads the descriptor, opens the menu, and selects a new default', async () => {
     const mutate = vi.fn(() => Promise.resolve(ok(view('workspace-write', 1))))
     const controller = derivedController({
@@ -87,7 +108,7 @@ describe('PermissionRow', () => {
       },
     })
     mount(controller)
-    const button = await screen.findByRole('button', { name: '仅可查看' })
+    const button = await screen.findByRole('button', { name: /^仅可查看/ })
     expect(button.getAttribute('aria-expanded')).toBe('false')
     fireEvent.click(button)
     expect(button.getAttribute('aria-expanded')).toBe('true')
@@ -97,11 +118,11 @@ describe('PermissionRow', () => {
     fireEvent.click(button)
     expect(button.getAttribute('aria-expanded')).toBe('false')
     fireEvent.click(button)
-    fireEvent.click(screen.getByRole('menuitem', { name: '仅可查看' }))
+    fireEvent.click(screen.getByRole('menuitem', { name: /^仅可查看/ }))
     expect(mutate).not.toHaveBeenCalled()
     fireEvent.click(button)
-    fireEvent.click(screen.getByRole('menuitem', { name: '工作区内修改' }))
-    await screen.findByRole('button', { name: '工作区内修改' })
+    fireEvent.click(screen.getByRole('menuitem', { name: /^工作区内修改/ }))
+    await screen.findByRole('button', { name: /^工作区内修改/ })
     expect(mutate).toHaveBeenCalledOnce()
   })
 
@@ -114,13 +135,13 @@ describe('PermissionRow', () => {
       },
     })
     mount(controller)
-    fireEvent.click(await screen.findByRole('button', { name: '仅可查看' }))
-    fireEvent.click(screen.getByRole('menuitem', { name: '完全权限' }))
+    fireEvent.click(await screen.findByRole('button', { name: /^仅可查看/ }))
+    fireEvent.click(screen.getByRole('menuitem', { name: /^完全权限/ }))
     expect(mutate).not.toHaveBeenCalled()
     fireEvent.click(screen.getByRole('button', { name: '取消' }))
     expect(screen.queryByRole('dialog', { name: '确认启用完全权限？' })).toBeNull()
-    fireEvent.click(screen.getByRole('button', { name: '仅可查看' }))
-    fireEvent.click(screen.getByRole('menuitem', { name: '完全权限' }))
+    fireEvent.click(screen.getByRole('button', { name: /^仅可查看/ }))
+    fireEvent.click(screen.getByRole('menuitem', { name: /^完全权限/ }))
     const dialog = screen.getByRole('dialog', { name: '确认启用完全权限？' })
     const enable = screen.getByRole('button', { name: '启用完全权限' })
     expect((enable as HTMLButtonElement).disabled).toBe(true)
@@ -148,7 +169,7 @@ describe('PermissionRow', () => {
       },
     })
     mount(readonly)
-    expect((await screen.findByRole('button', { name: '仅可查看' })).hasAttribute('disabled')).toBe(true)
+    expect((await screen.findByRole('button', { name: /^仅可查看/ })).hasAttribute('disabled')).toBe(true)
   })
 
   it('shows loading and a contained write error', async () => {
@@ -170,9 +191,9 @@ describe('PermissionRow', () => {
     mount(controller)
     expect((await screen.findByRole('button', { name: '加载中' })).hasAttribute('disabled')).toBe(true)
     describe.resolve(ok({ writable: true, hasDocument: false, namespaces: [view('read-only')] }))
-    const button = await screen.findByRole('button', { name: '仅可查看' })
+    const button = await screen.findByRole('button', { name: /^仅可查看/ })
     fireEvent.click(button)
-    fireEvent.click(screen.getByRole('menuitem', { name: '工作区内修改' }))
+    fireEvent.click(screen.getByRole('menuitem', { name: /^工作区内修改/ }))
     expect((await screen.findByRole('alert')).textContent).toBe('changed elsewhere')
   })
 })

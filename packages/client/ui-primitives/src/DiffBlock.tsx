@@ -1,6 +1,6 @@
 import { useCallback, useMemo, useState } from 'react'
 import clsx from 'clsx'
-import { structuredPatch } from 'diff'
+import { diffHunks, diffTotals, type DiffHunk } from '@deepseek-ai/dsh-presentation-tool-card'
 import { FoldToggle } from './FoldToggle.tsx'
 import { writeClipboard } from './clipboard.ts'
 import { CodeToolbar, type CodeToolbarLabels } from './CodeToolbar.tsx'
@@ -11,18 +11,8 @@ import css from './DiffBlock.module.css'
 /** Output lines shown before the height cap collapses the middle. */
 export const DEFAULT_DIFF_MAX_LINES = 16
 
-/**
- * One file change in the form {@link DiffBlock} renders. It is declared here
- * so this primitive stays independent of the tool contract.
- */
-export interface DiffHunk {
-  /** The changed file's path, drawn verbatim as the hunk's header (the tool's model-facing path). */
-  path: string
-  /** Prior content including context, or `null` when no prior content is available. */
-  oldText: string | null
-  /** Content after the change, including any shared context. */
-  newText: string
-}
+export { diffTotals }
+export type { DiffHunk }
 
 export interface DiffBlockProps {
   /** One entry per applied hunk, in file order; empty renders nothing. */
@@ -66,40 +56,6 @@ const ROW_CLASS: Record<DiffRow['kind'], string | undefined> = {
   gap: css.gap,
 }
 
-/** Bound synchronous edit-graph search; one replacement consumes two edits. */
-const MAX_DIFF_EDIT_LENGTH = 256
-
-/** Derive exact local patches or a whole-fragment replacement when search exceeds the limit. */
-function localHunks(diff: DiffHunk) {
-  const oldLines = contentLines(diff.oldText ?? '')
-  const newLines = contentLines(diff.newText)
-  const normalize = (lines: string[]): string => lines.map(line => `${line}\n`).join('')
-  return structuredPatch('', '', normalize(oldLines), normalize(newLines),
-    undefined, undefined, { context: 3, maxEditLength: MAX_DIFF_EDIT_LENGTH })?.hunks
-    ?? [{ lines: [...oldLines.map(line => `-${line}`), ...newLines.map(line => `+${line}`)] }]
-}
-
-/**
- * Count displayed additions and deletions. Exact patches exclude shared context;
- * comparisons exceeding the edit limit count both complete fragments as replaced.
- * Text follows {@link contentLines}'s terminator rule.
- * @param diffs - the hunks to count.
- * @returns the +/- totals for tool summaries.
- */
-export function diffTotals(diffs: DiffHunk[]): { added: number; removed: number } {
-  let added = 0
-  let removed = 0
-  for (const diff of diffs) {
-    for (const hunk of localHunks(diff)) {
-      for (const line of hunk.lines) {
-        if (line.startsWith('+')) added++
-        if (line.startsWith('-')) removed++
-      }
-    }
-  }
-  return { added, removed }
-}
-
 /**
  * Flatten local patches into rows.
  * A path header opens each new file. A `⋯` gap separates consecutive same-file
@@ -114,7 +70,7 @@ function buildRows(diffs: DiffHunk[]): DiffRow[] {
     if (diff.path !== prevPath) rows.push({ kind: 'path', text: diff.path })
     else rows.push({ kind: 'gap', text: '⋯' })
     prevPath = diff.path
-    for (const [index, hunk] of localHunks(diff).entries()) {
+    for (const [index, hunk] of diffHunks(diff).entries()) {
       if (index > 0) rows.push({ kind: 'gap', text: '⋯' })
       for (const line of hunk.lines) {
         const kind = line.startsWith('-') ? 'del' : line.startsWith('+') ? 'add' : 'context'
@@ -123,21 +79,6 @@ function buildRows(diffs: DiffHunk[]): DiffRow[] {
     }
   }
   return rows
-}
-
-/**
- * Split a side's text into its content lines. Empty text is zero lines (a full
- * deletion's `newText` or a create's absent `oldText` side draws nothing), and a
- * single trailing newline is a line terminator rather than an extra empty line —
- * the same terminator rule TerminalBlock applies to command output. An interior
- * blank line (a genuine `\n\n`) survives.
- * @param text - the removed or added side's text.
- * @returns the content lines, without the terminating newline.
- */
-function contentLines(text: string): string[] {
-  if (text === '') return []
-  const body = text.endsWith('\n') ? text.slice(0, -1) : text
-  return body.split('\n')
 }
 
 /**

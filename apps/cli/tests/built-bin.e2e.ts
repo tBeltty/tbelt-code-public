@@ -26,7 +26,7 @@ const repoRoot = fileURLToPath(new URL('../../../', import.meta.url))
 // share this value so a widening cannot leave a stale 25s diagnostic behind.
 const SPAWN_TIMEOUT_MS = 60_000
 // The release version, including a prerelease such as 0.0.1-rc.1: `--version`
-// prints what this manifest carries, so no test may pin it to a literal.
+// prints the product name and what this manifest carries, so no test may pin it to a literal.
 const cliVersion = (JSON.parse(readFileSync(new URL('../package.json', import.meta.url), 'utf8')) as { version: string }).version
 const dshBin = join(repoRoot, 'apps/cli/lib/bin.js')
 const invalidProvider = fileURLToPath(new URL('./fixtures/invalid-provider.cordis.yml', import.meta.url))
@@ -630,7 +630,7 @@ describe.skipIf(!existsSync(dshBin))('dsh BUILT bin (node lib/bin.js, no tsx)', 
     writeFileSync(join(project, '.env'), 'PATH=/project-only-path\n')
     try {
       const result = await runBuiltBin(['--version'], {}, project)
-      expect(result).toEqual({ code: 0, stdout: cliVersion, stderr: '' })
+      expect(result).toEqual({ code: 0, stdout: `tBelt Code ${cliVersion}`, stderr: '' })
     } finally {
       rmSync(project, { recursive: true, force: true })
     }
@@ -648,7 +648,7 @@ describe.skipIf(!existsSync(dshBin))('dsh BUILT bin (node lib/bin.js, no tsx)', 
         reject: false,
       })
       expect(result.exitCode).toBe(0)
-      expect(result.stdout).toBe(cliVersion)
+      expect(result.stdout).toBe(`tBelt Code ${cliVersion}`)
       expect(result.stderr).toBe('')
     } finally {
       rmSync(installation, { recursive: true, force: true })

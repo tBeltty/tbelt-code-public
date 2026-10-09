@@ -1163,9 +1163,14 @@ describe('ModelsSection', () => {
   it('edits a pi-ai profile with the curated fields only', async () => {
     const { mutate } = await mountSection()
     fireEvent.click(screen.getByRole('button', { name: openaiCopy(en.editProvider) }))
-    // The configured credential shows as the stored placeholder.
+    // The configured credential shows as a status row, with no input until Replace.
+    await screen.findByText(en.keyConfigured)
+    expect(screen.queryByLabelText(en.keyInput)).toBeNull()
+    fireEvent.click(screen.getByRole('button', { name: en.keyReplace }))
     const editorKey = await screen.findByLabelText<HTMLInputElement>(en.keyInput)
-    await waitFor(() => { expect(editorKey.placeholder).toBe(en.keyStored) })
+    expect(editorKey.value).toBe('')
+    fireEvent.click(screen.getByRole('button', { name: en.keyKeep }))
+    expect(screen.getByText(en.keyConfigured)).toBeTruthy()
     // pi-ai carries Base URL too: the stored override shows as the value and
     // the effective profile endpoint as its placeholder source.
     fireEvent.click(screen.getByText(en.customized))
@@ -1205,6 +1210,34 @@ describe('ModelsSection', () => {
       0,
     ])
     await waitFor(() => { expect(set).toHaveBeenCalledWith('ANTHROPIC_API_KEY', 'sk-ant') })
+  })
+
+  it('filters a long provider list in the add card, always keeping the chosen route', async () => {
+    const scripted = scriptedFace()
+    const many = Array.from({ length: 10 }, (_, index) => {
+      const id = `route-${String(index).padStart(2, '0')}`
+      return { provider: id, displayName: `Vendor ${String(index).padStart(2, '0')}`, settingsNs: 'llm-pi-ai', settingsPath: ['providers', id] }
+    })
+    scripted.face.llm.listConfigurableProviders.mockResolvedValue(remoteOk(many))
+    await mountFace(scripted)
+    fireEvent.click(screen.getByRole('button', { name: en.add }))
+    const pick = await screen.findByLabelText<HTMLSelectElement>(en.provider)
+    expect(pick.options).toHaveLength(10)
+    const search = screen.getByRole('searchbox', { name: en.onboardingSearchProviders })
+    fireEvent.change(search, { target: { value: 'vendor 07' } })
+    // The chosen route stays listed so the control never shows a value it does not offer.
+    expect([...pick.options].map(option => option.value)).toEqual(['route-00', 'route-07'])
+    fireEvent.change(search, { target: { value: '  ' } })
+    expect(pick.options).toHaveLength(10)
+    fireEvent.change(search, { target: { value: 'ROUTE-03' } })
+    expect([...pick.options].map(option => option.value)).toEqual(['route-00', 'route-03'])
+  })
+
+  it('offers no provider filter while the list is short', async () => {
+    await mountSection()
+    fireEvent.click(screen.getByText(en.add))
+    await screen.findByLabelText(en.provider)
+    expect(screen.queryByRole('searchbox', { name: en.onboardingSearchProviders })).toBeNull()
   })
 
   it('keeps pi-ai provider-native authentication when no key is entered', async () => {
@@ -1356,9 +1389,9 @@ describe('ModelsSection', () => {
       }])),
     )))
     fireEvent.click(screen.getByRole('button', { name: openaiCopy(en.editProvider) }))
-    const editorKey = await screen.findByLabelText<HTMLInputElement>(en.keyInput)
-    await waitFor(() => { expect(editorKey.placeholder).toBe(en.keyEnvLocked) })
-    expect(editorKey.disabled).toBe(true)
+    await screen.findByText(en.keyEnvLocked)
+    expect(screen.queryByLabelText(en.keyInput)).toBeNull()
+    expect(screen.queryByRole('button', { name: en.keyReplace })).toBeNull()
   })
 
   it('keeps a failed credential describe silent and the input usable', async () => {

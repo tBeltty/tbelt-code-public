@@ -1,7 +1,7 @@
 /** Native command-management dialogs; only fixed installation locations reach the worker. */
 
 import { execFile } from 'node:child_process'
-import { isAbsolute, join, normalize, win32 } from 'node:path'
+import { dirname, isAbsolute, join, normalize, win32 } from 'node:path'
 import { userInfo } from 'node:os'
 import { promisify } from 'node:util'
 import type { MessageBoxOptions, MessageBoxReturnValue } from 'electron'
@@ -171,7 +171,7 @@ export class DesktopCommandManager {
 
   private async inspect(): Promise<CommandState> {
     const state = await this.worker('inspect')
-    if (process.platform !== 'darwin') return state
+    if (process.platform === 'win32') return state
     try {
       return { ...state, ...await shellCommand() }
     } catch {
@@ -212,6 +212,8 @@ export class DesktopCommandManager {
       const result = await this.worker(operation, state.fingerprint)
       if (this.options.isQuitting()) return
       const current = await this.inspect()
+      const missingFromPath = process.platform === 'linux' && operation === 'install'
+        && current.activeCommand === undefined && !current.selectionUnknown
       const shadowed = current.activeCommand !== undefined && !sameCommand(current.activeCommand, current.destination, process.platform)
       await this.options.show({
         type: shadowed && operation === 'install' ? 'warning' : 'info', title: messages.cliCommandTitle,
@@ -220,6 +222,7 @@ export class DesktopCommandManager {
           ...shadowed && operation === 'install' && current.activeCommand !== undefined
             ? [format(messages.cliCommandSelected, current.activeCommand), messages.cliCommandShadowed] : [],
           ...current.selectionUnknown && operation === 'install' ? [messages.cliCommandSelectionUnknown] : [],
+          ...missingFromPath ? [format(messages.cliCommandPathMissing, dirname(current.destination))] : [],
           ...result.preservedBackup === undefined ? [] : [format(messages.cliCommandBackupKept, result.preservedBackup)],
         ].join('\n\n'),
         buttons: [messages.cliCommandClose],

@@ -101,6 +101,9 @@ export function WebSearchCard(props: WebSearchCardProps) {
               text={state.apiKey.text}
               configured={selected.configured}
               stateLabel={selected.configured ? t('apiKeySet') : t('apiKeyUnset')}
+              placeholder={t('apiKeyPlaceholder')}
+              replaceLabel={t('apiKeyReplace')}
+              cancelLabel={t('apiKeyKeep')}
               onEdit={(text) => { props.edit('apiKey', text) }}
             />
             <KeyStatus status={state.keyStatus} t={t} />

@@ -7,9 +7,7 @@ import type { StartedToolCall, ToolResultNode } from '@deepseek-ai/dsh-client-ui
 import { makeTranslate } from '@deepseek-ai/dsh-client-test-runtime'
 import { zh as commonZh } from '@deepseek-ai/dsh-client-locale/src/locales/zh.ts'
 import { localizeAutoReviewDenial, normalizeAutoReviewReason } from '../src/client/tool/models/auto-review-denial.ts'
-import {
-  classifyTool, formatToolBody, resultText, toolRowModel,
-} from '../src/client/tool/models/tool-call-model.ts'
+import { classifyTool, toolRowModel } from '@deepseek-ai/dsh-presentation-tool-call'
 import { ToolRow } from '../src/client/tool/components/ToolRow.tsx'
 import { GenericToolCard, type GenericToolCardProps } from '../src/client/tool/toolviews/GenericToolCard.tsx'
 import { zh } from '@deepseek-ai/dsh-client-ui-conversation/src/client/locales.ts'
@@ -33,25 +31,7 @@ const result = (over?: Partial<ToolResultNode>): ToolResultNode => ({
   content: [], isError: false, subCalls: [], ...over,
 })
 
-describe('tool-call-model', () => {
-  it('classifies known tools and falls back to others', () => {
-    expect(classifyTool('bash')).toBe('bash')
-    expect(classifyTool('pwsh')).toBe('bash')
-    expect(classifyTool('read')).toBe('read')
-    expect(classifyTool('web_fetch')).toBe('read')
-    expect(classifyTool('web_search')).toBe('search')
-    expect(classifyTool('grep')).toBe('search')
-    expect(classifyTool('write')).toBe('write')
-    expect(classifyTool('edit')).toBe('edit')
-    expect(classifyTool('cordis_runtime_inspect')).toBe('read')
-    // The v3 run-control verbs: `others` is the decided intent, not an
-    // unclassified default (there is no program to show and no file to open).
-    expect(classifyTool('cordis_run')).toBe('others')
-    expect(classifyTool('cordis_stop')).toBe('others')
-    expect(classifyTool('cordis_undefine')).toBe('others')
-    expect(classifyTool('todo_write')).toBe('others')
-  })
-
+describe('tool-call-model titles', () => {
   it('names each cordis verb instead of leaving it a bare tool call', () => {
     // Every define/run pair the model makes puts a row in the flow, so the
     // generic "Tool call · cordis_run · dyn-1" fallback is user-visible slop.
@@ -88,151 +68,11 @@ describe('tool-call-model', () => {
     expect(t(m.titleKey)).toBe('运行命令')
   })
 
-  it('derives state across running/ok/error/interrupted', () => {
-    expect(toolRowModel('bash', running()).state).toBe('running')
-    expect(toolRowModel('bash', result()).state).toBe('ok')
-    expect(toolRowModel('bash', result({ isError: true })).state).toBe('error')
-    expect(toolRowModel('bash', result({ isError: true, error: { name: 'E', code: 'interrupted' } })).state).toBe('stopped')
-  })
-
   it('derives the bash summary from description over command', () => {
     const m = toolRowModel('bash', running())
     expect(t(m.titleKey)).toBe('运行命令')
     expect(m.summary).toBe('List files')
     expect(toolRowModel('bash', running({ argsRaw: '{"command":"pwd"}' })).summary).toBe('pwd')
-  })
-
-  it('keeps summaries single-line and falls back for opaque args', () => {
-    expect(toolRowModel('bash', running({ argsRaw: '{"command":"a\\nb"}' })).summary).toBe('a')
-    expect(toolRowModel('read', running({ name: 'read', argsRaw: '{"path":"/tmp/x.ts"}' })).summary).toBe('/tmp/x.ts')
-    expect(toolRowModel('write', running({ name: 'write', argsRaw: '{"file_path":"src/x.ts"}' })).summary).toBe('src/x.ts')
-    expect(toolRowModel('edit', running({ name: 'edit', argsRaw: '{"file_path":"src/x.ts"}' })).summary).toBe('src/x.ts')
-    // Other rows prefix the real tool name into the summary slot (figma
-    // flows: static "Tool call" title, the name rides the mutable summary).
-    expect(toolRowModel('x', running({ argsRaw: '{"n":1}' })).summary).toBe('x · {"n":1}')
-    expect(toolRowModel('x', running({ argsRaw: 'not json' })).summary).toBe('x · not json')
-    expect(toolRowModel('x', running({ argsRaw: '' })).summary).toBe('x · c1')
-    expect(toolRowModel('', running({ argsRaw: '' })).summary).toBe('c1')
-  })
-
-  it('joins multi-query web search arguments in the summary', () => {
-    expect(toolRowModel('web_search', running({
-      name: 'web_search',
-      argsRaw: '{"queries":["first query","second\\nquery"]}',
-    })).summary).toBe('first query, second')
-  })
-
-  it('exposes filePath for path/file_path args and skips URL-only reads', () => {
-    expect(toolRowModel('read', running({ name: 'read', argsRaw: '{"path":"src/a.ts"}' })).filePath).toBe('src/a.ts')
-    expect(toolRowModel('write', running({ name: 'write', argsRaw: '{"file_path":"src/a.ts"}' })).filePath).toBe('src/a.ts')
-    expect(toolRowModel('edit', running({ name: 'edit', argsRaw: '{"file_path":"src/a.ts"}' })).filePath).toBe('src/a.ts')
-    expect(toolRowModel('web_fetch', running({ name: 'web_fetch', argsRaw: '{"url":"https://example.com"}' })).filePath)
-      .toBeUndefined()
-    expect(toolRowModel('bash', running()).filePath).toBeUndefined()
-  })
-
-  it('displays workspace-rooted paths relative to the session cwd', () => {
-    const cwd = '/Users/u/ws/'
-    expect(toolRowModel('edit', running({ name: 'edit', argsRaw: '{"file_path":"/Users/u/ws/src/x.ts"}' }), cwd).summary).toBe('src/x.ts')
-    expect(toolRowModel('read', running({ name: 'read', argsRaw: '{"path":"/Users/u/ws/a.md"}' }), cwd).summary).toBe('a.md')
-    // Paths outside the workspace (and non-path summaries) stay verbatim.
-    expect(toolRowModel('read', running({ name: 'read', argsRaw: '{"path":"/etc/hosts"}' }), cwd).summary).toBe('/etc/hosts')
-    expect(toolRowModel('bash', running({ argsRaw: '{"command":"pwd"}' }), cwd).summary).toBe('pwd')
-    expect(toolRowModel('read', running({ name: 'read', argsRaw: '{"path":"/Users/u/ws/a.md"}' }), '').summary).toBe('/Users/u/ws/a.md')
-  })
-
-  it('abbreviates leftover POSIX home paths after cwd relativization', () => {
-    const home = '/Users/u'
-    const cwd = '/tmp/ws'
-    expect(toolRowModel('read', running({ name: 'read', argsRaw: '{"path":"/Users/u"}' }), cwd, home).summary).toBe('~')
-    expect(toolRowModel('read', running({ name: 'read', argsRaw: '{"path":"/Users/u/notes.md"}' }), cwd, home).summary)
-      .toBe('~/notes.md')
-    // Workspace-relative wins: a home-and-cwd descendant stays short, not `~/…`.
-    expect(toolRowModel(
-      'read',
-      running({ name: 'read', argsRaw: '{"path":"/Users/u/proj/src/a.ts"}' }),
-      '/Users/u/proj',
-      home,
-    ).summary).toBe('src/a.ts')
-    // Prefix boundary: `/Users/u2` is not under `/Users/u`.
-    expect(toolRowModel('read', running({ name: 'read', argsRaw: '{"path":"/Users/u2/a.ts"}' }), cwd, home).summary)
-      .toBe('/Users/u2/a.ts')
-    expect(toolRowModel(
-      'read',
-      running({ name: 'read', argsRaw: '{"path":"C:\\\\Users\\\\u\\\\a.ts"}' }),
-      cwd,
-      home,
-    ).summary).toBe('C:\\Users\\u\\a.ts')
-    expect(toolRowModel('read', running({ name: 'read', argsRaw: '{"path":"/Users/u/a.ts"}' }), cwd).summary)
-      .toBe('/Users/u/a.ts')
-  })
-
-  it('body pretty-prints JSON args, keeps raw non-JSON, null when empty', () => {
-    expect(formatToolBody('bash', toolRowModel('bash', running({ argsRaw: '{"a":1}' })).bodyRaw ?? ''))
-      .toBe('{\n  "a": 1\n}')
-    expect(formatToolBody('bash', toolRowModel('bash', running({ argsRaw: 'raw' })).bodyRaw ?? ''))
-      .toBe('raw')
-    expect(toolRowModel('bash', running({ argsRaw: '' })).bodyRaw).toBeNull()
-    expect(toolRowModel('bash', result({ call: null })).bodyRaw).toBeNull()
-  })
-
-  it('a code row with an empty program falls back to the args JSON envelope', () => {
-    const model = toolRowModel('run_code', running({ name: 'run_code', argsRaw: '{"code":""}' }))
-    expect(formatToolBody(model.variant, model.bodyRaw ?? ''))
-      .toBe('{\n  "code": ""\n}')
-  })
-
-  it('resultText flattens text blocks verbatim, other shapes as JSON, empty error content to name: code', () => {
-    expect(resultText(result({ content: [{ type: 'text', text: 'a\nb' }] }))).toBe('a\nb')
-    expect(resultText(result({ content: [{ type: 'text', text: 'a' }, { type: 'image', data: 'x' } as never] })))
-      .toBe(`a\n${JSON.stringify({ type: 'image', data: 'x' }, null, 2)}`)
-    expect(resultText(result({ content: [], isError: true, error: { name: 'ToolError', code: 'denied' } })))
-      .toBe('ToolError: denied')
-    expect(resultText(result({ content: [] }))).toBe('')
-  })
-
-  it('derives output from the settled result and null while running or blank', () => {
-    expect(toolRowModel('bash', result({ content: [{ type: 'text', text: 'out' }] })).output).toBe('out')
-    expect(toolRowModel('bash', running()).output).toBeNull()
-    expect(toolRowModel('bash', result({ content: [] })).output).toBeNull()
-  })
-
-  it('derives errorSummary as the first output line on error rows only', () => {
-    const failed = result({ content: [{ type: 'text', text: 'boom\ndetail' }], isError: true })
-    expect(toolRowModel('bash', failed).errorSummary).toBe('boom')
-    expect(toolRowModel('bash', result({ content: [{ type: 'text', text: 'boom' }] })).errorSummary).toBeNull()
-    expect(toolRowModel('bash', result({ content: [], isError: true })).errorSummary).toBeNull()
-    expect(toolRowModel('bash', running()).errorSummary).toBeNull()
-  })
-
-  it('derives Auto-review denial only from the exact structured error identity', () => {
-    const denied = result({
-      parentCallId: 'outer:code:1',
-      isError: true,
-      error: { name: 'AutoReviewDeniedError', code: 'AUTO_REVIEW_DENIED', reason: ' raw\nreason ' },
-    })
-    expect(toolRowModel('bash', denied).autoReviewDenial).toEqual({ reason: ' raw\nreason ' })
-    expect(toolRowModel('bash', result({
-      isError: true,
-      error: { name: 'AutoReviewDeniedError', code: 'AUTO_REVIEW_DENIED' },
-    })).autoReviewDenial).toEqual({ reason: null })
-    expect(toolRowModel('bash', result({
-      isError: true,
-      error: { name: 'AutoReviewDeniedError', code: 'AUTO_REVIEW_DENIED', reason: 42 },
-    } as never)).autoReviewDenial).toEqual({ reason: null })
-    expect(toolRowModel('bash', result({
-      isError: true,
-      error: { name: 'AutoReviewDeniedError', code: 'OTHER' },
-    })).autoReviewDenial).toBeNull()
-    expect(toolRowModel('bash', result({
-      isError: true,
-      error: { name: 'OtherError', code: 'AUTO_REVIEW_DENIED' },
-    })).autoReviewDenial).toBeNull()
-    expect(toolRowModel('bash', result({
-      isError: false,
-      error: { name: 'AutoReviewDeniedError', code: 'AUTO_REVIEW_DENIED' },
-    })).autoReviewDenial).toBeNull()
-    expect(toolRowModel('bash', running()).autoReviewDenial).toBeNull()
   })
 
   it('normalizes Auto-review reasons only for localized display and falls back when blank', () => {
@@ -242,32 +82,6 @@ describe('tool-call-model', () => {
     expect(localizeAutoReviewDenial({ reason: null }, t)).toEqual({
       summary: 'Auto review 已拒绝',
       output: '工具未执行。原因：Auto review 未授权此次操作',
-    })
-  })
-
-  it('gives Cordis lifecycle tools action titles over their generic variants', () => {
-    expect(toolRowModel('cordis_runtime_inspect', running({
-      name: 'cordis_runtime_inspect',
-      argsRaw: '{"what":"api","name":"tools"}',
-    }))).toMatchObject({
-      variant: 'read',
-      titleKey: 'tool.title.inspect',
-      summary: 'api',
-    })
-    expect(toolRowModel('cordis_run', running({
-      name: 'cordis_run',
-      argsRaw: '{"id":"dyn-2"}',
-    }))).toMatchObject({
-      variant: 'others',
-      titleKey: 'tool.title.runCordis',
-      summary: 'dyn-2',
-    })
-    expect(toolRowModel('cordis_undefine', result({
-      call: { name: 'cordis_undefine', argsRaw: '{"id":"dyn-2"}' },
-    }))).toMatchObject({
-      variant: 'others',
-      titleKey: 'tool.title.removeCordis',
-      summary: 'dyn-2',
     })
   })
 })

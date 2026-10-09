@@ -21,7 +21,7 @@ describe('APP_IDENTITY', () => {
     expect(APP_IDENTITY).toEqual({
       product: 'tbelt-code',
       version: manifest.version,
-      url: 'https://tbelt.online',
+      url: 'https://code.tbelt.online',
     })
   })
 })
@@ -29,7 +29,7 @@ describe('APP_IDENTITY', () => {
 describe('userAgent', () => {
   it('renders product/version with the +url comment', () => {
     expect(userAgent()).toBe(
-      `tbelt-code/${manifest.version} (+https://tbelt.online)`,
+      `tbelt-code/${manifest.version} (+https://code.tbelt.online)`,
     )
   })
 

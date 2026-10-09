@@ -8,20 +8,17 @@ import {
 import type { PropsRenderSlots, TranslateNS } from '@deepseek-ai/dsh-client-ui-slots'
 import type { OpenFileOptions, UseDisclosure } from '@deepseek-ai/dsh-client-ui-chat/client'
 import type { MessageImageLoader } from '@deepseek-ai/dsh-client-ui-conversation/client'
-import { CHAT_DIFF_MAX_LINES, type DiffCardModel } from '../models/diff-card-model.ts'
-import { CHAT_READ_MAX_LINES, type ReadCardModel } from '../models/read-card-model.ts'
+import type { DiffCardModel, ReadCardModel, SearchCardModel, TerminalCardModel } from '@deepseek-ai/dsh-presentation-tool-card'
+import { CHAT_DIFF_MAX_LINES, CHAT_READ_MAX_LINES, CHAT_SEARCH_MAX_LINES } from '../models/chat-limits.ts'
 import type { ImageCardModel } from '../models/image-card-model.ts'
-import { CHAT_SEARCH_MAX_LINES, type SearchCardModel } from '../models/search-card-model.ts'
-import {
-  localizeTerminalCardModel, terminalBlockLabels, type TerminalCardModel,
-} from '../models/terminal-card-model.ts'
+import { localizeTerminalCardModel, terminalBlockLabels } from '../models/terminal-labels.ts'
 import {
   codeToolbarLabels, diffBlockLabels, readBlockLabels, searchBlockLabels, webBlockLabels,
 } from '../models/primitive-labels.ts'
 import type { AskQuestionCardModel } from '../models/ask-question-card-model.ts'
 import {
   formatToolBody, type ToolRowState, type ToolRowVariant,
-} from '../models/tool-call-model.ts'
+} from '@deepseek-ai/dsh-presentation-tool-call'
 import type { WebCardModelProps } from '../models/web-card-model.ts'
 import { AskQuestionCard } from './AskQuestionCard.tsx'
 import { ToolDetails, type ToolDetailsModel } from './ToolDetails.tsx'

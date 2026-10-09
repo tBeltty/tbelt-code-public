@@ -106,6 +106,7 @@
     "verify-concrete-terms": "tsx scripts/verify-concrete-terms.ts",
     "verify-no-unknown-casts": "tsx scripts/verify-no-unknown-casts.ts",
     "verify-doc-refs": "tsx scripts/verify-doc-refs.ts",
+    "verify-surface-parity": "tsx scripts/verify-surface-parity.ts",
     "verify-subsystem-pages": "tsx scripts/verify-subsystem-pages.ts",
     "verify-package-paths": "tsx scripts/verify-package-paths.ts",
     "verify-dsh-package-licenses": "tsx scripts/verify-dsh-package-licenses.ts",

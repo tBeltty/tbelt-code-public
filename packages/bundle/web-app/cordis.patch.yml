@@ -500,6 +500,11 @@
 - id: tool-skill
   disabled: true
 
+# The skill-authoring guide is a deployment-level bundled skill on the registry's
+# global layer, so every preset-composed agent in the app sees it.
+- id: skill-authoring
+  disabled: false
+
 # The goal service and session driver stay on the host plane, where Gateway
 # remotes resolve them. Presets own the human command and model-facing tool.
 
@@ -606,6 +611,12 @@
   disabled: true
 
 - id: web-search-deepseek
+  disabled: true
+
+# The DeepSeek account route signs in through the DeepSeek Platform. The Web
+# surface offers no provider-specific login, so the route stays unmounted and
+# every provider comes from the user's own Settings > Models entries.
+- id: llm-deepseek-account
   disabled: true
 
 # The search providers the user chooses from in Settings > Plugins > Web

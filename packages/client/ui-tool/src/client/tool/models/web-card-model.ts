@@ -1,7 +1,6 @@
 /** Pure web-card derivation from raw web result metadata. @module */
 import type { WebBlockProps } from '@deepseek-ai/dsh-client-ui-primitives'
-import type { ToolCallBlock } from './tool-call-model.ts'
-import { parsedToolCall } from './raw-tool-call.ts'
+import { parsedToolCall, type ToolCallBlock } from '@deepseek-ai/dsh-presentation-tool-call'
 
 type DistributiveOmit<T, K extends keyof T> = T extends unknown ? Omit<T, K> : never
 

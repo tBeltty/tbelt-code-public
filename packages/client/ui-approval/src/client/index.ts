@@ -8,6 +8,8 @@ import type { PendingInteractionPublisher } from '@deepseek-ai/dsh-client-ui-ses
 import type { TypertClientEventListener } from '@deepseek-ai/dsh-typert-protocol'
 import type {} from '@deepseek-ai/dsh-client-locale/client'
 import type { ShortcutCommandId } from '@deepseek-ai/dsh-client-shortcuts/client'
+import type { SessionId } from '@deepseek-ai/dsh-session/types'
+import { ApprovalGrants, approvalModel, approvalOutcome } from '@deepseek-ai/dsh-presentation-approval'
 import { ApprovalPanel } from './ApprovalPanel.tsx'
 import { PendingApproval } from './contract/slots.ts'
 import { en, zh } from './locales.ts'
@@ -39,9 +41,14 @@ async function answerApproval(
   request: ClientApprovalRequest,
   next: ClientApprovalNext,
   registerPendingInteraction: PendingInteractionPublisher<PendingApproval>,
+  grantsOf: (sessionId: SessionId) => ApprovalGrants,
 ): Promise<ClientApprovalOutcome> {
   const sessionId = ctx.sessions.scopeOf(owner)
   if (sessionId === undefined) return next()
+  const grants = grantsOf(sessionId)
+  // The audit reason, not the localized copy, so a language switch keeps the grant.
+  const scopeKey = approvalModel({ toolName: request.toolName, reason: request.reason }).scopeKey
+  if (grants.allows(scopeKey)) return 'allowed-once'
   const pending = new PendingApproval(sessionId, {
     toolName: request.toolName,
     ...(request.callId === undefined
@@ -58,7 +65,9 @@ async function answerApproval(
   })
   try {
     try {
-      return await pending.result
+      const choice = await pending.result
+      if (choice === 'allowed-session') grants.grant(scopeKey)
+      return approvalOutcome(choice)
     } catch (error) {
       if (pending.isDelegation(error)) return await next()
       throw error
@@ -101,7 +110,15 @@ export function apply(ctx: ClientContext): void {
       'conversation.approval.detail': { kind: 'single', scope: 'session' },
     },
   }, ApprovalPanel))
+  const grants = new Map<SessionId, ApprovalGrants>()
+  const grantsOf = (sessionId: SessionId): ApprovalGrants => {
+    const existing = grants.get(sessionId)
+    if (existing !== undefined) return existing
+    const created = new ApprovalGrants()
+    grants.set(sessionId, created)
+    return created
+  }
   ctx.remote.$on('approval/request', function (request, next) {
-    return answerApproval(ctx, this, request, next, registerPendingInteraction)
+    return answerApproval(ctx, this, request, next, registerPendingInteraction, grantsOf)
   })
 }

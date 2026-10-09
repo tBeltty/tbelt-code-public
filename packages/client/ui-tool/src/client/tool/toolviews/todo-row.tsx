@@ -5,15 +5,15 @@ import type { HostObservable, InjectFace, PropsLocale } from '@deepseek-ai/dsh-c
 import type { ToolCallViewProps } from '../../contract/slots.ts'
 import { registerTodoHistory, type TodoHistory } from '../models/todo-history.ts'
 import { todoDiffModel } from '../models/todo-diff-model.ts'
-import { toolRowModel } from '../models/tool-call-model.ts'
+import { toolRowModel } from '@deepseek-ai/dsh-presentation-tool-call'
 import { ToolRow } from '../components/ToolRow.tsx'
 import { CONVERSATION_NS as NS } from '../../locale.ts'
-import { planSummary, type PlanItemLike } from './plan-summary.ts'
+import { todoProgress, type TodoItemLike } from '@deepseek-ai/dsh-presentation-plan'
 
 type TodoHistoryInjected = { hooks: { todoHistory: HostObservable<TodoHistory | undefined> } }
 type TodoRowProps = ToolCallViewProps & PropsLocale<'conversation'> & InjectFace<TodoHistoryInjected>
 
-function isItem(value: unknown): value is PlanItemLike {
+function isItem(value: unknown): value is TodoItemLike {
   return typeof value === 'object' && value !== null
 }
 
@@ -41,7 +41,7 @@ function summarize(argsRaw: string | null, t: TodoRowProps['t']): RowSummary | n
   if (typeof parsed !== 'object' || parsed === null) return null
   const todos = (parsed as { todos?: unknown }).todos
   if (!Array.isArray(todos) || !todos.every(isItem)) return null
-  const { done, total, activeContent, activeExtra } = planSummary(todos)
+  const { done, total, activeContent, activeExtra } = todoProgress(todos)
   const head = t('todo.completed', { done, total })
   return {
     text: activeContent === null ? head : `${head} · ${activeContent}`,

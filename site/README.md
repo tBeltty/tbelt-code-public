@@ -1,4 +1,4 @@
-# tbelt.online
+# code.tbelt.online
 
 The tBelt Code download site, served by Cloudflare Pages from this folder.
 
@@ -12,7 +12,7 @@ The tBelt Code download site, served by Cloudflare Pages from this folder.
 
 [site-deploy.yml](../.github/workflows/site-deploy.yml) deploys on every push to `main` that touches `site/` and creates a preview deployment for pull requests. It needs the repository secret `CLOUDFLARE_API_TOKEN` (Account > Cloudflare Pages > Edit) and skips the deploy without it. `CLOUDFLARE_ACCOUNT_ID` (secret or variable) is optional when the token can read the tbelt.online zone, which names its account.
 
-`scripts/connect-domain.sh` points `tbelt.online` and `www.tbelt.online` at the Pages project after saving their current DNS records to a backup file; `scripts/restore-domain.sh <backup>` puts them back. The token for these scripts also needs Zone > DNS > Edit on `tbelt.online`. The `Site domain` workflow runs `connect-domain.sh` with the repository secret and keeps the backup as its `dns-backup` artifact; dispatching it with `restore_run_id` set to that run restores the records.
+`scripts/connect-domain.sh` points `code.tbelt.online` and `www.code.tbelt.online` at the Pages project after saving their current DNS records to a backup file; `scripts/restore-domain.sh <backup>` puts them back. The token for these scripts also needs Zone > DNS > Edit on `tbelt.online`. The `Site domain` workflow runs `connect-domain.sh` with the repository secret and keeps the backup as its `dns-backup` artifact; dispatching it with `restore_run_id` set to that run restores the records.
 
 ## Local preview
 

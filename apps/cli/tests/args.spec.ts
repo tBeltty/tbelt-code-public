@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { parseDshArgs } from '../src/args.ts'
+import { parseDshArgs, withDefaultProfile } from '../src/args.ts'
 
 const parse = (argv: string[], manageDesktopProfile = false) => parseDshArgs(argv, '1.2.3', manageDesktopProfile)
 
@@ -234,5 +234,33 @@ describe('parseDshArgs', () => {
     expect(stdout.mock.calls.map(([chunk]) => String(chunk)).join('')).not.toContain('help [command]')
     expect(exitCode(['-h'])).toBe(0)
     expect(exitCode(['--version'])).toBe(0)
+  })
+
+  it('names the product in the version line', () => {
+    const stdout = vi.spyOn(process.stdout, 'write').mockReturnValue(true)
+    expect(exitCode(['--version'])).toBe(0)
+    expect(stdout.mock.calls.map(([chunk]) => String(chunk)).join('')).toBe('tBelt Code 1.2.3\n')
+  })
+
+  it('names the terminal client in the help text without a provider name', () => {
+    const stdout = vi.spyOn(process.stdout, 'write').mockReturnValue(true)
+    expect(exitCode(['--help'])).toBe(0)
+    const printed = stdout.mock.calls.map(([chunk]) => String(chunk)).join('')
+    expect(printed).toContain('dsh terminal')
+    expect(printed).not.toMatch(/deepseek/iu)
+  })
+})
+
+describe('withDefaultProfile', () => {
+  it('reads the arguments as if the profile name came first', () => {
+    expect(withDefaultProfile([], 'terminal')).toEqual(['terminal'])
+    expect(withDefaultProfile(['--resume', 'abc'], 'terminal')).toEqual(['terminal', '--resume', 'abc'])
+    expect(parseDshArgs(withDefaultProfile(['--continue'], 'terminal'), '1.2.3')).toMatchObject({ mode: 'profile', profile: 'terminal', args: ['--continue'] })
+  })
+
+  it('leaves version requests and commands without a default profile alone', () => {
+    expect(withDefaultProfile(['--version'], 'terminal')).toEqual(['--version'])
+    expect(withDefaultProfile(['-V'], 'terminal')).toEqual(['-V'])
+    expect(withDefaultProfile(['web', '--help'], undefined)).toEqual(['web', '--help'])
   })
 })

@@ -23,15 +23,16 @@ interface LauncherPolicy {
   readonly wrapper?: string
 }
 
-/** Public product launcher plus the build-only WebWorker packer. */
+/** Public product launcher and its `tbelt` and `dsh-tui` aliases for the terminal profile, plus the build-only WebWorker packer. */
 const MANIFEST_BIN_ALLOWLIST = new Map<string, ManifestBin>([
-  ['apps/cli/package.json', { dsh: 'lib/bin.js' }],
+  ['apps/cli/package.json', { dsh: 'lib/bin.js', tbelt: 'lib/tbelt-bin.js', 'dsh-tui': 'lib/tbelt-bin.js' }],
   ['packages/experimental/webworker-packer/package.json', { 'dsh-pack-vfs-image': './bin.js' }],
 ])
 
 /** Every JavaScript executable in an application or packaging workspace has one explicit role. */
 const EXECUTABLE_SOURCE_ALLOWLIST = new Map<string, string>([
   ['apps/cli/src/bin.ts', 'supported dsh application launcher'],
+  ['apps/cli/src/tbelt-bin.ts', 'supported dsh application launcher under the product name, booting the terminal profile'],
   ['apps/desktop/scripts/logged-notarytool.mjs', 'build-only notarization logging wrapper'],
   ['packages/context/time-context/tests/fixtures/driver.ts', 'test-only subprocess driver'],
   ['packages/experimental/webworker-packer/bin.js', 'build-only wrapper'],

@@ -10,12 +10,12 @@
 
 import { useEffect, useRef, useState } from 'react'
 import type { ReactNode } from 'react'
-import type { LlmDiscoveredModel, SettingsNamespaceView, SettingsPathOpView } from '@deepseek-ai/dsh-api-remotes/client'
-import type { JsonValue } from '@deepseek-ai/dsh-util-values'
-import { Button } from '@deepseek-ai/dsh-client-ui-primitives'
+import type { LlmDiscoveredModel, SettingsNamespaceView } from '@deepseek-ai/dsh-api-remotes/client'
+import { setupOps } from '@deepseek-ai/dsh-presentation-settings'
+import { Button, SecretKeyInput } from '@deepseek-ai/dsh-client-ui-primitives'
 import { apiKeyFailure } from './apiKey.ts'
-import { adopt } from './ModelListEditor.tsx'
-import { pathOps, refFor } from './ProviderEditor.tsx'
+import { keyLabels } from './key-labels.ts'
+import { refFor } from './ProviderEditor.tsx'
 import type { ModelsOperations } from './operations.ts'
 import type { SettingsSchemaOperations } from './schema-operations.ts'
 import type { en } from './locales.ts'
@@ -140,18 +140,7 @@ export function OnboardingProviderSetup(props: OnboardingProviderSetupProps): Re
       const keyRef = refFor(schema, namespace, settingsPath, provider)
       const chosenKey = chosen.map(model => model.id).join('\n')
       if (writtenFor.current !== chosenKey) {
-        const before = schema.getPath(namespace.user, settingsPath)
-        const stored = typeof before === 'object' && before !== null && !Array.isArray(before)
-          ? before as Record<string, unknown>
-          : undefined
-        const after: Record<string, unknown> = {
-          ...stored,
-          apiKeyEnv: keyRef,
-          models: chosen.map(adopt),
-        }
-        const ops: SettingsPathOpView[] = stored === undefined
-          ? [{ op: 'set', path: [...settingsPath], value: after as JsonValue }]
-          : pathOps(settingsPath, stored, after)
+        const ops = setupOps(settingsPath, schema.getPath(namespace.user, settingsPath), keyRef, chosen)
         const written = await operations.writeSettings(namespace.ns, ops, namespace.revision)
         if (written.kind !== 'written') {
           setFailure(written.kind === 'conflict' ? t('conflict') : written.message)
@@ -178,17 +167,14 @@ export function OnboardingProviderSetup(props: OnboardingProviderSetupProps): Re
     <div className={onboardingStyles['setup']}>
       <div className={styles['field']}>
         <span className={styles['fieldLabel']}>{t('keyInput')}</span>
-        <input
-          className={styles['input']}
-          type="password"
-          autoComplete="new-password"
+        <SecretKeyInput
           value={keyDraft}
-          placeholder={t('keyPlaceholder')}
-          aria-label={t('keyInput')}
-          aria-invalid={formatFailure !== undefined || check.kind === 'rejected'}
+          onChange={setKeyDraft}
+          configured={false}
+          labels={keyLabels(t, 'keyPlaceholder')}
+          invalid={formatFailure !== undefined || check.kind === 'rejected'}
           autoFocus
           disabled={disabled}
-          onChange={(event) => { setKeyDraft(event.target.value) }}
         />
         {formatFailure !== undefined
           ? <p className={styles['error']}>{t(formatFailure)}</p>

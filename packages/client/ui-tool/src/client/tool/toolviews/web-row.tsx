@@ -3,7 +3,7 @@ import { IconBrowseOutlineRegular, IconGlobeOutlineRegular } from '@deepseek-ai/
 import type { PropsLocale } from '@deepseek-ai/dsh-client-ui-slots'
 import type { ToolCallViewProps } from '../../contract/slots.ts'
 import { webCardModel, webFetchHref } from '../models/web-card-model.ts'
-import { toolRowModel } from '../models/tool-call-model.ts'
+import { toolRowModel } from '@deepseek-ai/dsh-presentation-tool-call'
 import { ToolRow } from '../components/ToolRow.tsx'
 import { CONVERSATION_NS as NS } from '../../locale.ts'
 

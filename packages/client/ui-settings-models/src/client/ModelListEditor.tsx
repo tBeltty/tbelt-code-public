@@ -18,6 +18,7 @@ import { useEffect, useMemo, useState } from 'react'
 import type { ReactNode } from 'react'
 import type { LlmDiscoveredModel } from '@deepseek-ai/dsh-api-remotes/client'
 import { Button, IconPlusOutlineRegular, Modal } from '@deepseek-ai/dsh-client-ui-primitives'
+import { modelEntry } from '@deepseek-ai/dsh-presentation-settings'
 import { formatCapacity, parseCapacity } from './DeepSeekModelsEditor.tsx'
 import type { ModelsOperations } from './operations.ts'
 import type { DeepSeekModelDraft } from './DeepSeekModelsEditor.tsx'
@@ -67,6 +68,12 @@ export interface ModelListEditorProps {
   models: readonly ModelDraft[]
   /** Installed provider whose catalog supplies defaults without endpoint I/O. */
   catalogProvider?: string | undefined
+  /**
+   * Fold the rows and the manual add button behind a disclosure, leaving the
+   * heading and the fetch action in view. A provider card sets it so adding
+   * models from the provider needs no opening first.
+   */
+  collapsible?: boolean
   /** Route input types for models absent from the installed catalog. */
   defaultInput?: readonly string[] | undefined
   /** Whether the user layer currently owns the whole array; absent on a create. */
@@ -135,14 +142,7 @@ function capacitySpelling(value: number | undefined): string {
  * @returns the model row to store.
  */
 export function adopt(candidate: LlmDiscoveredModel): ModelDraft {
-  return {
-    id: candidate.id,
-    ...candidate.name === undefined ? {} : { name: candidate.name },
-    ...candidate.contextWindow === undefined ? {} : { contextWindow: candidate.contextWindow },
-    ...candidate.maxTokens === undefined ? {} : { maxTokens: candidate.maxTokens },
-    ...candidate.inputModalities === undefined ? {} : { input: [...candidate.inputModalities] },
-    ...candidate.pricing === undefined ? {} : { pricing: { ...candidate.pricing } },
-  }
+  return modelEntry(candidate)
 }
 
 /**
@@ -374,44 +374,8 @@ export function ModelListEditor(props: ModelListEditorProps): ReactNode {
   // A route the adapter already describes answers without an endpoint; only a
   // draft with neither has nothing to ask about.
   const askable = probe.provider !== undefined || (probe.baseURL !== undefined && probe.baseURL.length > 0)
-  return (
-    <section className={styles['modelCatalog']} aria-label={t('models')}>
-      <div className={styles['modelListHead']}>
-        <div className={styles['modelCatalogHeading']}>
-          <span className={styles['modelCatalogTitle']}>{t('models')}</span>
-          {props.overridden === undefined
-            ? null
-            : (
-              <span className={styles['modelCatalogMeta']}>
-                {props.overridden ? t('modelsCustomized') : t('modelsInherited')}
-              </span>
-            )}
-        </div>
-        {props.overridden === true && props.onReset !== undefined
-          ? (
-            <button
-              type="button"
-              className={styles['linkButton']}
-              disabled={disabled}
-              onClick={props.onReset}
-            >
-              {t('resetModels')}
-            </button>
-          )
-          : null}
-        <button
-          type="button"
-          className={styles['linkButton']}
-          disabled={disabled || busy || !askable || props.probeBlocked !== undefined}
-          title={props.probeBlocked !== undefined
-            ? t(props.probeBlocked)
-            : askable ? undefined : t('fetchNeedsBaseUrl')}
-          onClick={() => { void fetchModels() }}
-        >
-          {busy ? t('fetching') : t('fetchModels')}
-        </button>
-      </div>
-      {models.length === 0 ? <p className={styles['modelEmpty']}>{t('modelsEmpty')}</p> : null}
+  const rows = (
+    <>
       <div className={styles['modelList']}>
         {models.map((model, index) => (
           <ModelRow
@@ -466,6 +430,54 @@ export function ModelListEditor(props: ModelListEditorProps): ReactNode {
         <IconPlusOutlineRegular size={14} />
         {t('addModel')}
       </button>
+    </>
+  )
+  return (
+    <section className={styles['modelCatalog']} aria-label={t('models')}>
+      <div className={styles['modelListHead']}>
+        <div className={styles['modelCatalogHeading']}>
+          <span className={styles['modelCatalogTitle']}>{t('models')}</span>
+          {props.overridden === undefined
+            ? null
+            : (
+              <span className={styles['modelCatalogMeta']}>
+                {props.overridden ? t('modelsCustomized') : t('modelsInherited')}
+              </span>
+            )}
+        </div>
+        {props.overridden === true && props.onReset !== undefined
+          ? (
+            <button
+              type="button"
+              className={styles['linkButton']}
+              disabled={disabled}
+              onClick={props.onReset}
+            >
+              {t('resetModels')}
+            </button>
+          )
+          : null}
+        <button
+          type="button"
+          className={styles['linkButton']}
+          disabled={disabled || busy || !askable || props.probeBlocked !== undefined}
+          title={props.probeBlocked !== undefined
+            ? t(props.probeBlocked)
+            : askable ? undefined : t('fetchNeedsBaseUrl')}
+          onClick={() => { void fetchModels() }}
+        >
+          {busy ? t('fetching') : t('fetchModels')}
+        </button>
+      </div>
+      {models.length === 0 ? <p className={styles['modelEmpty']}>{t('modelsEmpty')}</p> : null}
+      {props.collapsible === true
+        ? (
+          <details className={styles['customized']}>
+            <summary className={styles['customizedSummary']}>{t('modelsEdit')}</summary>
+            <div className={styles['customizedBody']}>{rows}</div>
+          </details>
+        )
+        : rows}
       {failure !== undefined ? <p className={styles['error']}>{failure}</p> : null}
       <Modal
         open={candidates !== undefined}

@@ -4,6 +4,7 @@ import type { SessionId } from '@deepseek-ai/dsh-session/types'
 import type {
   PropsLocale, PropsRenderSlots, PropsRuntime,
 } from '@deepseek-ai/dsh-client-ui-slots'
+import type { ApprovalChoice } from '@deepseek-ai/dsh-presentation-approval'
 import type { ApprovalKey } from '../locales.ts'
 
 /* jscpd:ignore-start -- Approval and Question intentionally own independent pending-settlement lifecycles. */
@@ -62,8 +63,12 @@ export interface ApprovalPresentationRequest {
   readonly signal?: AbortSignal
 }
 
-/** Decisions this interactive Client presentation can return. */
-export type ApprovalDecision = 'allowed-once' | 'rejected'
+/**
+ * Decisions this interactive Client presentation can return. `allowed-session`
+ * stays in the Client: the Host waterfall receives a one-time allow and the
+ * Client answers the same permission itself for the rest of the Session.
+ */
+export type ApprovalDecision = ApprovalChoice
 
 let nextApprovalKey = 0
 

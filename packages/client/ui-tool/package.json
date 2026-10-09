@@ -76,7 +76,10 @@
     "clsx": "^2.0.0",
     "@deepseek-ai/dsh-ptc-runtime": "workspace:*",
     "@deepseek-ai/dsh-token-meter": "workspace:*",
-    "@deepseek-ai/dsh-user-questions": "workspace:*"
+    "@deepseek-ai/dsh-user-questions": "workspace:*",
+    "@deepseek-ai/dsh-presentation-tool-call": "workspace:*",
+    "@deepseek-ai/dsh-presentation-tool-card": "workspace:*",
+    "@deepseek-ai/dsh-presentation-plan": "workspace:*"
   },
   "files": [
     "lib/index.js",

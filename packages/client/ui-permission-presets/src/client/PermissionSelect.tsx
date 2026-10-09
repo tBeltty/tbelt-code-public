@@ -19,6 +19,7 @@ import {
   AUTO_REVIEW_PRESET as AUTO_REVIEW,
   displayPermissionPreset,
   FULL_ACCESS_PRESET as FULL_ACCESS,
+  presetHintKey,
 } from './presentation.ts'
 import css from './PermissionSelect.module.css'
 
@@ -105,10 +106,18 @@ export function PermissionSelect({
     const icon = permissionGlyph(option.value)
     const label = permissionLabel(option.value, option.name, t)
     const badge = optionBadge(option.value, t)
+    const hintKey = presetHintKey(option.value, option.name)
     return {
       id: option.value,
       label: badge === undefined
-        ? label
+        ? hintKey === undefined
+          ? label
+          : (
+            <span className={css.optionStack}>
+              <span>{label}</span>
+              <span className={css.optionHint}>{t(hintKey)}</span>
+            </span>
+          )
         : (
           <span className={css.optionLabel} aria-label={`${label} ${badge}`}>
             <span className={css.optionLabelText}>{label}</span>

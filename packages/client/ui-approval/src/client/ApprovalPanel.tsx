@@ -1,7 +1,8 @@
 /** Composer takeover for one pending approval waterfall. */
 import { useEffect, useRef, useState, type KeyboardEvent, type ReactNode } from 'react'
-import { Button, StateDot } from '@deepseek-ai/dsh-client-ui-primitives'
-import type { ApprovalComposerProps, PendingApproval } from './contract/slots.ts'
+import { Button, IconChevronDownOutlineRegular, Menu, StateDot } from '@deepseek-ai/dsh-client-ui-primitives'
+import { approvalModel } from '@deepseek-ai/dsh-presentation-approval'
+import type { ApprovalComposerProps, ApprovalDecision, PendingApproval } from './contract/slots.ts'
 import css from './ApprovalPanel.module.css'
 
 /**
@@ -25,6 +26,9 @@ function ApprovalFlow({ pending, reason, detail, t }: {
   t: ApprovalComposerProps['t']
 }) {
   const [answered, setAnswered] = useState(false)
+  const [menuOpen, setMenuOpen] = useState(false)
+  const model = approvalModel({ toolName: pending.toolName, callId: pending.callId, reason })
+  const menuChoices = model.choices.filter(choice => choice.role === 'menu')
   const waiting = useRef(false)
   const active = useRef(true)
   const composing = useRef(false)
@@ -33,7 +37,7 @@ function ApprovalFlow({ pending, reason, detail, t }: {
     active.current = true
     return () => { active.current = false }
   }, [])
-  const answer = (outcome: 'allowed-once' | 'rejected'): void => {
+  const answer = (outcome: ApprovalDecision): void => {
     if (waiting.current || !pending.answerable) return
     waiting.current = true
     setAnswered(true)
@@ -71,16 +75,44 @@ function ApprovalFlow({ pending, reason, detail, t }: {
           role="group"
           aria-label={t('detail.aria')}
         >
-          <div className={css.headline}>{reason ?? t('escalation', { toolName: pending.toolName })}</div>
-          {detail !== null && <div className={css.command}>{detail}</div>}
+          <div className={css.headline}>{t(model.needKey)}</div>
+          {model.because !== null && <div className={css.because}>{t('because', { reason: model.because })}</div>}
+          <details className={css.technical}>
+            <summary>{t('technical')}</summary>
+            <div className={css.technicalTool}>{t('technical.tool', { toolName: model.technical.toolName })}</div>
+            {detail !== null && <div className={css.command}>{detail}</div>}
+          </details>
         </div>
         <div className={css.actionRow}>
           <Button variant="outline" className={css.reject} disabled={answered} onClick={() => { answer('rejected') }}>
             {t('reject')}
           </Button>
-          <Button variant="primary" disabled={answered} onClick={() => { answer('allowed-once') }}>
-            {t('allowOnce')}
-          </Button>
+          <div className={css.allowGroup}>
+            <Button variant="primary" disabled={answered} onClick={() => { answer('allowed-once') }}>
+              {t('allowOnce')}
+            </Button>
+            <Menu
+              open={menuOpen}
+              onClose={() => { setMenuOpen(false) }}
+              items={menuChoices.map(choice => ({ id: choice.id, label: t(choice.labelKey) }))}
+              onSelect={(id) => {
+                setMenuOpen(false)
+                const choice = menuChoices.find(candidate => candidate.id === id)
+                if (choice !== undefined) answer(choice.id)
+              }}
+              align="end"
+              portal
+              anchor={(
+                <Button
+                  variant="primary" className={css.allowMore} disabled={answered}
+                  aria-haspopup="menu" aria-expanded={menuOpen} aria-label={t('allowMenu')}
+                  onClick={() => { setMenuOpen(open => !open) }}
+                >
+                  <IconChevronDownOutlineRegular />
+                </Button>
+              )}
+            />
+          </div>
         </div>
       </div>
     </div>

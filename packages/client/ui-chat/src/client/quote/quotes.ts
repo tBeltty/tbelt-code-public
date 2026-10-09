@@ -13,6 +13,8 @@ export interface ChatQuote {
   readonly id: number
   /** Normalized quoted text; never empty. */
   readonly text: string
+  /** Normalized comment written beside the quote; undefined for a plain quote. */
+  readonly comment?: string
 }
 
 /** Unsent quotes by Session, in insertion order. */
@@ -26,8 +28,9 @@ export interface ChatQuotes {
    * Append one quote to a Session; text that normalizes to empty is ignored.
    * @param sessionId - Session whose next message carries the quote.
    * @param text - Selected text.
+   * @param comment - Optional comment that travels with the quote; blank text is dropped.
    */
-  add(sessionId: SessionId, text: string): void
+  add(sessionId: SessionId, text: string, comment?: string): void
   /**
    * Remove quotes from a Session.
    * @param sessionId - Session that holds the quotes.
@@ -58,11 +61,15 @@ export function createChatQuotes(): ChatQuotes {
   let nextId = 0
   return {
     store,
-    add: (sessionId, text) => {
+    add: (sessionId, text, comment) => {
       const normalized = normalizeQuoteText(text)
       if (normalized === '') return
+      const normalizedComment = normalizeQuoteText(comment ?? '')
+      const entry: ChatQuote = normalizedComment === ''
+        ? { id: ++nextId, text: normalized }
+        : { id: ++nextId, text: normalized, comment: normalizedComment }
       const state = store.getSnapshot()
-      store.set({ ...state, [sessionId]: [...state[sessionId] ?? NO_QUOTES, { id: ++nextId, text: normalized }] })
+      store.set({ ...state, [sessionId]: [...state[sessionId] ?? NO_QUOTES, entry] })
     },
     remove: (sessionId, ids) => {
       const state = store.getSnapshot()
@@ -77,12 +84,16 @@ export function createChatQuotes(): ChatQuotes {
 }
 
 /**
- * Format quotes as the message prefix: each quote is one Markdown blockquote, and quotes are separated by one blank line.
- * @param quotes - Normalized quote texts.
+ * Format quotes as the message prefix: each quote is one Markdown blockquote, followed by its comment paragraph when
+ * it has one, and entries are separated by one blank line.
+ * @param quotes - Normalized quote texts with their optional comments.
  * @returns prefix text for the composer message.
  */
-export function formatQuotes(quotes: readonly string[]): string {
-  return quotes.map(quote => quote.split('\n').map(line => line === '' ? '>' : `> ${line}`).join('\n')).join('\n\n')
+export function formatQuotes(quotes: readonly Pick<ChatQuote, 'text' | 'comment'>[]): string {
+  return quotes.map(({ text, comment }) => {
+    const block = text.split('\n').map(line => line === '' ? '>' : `> ${line}`).join('\n')
+    return comment === undefined ? block : `${block}\n\n${comment}`
+  }).join('\n\n')
 }
 
 /**

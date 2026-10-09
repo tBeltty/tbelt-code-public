@@ -1,10 +1,9 @@
 /** Todo changes relative to the preceding recorded write. */
-import type { ToolCallBlock } from './tool-call-model.ts'
+import { parsedToolCall, type ToolCallBlock } from '@deepseek-ai/dsh-presentation-tool-call'
 import type { TranslateNS } from '@deepseek-ai/dsh-client-ui-slots'
 import type { ToolDetailsModel } from '../components/ToolDetails.tsx'
 import type { TodoBaseline } from './todo-history.ts'
 import { todosDetail } from './details-card-model.ts'
-import { parsedToolCall } from './raw-tool-call.ts'
 
 /**
  * Compare this write with its predecessor in the loaded call history.

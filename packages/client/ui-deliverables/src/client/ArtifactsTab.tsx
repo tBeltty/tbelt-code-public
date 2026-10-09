@@ -1,8 +1,9 @@
 /**
- * The Artifacts page body: the Session's delivered and changed files grouped by
- * Turn, newest Turn first, with the same cards the transcript shows under each
- * closing reply. A delivered file previews in a Sidebar tab beside this page;
- * a changed file opens its Turn's review tab.
+ * The Artifacts page body: the Session's delivered files grouped by Turn,
+ * newest Turn first, with the same cards the transcript shows under each
+ * closing reply. A delivered file previews in a Sidebar tab beside this page.
+ * Code changes never appear here: they stay a quiet added/removed count on the
+ * tool row and the transcript's changed-files line.
  */
 import { useCallback, useSyncExternalStore, type ReactNode } from 'react'
 import type { ObservableSnapshot } from '@deepseek-ai/dsh-client-store'
@@ -14,6 +15,11 @@ import { Deliverables, type DeliverablesInjected } from './Deliverables.tsx'
 import type { ArtifactTurn } from './session-artifacts.ts'
 import type { NS } from './locales.ts'
 import css from './ArtifactsTab.module.css'
+
+/** The Artifacts page draws no code changes whatever the developer-tools setting says. */
+function hideCodeDiff<T>(select: (value: boolean) => T): T {
+  return select(false)
+}
 
 const NO_ARTIFACTS: ObservableSnapshot<readonly ArtifactTurn[]> = {
   getSnapshot: () => [],
@@ -54,12 +60,11 @@ export function useSessionArtifacts(
  * @returns the page body.
  */
 export function ArtifactsTab(props: ArtifactsTabProps): ReactNode {
-  const { useTabInfo, sessionId, useSessions, artifacts, useShowCodeDiff, renderSlot, t } = props
+  const { useTabInfo, sessionId, useSessions, artifacts, renderSlot, t } = props
   const { tab } = useTabInfo()
   const cwd = useSessions(state => state.byId[sessionId]?.cwd)
-  const showCodeDiff = useShowCodeDiff(value => value)
   const turns = useSessionArtifacts(artifacts, sessionId)
-    .filter(turn => turn.presented.length > 0 || (showCodeDiff && turn.changes !== null))
+    .filter(turn => turn.presented.length > 0)
   const openFile = (path: string): void => { tab.actions.openResource(fileAddressFor(sessionId, cwd, path)) }
   if (turns.length === 0) {
     return (
@@ -78,7 +83,7 @@ export function ArtifactsTab(props: ArtifactsTabProps): ReactNode {
         {turns.map(turn => (
           <li key={turn.turn} className={css.turn} data-artifacts-turn={turn.turn}>
             <h3 className={css.turnTitle}>{t('artifacts.turn', { turn: String(turn.turn) })}</h3>
-            <Deliverables {...props} matched={turn} openFile={openFile}
+            <Deliverables {...props} useShowCodeDiff={hideCodeDiff} matched={turn} openFile={openFile}
               renderFileActions={owner => renderSlot('deliverables.artifacts.file.actions', owner)} />
           </li>
         ))}

@@ -40,6 +40,9 @@
     },
     {
       "path": "../product-analytics/tsconfig.client.json"
+    },
+    {
+      "path": "../../presentation/settings"
     }
   ]
 }

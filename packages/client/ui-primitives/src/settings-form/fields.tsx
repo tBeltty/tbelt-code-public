@@ -8,6 +8,7 @@
 
 import { useState, type ReactNode } from 'react'
 import { IconInfoOutlineRegular } from '../icons/index.tsx'
+import { SecretKeyInput } from '../SecretKeyInput.tsx'
 import { Tag } from '../Tag.tsx'
 import css from './fields.module.css'
 
@@ -116,9 +117,10 @@ export function SettingsValueField(props: Omit<SettingsFieldProps, 'hint'> & {
 
 /**
  * A write-only credential control. The value never rides a response, so the
- * control reports only whether one is configured and starts blank; a blank
- * draft writes nothing, which keeps the stored key rather than clearing it.
- * The control asks browsers not to autofill saved login passwords.
+ * control reports only whether one is configured: a stored key shows a status
+ * row with a replace button, and a blank draft writes nothing, which keeps the
+ * stored key rather than clearing it. Browsers are asked not to autofill saved
+ * login passwords.
  * @param props - the field's copy, its staged text, and the configured state.
  * @returns the labelled control.
  */
@@ -127,23 +129,31 @@ export function SettingsSecretField(props: Pick<SettingsFieldProps, 'id' | 'labe
   configured: boolean
   /** Copy describing the configured state. */
   stateLabel: string
+  /** Copy of the button that opens the input to replace the stored key. */
+  replaceLabel: string
+  /** Copy of the button that discards the draft and keeps the stored key. */
+  cancelLabel: string
+  /** Placeholder of the key input. */
+  placeholder: string
 }) {
   return (
     <div className={css.field}>
       <div className={css.head}>
         <label className={css.label} htmlFor={props.id}>{props.label}</label>
-        <span className={css.badges}>
-          <Tag tone={props.configured ? 'neutral' : 'quiet'}>{props.stateLabel}</Tag>
-        </span>
       </div>
-      <input
+      <SecretKeyInput
         id={props.id}
-        className={css.input}
-        type="password"
-        autoComplete="new-password"
         value={props.text}
+        onChange={props.onEdit}
+        configured={props.configured}
         disabled={props.disabled}
-        onChange={(event) => { props.onEdit(event.target.value) }}
+        labels={{
+          input: props.label,
+          placeholder: props.placeholder,
+          configured: props.stateLabel,
+          replace: props.replaceLabel,
+          cancel: props.cancelLabel,
+        }}
       />
       <p className={css.hint}>{props.hint}</p>
     </div>

@@ -201,7 +201,7 @@ export function apply(ctx: Context): void {
       const pending = quotes.store.getSnapshot()[sessionId] ?? NO_QUOTES
       if (pending.length === 0) return undefined
       return {
-        text: formatQuotes(pending.map(quote => quote.text)),
+        text: formatQuotes(pending),
         commit: () => { quotes.remove(sessionId, pending.map(quote => quote.id)) },
       }
     }), 'ui-chat: quotes in composer messages')
@@ -285,7 +285,7 @@ export function apply(ctx: Context): void {
             },
             read: () => chatScrollPositions.get(sessionId) ?? null,
           },
-          quote: (text) => { quotes.add(sessionId, text) },
+          quote: (text, comment) => { quotes.add(sessionId, text, comment) },
           quoteShortcut: quoteShortcut(),
           forkAt: (seq) => {
             const turn = [...chat.getSnapshot().timeline.turns.values()].find(turn => turn.end?.seq === seq)

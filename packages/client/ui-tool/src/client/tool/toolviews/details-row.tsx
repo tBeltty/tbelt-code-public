@@ -11,8 +11,7 @@ import type { ToolCallViewProps } from '../../contract/slots.ts'
 import { CONVERSATION_NS as NS } from '../../locale.ts'
 import { ToolRow } from '../components/ToolRow.tsx'
 import { detailsCardModel } from '../models/details-card-model.ts'
-import { parsedToolCall } from '../models/raw-tool-call.ts'
-import { toolRowModel } from '../models/tool-call-model.ts'
+import { parsedToolCall, toolRowModel } from '@deepseek-ai/dsh-presentation-tool-call'
 
 type DetailsRowProps = ToolCallViewProps & PropsLocale<'conversation'>
 

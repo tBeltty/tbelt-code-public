@@ -80,9 +80,11 @@ New packages join existing groups; a new group updates its own README and this t
 | [`boot/`](boot/README.md) | Shared app-bin boot glue |
 | [`host/`](host/README.md) | Web GUI host services, directory picking, application launch, plugin inventory, and product telemetry |
 | [`client/`](client/README.md) | Web-GUI browser half: shell, wire, object services, slots, `ui-*` plugins |
-| [`test-support/`](test-support/README.md) | Test infrastructure (testkits, replay, Loader smokes) |
-| [`runtime-diagnostics/`](runtime-diagnostics/README.md) | Runtime diagnostics: package-owned invariant checks and reports |
-| [`util/`](util/README.md) | Low-level zero-dependency utilities shared across groups (`Branded<B>`, home/path helpers, timeout, retention) |
+| [`test-support/`](test-support/README.md) | Test infrastructure (testkits, replay, smokes) |
+| [`runtime-diagnostics/`](runtime-diagnostics/README.md) | Package-owned invariant checks and reports |
+| [`presentation/`](presentation/README.md) | Presenters shared by GUI and terminal |
+| [`terminal-client/`](terminal-client/README.md) | Views and runtime of `dsh terminal` |
+| [`util/`](util/README.md) | Zero-dependency utilities shared across groups (`Branded<B>`, paths, timeouts) |
 
 -----
 

@@ -1,7 +1,7 @@
 /** Tool-owned non-expandable chrome without dispatched argument material. */
 import type { ReactNode } from 'react'
 import type { ToolCallViewProps } from '../../contract/slots.ts'
-import { classifyTool } from '../models/tool-call-model.ts'
+import { classifyTool } from '@deepseek-ai/dsh-presentation-tool-call'
 import { ToolRow, type ToolRowProps } from './ToolRow.tsx'
 
 /** Inputs contain a tool-owned icon/title and no expandable body. */

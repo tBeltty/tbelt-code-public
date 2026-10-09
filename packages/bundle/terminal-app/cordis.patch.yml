@@ -1,0 +1,211 @@
+# The dsh-terminal-app bundle patch: the terminal client over the web bundle's Host.
+# It is applied after dsh-base and dsh-web-app. The web layer's Host rows (Session,
+# Workspace, Job, Settings and Account controllers, presets, Connection, Remote
+# events, file upload) stay, so the terminal speaks the same Remote API as the
+# browser. This layer turns off what only a browser needs: the web server and its
+# start-up flags, the client bundle server, hot reload, and every `ui-*` row.
+# Product analytics and the telemetry exporter ship disabled in the web layer and
+# are not touched here; the terminal profile mounts neither.
+#
+# The Connection row keeps its Host half (the Remote API handler) and drops the
+# web-runtime injection that only fed its browser trust fence.
+
+# ── rows that exist only to serve a browser ─────────────────────────────────
+
+- id: web-startup
+  disabled: true
+
+- id: webserver
+  disabled: true
+
+- id: web-runtime
+  disabled: true
+
+- id: client-hmr
+  disabled: true
+
+- id: modules
+  disabled: true
+
+- id: cordis-client-runner
+  disabled: true
+
+- id: open-in-app
+  disabled: true
+
+# Opens a native or in-page folder picker for the browser; it waits for the web server.
+- id: directory-picker
+  disabled: true
+
+- id: ui-open-in-app
+  disabled: true
+
+- id: ui-settings-account
+  disabled: true
+
+- id: ui-theme
+  disabled: true
+
+- id: locale
+  disabled: true
+
+- id: shortcuts
+  disabled: true
+
+- id: ui-shortcuts
+  disabled: true
+
+- id: ui-layout
+  disabled: true
+
+- id: ui-renderer
+  disabled: true
+
+- id: ui-session
+  disabled: true
+
+- id: resources
+  disabled: true
+
+- id: ui-sidebar
+  disabled: true
+
+- id: ui-sidebar-right
+  disabled: true
+
+- id: ui-sidebar-documentpreview
+  disabled: true
+
+- id: ui-sidebar-browser
+  disabled: true
+
+- id: ui-sidebar-terminal
+  disabled: true
+
+- id: ui-sidebar-files
+  disabled: true
+
+- id: ui-settings
+  disabled: true
+
+- id: ui-settings-general
+  disabled: true
+
+- id: ui-settings-models
+  disabled: true
+
+- id: ui-plugin-manager
+  disabled: true
+
+- id: ui-settings-plugin-inventory
+  disabled: true
+
+- id: ui-conversation
+  disabled: true
+
+- id: ui-approval
+  disabled: true
+
+- id: ui-chat
+  disabled: true
+
+- id: ui-brand-official
+  disabled: true
+
+- id: ui-attachment
+  disabled: true
+
+- id: ui-tool
+  disabled: true
+
+- id: ui-cordis
+  disabled: true
+
+- id: ui-deliverables
+  disabled: true
+
+- id: ui-workspace
+  disabled: true
+
+- id: ui-workflow-run
+  disabled: true
+
+- id: ui-input-trigger
+  disabled: true
+
+- id: ui-commands
+  disabled: true
+
+- id: ui-skill
+  disabled: true
+
+- id: ui-subagent
+  disabled: true
+
+- id: ui-reference
+  disabled: true
+
+- id: ui-jobs
+  disabled: true
+
+- id: ui-goal
+  disabled: true
+
+- id: ui-message-feedback
+  disabled: true
+
+- id: ui-model-selection
+  disabled: true
+
+- id: ui-permission
+  disabled: true
+
+- id: ui-agent-preset
+  disabled: true
+
+- id: ui-settings-session-log
+  disabled: true
+
+- id: ui-settings-plugins
+  disabled: true
+
+- id: ui-settings-shell
+  disabled: true
+
+- id: ui-settings-agent-loop
+  disabled: true
+
+- id: ui-settings-subagent
+  disabled: true
+
+- id: ui-settings-web-search
+  disabled: true
+
+- id: ui-plan
+  disabled: true
+
+- id: ui-user-questions
+  disabled: true
+
+- id: ui-trajectory
+  disabled: true
+
+- id: connection
+  inject: []
+  config: {}
+
+# ── the terminal client ──────────────────────────────────────────────────────
+
+- insert:
+    - id: terminal-startup
+      name: '@deepseek-ai/dsh-terminal-app'
+
+    # Reads its start-up choice from the ordinary terminalStartup provider and runs
+    # once the tree is up.
+    - id: terminal-client
+      name: '@deepseek-ai/dsh-terminal-client'
+      inject: [terminalStartup]
+      config:
+        resume: !!js ctx.terminalStartup.resume
+        continueLatest: !!js ctx.terminalStartup.continueLatest
+        cwd: !!js ctx.terminalStartup.cwd

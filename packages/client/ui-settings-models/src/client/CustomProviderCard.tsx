@@ -27,7 +27,10 @@
 import { useEffect, useState } from 'react'
 import type { ReactNode } from 'react'
 import type { JsonValue } from '@deepseek-ai/dsh-util-values'
+import { cleartextRemote, isHttpUrl, ROUTE_PATTERN } from '@deepseek-ai/dsh-presentation-settings'
+import { SecretKeyInput } from '@deepseek-ai/dsh-client-ui-primitives'
 import { apiKeyFailure } from './apiKey.ts'
+import { keyLabels } from './key-labels.ts'
 import { EditorFooter } from './EditorFooter.tsx'
 import { validateDeepSeekModels } from './DeepSeekModelsEditor.tsx'
 import { ModelListEditor } from './ModelListEditor.tsx'
@@ -41,25 +44,6 @@ import styles from './ModelsSection.module.css'
 
 /** The settings namespace a hand-declared provider is written into. */
 const NS = 'llm-pi-ai'
-
-/**
- * A route id usable as a settings key AND as the stem of a credential name.
- * The leading letter is the second half of that: `deriveKeyRef` uppercases the
- * id and replaces every non-alphanumeric run with `_`, and a credential
- * reference is a POSIX shell identifier, which cannot start with a digit. A
- * digit-leading id passes every check this card makes and then fails at the
- * credential seam with a raw regular expression the user cannot act on.
- */
-const ROUTE_PATTERN = /^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$/
-
-function isHttpUrl(value: string): boolean {
-  try {
-    const protocol = new URL(value).protocol
-    return protocol === 'http:' || protocol === 'https:'
-  } catch {
-    return false
-  }
-}
 
 /** Props of {@link CustomProviderCard}. */
 export interface CustomProviderCardProps {
@@ -92,19 +76,6 @@ export interface CustomProviderCardProps {
    * interrogation is in flight, so the owner can hold its surface still.
    */
   onBusyChange?: (busy: boolean) => void
-}
-
-/** Hosts that never leave this computer, where plain HTTP exposes nothing. */
-const LOOPBACK_HOSTS: ReadonlySet<string> = new Set(['localhost', '127.0.0.1', '[::1]'])
-
-/**
- * Whether an endpoint sends its key unencrypted to another machine.
- * @param url - an http or https URL that {@link isHttpUrl} accepted.
- * @returns true for an `http:` URL whose host is not this computer.
- */
-function cleartextRemote(url: string): boolean {
-  const parsed = new URL(url)
-  return parsed.protocol === 'http:' && !LOOPBACK_HOSTS.has(parsed.hostname) && !parsed.hostname.endsWith('.localhost')
 }
 
 /**
@@ -299,15 +270,13 @@ export function CustomProviderCard(props: CustomProviderCardProps): ReactNode {
       </div>
       <div className={styles['field']}>
         <span className={styles['fieldLabel']}>{t('keyInput')}</span>
-        <input
-          className={styles['input']}
-          type="password"
-          autoComplete="new-password"
+        <SecretKeyInput
           value={keyDraft}
-          placeholder={t('keyPlaceholder')}
-          aria-label={t('keyInput')}
+          onChange={setKeyDraft}
+          configured={false}
+          labels={keyLabels(t, 'keyPlaceholder')}
+          invalid={keyFailure !== undefined}
           disabled={disabled}
-          onChange={(event) => { setKeyDraft(event.target.value) }}
         />
         {/* A create card has no stored key to keep, so the blank case says
             what a blank field means here instead: this route may authenticate

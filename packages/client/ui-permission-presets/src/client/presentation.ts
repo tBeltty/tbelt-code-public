@@ -12,6 +12,31 @@ export type PermissionPresetLabelKey =
   | 'preset.workspaceWrite'
   | 'preset.fullAccess'
 
+/** Locale dictionary key for a built-in permission preset's one-line effect. */
+export type PermissionPresetHintKey =
+  | 'hint.readOnly'
+  | 'hint.workspaceWrite'
+  | 'hint.fullAccess'
+
+const PRESET_HINT_KEYS = new Map<string, PermissionPresetHintKey>([
+  ['read-only', 'hint.readOnly'],
+  ['workspace-write', 'hint.workspaceWrite'],
+  [FULL_ACCESS_PRESET, 'hint.fullAccess'],
+])
+
+/**
+ * The locale key describing what a built-in preset lets the agent do.
+ * @param value - preset machine value.
+ * @param name - host-supplied preset name; a renamed preset may have been
+ * redefined by the host, so only the built-in names carry the built-in hint.
+ * @returns the hint key, or undefined for a host-defined preset.
+ */
+export function presetHintKey(value: string, name: string): PermissionPresetHintKey | undefined {
+  const labelKey = PRESET_LABEL_KEYS.get(value)
+  if (labelKey === undefined || (name !== value && name !== DEFAULT_PRESET_LABELS[labelKey])) return undefined
+  return PRESET_HINT_KEYS.get(value)
+}
+
 const PRESET_LABEL_KEYS = new Map<string, PermissionPresetLabelKey>([
   ['read-only', 'preset.readOnly'],
   ['workspace-write', 'preset.workspaceWrite'],

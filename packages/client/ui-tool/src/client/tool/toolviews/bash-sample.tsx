@@ -8,14 +8,10 @@ import {
 import type { PropsLocale } from '@deepseek-ai/dsh-client-ui-slots'
 import type { ToolCallViewProps } from '../../contract/slots.ts'
 import {
-  isSettledPersistentShellCall,
-  isSpilledShellCall,
-  localizeTerminalCardModel,
-  terminalBlockLabels,
-  terminalCardModel,
-  terminalFailed,
-} from '../models/terminal-card-model.ts'
-import { formatToolBody, toolRowModel, toolTitleKey, type ToolRowState } from '../models/tool-call-model.ts'
+  isSettledPersistentShellCall, isSpilledShellCall, terminalCardModel, terminalFailed,
+} from '@deepseek-ai/dsh-presentation-tool-card'
+import { localizeTerminalCardModel, terminalBlockLabels } from '../models/terminal-labels.ts'
+import { formatToolBody, toolRowModel, toolTitleKey, type ToolRowState } from '@deepseek-ai/dsh-presentation-tool-call'
 import { PreparingToolRow } from '../components/PreparingToolRow.tsx'
 import { CONVERSATION_NS as NS } from '../../locale.ts'
 import css from './bash-sample.module.css'

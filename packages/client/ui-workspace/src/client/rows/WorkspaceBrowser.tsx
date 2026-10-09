@@ -275,6 +275,8 @@ type SessionTreeProps = Pick<
   rowState: SessionRowState
   /** Switch the archived filter back to the default hide-archived view. */
   onLeaveArchivedOnly: () => void
+  /** Start the add-workspace flow from the empty list; absent when the composition offers no picking flow. */
+  onAddWorkspace?: (() => void) | undefined
   /** Open the browser-owned rename dialog for a real Workspace group. */
   onRenameRequest: (workspaceId: WorkspaceId, currentTitle: string) => void
   /** Open the browser-owned delete-confirmation dialog for a real Workspace group. */
@@ -290,7 +292,7 @@ type SessionTreeProps = Pick<
 }
 
 /** The list-empty placeholder — a glyph over the text; the archived-only view names its filter and offers the way back. */
-function EmptySessions({ rowState, onLeaveArchivedOnly, t }: Pick<SessionTreeProps, 'rowState' | 'onLeaveArchivedOnly' | 't'>) {
+function EmptySessions({ rowState, onLeaveArchivedOnly, onAddWorkspace, t }: Pick<SessionTreeProps, 'rowState' | 'onLeaveArchivedOnly' | 'onAddWorkspace' | 't'>) {
   const archivedOnly = rowState.archivedFilter === 'only'
   const attentionOnly = rowState.attentionOnly === true
   return (
@@ -302,6 +304,11 @@ function EmptySessions({ rowState, onLeaveArchivedOnly, t }: Pick<SessionTreePro
           {t('empty.viewOthers')}
         </button>
       )}
+      {!archivedOnly && !attentionOnly && onAddWorkspace !== undefined && (
+        <button type="button" className={css.emptyAction} onClick={onAddWorkspace}>
+          {t('menu.addWorkspace')}
+        </button>
+      )}
     </div>
   )
 }
@@ -309,7 +316,7 @@ function EmptySessions({ rowState, onLeaveArchivedOnly, t }: Pick<SessionTreePro
 /** The scrolling session tree; unmounting drops the sessions subscription and local row limits. */
 function SessionTree({
   list, useSessionStatus, startSession, open, workspaces, ungroupedSessionIds,
-  rowState, onLeaveArchivedOnly,
+  rowState, onLeaveArchivedOnly, onAddWorkspace,
   workspaceReady, animationResetKey, usePanelInfo,
   onRenameRequest, onDeleteRequest, onWorktreeRequest, onSessionRenameRequest,
   renderSlot,
@@ -649,7 +656,7 @@ function SessionTree({
         resetKey={JSON.stringify([animationResetKey, sessionLimits])}
       >
         {groups.length === 0 && (
-          <EmptySessions rowState={rowState} onLeaveArchivedOnly={onLeaveArchivedOnly} t={t} />
+          <EmptySessions rowState={rowState} onLeaveArchivedOnly={onLeaveArchivedOnly} onAddWorkspace={onAddWorkspace} t={t} />
         )}
         {groupRows}
       </AnimatedRows>
@@ -660,7 +667,7 @@ function SessionTree({
 
 /** The flat "In one list" body: every session is one draggable top-level row. */
 function FlatList({
-  list, sessionIds, rowState, onLeaveArchivedOnly, useSessionStatus, open, onSessionRenameRequest,
+  list, sessionIds, rowState, onLeaveArchivedOnly, onAddWorkspace, useSessionStatus, open, onSessionRenameRequest,
   usePanelInfo, setSessionOrder, workspaceReady, animationResetKey,
   revealSessionId, onSessionRevealed, renderSlot, t,
 }: Pick<
@@ -677,6 +684,7 @@ function FlatList({
   | 'onSessionRevealed'
   | 'rowState'
   | 'onLeaveArchivedOnly'
+  | 'onAddWorkspace'
   | 't'
 > & {
   list: SessionListState
@@ -712,7 +720,7 @@ function FlatList({
         resetKey={animationResetKey}
       >
         {rows.length === 0 && (
-          <EmptySessions rowState={rowState} onLeaveArchivedOnly={onLeaveArchivedOnly} t={t} />
+          <EmptySessions rowState={rowState} onLeaveArchivedOnly={onLeaveArchivedOnly} onAddWorkspace={onAddWorkspace} t={t} />
         )}
         {rows.map((node) => {
           const active = drag !== null && drag.pinned === node.pinned
@@ -1455,6 +1463,7 @@ export function WorkspaceBrowser({
                 sessionIds={orderedFlatSessionIds}
                 rowState={rowState}
                 onLeaveArchivedOnly={leaveArchivedOnly}
+                onAddWorkspace={directoryFlowAvailable ? requestAddWorkspace : undefined}
                 workspaceReady={workspaceReady}
                 animationResetKey={`${groupBy}/${orderBy}/${archivedFilter}/${attentionOnly}`}
                 useSessionStatus={useSessionStatus}
@@ -1485,6 +1494,7 @@ export function WorkspaceBrowser({
                 setSessionOrder={saveSessionOrder}
                 rowState={rowState}
                 onLeaveArchivedOnly={leaveArchivedOnly}
+                onAddWorkspace={directoryFlowAvailable ? requestAddWorkspace : undefined}
                 startSession={startSession}
                 open={guardedOpen}
                 insertWorkspaceBefore={insertWorkspaceBefore}

@@ -13,7 +13,7 @@ import { formatSpillNotice } from '@deepseek-ai/dsh-spill-policy/notice'
 import SystemPrompt from '@deepseek-ai/dsh-system-prompt'
 import ToolRuntime, { defineContentToolFixture } from '@deepseek-ai/dsh-tools'
 import { describe, expect, it } from 'vitest'
-import { isSpilledShellCall, terminalCardModel } from '../src/client/tool/models/terminal-card-model.ts'
+import { isSpilledShellCall, terminalCardModel } from '@deepseek-ai/dsh-presentation-tool-card'
 
 const spillReference = {
   locator: SpillLocator('/spill/shell.txt'),

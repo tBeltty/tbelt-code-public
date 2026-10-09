@@ -4,7 +4,7 @@
 
 tBelt Code is a desktop coding agent. It works with any model provider and runs commands in the operating system's sandbox on your machine.
 
-Download it from [tbelt.online](https://tbelt.online). It is a developer preview; see [SAFETY.md](SAFETY.md).
+Download it from [code.tbelt.online](https://code.tbelt.online). It is a developer preview; see [SAFETY.md](SAFETY.md).
 
 ## Features
 
@@ -21,6 +21,10 @@ Download it from [tbelt.online](https://tbelt.online). It is a developer preview
 - An Artifacts page listing the files each turn delivered or changed.
 - A side panel preview for HTML pages, images, PDFs and local dev servers.
 - Point at an element in the preview and the agent knows exactly which one.
+- `dsh terminal`: the same sessions in a terminal, with streaming, tool lines, plain-language permission prompts and resume.
+- In the terminal, switch sessions, rename them, pick the model, start in another directory, and attach images that draw inline.
+- In the terminal, add providers and API keys, choose models, set web search, edit settings, manage plugins and agent presets, and pick permission modes.
+- In Orca, a `dsh terminal` pane shows live status in the tab.
 - Run buttons on shell commands, executed in a terminal in the side panel.
 - Web search through Exa, Perplexity, Brave or Tavily, with your own key.
 - Model prices in the model picker, refreshable from a JSON directory you name, with spend per chat and per month and limits with `/budget`.
@@ -30,6 +34,8 @@ Download it from [tbelt.online](https://tbelt.online). It is a developer preview
 - A repository map in context at the start of each session.
 - Inspector, Coder and Tester subagents, and saved agent presets.
 - MCP servers, skills and plugins.
+- A `dsh` command for your terminal, installed from the app on macOS, Windows and Linux.
+- A built-in skill that shows agents how to write and install new skills.
 - Sessions are stored locally, and usage analytics are off.
 
 ## Platforms

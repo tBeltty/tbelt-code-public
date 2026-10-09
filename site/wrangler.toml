@@ -1,4 +1,4 @@
-# Cloudflare Pages project for https://tbelt.online, deployed by
+# Cloudflare Pages project for https://code.tbelt.online, deployed by
 # .github/workflows/site-deploy.yml. `public/` is served as static files and
 # `functions/` adds the /download and /api routes.
 name = "tbelt-online"

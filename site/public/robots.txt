@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://tbelt.online/sitemap.xml
+Sitemap: https://code.tbelt.online/sitemap.xml

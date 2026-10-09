@@ -4,12 +4,9 @@ import {
   IconSparkleRegular,
 } from '@deepseek-ai/dsh-client-ui-primitives'
 import type { ToolCallOwnerProps, ToolTreeProps } from '../../contract/slots.ts'
-import { readCardModel } from '../models/read-card-model.ts'
-import { diffCardModel } from '../models/diff-card-model.ts'
-import { searchCardModel } from '../models/search-card-model.ts'
-import { terminalCardModel, terminalFailed } from '../models/terminal-card-model.ts'
+import { diffCardModel, readCardModel, searchCardModel, terminalCardModel, terminalFailed } from '@deepseek-ai/dsh-presentation-tool-card'
 import { webCardModel } from '../models/web-card-model.ts'
-import { toolRowModel, type ToolRowVariant } from '../models/tool-call-model.ts'
+import { toolRowModel, type ToolRowVariant } from '@deepseek-ai/dsh-presentation-tool-call'
 import { localizeAutoReviewDenial } from '../models/auto-review-denial.ts'
 import { ToolRow } from '../components/ToolRow.tsx'
 

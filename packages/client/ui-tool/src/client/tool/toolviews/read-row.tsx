@@ -1,7 +1,7 @@
 import type { Context } from '@deepseek-ai/cordis'
 import type { PropsLocale } from '@deepseek-ai/dsh-client-ui-slots'
 import type { ToolCallViewProps } from '../../contract/slots.ts'
-import { readCallLine, readCardModel } from '../models/read-card-model.ts'
+import { readCallLine, readCardModel } from '@deepseek-ai/dsh-presentation-tool-card'
 import { readFamilyRow } from './read-family-row.tsx'
 import { CONVERSATION_NS as NS } from '../../locale.ts'
 

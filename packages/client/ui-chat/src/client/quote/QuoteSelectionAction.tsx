@@ -2,12 +2,15 @@
  * The Quote action for text selected in assistant messages. It appears after a
  * pointer or keyboard selection settles inside one `[data-chat-quote-source]`
  * element of the Chat column, follows the selection while the Chat scrolls,
- * and hides when the selection collapses or leaves assistant text.
+ * and hides when the selection collapses or leaves assistant text. Choosing
+ * Quote opens a comment box beside the selection; confirming it adds the quote
+ * with the typed comment.
  */
 import { useCallback, useEffect, useState, type ReactNode, type RefObject } from 'react'
 import { ShortcutKeys } from '@deepseek-ai/dsh-client-ui-primitives'
 import type { ChatViewSlotProps, QuoteShortcut } from '../contract/slots.ts'
 import { QuoteGlyph } from './QuoteChip.tsx'
+import { COMMENT_BOX_WIDTH, QuoteCommentBox } from './QuoteCommentBox.tsx'
 import { normalizeQuoteText } from './quotes.ts'
 import css from './Quote.module.css'
 
@@ -18,6 +21,8 @@ export const QUOTE_SOURCE_ATTRIBUTE = 'data-chat-quote-source'
 const ACTION_GAP = 6
 /** Room kept for the action at the viewport's right edge, in pixels. */
 const ACTION_ROOM = 140
+/** Room kept for the comment box at the viewport's right edge, in pixels. */
+const BOX_MARGIN = 8
 
 interface QuotableSelection {
   readonly text: string
@@ -62,28 +67,34 @@ export function isQuoteShortcut(event: KeyboardEvent, mac: boolean): boolean {
 /**
  * Track quotable selections in the container and render the Quote action.
  * @param props.container - Chat column element that owns the selections; render this action outside it.
- * @param props.quote - Add text to the Session's unsent quotes.
+ * @param props.quote - Add text and an optional comment to the Session's unsent quotes.
  * @param props.shortcut - Fixed shortcut, or undefined when the action has none.
  * @param props.t - Chat copy.
- * @returns the positioned action, or null without a quotable selection.
+ * @returns the positioned action or comment box, or null without a quotable selection.
  */
 export function QuoteSelectionAction({ container, quote, shortcut, t }: {
   container: RefObject<HTMLElement>
-  quote: (text: string) => void
+  quote: ChatViewSlotProps['quote']
   shortcut: QuoteShortcut | undefined
   t: ChatViewSlotProps['t']
 }): ReactNode {
   const [current, setCurrent] = useState<QuotableSelection | undefined>()
+  const [composing, setComposing] = useState<QuotableSelection | undefined>()
   const read = useCallback(
     /* v8 ignore next -- the column mounts with this action and never unmounts before it. */
     () => container.current === null ? undefined : readQuotableSelection(container.current),
     [container],
   )
   const refresh = useCallback(() => { setCurrent(read()) }, [read])
-  const commit = useCallback((text: string) => {
-    quote(text)
-    window.getSelection()?.removeAllRanges()
+  const compose = useCallback((selection: QuotableSelection) => {
+    setComposing({ ...selection, left: Math.max(0, Math.min(selection.left, window.innerWidth - COMMENT_BOX_WIDTH - BOX_MARGIN)) })
     setCurrent(undefined)
+  }, [])
+  const cancelComposing = useCallback(() => { setComposing(undefined) }, [])
+  const commit = useCallback((text: string, comment: string) => {
+    quote(text, comment)
+    window.getSelection()?.removeAllRanges()
+    setComposing(undefined)
   }, [quote])
 
   useEffect(() => {
@@ -120,7 +131,7 @@ export function QuoteSelectionAction({ container, quote, shortcut, t }: {
       if (selection === undefined) return
       event.preventDefault()
       event.stopPropagation()
-      commit(selection.text)
+      compose(selection)
     }
     // The action is viewport-positioned, so it follows the selection while any ancestor scrolls.
     window.addEventListener('scroll', refresh, true)
@@ -131,14 +142,18 @@ export function QuoteSelectionAction({ container, quote, shortcut, t }: {
       window.removeEventListener('resize', refresh)
       document.removeEventListener('keydown', onKeyDown, true)
     }
-  }, [commit, read, refresh, shortcut, visible])
+  }, [compose, read, refresh, shortcut, visible])
 
+  if (composing !== undefined) {
+    return <QuoteCommentBox text={composing.text} top={composing.top} left={composing.left}
+      confirm={(comment) => { commit(composing.text, comment) }} cancel={cancelComposing} t={t} />
+  }
   if (current === undefined) return null
   return (
     <button type="button" className={css.selectionAction} style={{ top: current.top, left: current.left }}
       data-quote-selection-action=""
       onMouseDown={(event) => { event.preventDefault() }}
-      onClick={() => { commit(current.text) }}>
+      onClick={() => { compose(current) }}>
       <QuoteGlyph />
       {t('quote.action')}
       {shortcut !== undefined && <ShortcutKeys keys={shortcut.keys} className={css.keys} />}

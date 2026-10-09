@@ -72,6 +72,15 @@ describe('Session Controller Client apply', () => {
     await vi.waitFor(() => { expect(connected).toHaveBeenCalledTimes(2) })
   }, COLD_BOOT_TIMEOUT_MS)
 
+  it('activates the whole cone on plain Node: no document, no window, a connected Session list', async ({ start }) => {
+    expect(typeof document).toBe('undefined')
+    expect(typeof window).toBe('undefined')
+    const { client, sessions } = await bench(start)
+    expect(sessions).toBeInstanceOf(ClientSessions)
+    expect(client.connection.state.getSnapshot()).toBe('connected')
+    await vi.waitFor(() => { expect(sessions.list.getSnapshot().phase).toBe('ready') })
+  }, COLD_BOOT_TIMEOUT_MS)
+
   it('runs handleConnected at apply when the Host is already connected, as a reload of the row does', async ({ start }) => {
     const connected = vi.spyOn(ClientSessions.prototype, 'handleConnected')
     const { client } = await bench(start)

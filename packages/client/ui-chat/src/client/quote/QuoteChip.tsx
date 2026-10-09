@@ -65,9 +65,10 @@ export function QuoteDock({ sessionId, useQuotes, removeQuote, t }: Pick<PropsRu
       {quotes.map(quote => (
         <div key={quote.id} role="listitem" className={`${css.chip} ${css.dockChip}`}>
           <QuoteGlyph />
-          <Tooltip label={quote.text} side="top" portal maxWidth={QUOTE_TOOLTIP_WIDTH} delayMs={300}>
+          <Tooltip label={quote.comment === undefined ? quote.text : `${quote.text}\n\n${quote.comment}`} side="top" portal maxWidth={QUOTE_TOOLTIP_WIDTH} delayMs={300}>
             <span className={css.text} tabIndex={0}>{quote.text}</span>
           </Tooltip>
+          {quote.comment !== undefined && <span className={`${css.text} ${css.dockComment}`} data-quote-comment="">{quote.comment}</span>}
           <button type="button" className={css.remove} aria-label={t('quote.remove')} title={t('quote.remove')}
             onClick={() => { removeQuote(sessionId, quote.id) }}>
             <IconCloseOutlineRegular size={12} />

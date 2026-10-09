@@ -52,8 +52,10 @@ function digest(value: unknown): string {
   return createHash('sha256').update(JSON.stringify(value)).digest('hex')
 }
 
+/** The `dsh` receipt keeps its original name so existing installations stay managed; companions such as `tbelt` get their own. */
 function receiptPath(options: FileCommandInstallation): string {
-  return join(dirname(options.destination), '.dsh-desktop-command.json')
+  const name = basename(options.destination)
+  return join(dirname(options.destination), name === 'dsh' ? '.dsh-desktop-command.json' : `.dsh-desktop-command-${name}.json`)
 }
 
 async function readEntry(path: string): Promise<Entry> {

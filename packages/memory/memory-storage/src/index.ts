@@ -21,7 +21,7 @@ import type { KvTable } from '@deepseek-ai/dsh-storage-domain'
 import { indexFilePath, readTopicFileBody, regenerateIndex, scopeDirectory, writeTopicFile } from './markdown-files.ts'
 import { memoryDomainSpec, memoryEntryRecord } from './spec.ts'
 import type { MemoryEntryRecord, MemoryEntryType } from './spec.ts'
-import { GLOBAL_SCOPE_ID, memoryEntryKey, projectScopeId, resolveMemoryProjectRoot } from './scope.ts'
+import { GLOBAL_SCOPE_ID, isKeyInScope, memoryEntryKey, projectScopeId, resolveMemoryProjectRoot } from './scope.ts'
 import type { MemoryEntryKey } from './types.ts'
 
 export {
@@ -179,7 +179,7 @@ export class MemoryStorage extends Service {
     const scopeDir = scopeDirectory(this.markdownRoot, scopeId)
     await writeTopicFile(scopeDir, record, contentRedaction?.text)
     const scoped = [...table.entries()]
-      .filter(([entryKey]) => entryKey.startsWith(`${scopeId}/`))
+      .filter(([entryKey]) => isKeyInScope(entryKey, scopeId))
       .map(([, entryRecord]) => entryRecord)
     await regenerateIndex(scopeDir, scoped)
     return { record, key, redacted: descriptionRedaction.redacted || (contentRedaction?.redacted ?? false) }
@@ -212,7 +212,7 @@ export class MemoryStorage extends Service {
     const table = this.requireTable()
     const result: MemoryEntryRecord[] = []
     for (const [key, record] of table.entries()) {
-      if (scopeId !== undefined && !key.startsWith(`${scopeId}/`)) continue
+      if (scopeId !== undefined && !isKeyInScope(key, scopeId)) continue
       result.push(record)
     }
     return result

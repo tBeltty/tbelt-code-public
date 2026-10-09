@@ -67,7 +67,7 @@ describe('memoryEntryRecord', () => {
 
 describe('memoryEntryKey / projectScopeId', () => {
   it('builds a global-scope key using the global scope id', () => {
-    expect(memoryEntryKey(GLOBAL_SCOPE_ID, 'ci-preferences')).toBe('global/ci-preferences')
+    expect(memoryEntryKey(GLOBAL_SCOPE_ID, 'ci-preferences')).toBe('global_ci-preferences')
   })
 
   it('derives a stable 16-character hex scope id for the same project root', () => {

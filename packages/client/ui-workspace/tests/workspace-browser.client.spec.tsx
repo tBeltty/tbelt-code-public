@@ -1795,6 +1795,23 @@ describe('WorkspaceBrowser', () => {
     }
   })
 
+  it('offers adding a workspace from the empty list in both modes, but not in a filtered view or without a directory flow', () => {
+    const b = mount({ renderSlot: renderDirectoryFlowOnly })
+    fireEvent.click(screen.getByRole('button', { name: '添加工作区…' }))
+    expect(screen.getByTestId('directory-flow')).toBeTruthy()
+    b.store.actions.setGroupBy('flat')
+    rerender(b, {})
+    expect(screen.getByRole('button', { name: '添加工作区…' })).toBeTruthy()
+    act(() => { b.store.actions.setArchivedFilter('only') })
+    expect(screen.queryByRole('button', { name: '添加工作区…' })).toBeNull()
+  })
+
+  it('leaves the empty list without an add action when no directory flow is composed', () => {
+    mount({ useDirectoryFlow: bindSnapshotSelector({ getSnapshot: () => false, subscribe: () => () => {} }) })
+    expect(screen.getByText('暂无会话')).toBeTruthy()
+    expect(screen.queryByRole('button', { name: '添加工作区…' })).toBeNull()
+  })
+
   it('rail state renders icon controls that request expansion', () => {
     vi.useFakeTimers()
     try {

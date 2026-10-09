@@ -1006,7 +1006,8 @@ async function main(): Promise<void> {
       : { label: currentDesktopLocale().messages.aboutMenu, role: 'about' },
     { type: 'separator' },
     { label: currentDesktopLocale().messages.checkUpdatesMenu, click: () => { void openUpdatePrompt(true) } },
-    ...process.platform === 'darwin' || process.platform === 'win32'
+    // Linux registers the command from the AppImage; an unpacked tree has no stable path to link to.
+    ...process.platform === 'darwin' || process.platform === 'win32' || (process.platform === 'linux' && process.env.APPIMAGE !== undefined)
       ? [{ label: currentDesktopLocale().messages.cliCommandMenu, click: () => { void commandManager.show() } }] : [],
     ...development ? [
       { type: 'separator' as const },

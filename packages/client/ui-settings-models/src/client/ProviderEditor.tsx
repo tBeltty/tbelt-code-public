@@ -26,19 +26,24 @@ import type { ReactNode } from 'react'
 import type {
   CredentialInfo, SettingsNamespaceView, SettingsPathOpView,
 } from '@deepseek-ai/dsh-api-remotes/client'
-import type { JsonValue } from '@deepseek-ai/dsh-util-values'
+import { profileOps, providerKeyRef } from '@deepseek-ai/dsh-presentation-settings'
 import {
   DeepSeekModelsEditor, modelDrafts, validateDeepSeekModels,
 } from './DeepSeekModelsEditor.tsx'
+import { SecretKeyInput } from '@deepseek-ai/dsh-client-ui-primitives'
 import { apiKeyFailure } from './apiKey.ts'
+import { keyLabels } from './key-labels.ts'
 import { EditorFooter } from './EditorFooter.tsx'
 import { ModelListEditor } from './ModelListEditor.tsx'
-import { deriveKeyRef, protocolChoices } from './store.ts'
+import { protocolChoices } from './store.ts'
 import { protocolLabel } from './protocol-label.ts'
 import type { ModelsOperations } from './operations.ts'
 import type { SettingsSchemaOperations } from './schema-operations.ts'
 import type { en } from './locales.ts'
 import styles from './ModelsSection.module.css'
+
+/** Quiet period after the last keystroke before the typed key is checked. */
+const KEY_CHECK_DELAY_MS = 500
 
 /** Per-adapter-family curated field sets (unknown namespaces get the hint alone). */
 type EditorLayout = 'deepseek' | 'pi-ai' | 'unknown'
@@ -108,34 +113,8 @@ function draftAt(
   return structuredClone(subtree) as Record<string, unknown>
 }
 
-/**
- * The minimal path ops carrying `after` over `before`, both as the card sees
- * them. Only keys the card observed are named; fields absent from both sides
- * produce no op, which is why edits are path-addressed rather than a rebuilt
- * section.
- * @param base - path of the edited subtree inside the user section.
- * @param before - the subtree as loaded, or undefined when it is new.
- * @param after - the subtree as edited.
- * @returns ordered set/unset ops; empty when nothing changed.
- */
-export function pathOps(
-  base: readonly string[],
-  before: unknown,
-  after: Record<string, unknown>,
-): SettingsPathOpView[] {
-  const previous = typeof before === 'object' && before !== null && !Array.isArray(before)
-    ? before as Record<string, unknown>
-    : {}
-  const ops: SettingsPathOpView[] = []
-  for (const [key, value] of Object.entries(after)) {
-    if (JSON.stringify(previous[key]) === JSON.stringify(value)) continue
-    ops.push({ op: 'set', path: [...base, key], value: value as JsonValue })
-  }
-  for (const key of Object.keys(previous)) {
-    if (!(key in after)) ops.push({ op: 'unset', path: [...base, key] })
-  }
-  return ops
-}
+/** The minimal path ops carrying `after` over `before`; see `profileOps` in the shared presenter. */
+export const pathOps: typeof profileOps = profileOps
 
 /** The editor layout the owning namespace selects. */
 function layoutOf(ns: string): EditorLayout {
@@ -158,11 +137,7 @@ export function refFor(
   path: readonly string[],
   provider: string,
 ): string {
-  const profile = schema.getPath(namespace.value, path)
-  const named = typeof profile === 'object' && profile !== null
-    ? (profile as { apiKeyEnv?: unknown }).apiKeyEnv
-    : undefined
-  return typeof named === 'string' && named.length > 0 ? named : deriveKeyRef(provider)
+  return providerKeyRef(schema.getPath(namespace.value, path), provider)
 }
 
 /**
@@ -236,6 +211,39 @@ export function ProviderEditor(props: ProviderEditorProps): ReactNode {
   // so a bad row is named by its position rather than by a blanket message.
   const modelFailure = validateDeepSeekModels(schema.getPath(draft, ['models']))
   const keyFailure = apiKeyFailure(keyDraft)
+  // A typed key for a catalog route is checked against the provider while the
+  // user is still on the card, as first-run setup does. The result only warns:
+  // a provider that is unreachable from here may still accept the key later.
+  const [keyCheck, setKeyCheck] = useState<
+    { kind: 'idle' } | { kind: 'checking' } | { kind: 'refused'; message: string }
+  >({ kind: 'idle' })
+  const checkedKey = layout === 'pi-ai' && props.declared !== true && props.credentialOnly !== true
+    && keyFailure === undefined && keyDraft.trim().length > 0
+    ? keyDraft.trim()
+    : undefined
+  useEffect(() => {
+    if (checkedKey === undefined) {
+      setKeyCheck({ kind: 'idle' })
+      return
+    }
+    let current = true
+    setKeyCheck({ kind: 'checking' })
+    const timer = setTimeout(() => {
+      void operations.discoverModels(namespace.ns, { provider: props.provider, apiKey: checkedKey, live: true })
+        .then((answer) => {
+          if (!current) return
+          setKeyCheck(answer.kind === 'refused' && answer.code === 'INVALID_CREDENTIAL'
+            ? { kind: 'refused', message: t('onboardingKeyRejected') }
+            : answer.kind === 'refused' && answer.code === 'QUOTA'
+              ? { kind: 'refused', message: t('onboardingKeyQuota') }
+              : { kind: 'idle' })
+        })
+    }, KEY_CHECK_DELAY_MS)
+    return () => {
+      current = false
+      clearTimeout(timer)
+    }
+  }, [checkedKey, namespace.ns, operations, props.provider, t])
   // What a probe or a write must carry: the typed key with paste whitespace
   // removed. A blank field yields an empty string, which both call sites read
   // as "no key supplied" rather than as a key — that is how a card whose
@@ -364,11 +372,6 @@ export function ProviderEditor(props: ProviderEditorProps): ReactNode {
     const defaultContextWindow = schema.getPath(fallback, ['defaultContextWindow'])
     const defaultMaxTokens = schema.getPath(fallback, ['maxTokens'])
     const defaultInput = schema.getPath(fallback, ['defaultInput'])
-    const keyPlaceholder = keyLocked
-      ? t('keyEnvLocked')
-      : keyState?.configured === true && props.credentialRequired !== true
-        ? t('keyStored')
-        : family === 'pi-ai' ? t('keyPlaceholderNative') : t('keyPlaceholder')
     /** What both family editors take: the rows, whose layer owns them, and the two writes. */
     const catalogProps = {
       models,
@@ -387,20 +390,20 @@ export function ProviderEditor(props: ProviderEditorProps): ReactNode {
       <>
         <div className={styles['field']}>
           <span className={styles['fieldLabel']}>{t('keyInput')}</span>
-          <input
-            className={styles['input']}
-            type="password"
-            autoComplete="new-password"
+          <SecretKeyInput
             value={keyDraft}
-            placeholder={keyPlaceholder}
-            aria-label={t('keyInput')}
-            aria-invalid={shownKeyFailure !== undefined}
+            onChange={setKeyDraft}
+            configured={keyState?.configured === true && props.credentialRequired !== true}
+            lockedLabel={keyLocked ? t('keyEnvLocked') : undefined}
+            labels={keyLabels(t, family === 'pi-ai' ? 'keyPlaceholderNative' : 'keyPlaceholder')}
+            invalid={shownKeyFailure !== undefined}
             required={props.credentialRequired === true}
             autoFocus={props.autoFocusCredential === true}
-            disabled={disabled || keyLocked}
-            onChange={(event) => { setKeyDraft(event.target.value) }}
+            disabled={disabled}
           />
           {shownKeyFailure === undefined ? null : <p className={styles['error']}>{t(shownKeyFailure)}</p>}
+          {keyCheck.kind === 'checking' ? <p className={styles['advancedHint']} role="status">{t('onboardingKeyChecking')}</p> : null}
+          {keyCheck.kind === 'refused' ? <p className={styles['error']} role="alert">{keyCheck.message}</p> : null}
         </div>
         {props.credentialOnly === true ? null : <details className={styles['customized']}>
           <summary className={styles['customizedSummary']}>{t('customized')}</summary>
@@ -475,9 +478,8 @@ export function ProviderEditor(props: ProviderEditorProps): ReactNode {
                 </div>
               )
               : null}
-            {/* Both families edit the same rows through the same contract; only
-                the extras differ — DeepSeek's inherited capacities, pi-ai's
-                endpoint interrogation. */}
+            {/* DeepSeek's catalog editor lives here; the pi-ai list sits below
+                the disclosure, which this card shares with the create card. */}
             {family === 'deepseek'
               ? (
                 <DeepSeekModelsEditor
@@ -488,19 +490,25 @@ export function ProviderEditor(props: ProviderEditorProps): ReactNode {
                   defaultMaxTokens={typeof defaultMaxTokens === 'number' ? defaultMaxTokens : undefined}
                 />
               )
-              : (
-                <ModelListEditor
-                  {...catalogProps}
-                  catalogProvider={props.declared === true ? undefined : props.provider}
-                  defaultInput={Array.isArray(defaultInput) ? defaultInput : undefined}
-                  probe={probe}
-                  probeBlocked={keyFailure}
-                  operations={operations}
-                  onBusyChange={setListBusy}
-                />
-              )}
+              : null}
           </div>
         </details>}
+        {/* The pi-ai model list sits outside the disclosure so adding models
+            from the provider is one click; only its rows fold away. */}
+        {props.credentialOnly === true || family !== 'pi-ai'
+          ? null
+          : (
+            <ModelListEditor
+              {...catalogProps}
+              collapsible
+              catalogProvider={props.declared === true ? undefined : props.provider}
+              defaultInput={Array.isArray(defaultInput) ? defaultInput : undefined}
+              probe={probe}
+              probeBlocked={keyFailure}
+              operations={operations}
+              onBusyChange={setListBusy}
+            />
+          )}
       </>
     )
   }

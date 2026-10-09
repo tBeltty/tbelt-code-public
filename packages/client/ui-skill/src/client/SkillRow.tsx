@@ -41,7 +41,7 @@ function skillName(argsRaw: string, callId: string): string {
 }
 
 /** Flatten durable result blocks under the generic Tool-row text contract.
- *  Keep aligned with ui-tool's models/tool-call-model.ts `resultText`. */
+ *  Keep aligned with `resultText` in presentation/tool-call. */
 function resultText(block: StartedToolCallViewProps['block']): string | null {
   if (!('kind' in block)) return null
   const parts: string[] = []

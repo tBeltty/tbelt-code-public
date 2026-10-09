@@ -9,6 +9,7 @@ import type { Entry } from '@deepseek-ai/cordis-plugin-loader'
 import { tearDownEntryFiber } from '@deepseek-ai/dsh-client-modules/client'
 import {
   installConnection,
+  type ClientTransportHooks,
   type ConnectionHandle,
 } from '@deepseek-ai/dsh-client-connection/client'
 import { bootClient } from '@deepseek-ai/dsh-client-web/src/boot-client.ts'
@@ -26,6 +27,12 @@ export interface TestClientOptions {
    * that provides `uiRenderer`. Default false.
    */
   readonly mount?: boolean | HTMLElement
+  /**
+   * Physical carrier the client's Connection uses, built from this client's mock. Default: the decoded logical
+   * carrier `{ rpc: mock.rpc }` the GUI's whole-client specs use. A spec that checks another carrier supplies its
+   * hooks here and the roster, Remote proxies and mock stay the same.
+   */
+  readonly carrier?: (mock: RemoteMock) => ClientTransportHooks
   /** Wait for `ctx.connection.state === 'connected'` before returning. Default true. */
   readonly awaitConnected?: boolean
   /** Readiness budget in milliseconds before `start` rejects with the mock log summary. Default 5000. */
@@ -220,7 +227,7 @@ export class TestClient {
           ...connection,
           apply: (connectionCtx) => {
             installConnection(connectionCtx, {
-              transport: { rpc: mock.rpc },
+              transport: options.carrier?.(mock) ?? { rpc: mock.rpc },
               ...(pageLocation === undefined ? {} : { location: pageLocation }),
             })
           },

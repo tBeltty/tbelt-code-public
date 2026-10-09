@@ -194,6 +194,9 @@ export const zh = {
   'quote.action': '引用',
   'quote.dock': '引用的文本',
   'quote.remove': '移除引用',
+  'quote.comment.label': '引用评论',
+  'quote.comment.placeholder': '写下回复',
+  'quote.comment.submit': '添加引用和评论',
 } satisfies Record<string, string>
 
 /** Chat dictionary key union. */
@@ -390,4 +393,7 @@ export const en = {
   'quote.action': 'Quote',
   'quote.dock': 'Quoted text',
   'quote.remove': 'Remove quote',
+  'quote.comment.label': 'Comment on quote',
+  'quote.comment.placeholder': 'Write a reply',
+  'quote.comment.submit': 'Add quote and comment',
 } satisfies Record<ChatKey, string>

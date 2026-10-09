@@ -7,7 +7,7 @@
  * their own flag families and print their own `--help` (see
  * `@deepseek-ai/dsh-cmdline`). Launcher flags therefore come first: the first
  * token this parser does not recognize starts the inner arguments, so
- * `dsh --profile tui --resume abc` boots the tui profile with `--resume abc`,
+ * `dsh --profile terminal --resume abc` boots the terminal profile with `--resume abc`,
  * and `dsh --profile web -h` prints the web app's help, not this one's.
  *
  * `dsh <name>` abbreviates `dsh --profile <name>`; `plugin` manages a profile's
@@ -93,10 +93,12 @@ Examples:
   dsh rescue --from-default-profile web
                                             create rescue from the shipped web template, then boot it
   dsh headless "run the tests"              answer one task, print the result, and exit
-  dsh tui --patch ./extra.yml               boot a custom profile with one extra overlay
-  dsh tui --resume <session>                arguments after the launcher flags reach the app
+  dsh terminal                              the interactive terminal client (same as: tbelt)
+  dsh mine --patch ./extra.yml              boot a custom profile with one extra overlay
+  dsh terminal --resume <session>           arguments after the launcher flags reach the app
   dsh web --help                            the web app's own flags and help
-  dsh plugin --profile tui add <package>    install a plugin into the tui profile
+  dsh plugin --profile terminal add <package>
+                                            install a plugin into the terminal profile
 `
 
 /**
@@ -136,10 +138,21 @@ function resolveBoot(program: Command, profile: string, options: BootOptions, ar
 }
 
 /**
+ * Apply a command's default profile to its arguments.
+ * @param argv - arguments after the Node binary and script.
+ * @param profile - the profile the command stands for, if any.
+ * @returns `argv` unchanged without a profile or for a version request, otherwise `argv` after the profile name.
+ */
+export function withDefaultProfile(argv: readonly string[], profile: string | undefined): string[] {
+  if (profile === undefined || argv[0] === '--version' || argv[0] === '-V') return [...argv]
+  return [profile, ...argv]
+}
+
+/**
  * Resolve argv into one invocation, or print and exit for help, version, or an
  * error.
  * @param argv - arguments after the Node binary and script.
- * @param version - version string printed by `--version`.
+ * @param version - release version; `--version` prints it after the product name.
  * @param manageDesktopProfile - permit Desktop's installed carrier to manage its reserved profile's plugins.
  * @returns the resolved invocation.
  */
@@ -151,7 +164,7 @@ export function parseDshArgs(argv: readonly string[], version: string, manageDes
   const program: Command = new Command()
   program
     .name('dsh')
-    .version(version, '-V, --version', 'output the version number')
+    .version(`tBelt Code ${version}`, '-V, --version', 'output the tBelt Code version')
     .usage('[--profile] <name> [options] [app-args...]\n       dsh plugin --profile <name> <pnpm-args...>')
     .description('dsh: boot a tBelt Code profile — an ordered stack of plugin-bundle patch layers under your own overrides.')
     .addHelpText('after', HELP_EXAMPLES)

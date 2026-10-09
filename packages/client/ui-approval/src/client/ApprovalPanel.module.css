@@ -65,3 +65,33 @@
   color: var(--dsw-alias-state-error-primary);
   border-color: transparent;
 }
+
+.because {
+  color: var(--dsw-alias-label-secondary);
+  font-size: 13px;
+  line-height: 20px;
+}
+
+.technical {
+  color: var(--dsw-alias-label-tertiary);
+  font-size: 12px;
+  line-height: 18px;
+}
+
+.technical summary {
+  cursor: pointer;
+}
+
+.technicalTool {
+  margin-top: 4px;
+}
+
+.allowGroup {
+  display: flex;
+  align-items: stretch;
+  gap: 1px;
+}
+
+.allowMore {
+  padding-inline: 6px;
+}

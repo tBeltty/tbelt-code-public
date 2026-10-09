@@ -50,15 +50,23 @@ describe('WebSearchCard', () => {
     expect(actions.edit).toHaveBeenCalledWith('searchProvider', 'brave')
   })
 
-  it('shows the chosen provider’s key state without ever showing a key', () => {
+  it('shows a stored key as configured and opens the input only on Replace', () => {
     const actions = renderWebSearch({ provider: field('brave') })
+    expect(screen.getByText(en.apiKeySet)).toBeTruthy()
+    expect(screen.queryByLabelText(`${en.apiKey} · ${en.providerBrave}`)).toBeNull()
+
+    fireEvent.click(screen.getByRole('button', { name: en.apiKeyReplace }))
     const key = screen.getByLabelText(`${en.apiKey} · ${en.providerBrave}`)
     expect(key).toHaveProperty('type', 'password')
-    expect(screen.getByText(en.apiKeySet)).toBeTruthy()
-
     fireEvent.change(key, { target: { value: 'brave-secret' } })
 
     expect(actions.edit).toHaveBeenCalledWith('apiKey', 'brave-secret')
+  })
+
+  it('shows the key input straight away when none is stored', () => {
+    renderWebSearch({ provider: field('exa') })
+    expect(screen.getByLabelText(`${en.apiKey} · ${en.providerExa}`)).toHaveProperty('type', 'password')
+    expect(screen.queryByRole('button', { name: en.apiKeyReplace })).toBeNull()
   })
 
   it('says a rejected key was not saved, with the provider’s reason', () => {

@@ -252,6 +252,45 @@ describe('approval Remote Event consumer', () => {
     await scope.fiber.dispose()
   })
 
+  it('answers the same permission without asking again after allow for this session', async () => {
+    const bench = await setupPlugin()
+    const scope = createScope(bench.ctx, id('s1'))
+    await scope.fiber.await()
+    const next = vi.fn(() => Promise.resolve<'unavailable'>('unavailable'))
+    const first = bench.listener.call(scope.ctx, { toolName: 'bash', reason: 'needs network' }, next)
+    await bench.pending.getSnapshot()[0]!.answer('allowed-session')
+    await expect(first).resolves.toBe('allowed-once')
+
+    await expect(bench.listener.call(scope.ctx, { toolName: 'bash', reason: 'needs network' }, next))
+      .resolves.toBe('allowed-once')
+    expect(bench.pending.getSnapshot()).toEqual([])
+
+    const other = bench.listener.call(scope.ctx, { toolName: 'bash', reason: 'needs disk' }, next)
+    expect(bench.pending.getSnapshot()).toHaveLength(1)
+    await bench.pending.getSnapshot()[0]!.answer('rejected')
+    await expect(other).resolves.toBe('rejected')
+    await scope.fiber.dispose()
+  })
+
+  it('keeps allow for this session inside the Session that granted it', async () => {
+    const bench = await setupPlugin()
+    const one = createScope(bench.ctx, id('s1'))
+    const two = createScope(bench.ctx, id('s2'))
+    await one.fiber.await()
+    await two.fiber.await()
+    const next = () => Promise.resolve<'unavailable'>('unavailable')
+    const first = bench.listener.call(one.ctx, { toolName: 'bash', reason: 'r' }, next)
+    await bench.pending.getSnapshot()[0]!.answer('allowed-session')
+    await first
+
+    const second = bench.listener.call(two.ctx, { toolName: 'bash', reason: 'r' }, next)
+    expect(bench.pending.getSnapshot()).toHaveLength(1)
+    await bench.pending.getSnapshot()[0]!.answer('allowed-once')
+    await expect(second).resolves.toBe('allowed-once')
+    await one.fiber.dispose()
+    await two.fiber.dispose()
+  })
+
   it('propagates request cancellation after removing the pending object', async () => {
     const bench = await setupPlugin()
     const scope = createScope(bench.ctx, id('s1'))
@@ -319,15 +358,23 @@ function panelProps(
   const messages: Record<string, string> = {
     waiting: 'Waiting',
     'detail.aria': 'Approval details',
-    escalation: `Tool ${pending.toolName} asks`,
+    'need.shell': 'I need permission to run a command',
+    'need.generic': 'I need permission to take an action',
+    'need.read': 'I need permission to read',
+    because: 'Because: {reason}',
+    technical: 'Technical details',
+    'technical.tool': 'Tool: {toolName}',
     reject: 'Reject',
     allowOnce: 'Allow once',
+    allowSession: 'Allow for this session',
+    allowMenu: 'More ways to allow',
   }
   return {
     matched: pending,
     renderSlot,
     resolveReason: (reason: NonNullable<PendingApproval['displayReason']>) => reason.en,
-    t: (key: string) => messages[key] ?? key,
+    t: (key: string, params?: Record<string, string>) =>
+      (messages[key] ?? key).replace(/\{(\w+)\}/g, (_match, name: string) => params?.[name] ?? ''),
   } as ApprovalComposerProps
 }
 
@@ -337,7 +384,8 @@ describe('ApprovalPanel', () => {
     const props = panelProps(pending)
     render(<ApprovalPanel {...props} />)
 
-    expect(screen.getByText('Tool bash asks')).toBeTruthy()
+    expect(screen.getByText('I need permission to run a command')).toBeTruthy()
+    expect(screen.queryByText(/^Because/)).toBeNull()
     expect(document.querySelector('[data-approval-key] [data-state="warning"]')).not.toBeNull()
     expect(screen.getByRole('group', { name: 'Approval details' })).toBeTruthy()
     expect(props.renderSlot).not.toHaveBeenCalled()
@@ -358,8 +406,8 @@ describe('ApprovalPanel', () => {
     const renderSlot = vi.fn(() => <code>pnpm test</code>)
     render(<ApprovalPanel {...panelProps(pending, renderSlot)} />)
 
-    expect(screen.getByText('Run this exact command')).toBeTruthy()
-    expect(screen.getByText('pnpm test')).toBeTruthy()
+    expect(screen.getByText('Because: Run this exact command')).toBeTruthy()
+    expect(screen.getByText('pnpm test').closest('details')).not.toBeNull()
     expect(renderSlot).toHaveBeenCalledWith('conversation.approval.detail', {
       callId: 'call-1',
     })
@@ -378,10 +426,10 @@ describe('ApprovalPanel', () => {
     })
     const props = panelProps(pending)
     const view = render(<ApprovalPanel {...props} />)
-    expect(screen.getByText('English explanation')).toBeTruthy()
-    expect(screen.queryByText('audit reason')).toBeNull()
+    expect(screen.getByText('Because: English explanation')).toBeTruthy()
+    expect(screen.queryByText(/audit reason/)).toBeNull()
     view.rerender(<ApprovalPanel {...props} resolveReason={reason => reason['zh']!} />)
-    expect(screen.getByText('中文说明')).toBeTruthy()
+    expect(screen.getByText('Because: 中文说明')).toBeTruthy()
     expect(pending.reason).toBe('audit reason')
   })
 
@@ -479,6 +527,26 @@ describe('ApprovalPanel', () => {
     fireEvent.keyDown(group, { key: 'Enter', code: 'Enter' })
     fireEvent.click(screen.getByRole('button', { name: 'Reject' }))
     expect(answer).not.toHaveBeenCalled()
+  })
+
+  it('keeps the tool name and raw detail in a collapsed technical block, not in the headline', () => {
+    const pending = new PendingApproval(id('s1'), { toolName: 'bash', callId: 'call-1' as ToolCallId })
+    render(<ApprovalPanel {...panelProps(pending, () => <code>rm -rf build</code>)} />)
+    const technical = screen.getByText('Technical details').closest('details')!
+    expect(technical.open).toBe(false)
+    expect(technical.textContent).toContain('Tool: bash')
+    expect(technical.textContent).toContain('rm -rf build')
+    expect(screen.getByText('I need permission to run a command').closest('details')).toBeNull()
+  })
+
+  it('offers allow for this session from the arrow beside Allow once', async () => {
+    const pending = new PendingApproval(id('s1'), { toolName: 'bash' })
+    render(<ApprovalPanel {...panelProps(pending)} />)
+    expect(screen.queryByRole('menuitem')).toBeNull()
+    fireEvent.click(screen.getByRole('button', { name: 'More ways to allow' }))
+    fireEvent.click(screen.getByRole('menuitem', { name: 'Allow for this session' }))
+    await expect(pending.result).resolves.toBe('allowed-session')
+    expect(screen.getByRole<HTMLButtonElement>('button', { name: 'More ways to allow' }).disabled).toBe(true)
   })
 
   it('re-enables actions when answering fails', async () => {

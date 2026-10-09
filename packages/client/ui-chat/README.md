@@ -41,9 +41,9 @@ Settings → General → Open chat links in selects the destination for ordinary
 <a id="quotes"></a>
 ## Quotes
 
-Selecting text inside one assistant message shows a Quote action below the selection. Clicking it, or pressing Command+L on macOS or Control+L elsewhere while the action is visible, adds the text to the Session's unsent quotes and clears the selection; Escape hides the action. The shortcut is a fixed row in the shortcut reference and is unavailable without the shortcut service. Unsent quotes appear as removable chips above the composer and live only in browser memory for the Session.
+Selecting text inside one assistant message shows a Quote action below the selection. Clicking it, or pressing Command+L on macOS or Control+L elsewhere while the action is visible, opens a comment box beside the selection with the quote in small type above a focused reply field. Enter or the send button adds the text and the optional comment to the Session's unsent quotes and clears the selection; Escape or a click outside the box cancels; Escape also hides the action before the box opens. The shortcut is a fixed row in the shortcut reference and is unavailable without the shortcut service. Unsent quotes appear as removable chips above the composer, showing the comment beside the quote, and live only in browser memory for the Session.
 
-The next plain message that carries text or attachments sends each quote as a Markdown blockquote before the typed text, separated by blank lines; the quotes clear once the Host accepts the message, and commands never carry them. A sent user message whose leading blocks are all blockquotes and that continues with text shows those blocks as truncated chips before the text, with the full quote in a tooltip.
+The next plain message that carries text or attachments sends each quote as a Markdown blockquote, followed by its comment paragraph when it has one, before the typed text, separated by blank lines; the quotes clear once the Host accepts the message, and commands never carry them. A sent user message whose leading blocks are all blockquotes and that continues with text shows those blocks as truncated chips before the text, with the full quote in a tooltip.
 
 -----
 
@@ -159,7 +159,7 @@ Active-Turn highlighting is approximate: `readVisibleTurn` binary-searches the c
 <a id="model-experience"></a>
 ## Model Experience
 
-Quotes reach the model as Markdown blockquotes at the start of the user message, for example `> quoted text` followed by a blank line and the typed text. They are recorded in the Session log as part of that `user/message`. Everything else in this package renders logged conversation state.
+Quotes reach the model as Markdown blockquotes at the start of the user message, for example `> quoted text` followed by a blank line, the quote's comment if any, and the typed text. They are recorded in the Session log as part of that `user/message`. Everything else in this package renders logged conversation state.
 
 #### KV Cache effect
 

@@ -81,8 +81,13 @@ describe('PermissionSelect', () => {
 
     fireEvent.click(trigger())
     expect(screen.getAllByRole('menuitem').map(item => item.textContent))
-      .toEqual(['仅可查看', '工作区内修改', '完全权限', 'Auto reviewEXP'])
-    fireEvent.click(screen.getByRole('menuitem', { name: '工作区内修改' }))
+      .toEqual([
+        '仅可查看只能查看文件，不能修改。',
+        '工作区内修改可在工作区内修改文件，超出范围前会先询问。',
+        '完全权限完全访问文件，不再询问确认。',
+        'Auto reviewEXP',
+      ])
+    fireEvent.click(screen.getByRole('menuitem', { name: /^工作区内修改/ }))
 
     expect(select).toHaveBeenCalledExactlyOnceWith('workspace-write')
     expect(trigger().textContent).toBe('工作区内修改')
@@ -123,7 +128,7 @@ describe('PermissionSelect', () => {
     const { select } = setup()
     const open = () => {
       fireEvent.click(trigger())
-      fireEvent.click(screen.getByRole('menuitem', { name: '完全权限' }))
+      fireEvent.click(screen.getByRole('menuitem', { name: /^完全权限/ }))
     }
     open()
     const enable = screen.getByRole<HTMLButtonElement>('button', { name: '启用完全权限' })
@@ -162,7 +167,7 @@ describe('PermissionSelect', () => {
   it('revokes open UI when locked or either source disappears', () => {
     const locked = setup()
     fireEvent.click(trigger())
-    fireEvent.click(screen.getByRole('menuitem', { name: '完全权限' }))
+    fireEvent.click(screen.getByRole('menuitem', { name: /^完全权限/ }))
     locked.view.rerender(<PermissionSelect {...locked.props} locked />)
     expect(screen.queryByRole('dialog')).toBeNull()
     expect(trigger().disabled).toBe(true)
@@ -225,7 +230,7 @@ describe('PermissionSelect', () => {
     expect(trigger().querySelectorAll('svg')).toHaveLength(1)
 
     fireEvent.click(trigger())
-    fireEvent.click(screen.getByRole('menuitem', { name: '工作区内修改' }))
+    fireEvent.click(screen.getByRole('menuitem', { name: /^工作区内修改/ }))
     expect(trigger().textContent).toBe('工作区内修改')
     await act(async () => {})
     expect(trigger().textContent).toBe('Custom')

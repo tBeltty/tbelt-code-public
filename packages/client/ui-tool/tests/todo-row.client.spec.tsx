@@ -8,7 +8,7 @@ import type { ToolResultNode } from '@deepseek-ai/dsh-client-ui-chat/client'
 import { makeTranslate } from '@deepseek-ai/dsh-client-test-runtime'
 import { zh as commonZh } from '@deepseek-ai/dsh-client-locale/src/locales/zh.ts'
 import { TodoRow, todoToolview } from '../src/client/tool/toolviews/todo-row.tsx'
-import { planSummary } from '../src/client/tool/toolviews/plan-summary.ts'
+import { todoProgress } from '@deepseek-ai/dsh-presentation-plan'
 import { CONVERSATION_NS as NS } from '../src/client/locale.ts'
 import { zh } from '@deepseek-ai/dsh-client-ui-conversation/src/client/locales.ts'
 
@@ -32,31 +32,31 @@ const PARALLEL: TodoItem[] = [
   { content: '补测试', status: 'pending' },
 ]
 
-describe('planSummary', () => {
+describe('todoProgress', () => {
   it('counts done/total and names the single active item with no extra count', () => {
-    expect(planSummary(LIST)).toEqual({ done: 1, total: 3, activeContent: '写组件', activeExtra: 0 })
+    expect(todoProgress(LIST)).toEqual({ done: 1, total: 3, activeContent: '写组件', activeExtra: 0 })
   })
 
   it('reports the extra active count separately when several items are in progress', () => {
-    expect(planSummary(PARALLEL)).toEqual({ done: 1, total: 5, activeContent: '写组件', activeExtra: 2 })
+    expect(todoProgress(PARALLEL)).toEqual({ done: 1, total: 5, activeContent: '写组件', activeExtra: 2 })
   })
 
   it('has no hint when nothing is in progress', () => {
-    expect(planSummary([{ content: '都完了', status: 'completed' }]))
+    expect(todoProgress([{ content: '都完了', status: 'completed' }]))
       .toEqual({ done: 1, total: 1, activeContent: null, activeExtra: 0 })
   })
 
   it('has no hint when the first active item carries no usable content', () => {
-    expect(planSummary([{ status: 'in_progress' }, { content: 'x', status: 'in_progress' }]))
+    expect(todoProgress([{ status: 'in_progress' }, { content: 'x', status: 'in_progress' }]))
       .toMatchObject({ activeContent: null, activeExtra: 0 })
-    expect(planSummary([{ content: 42, status: 'in_progress' }]).activeContent).toBeNull()
-    expect(planSummary([{ content: '', status: 'in_progress' }]).activeContent).toBeNull()
-    expect(planSummary([{ content: '   ', status: 'in_progress' }, { content: 'x', status: 'in_progress' }]))
+    expect(todoProgress([{ content: 42, status: 'in_progress' }]).activeContent).toBeNull()
+    expect(todoProgress([{ content: '', status: 'in_progress' }]).activeContent).toBeNull()
+    expect(todoProgress([{ content: '   ', status: 'in_progress' }, { content: 'x', status: 'in_progress' }]))
       .toMatchObject({ activeContent: null, activeExtra: 0 })
   })
 
   it('is empty-safe', () => {
-    expect(planSummary([])).toEqual({ done: 0, total: 0, activeContent: null, activeExtra: 0 })
+    expect(todoProgress([])).toEqual({ done: 0, total: 0, activeContent: null, activeExtra: 0 })
   })
 })
 

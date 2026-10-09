@@ -1,6 +1,12 @@
 #!/bin/sh
 # Run the installed CLI without changing the invoking shell or working directory.
 set -e
+# The installed application keeps its data in ~/.tbelt-code (see `INSTALLED_APP_HOME_DIR_NAME` in src/main.ts);
+# the command must read the same home so it sees the Desktop profile, sessions and credentials.
+case ${DSH_HOME:-} in
+  *[![:space:]]*) ;;
+  *) DSH_HOME=$HOME/.tbelt-code; export DSH_HOME ;;
+esac
 launcher=$0
 while [ -L "$launcher" ]; do
   directory=$(CDPATH= cd -- "$(dirname -- "$launcher")" && pwd -P)

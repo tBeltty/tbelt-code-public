@@ -9,9 +9,11 @@
 
 import type { Context as ClientContext } from '@deepseek-ai/cordis'
 import type {
-  CredentialInfo, LlmConfigurableProvider, LlmProviderInfo, SettingsNamespaceView,
+  CredentialInfo, SettingsNamespaceView,
 } from '@deepseek-ai/dsh-api-remotes/client'
 import type { SnapshotStore } from '@deepseek-ai/dsh-client-store'
+import { deriveKeyRef, joinProviderDirectory } from '@deepseek-ai/dsh-presentation-settings'
+import type { ProviderDirectoryEntry } from '@deepseek-ai/dsh-presentation-settings'
 import { createSnapshotStore } from '@deepseek-ai/dsh-client-store'
 import type { SettingsDescribeFace } from '@deepseek-ai/dsh-client-ui-settings/client'
 import type { SettingsSchemaOperations } from './schema-operations.ts'
@@ -22,52 +24,8 @@ import type { SettingsSchemaOperations } from './schema-operations.ts'
  */
 const PROBE_ROUTE = '\u0000probe'
 
-/** One provider row after joining the configurable directory with live routes. */
-export interface ProviderDirectoryEntry {
-  readonly provider: string
-  readonly displayName: string
-  readonly settingsNs: string
-  readonly settingsPath: readonly string[]
-  readonly active: boolean
-  readonly declared?: boolean
-  readonly error?: string
-}
-
-/**
- * Join declared configurable providers with the currently registered routes.
- * @param registered - live provider routes in registration order.
- * @param directory - declared configurable providers in declaration order.
- * @returns account and official routes first, then other routes in their original order.
- */
-export function joinProviderDirectory(
-  registered: readonly LlmProviderInfo[],
-  directory: readonly LlmConfigurableProvider[],
-): ProviderDirectoryEntry[] {
-  const active = new Set(registered.map(provider => provider.id))
-  const declared = new Set(directory.map(entry => entry.provider))
-  const rows: ProviderDirectoryEntry[] = directory.map(entry => ({
-    provider: entry.provider,
-    displayName: entry.displayName,
-    settingsNs: entry.settingsNs,
-    settingsPath: [...entry.settingsPath],
-    active: active.has(entry.provider),
-    ...entry.declared === undefined ? {} : { declared: entry.declared },
-    ...entry.error === undefined ? {} : { error: entry.error },
-  }))
-  for (const provider of registered) {
-    if (declared.has(provider.id)) continue
-    rows.push({
-      provider: provider.id,
-      displayName: provider.name,
-      settingsNs: '',
-      settingsPath: [],
-      active: true,
-    })
-  }
-  return rows.toSorted((left, right) =>
-    (left.provider === 'deepseek-account' ? 0 : left.provider === 'deepseek-official' ? 1 : 2)
-      - (right.provider === 'deepseek-account' ? 0 : right.provider === 'deepseek-official' ? 1 : 2))
-}
+export { deriveKeyRef, joinProviderDirectory }
+export type { ProviderDirectoryEntry }
 
 /** One provider row the page renders. */
 export interface ProviderRow {
@@ -105,17 +63,6 @@ export interface ModelsSettingsState {
   rows: readonly ProviderRow[]
   /** Namespace views by ns, for the editor's schema/layers/secrets. */
   namespaces: ReadonlyMap<string, SettingsNamespaceView>
-}
-
-/**
- * Derive the conventional credential reference for a provider route: the v1
- * page never asks for an environment-variable name, so a typed key stores
- * under this derived reference and the profile records it as `apiKeyEnv`.
- * @param provider - provider route id (e.g. `anthropic`, `minimax-cn`).
- * @returns the derived reference name (e.g. `MINIMAX_CN_API_KEY`).
- */
-export function deriveKeyRef(provider: string): string {
-  return `${provider.toUpperCase().replace(/[^A-Z0-9]+/g, '_')}_API_KEY`
 }
 
 /**

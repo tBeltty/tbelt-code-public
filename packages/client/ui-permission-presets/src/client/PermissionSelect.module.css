@@ -100,3 +100,17 @@
 .chevronOpen {
   transform: rotate(180deg);
 }
+
+/* Menu row: the preset name with a one-line effect beneath it. */
+.optionStack {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  white-space: normal;
+}
+
+.optionHint {
+  font-size: 12px;
+  line-height: 16px;
+  color: var(--dsw-alias-label-tertiary);
+}

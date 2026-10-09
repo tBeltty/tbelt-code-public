@@ -1,0 +1,36 @@
+/**
+ * Help text: the keys and commands of the terminal client.
+ * @module @deepseek-ai/dsh-terminal-views/help
+ */
+import { t } from './copy.ts'
+import type { Style } from './ansi.ts'
+
+/**
+ * The key and command reference.
+ * @param style - text styles.
+ * @returns lines without trailing newlines.
+ */
+export function helpLines(style: Style): string[] {
+  return [
+    style.bold(t('help.title')),
+    t('help.send'),
+    t('help.newline'),
+    t('help.history'),
+    t('help.edit'),
+    t('help.cancel'),
+    t('help.exit'),
+    t('help.sessions'),
+    t('help.rename'),
+    t('help.model'),
+    t('help.modelDefault'),
+    t('help.new'),
+    t('help.attach'),
+    t('help.providers'),
+    t('help.webSearch'),
+    t('help.settings'),
+    t('help.plugins'),
+    t('help.agents'),
+    t('help.permissions'),
+    t('help.commands'),
+  ]
+}

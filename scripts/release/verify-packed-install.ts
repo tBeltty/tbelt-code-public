@@ -113,8 +113,8 @@ function main(): void {
     console.log(`release verify-packed-install: ${String(packageCount)} default-product packages exclude experimental packages`)
     const bin = join(consumerRoot, 'node_modules', ...entry.packageName.split('/'), entry.binPath)
     const version = capture(process.execPath, [bin, '--version'], { cwd: consumerRoot, env: environment })
-    if (version !== expected.version) {
-      throw new Error(`installed ${entry.packageName} --version reported ${JSON.stringify(version)}, expected ${expected.version}`)
+    if (version !== `tBelt Code ${expected.version}`) {
+      throw new Error(`installed ${entry.packageName} --version reported ${JSON.stringify(version)}, expected tBelt Code ${expected.version}`)
     }
     console.log(`release verify-packed-install: installed ${entry.packageName} reports ${version}`)
   } finally {

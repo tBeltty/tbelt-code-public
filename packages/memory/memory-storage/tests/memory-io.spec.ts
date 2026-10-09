@@ -5,6 +5,7 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 import { Context } from '@deepseek-ai/cordis'
 import Storage from '@deepseek-ai/dsh-storage'
 import { DomainFacility } from '@deepseek-ai/dsh-storage-domain'
+import { JsonStorageBackend } from '../../../storage/storage-json/src/index.ts'
 import { MemoryMediaPool, MemoryStorageBackend } from '../../../storage/storage-domain/tests/helpers/memory-backend.ts'
 import MemoryStorage, { GLOBAL_SCOPE_ID } from '../src/index.ts'
 import { parseFrontmatter } from '../src/frontmatter.ts'
@@ -177,5 +178,28 @@ describe('MemoryStorage read/write API (real composition)', () => {
     expect(projectEntries).toHaveLength(1)
 
     await fiber.dispose()
+  })
+
+  it('persists and reloads entries through the JSON per-record backend', async () => {
+    const root = join(dshHome, 'storage')
+    const open = async () => {
+      const ctx = new Context()
+      await ctx.plugin(Storage)
+      ctx.storage.backend.register('json', new JsonStorageBackend(root))
+      const facility = new DomainFacility(ctx, { backend: 'json', routes: {} })
+      ctx.storage.mount('domain', facility)
+      ctx.provide('storageDomain', facility)
+      const fiber = await ctx.plugin(MemoryStorage, { dshHome })
+      return { ctx, fiber }
+    }
+    const first = await open()
+    await first.ctx.memoryStorage.writeEntry({
+      name: 'ci-preferences', type: 'feedback', description: 'Sole authorship.', projectScope: 'global', content: 'Body.',
+    })
+    await first.fiber.dispose()
+
+    const second = await open()
+    expect(second.ctx.memoryStorage.listEntries(GLOBAL_SCOPE_ID).map(entry => entry.name)).toEqual(['ci-preferences'])
+    await second.fiber.dispose()
   })
 })

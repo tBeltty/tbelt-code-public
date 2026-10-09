@@ -109,6 +109,21 @@ interface CatalogDraft {
   namespace: SettingsNamespaceView
 }
 
+/** The add card shows a provider filter once more routes than this can be added. */
+const PROVIDER_SEARCH_FROM = 8
+
+/**
+ * Whether a directory entry matches the add card's provider filter.
+ * @param entry - the route's directory entry.
+ * @param query - filter text; blank matches every route.
+ * @returns true when the id or display name contains the text, ignoring case.
+ */
+function matchesProviderQuery(entry: ProviderRow['entry'], query: string): boolean {
+  const needle = query.trim().toLowerCase()
+  return needle.length === 0 || entry.provider.toLowerCase().includes(needle)
+    || entry.displayName.toLowerCase().includes(needle)
+}
+
 /** Values that vary around the shared provider-editor rendering. */
 interface ProviderEditorRenderProps extends Pick<
   ProviderEditorProps,
@@ -245,6 +260,8 @@ function Loaded({ injected, renderSlot }: { injected: ModelsSectionFace; renderS
   /** Whether each add panel has a write or an interrogation in flight. */
   const [catalogBusy, setCatalogBusy] = useState(false)
   const [customBusy, setCustomBusy] = useState(false)
+  /** Filter typed into the add card's provider list, offered once the list is long. */
+  const [providerQuery, setProviderQuery] = useState('')
   /** The catalog route whose add card skips the key check, for providers that authenticate some other way. */
   const [keylessProvider, setKeylessProvider] = useState<string | undefined>(undefined)
   /** Base of the add card's tab and panel ids. */
@@ -278,6 +295,7 @@ function Loaded({ injected, renderSlot }: { injected: ModelsSectionFace; renderS
     setCustomBusy(false)
     setCustomTemplate(undefined)
     setKeylessProvider(undefined)
+    setProviderQuery('')
   }
 
   const closeEditor = (changed: boolean, target: ProviderIdentity): void => {
@@ -580,6 +598,19 @@ function Loaded({ injected, renderSlot }: { injected: ModelsSectionFace; renderS
                   >
                     <div className={styles['field']}>
                       <span className={styles['fieldLabel']}>{t('provider')}</span>
+                      {addable.length > PROVIDER_SEARCH_FROM
+                        ? (
+                          <input
+                            className={styles['input']}
+                            type="search"
+                            value={providerQuery}
+                            placeholder={t('onboardingSearchProviders')}
+                            aria-label={t('onboardingSearchProviders')}
+                            disabled={catalogBusy}
+                            onChange={(event) => { setProviderQuery(event.target.value) }}
+                          />
+                        )
+                        : null}
                       <select
                         className={`${styles['input']} ${styles['selectInput']}`}
                         value={draft.target.provider}
@@ -592,9 +623,12 @@ function Loaded({ injected, renderSlot }: { injected: ModelsSectionFace; renderS
                           setEditing(targetOf(picked.row))
                         }}
                       >
-                        {addable.map(({ row }) => (
-                          <option key={row.entry.provider} value={row.entry.provider}>{row.entry.displayName}</option>
-                        ))}
+                        {addable
+                          .filter(({ row }) => row.entry.provider === draft.target.provider
+                            || matchesProviderQuery(row.entry, providerQuery))
+                          .map(({ row }) => (
+                            <option key={row.entry.provider} value={row.entry.provider}>{row.entry.displayName}</option>
+                          ))}
                       </select>
                     </div>
                     {draft.namespace.ns === 'llm-pi-ai' && keylessProvider !== draft.target.provider

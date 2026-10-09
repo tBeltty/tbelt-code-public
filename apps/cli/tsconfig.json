@@ -33,6 +33,12 @@
       "path": "../../packages/bundle/web-app"
     },
     {
+      "path": "../../packages/bundle/terminal-app"
+    },
+    {
+      "path": "../../packages/terminal-client/runtime"
+    },
+    {
       "path": "../../packages/host/webserver"
     },
     {

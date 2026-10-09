@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
-# Point tbelt.online and www.tbelt.online at the Cloudflare Pages project.
+# Point code.tbelt.online and www.code.tbelt.online at the Cloudflare Pages
+# project. The apex and www hosts are not touched.
 #
-# This replaces whatever those two hostnames serve today. Before changing
+# This replaces whatever that hostname serves today. Before changing
 # anything it saves their current DNS records to dns-backup-<timestamp>.json,
 # which restore-domain.sh puts back.
 #
@@ -18,7 +19,7 @@ if [[ -z "${CLOUDFLARE_ACCOUNT_ID:-}" ]]; then
 fi
 PROJECT=${PROJECT:-tbelt-online}
 ZONE_NAME=${ZONE_NAME:-tbelt.online}
-HOSTS=("$ZONE_NAME" "www.$ZONE_NAME")
+HOSTS=("code.$ZONE_NAME" "www.code.$ZONE_NAME")
 api=https://api.cloudflare.com/client/v4
 
 cf() {

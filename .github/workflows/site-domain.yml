@@ -1,6 +1,7 @@
 name: Site domain
 
-# Points tbelt.online and www.tbelt.online at the tbelt-online Pages project
+# Points code.tbelt.online and www.code.tbelt.online at the tbelt-online
+# Pages project
 # (site/scripts/connect-domain.sh) and keeps the replaced DNS records as the
 # dns-backup artifact. With restore_run_id it puts back the records saved by
 # that run (site/scripts/restore-domain.sh).

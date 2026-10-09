@@ -1,8 +1,7 @@
 /** Recorded todo, goal, and schedule values for the compact detail body. */
 import type { TranslateNS } from '@deepseek-ai/dsh-client-ui-slots'
-import type { ToolCallBlock } from './tool-call-model.ts'
+import { parsedToolCall, singleResultText, type ToolCallBlock } from '@deepseek-ai/dsh-presentation-tool-call'
 import type { ToolDetailsModel } from '../components/ToolDetails.tsx'
-import { parsedToolCall, singleResultText } from './raw-tool-call.ts'
 import { controlDetails } from './control-details-model.ts'
 import { inspectionDetails } from './inspection-details-model.ts'
 import { detailJson, detailRecord, nonempty } from './detail-model-shared.ts'

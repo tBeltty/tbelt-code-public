@@ -56,7 +56,7 @@ async function fixture(options: {
     directory: root, launcher: join(root, 'desktop-dsh'),
     activeCommand: options.managed && !options.shadowed ? join(root, process.platform === 'win32' ? 'dsh.cmd' : 'dsh') : join(root, 'other-dsh'),
   }
-  if (process.platform === 'darwin') {
+  if (process.platform === 'darwin' || process.platform === 'linux') {
     const shell = join(root, 'lookup-shell')
     await writeFile(shell, '#!/bin/sh\nprintf "\\0DSH_COMMAND\\0"\ncat "$(dirname "$0")/selected-command"\nprintf "\\0"\n', { mode: 0o755 })
     await writeFile(join(root, 'selected-command'), state.activeCommand + '\n')

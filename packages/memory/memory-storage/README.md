@@ -60,7 +60,7 @@ A write with `content` omitted patches only the entry's frontmatter fields (e.g.
 
 ### Building a storage key
 
-A memory entry's storage key is `<scope-id>/<name>`. `GLOBAL_SCOPE_ID` (`'global'`) is the fixed scope id for every global-tier entry; `projectScopeId(projectRoot)` derives a stable 16-character hex id for a project-tier entry, since the domain has exactly one `entries` table shared by every project — project identity lives in the key, not in a second domain instance. `resolveMemoryProjectRoot(cwd, fileSystem?, signal?)` finds the project root for a project-tier key, walking upward from `cwd` for a `.git` directory (via `@deepseek-ai/dsh-project-root`). `memoryEntryKey(scopeId, name)` builds the branded `MemoryEntryKey`.
+A memory entry's storage key is `<scope-id>_<name>`. `GLOBAL_SCOPE_ID` (`'global'`) is the fixed scope id for every global-tier entry; `projectScopeId(projectRoot)` derives a stable 16-character hex id for a project-tier entry, since the domain has exactly one `entries` table shared by every project — project identity lives in the key, not in a second domain instance. `resolveMemoryProjectRoot(cwd, fileSystem?, signal?)` finds the project root for a project-tier key, walking upward from `cwd` for a `.git` directory (via `@deepseek-ai/dsh-project-root`). `memoryEntryKey(scopeId, name)` builds the branded `MemoryEntryKey`.
 
 ```ts
 import { GLOBAL_SCOPE_ID, memoryEntryKey, projectScopeId, resolveMemoryProjectRoot } from '@deepseek-ai/dsh-memory-storage'

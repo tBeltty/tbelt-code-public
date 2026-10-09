@@ -54,6 +54,15 @@
       "path": "../../interaction/user-questions"
     },
     {
+      "path": "../../presentation/tool-call"
+    },
+    {
+      "path": "../../presentation/tool-card"
+    },
+    {
+      "path": "../../presentation/plan"
+    },
+    {
       "path": "../../util/workspace-path"
     }
   ]

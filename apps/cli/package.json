@@ -12,7 +12,9 @@
   },
   "type": "module",
   "bin": {
-    "dsh": "lib/bin.js"
+    "dsh": "lib/bin.js",
+    "tbelt": "lib/tbelt-bin.js",
+    "dsh-tui": "lib/tbelt-bin.js"
   },
   "files": [
     "lib/*.js",
@@ -64,7 +66,9 @@
     "@deepseek-ai/dsh-skill-office": "workspace:*",
     "@deepseek-ai/dsh-tool-workspace-dependencies": "workspace:*",
     "@deepseek-ai/dsh-terminal": "workspace:*",
+    "@deepseek-ai/dsh-terminal-app": "workspace:*",
     "@deepseek-ai/dsh-terminal-bash": "workspace:*",
+    "@deepseek-ai/dsh-terminal-client": "workspace:*",
     "@deepseek-ai/dsh-time-context": "workspace:*",
     "@deepseek-ai/dsh-tmux-context": "workspace:*",
     "@deepseek-ai/dsh-token-meter": "workspace:*",

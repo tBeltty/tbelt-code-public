@@ -7,7 +7,7 @@ export type WebSearchSettingsLocaleKey =
   | 'title' | 'description'
   | 'provider' | 'providerHint' | 'noProviders'
   | 'providerExa' | 'providerPerplexity' | 'providerBrave' | 'providerTavily'
-  | 'apiKey' | 'apiKeyHint' | 'apiKeySet' | 'apiKeyUnset'
+  | 'apiKey' | 'apiKeyHint' | 'apiKeySet' | 'apiKeyUnset' | 'apiKeyPlaceholder' | 'apiKeyReplace' | 'apiKeyKeep'
   | 'checking' | 'keyMissing' | 'keyRejected' | 'keyQuota' | 'keyError'
   | 'readOnly' | 'unavailable' | 'save' | 'saving' | 'saveFailed'
 
@@ -24,8 +24,11 @@ export const en: Record<WebSearchSettingsLocaleKey, string> = {
   providerTavily: 'Tavily',
   apiKey: 'API key',
   apiKeyHint: 'Stored outside the settings file and checked with the provider before saving. Leave blank to keep the current key.',
-  apiKeySet: 'A key is configured.',
+  apiKeySet: 'API key configured',
   apiKeyUnset: 'No key is configured.',
+  apiKeyPlaceholder: 'Enter your API key',
+  apiKeyReplace: 'Replace API',
+  apiKeyKeep: 'Keep current key',
   checking: 'Checking the key with the provider…',
   keyMissing: 'Add this provider’s API key before saving.',
   keyRejected: 'The provider rejected this key. Nothing was saved.',
@@ -51,8 +54,11 @@ export const zh: Record<WebSearchSettingsLocaleKey, string> = {
   providerTavily: 'Tavily',
   apiKey: 'API Key',
   apiKeyHint: '不写入设置文件，保存前会先向提供方验证。留空表示保持当前密钥。',
-  apiKeySet: '已配置密钥。',
+  apiKeySet: 'API 密钥已配置',
   apiKeyUnset: '未配置密钥。',
+  apiKeyPlaceholder: '输入 API 密钥',
+  apiKeyReplace: '替换 API',
+  apiKeyKeep: '保留当前密钥',
   checking: '正在向提供方验证密钥…',
   keyMissing: '保存前请先填写该提供方的 API Key。',
   keyRejected: '提供方拒绝了该密钥，未保存任何内容。',

@@ -10,9 +10,10 @@ import type { InjectFace, PropsLocale, PropsRuntime } from '@deepseek-ai/dsh-cli
 import {
   IconChevronDownOutlineRegular, Menu, RiskConfirmation,
 } from '@deepseek-ai/dsh-client-ui-primitives'
+import type { MenuEntry } from '@deepseek-ai/dsh-client-ui-primitives'
 import type { PermissionSettingsState } from './settings-store.ts'
 import type { PermissionSettingsKey } from './locales.ts'
-import { displayPermissionPreset, FULL_ACCESS_PRESET } from './presentation.ts'
+import { displayPermissionPreset, FULL_ACCESS_PRESET, presetHintKey } from './presentation.ts'
 import css from './PermissionRow.module.css'
 
 /** Registration-side business face for the host-backed preference. */
@@ -61,7 +62,22 @@ export function PermissionRow({ load, select, usePermission, t }: PermissionRowP
   const optionLabel = (option: PermissionSettingsState['options'][number]): string =>
     displayPermissionPreset(option.id, option.label, t)
   const label = selected !== undefined ? optionLabel(selected) : (busy ? t('loading') : t('unavailable'))
-  const description: string = state.error ?? t('description')
+  const selectedHintKey = selected === undefined ? undefined : presetHintKey(selected.id, selected.label)
+  const description: string = state.error ?? (selectedHintKey === undefined ? t('description') : t(selectedHintKey))
+  const optionItem = (option: PermissionSettingsState['options'][number]): MenuEntry => {
+    const hintKey = presetHintKey(option.id, option.label)
+    return {
+      id: option.id,
+      label: hintKey === undefined
+        ? optionLabel(option)
+        : (
+          <span className={css.optionText}>
+            <span>{optionLabel(option)}</span>
+            <span className={css.optionHint}>{t(hintKey)}</span>
+          </span>
+        ),
+    }
+  }
 
   return (
     <>
@@ -73,7 +89,7 @@ export function PermissionRow({ load, select, usePermission, t }: PermissionRowP
         <Menu
           open={open}
           onClose={() => { setOpen(false) }}
-          items={state.options.map(option => ({ id: option.id, label: optionLabel(option) }))}
+          items={state.options.map(optionItem)}
           selectedId={state.currentValue}
           onSelect={(id) => {
             setOpen(false)

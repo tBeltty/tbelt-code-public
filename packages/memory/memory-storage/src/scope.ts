@@ -55,12 +55,28 @@ export function resolveMemoryProjectRoot(
   return findProjectRoot(cwd, DEFAULT_PROJECT_ROOT_MARKERS, fileSystem, signal)
 }
 
+/** Joins the scope id and name in a {@link MemoryEntryKey}. */
+const MEMORY_KEY_SEPARATOR = '_'
+
 /**
- * Build the storage key for one memory entry.
+ * Whether a storage key belongs to one scope.
+ * @param key - a key built by {@link memoryEntryKey}.
+ * @param scopeId - {@link GLOBAL_SCOPE_ID} or a {@link projectScopeId} result.
+ * @returns true when the key was built with that scope id.
+ */
+export function isKeyInScope(key: string, scopeId: string): boolean {
+  return key.startsWith(`${scopeId}${MEMORY_KEY_SEPARATOR}`)
+}
+
+/**
+ * Build the storage key for one memory entry: `<scope-id>_<name>`. The
+ * separator is `_` because backends store a key as one path segment
+ * (`[a-zA-Z0-9_-]+`), and neither a scope id (`global` or lowercase hex) nor a
+ * name (lowercase hyphenated slug) contains `_`, so the join stays unambiguous.
  * @param scopeId - {@link GLOBAL_SCOPE_ID} or a {@link projectScopeId} result.
  * @param name - the entry's slug (`MemoryEntryRecord.name`).
  * @returns the branded storage key.
  */
 export function memoryEntryKey(scopeId: string, name: string): MemoryEntryKey {
-  return brandString<MemoryEntryKey>(`${scopeId}/${name}`)
+  return brandString<MemoryEntryKey>(`${scopeId}${MEMORY_KEY_SEPARATOR}${name}`)
 }

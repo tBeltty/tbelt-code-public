@@ -40,7 +40,7 @@ export interface AppIdentity {
 export const APP_IDENTITY: AppIdentity = {
   product: 'tbelt-code',
   version,
-  url: 'https://tbelt.online',
+  url: 'https://code.tbelt.online',
 }
 
 /**

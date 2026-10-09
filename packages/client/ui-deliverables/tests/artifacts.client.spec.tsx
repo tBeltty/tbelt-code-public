@@ -154,20 +154,28 @@ describe('Artifacts page', () => {
   })
 
   it('groups the cards by Turn, newest first, and opens files beside the page', () => {
-    const { view, openResource, openPresented, openChangesReview } = renderTab([
-      { turn: 2, changes: { seq: 7 }, presented: [] },
+    const { view, openResource, openPresented } = renderTab([
+      { turn: 3, changes: null, presented: [{ path: 'out/summary.md', seq: 9, index: 0 }] },
       { turn: 1, changes: null, presented: [{ path: 'out/report.md', seq: 4, index: 0, description: 'Report' }] },
     ])
     const turns = [...view.container.querySelectorAll('[data-artifacts-turn]')]
-    expect(turns.map(turn => turn.getAttribute('data-artifacts-turn'))).toEqual(['2', '1'])
-    expect(view.getByText('Turn 2')).toBeTruthy()
-    expect(view.getByText('Edited a.ts')).toBeTruthy()
+    expect(turns.map(turn => turn.getAttribute('data-artifacts-turn'))).toEqual(['3', '1'])
+    expect(view.getByText('Turn 3')).toBeTruthy()
     fireEvent.click(view.getByRole('button', { name: 'Preview out/report.md in sidebar' }))
     expect(openResource).toHaveBeenCalledExactlyOnceWith('dsh-resource://file/session/session/out/report.md')
-    fireEvent.click(view.getByRole('button', { name: 'Native file action' }))
+    fireEvent.click(view.getAllByRole('button', { name: 'Native file action' })[1] as HTMLElement)
     expect(openPresented).toHaveBeenCalledWith('session', 4, 0, 'open', undefined)
-    fireEvent.click(view.getByText('Edited a.ts'))
-    expect(openChangesReview).toHaveBeenCalledWith({ sessionId: 'session', seq: 7, turn: 2 }, 0)
+  })
+
+  it('never lists code changes, even when the developer-tools setting would show them', () => {
+    const { view, openChangesReview } = renderTab([
+      { turn: 2, changes: { seq: 7 }, presented: [] },
+      { turn: 1, changes: { seq: 3 }, presented: [{ path: 'a.md', seq: 4, index: 0 }] },
+    ])
+    const turns = [...view.container.querySelectorAll('[data-artifacts-turn]')]
+    expect(turns.map(turn => turn.getAttribute('data-artifacts-turn'))).toEqual(['1'])
+    expect(view.queryByText('Edited a.ts')).toBeNull()
+    expect(openChangesReview).not.toHaveBeenCalled()
   })
 })
 

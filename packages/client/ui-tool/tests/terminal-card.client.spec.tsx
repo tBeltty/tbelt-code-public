@@ -11,9 +11,8 @@ import type { SessionId } from '@deepseek-ai/dsh-session/types'
 import { makeTranslate } from '@deepseek-ai/dsh-client-test-runtime'
 import { en as commonEn } from '@deepseek-ai/dsh-client-locale/src/locales/en.ts'
 import { zh as commonZh } from '@deepseek-ai/dsh-client-locale/src/locales/zh.ts'
-import {
-  localizeTerminalCardModel, terminalCardModel, terminalFailed,
-} from '../src/client/tool/models/terminal-card-model.ts'
+import { terminalCardModel, terminalFailed } from '@deepseek-ai/dsh-presentation-tool-card'
+import { localizeTerminalCardModel } from '../src/client/tool/models/terminal-labels.ts'
 import { GenericToolCard, type GenericToolCardProps } from '../src/client/tool/toolviews/GenericToolCard.tsx'
 import { BashRow } from '../src/client/tool/toolviews/bash-sample.tsx'
 import { en, zh } from '@deepseek-ai/dsh-client-ui-conversation/src/client/locales.ts'

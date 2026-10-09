@@ -272,8 +272,9 @@ export interface ChatViewInjected {
   /**
    * Add selected assistant text to this Session's unsent quotes; the next plain message carries them.
    * @param text - Selected text.
+   * @param comment - Optional comment that travels with the quote.
    */
-  quote: (text: string) => void
+  quote: (text: string, comment?: string) => void
   /** Fixed Quote shortcut keycaps and whether its modifier is Command; undefined without a shortcut service. */
   quoteShortcut: QuoteShortcut | undefined
   /** Read the current fenced-code runner; called during render, so it returns a stable identity. */

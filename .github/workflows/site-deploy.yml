@@ -1,6 +1,6 @@
 name: Site deploy
 
-# Publishes site/ (https://tbelt.online) to Cloudflare Pages when main changes
+# Publishes site/ (https://code.tbelt.online) to Cloudflare Pages when main changes
 # site/. Runs only in the public repository. It never builds the app or runs
 # the quality gate.
 #

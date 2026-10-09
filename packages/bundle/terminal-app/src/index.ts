@@ -20,8 +20,8 @@ export const inject = ['cmdlineArgs']
 
 /** Plugin config. */
 export interface Config {
-  /** `auto` loads Orca's status hooks when the terminal runs in an Orca pane; `off` never does. */
-  orcaHooks: 'auto' | 'off'
+  /** `auto` loads Orca's status hooks when the terminal runs in an Orca pane; `off` never does. @default 'auto' */
+  readonly orcaHooks?: 'auto' | 'off'
 }
 
 export const Config: z<Config> = z.object({
@@ -103,6 +103,6 @@ export function apply(ctx: Context, config: Config): void {
     } satisfies TerminalStartupValues)
   })
   parseCmdline(ctx, program)
-  const orcaHooks = config.orcaHooks === 'auto' ? orcaHooksConfigPath(processProbe()) : undefined
+  const orcaHooks = config.orcaHooks !== 'off' ? orcaHooksConfigPath(processProbe()) : undefined
   if (orcaHooks !== undefined) ctx.plugin(hooksClaudeCode, { configPath: orcaHooks })
 }

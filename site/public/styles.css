@@ -25,7 +25,7 @@
 }
 
 *, *::before, *::after { box-sizing: border-box; }
-html { scroll-behavior: smooth; }
+html { scroll-behavior: smooth; background: var(--bg-base); }
 body {
   margin: 0;
   background: var(--bg-base);
@@ -125,12 +125,16 @@ h2 { font-size: clamp(26px, 3vw, 34px); font-weight: 500; letter-spacing: -0.015
 .feature-list dd { color: var(--text-secondary); font-size: 15px; }
 .screenshot { margin-top: clamp(48px, 7vw, 88px); border-radius: 14px; border: 1px solid var(--border-subtle); }
 
-/* Get started: one centered block, one platform panel at a time */
-.start { max-width: 720px; margin: 0 auto; padding: clamp(72px, 10vw, 136px) var(--gutter) 0; text-align: center; }
-.badge { display: inline-block; padding: 5px 14px; border-radius: 999px; background: var(--accent-cyan-tint); color: var(--accent-cyan); font-family: var(--font-mono); font-size: 12px; letter-spacing: 0.12em; text-transform: uppercase; }
-.start h2 { margin-top: 24px; text-wrap: balance; font-size: clamp(30px, 4.4vw, 46px); line-height: 1.1; letter-spacing: -0.025em; }
-.notice { margin-top: 24px; padding: 14px 18px; border-radius: 12px; background: var(--accent-cyan-tint); font-size: 15px; }
-.installer { margin-top: 40px; text-align: left; background: var(--bg-raised); border: 1px solid var(--border-subtle); border-radius: 18px; overflow: hidden; }
+/* Get started: the hero's two-column grid again, copy on the left and the platform panel on the right */
+.start {
+  display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.05fr); gap: 0 clamp(32px, 6vw, 88px); align-items: start;
+  max-width: var(--measure); margin: 0 auto; padding: clamp(72px, 10vw, 136px) var(--gutter) 0;
+}
+.start h2 { text-wrap: balance; font-size: clamp(30px, 4.4vw, 46px); line-height: 1.1; letter-spacing: -0.025em; max-width: 14ch; }
+.start .lead { margin-top: 20px; }
+.signing { margin-top: 12px; color: var(--text-muted); font-size: 14px; }
+.notice { margin-bottom: 16px; padding: 14px 18px; border-radius: 12px; background: var(--accent-cyan-tint); font-size: 15px; }
+.installer { background: var(--bg-raised); border: 1px solid var(--border-subtle); border-radius: 24px; overflow: hidden; }
 .os-tabs { display: none; gap: 4px; padding: 10px; border-bottom: 1px solid var(--border-subtle); }
 .js .os-tabs { display: flex; }
 .os-tabs button { min-height: 36px; padding: 0 14px; border: 0; border-radius: 999px; background: transparent; color: var(--text-muted); font: 500 14px var(--font-sans); cursor: pointer; transition: background-color 0.2s var(--ease), color 0.2s var(--ease); }
@@ -146,22 +150,28 @@ h2 { font-size: clamp(26px, 3vw, 34px); font-weight: 500; letter-spacing: -0.015
 .platform-help { color: var(--text-muted); font-size: 14px; }
 .platform-help em { font-style: normal; color: var(--text-secondary); }
 .platform-help code { color: var(--text-secondary); background: var(--code-bg); padding: 2px 6px; border-radius: 6px; overflow-wrap: anywhere; }
-.start-line { margin: 32px auto 0; max-width: 52ch; color: var(--text-secondary); font-size: 16px; }
-.signing { margin-top: 10px; color: var(--text-muted); font-size: 14px; }
-.actions-center { justify-content: center; align-items: center; gap: 24px; margin-top: 28px; }
+.start .actions { align-items: center; gap: 24px; }
 .gh { width: 18px; height: 18px; margin-right: 10px; fill: currentColor; }
 .text-link { color: var(--text-secondary); text-decoration: none; font-size: 15px; padding: 12px 4px; }
 .text-link:hover { color: var(--text-primary); }
-.requirement { margin: 56px auto 0; max-width: 60ch; color: var(--text-muted); font-size: 14px; }
+.requirement { grid-column: 1 / -1; margin-top: clamp(40px, 6vw, 72px); max-width: 70ch; color: var(--text-muted); font-size: 14px; }
 
-.bottom {
-  display: flex; flex-wrap: wrap; justify-content: space-between; gap: 8px 24px;
-  max-width: var(--measure); margin: clamp(80px, 10vw, 136px) auto 0; padding: 28px var(--gutter) 40px;
+/* The footer rule runs exactly as wide as the content above it */
+.bottom { max-width: var(--measure); margin: clamp(48px, 7vw, 88px) auto 0; padding: 0 var(--gutter) 40px; }
+.bottom-inner {
+  display: flex; flex-wrap: wrap; justify-content: space-between; gap: 8px 24px; padding-top: 28px;
   border-top: 1px solid var(--border-subtle); color: var(--text-muted); font-size: 14px;
 }
 
 @media (max-width: 960px) {
-  .hero { grid-template-columns: 1fr; }
+  .hero, .start { grid-template-columns: 1fr; }
+  .start-copy { display: contents; }
+  .start h2 { order: 1; }
+  .start .lead { order: 2; }
+  .signing { order: 3; }
+  .start-install { order: 4; margin-top: 32px; }
+  .start .actions { order: 5; }
+  .requirement { order: 6; }
   .feature-list { grid-template-columns: 1fr; }
 }
 @media (max-width: 640px) {

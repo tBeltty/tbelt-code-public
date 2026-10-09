@@ -65,6 +65,7 @@ After parsing, `terminal-startup` mounts `dsh-hooks-claude-code` on the hook fil
 | [`cordis.patch.yml`](cordis.patch.yml) | The patch over base and web: disabled browser rows and the two terminal rows |
 | [`src/index.ts`](src/index.ts) | The `terminal-startup` provider and the Orca hook mount |
 | [`src/orca-hooks.ts`](src/orca-hooks.ts) | Where Orca's hook file is, and whether this process should load it |
+| [`tests/orca-contract.spec.ts`](tests/orca-contract.spec.ts) | Opt-in check against an Orca checkout: process recognition, hook files and the patch block |
 | [`tests/startup.spec.ts`](tests/startup.spec.ts) | Command-line parsing and the Orca hook mount over a real Loader tree |
 | [`tests/orca-hooks.spec.ts`](tests/orca-hooks.spec.ts) | The hook file lookup against fake machines |
 | [`tests/composition.spec.ts`](tests/composition.spec.ts) | The composed entry list: Host rows kept, browser rows off, no analytics or telemetry mounted |
@@ -103,8 +104,8 @@ None; the bundle changes no request prefix.
 
 - **Layered over the web bundle** — the profile keeps the web layer's Host rows and turns the browser rows off one by one, so a row added to the web layer for the browser needs a line here when it cannot run without a web server; the composition test names the ones that must be off.
 - **Needs an interactive terminal** — redirected input or output fails at start with a one-line message.
-- **No `tbelt` alias** — the alias for `dsh terminal` is not installed.
-- **Orca agent menu** — Orca lists the DeepSeek Harness agent when `dsh-tui` or `dst` is on the PATH, and recognizes the process `dsh`, not `tbelt`. The npm package installs `dsh-tui` but not `dst`; a community `dsh-tui` installed in the same prefix conflicts with it.
+- **Orca agent menu** — Orca lists the DeepSeek Harness agent when `dsh-tui` or `dst` is on the PATH and recognizes the processes `dsh` and `dsh-tui`, not `tbelt`. Give Orca `dsh terminal` or `dsh-tui` as the agent command. The npm package installs `dsh-tui` but not `dst`; a community `dsh-tui` installed in the same prefix conflicts with it. On Windows the npm shims start `tbelt-bin.js`, which Orca does not recognize under any of these names.
+- **Orca contract check** — set `ORCA_SRC` to an Orca checkout and run `tests/orca-contract.spec.ts` to run Orca's own process recognition, title reading and hook files against this profile; the suite is skipped without it.
 - **Orca approvals** — Orca has no hook for an approval pause and answers permission prompts only in the pane; the pane's title shows `!` while one waits.
 
 <a id="dev-note"></a>

@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest'
-import { confirm, remoteDone, remoteValue } from '../../src/config/ui.ts'
+import { attempt, confirm, remoteDone, remoteOutcome, remoteValue } from '../../src/config/ui.ts'
 import { writeSettings } from '../../src/config/write.ts'
 import type { RemotePort } from '../../src/ports.ts'
 import { fakeNamespaces, scriptedUi } from '../fakes.ts'
@@ -24,6 +24,23 @@ describe('remote helpers', () => {
     expect(await remoteDone(ui, failed, () => Promise.reject(new Error('err')))).toBe(false)
     expect(await remoteDone(ui, failed, () => Promise.reject('text'))).toBe(false)
     expect(warns(log)).toEqual(['failed: host', 'failed: err', 'failed: text'])
+  })
+
+  it('keep a successful undefined apart from a failure', async () => {
+    const { ui, log } = scriptedUi([])
+    expect(await remoteOutcome(ui, failed, () => Promise.resolve({ ok: true as const, value: undefined }))).toEqual({ value: undefined })
+    expect(await remoteOutcome(ui, failed, () => Promise.resolve({ ok: false as const, error: { code: 'x', message: 'host' } }))).toBeUndefined()
+    expect(await remoteOutcome(ui, failed, () => Promise.reject(new Error('err')))).toBeUndefined()
+    expect(await remoteOutcome(ui, failed, () => Promise.reject('text'))).toBeUndefined()
+    expect(warns(log)).toEqual(['failed: host', 'failed: err', 'failed: text'])
+  })
+
+  it('print what a throwing service call says', async () => {
+    const { ui, log } = scriptedUi([])
+    expect(await attempt(ui, failed, () => Promise.resolve(5))).toEqual({ value: 5 })
+    expect(await attempt(ui, failed, () => Promise.reject(new Error('err')))).toBeUndefined()
+    expect(await attempt(ui, failed, () => Promise.reject('text'))).toBeUndefined()
+    expect(warns(log)).toEqual(['failed: err', 'failed: text'])
   })
 
   it('confirm only on the confirming choice', async () => {

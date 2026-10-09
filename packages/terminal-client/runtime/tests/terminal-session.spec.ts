@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest'
-import { listenForApprovals, TerminalSession } from '../src/terminal-session.ts'
+import { listenForApprovals, listenForQuestions, TerminalSession } from '../src/terminal-session.ts'
 import type { TerminalSessionOptions } from '../src/terminal-session.ts'
-import type { ApprovalOutcomePort, ApprovalRequestPort } from '../src/ports.ts'
+import type { ApprovalOutcomePort, ApprovalRequestPort, QuestionAnswerPort, QuestionRequestPort } from '../src/ports.ts'
 import {
   assistantEvent, callEvent, deltaEvent, fakeBinding, fakeDeps, fakeIo, fakeRemote, fakeSessions, plain, turnEnd, userEvent, visible,
 } from './fakes.ts'
@@ -106,6 +106,18 @@ describe('TerminalSession', () => {
     terminal.handleInput('/nope\r')
     await flush()
     expect(visible(io.text)).toContain('The command failed: unknown command')
+    session.command.mockResolvedValueOnce({ ok: true, value: { matched: false } })
+    terminal.handleInput('/nope now\r')
+    await flush()
+    expect(visible(io.text)).toContain('There is no /nope command. Type /help for the commands.')
+    session.command.mockRejectedValueOnce(new Error('offline'))
+    terminal.handleInput('/later\r')
+    await flush()
+    expect(visible(io.text)).toContain('The command failed: offline')
+    session.command.mockRejectedValueOnce('plain failure')
+    terminal.handleInput('/again\r')
+    await flush()
+    expect(visible(io.text)).toContain('The command failed: plain failure')
     let fail: (error: Error) => void = () => {}
     session.prompt.mockReturnValueOnce(new Promise((_resolve, reject) => { fail = reject }))
     terminal.handleInput('four\r')
@@ -322,6 +334,157 @@ describe('listenForApprovals', () => {
   })
 })
 
+describe('TerminalSession questions', () => {
+  const mode: QuestionRequestPort = {
+    questions: [{ id: 'mode', question: 'Which mode?', options: [{ label: 'Fast', description: 'Skip the checks' }, { label: 'Careful' }] }],
+  }
+  const codeOf = (error: unknown): unknown => (error as { code?: string }).code
+
+  it('prints the question, takes the chosen option and returns the answers', async () => {
+    const { terminal, io } = open()
+    const answer = terminal.requestQuestions(mode)
+    const shown = visible(io.text)
+    expect(shown).toContain('? The agent has a question')
+    expect(shown).toContain('Which mode?')
+    expect(shown).toContain('Fast  Skip the checks')
+    terminal.handleInput('\u001B[B')
+    terminal.handleInput('\r')
+    await expect(answer).resolves.toEqual({ answers: [{ id: 'mode', selected: ['Careful'] }] })
+    expect(visible(io.text)).toContain('→ Careful')
+    expect(visible(io.text.slice(io.text.lastIndexOf('→ Careful')))).toContain('Message the agent')
+  })
+
+  it('asks a batch one question at a time and keeps typed text as the custom answer', async () => {
+    const { terminal, io } = open()
+    const answer = terminal.requestQuestions({
+      questions: [...mode.questions, { id: 'name', question: 'What name?' }],
+    })
+    terminal.handleInput('\r')
+    expect(visible(io.text)).toContain('(question 2 of 2)')
+    terminal.handleInput('Ana\r')
+    await expect(answer).resolves.toEqual({
+      answers: [{ id: 'mode', selected: ['Fast'] }, { id: 'name', selected: [], custom: 'Ana' }],
+    })
+  })
+
+  it('shows the plan under review above the decision', async () => {
+    const { terminal, io } = open()
+    const answer = terminal.requestQuestions({
+      questions: [{
+        id: 'plan-review', question: 'Approve this plan?', header: 'Plan review', detail: '# Plan\n\n- step one',
+        options: [{ label: 'Approve' }, { label: 'Keep planning' }], intent: { kind: 'plan-review' },
+      }],
+    })
+    expect(visible(io.text)).toContain('? Plan review')
+    expect(visible(io.text)).toContain('# Plan')
+    terminal.handleInput('\r')
+    await expect(answer).resolves.toEqual({ answers: [{ id: 'plan-review', selected: ['Approve'] }] })
+  })
+
+  it('rejects with a cancellation when the person leaves the question', async () => {
+    const { terminal, io } = open()
+    const answer = terminal.requestQuestions(mode)
+    terminal.handleInput('\u001B')
+    await expect(answer).rejects.toMatchObject({ name: 'UserQuestionError', code: 'ASK_CANCELLED' })
+    expect(visible(io.text)).toContain('You left the question unanswered.')
+  })
+
+  it('cancels the question and stops the turn on Ctrl+C', async () => {
+    const { terminal, session } = open()
+    session.setRunning(true)
+    const answer = terminal.requestQuestions(mode)
+    terminal.handleInput('\u0003')
+    await expect(answer).rejects.toMatchObject({ code: 'ASK_CANCELLED' })
+    expect(session.cancel).toHaveBeenCalledOnce()
+  })
+
+  it('withdraws a question the Host aborts, and shows the next waiting one', async () => {
+    const { terminal, io } = open()
+    const controller = new AbortController()
+    const first = terminal.requestQuestions({ ...mode, signal: controller.signal })
+    const second = terminal.requestQuestions({ questions: [{ id: 'next', question: 'Second question?', options: [{ label: 'Yes' }] }] })
+    expect(visible(io.text)).not.toContain('Second question?')
+    controller.abort()
+    await expect(first).rejects.toMatchObject({ code: 'ASK_ABORTED' })
+    expect(visible(io.text)).toContain('Second question?')
+    terminal.handleInput('\r')
+    await expect(second).resolves.toEqual({ answers: [{ id: 'next', selected: ['Yes'] }] })
+    controller.abort()
+  })
+
+  it('ignores an abort that arrives after the question was answered', async () => {
+    const { terminal } = open()
+    const controller = new AbortController()
+    const answer = terminal.requestQuestions({ ...mode, signal: controller.signal })
+    terminal.handleInput('\r')
+    await expect(answer).resolves.toEqual({ answers: [{ id: 'mode', selected: ['Fast'] }] })
+    controller.abort()
+  })
+
+  it('refuses a request whose signal already aborted', async () => {
+    const { terminal } = open()
+    const answer = terminal.requestQuestions({ ...mode, signal: AbortSignal.abort() })
+    await expect(answer).rejects.toMatchObject({ code: 'ASK_ABORTED' })
+  })
+
+  it('cancels open questions when the terminal closes and refuses new ones', async () => {
+    const { terminal } = open()
+    const answer = terminal.requestQuestions(mode)
+    terminal.dispose()
+    await expect(answer).rejects.toMatchObject({ code: 'ASK_CANCELLED' })
+    await expect(terminal.requestQuestions(mode)).rejects.toSatisfy(error => codeOf(error) === 'ASK_CANCELLED')
+  })
+
+  it('tells the host window the session waits while a question is open', async () => {
+    const { terminal, io } = open({ hostTitle: { marker: true, frameIntervalMs: 500 } })
+    const answer = terminal.requestQuestions(mode)
+    expect(io.text).toContain('\u001B]0;! \u{1F40B} app')
+    terminal.handleInput('\r')
+    await answer
+    expect(io.text.lastIndexOf('\u001B]0;')).toBeGreaterThan(io.text.indexOf('\u001B]0;! '))
+  })
+
+  it('puts an approval before a question', async () => {
+    const { terminal, io } = open()
+    const question = terminal.requestQuestions(mode)
+    const approval = terminal.requestApproval({ toolName: 'bash', reason: 'run the tests' })
+    expect(visible(io.text.slice(io.text.lastIndexOf('I need permission')))).toContain('I need permission')
+    terminal.handleInput('y')
+    await expect(approval).resolves.toBe('allowed-once')
+    terminal.handleInput('\r')
+    await expect(question).resolves.toEqual({ answers: [{ id: 'mode', selected: ['Fast'] }] })
+  })
+})
+
+describe('listenForQuestions', () => {
+  it('answers requests of its own session and delegates every other', async () => {
+    const { remote, questionListeners } = fakeRemote()
+    const asked: QuestionRequestPort[] = []
+    const answer: QuestionAnswerPort = { answers: [{ id: 'q', selected: ['Yes'] }] }
+    const terminal = {
+      requestQuestions: vi.fn((request: QuestionRequestPort): Promise<QuestionAnswerPort> => {
+        asked.push(request)
+        return Promise.resolve(answer)
+      }),
+    }
+    const shown: { terminal?: typeof terminal } = {}
+    const sessions = fakeSessions({ scopeOf: context => (context as { scope?: string }).scope })
+    const stop = listenForQuestions({ sessions, remote }, 'session-a', () => shown.terminal)
+    const listener = questionListeners[0]!
+    const fallback: QuestionAnswerPort = { answers: [] }
+    const next = vi.fn(() => Promise.resolve(fallback))
+    const request: QuestionRequestPort = { questions: [{ id: 'q', question: 'Sure?' }] }
+
+    await expect(listener.call({ scope: 'session-a' }, request, next)).resolves.toBe(fallback)
+    shown.terminal = terminal
+    await expect(listener.call({ scope: 'session-b' }, request, next)).resolves.toBe(fallback)
+    await expect(listener.call({ scope: 'session-a' }, { ...request, wait: { callId: 'c1', timed: true } }, next)).resolves.toBe(fallback)
+    await expect(listener.call({ scope: 'session-a' }, { ...request, wait: { callId: 'c1' } }, next)).resolves.toBe(answer)
+    expect(asked).toHaveLength(1)
+    stop()
+  })
+})
+
 describe('TerminalSession pickers', () => {
   const rows = [
     { id: 'session-aaaa1111-0', title: 'Fix the build', cwd: '/work/app', blank: false, updatedAt: 9_000_000 },
@@ -472,10 +635,10 @@ describe('TerminalSession commands', () => {
     await flush()
     terminal.handleInput('/attach "shots/b b.png"\r')
     await flush()
-    expect(deps.files.readImage).toHaveBeenNthCalledWith(1, '/home/me/pics/a.png')
-    expect(deps.files.readImage).toHaveBeenNthCalledWith(2, '/work/app/shots/b b.png')
+    expect(deps.files.readAttachment).toHaveBeenNthCalledWith(1, '/home/me/pics/a.png')
+    expect(deps.files.readAttachment).toHaveBeenNthCalledWith(2, '/work/app/shots/b b.png')
     expect(visible(io.text)).toContain('Attached a.png. It goes with your next message (1 waiting).')
-    expect(visible(io.text)).toContain('2 image(s) attached')
+    expect(visible(io.text)).toContain('2 attached')
     session.prompt.mockResolvedValueOnce({ ok: false, error: { code: 'x', message: 'too big' } })
     terminal.handleInput('look\r')
     await flush()
@@ -496,11 +659,11 @@ describe('TerminalSession commands', () => {
   it('removes attached images and says when there are none', async () => {
     const { terminal, io, session } = open()
     terminal.handleInput('/detach\r')
-    expect(visible(io.text)).toContain('No images are attached.')
+    expect(visible(io.text)).toContain('Nothing is attached.')
     terminal.handleInput('/attach a.png\r')
     await flush()
     terminal.handleInput('/detach\r')
-    expect(visible(io.text)).toContain('Removed 1 attached images.')
+    expect(visible(io.text)).toContain('Removed 1 attached files.')
     terminal.handleInput('plain\r')
     await flush()
     expect(session.prompt.mock.calls[0]![0]).toEqual([{ type: 'text', text: 'plain' }])
@@ -509,11 +672,11 @@ describe('TerminalSession commands', () => {
   it('explains why a file cannot be attached', async () => {
     const deps = fakeDeps()
     const { terminal, io } = open({ deps })
-    deps.files.readImage.mockRejectedValueOnce(new Error('only PNG, JPEG, WebP and GIF images can be attached'))
+    deps.files.readAttachment.mockRejectedValueOnce(new Error('only PNG, JPEG, WebP and GIF images can be attached'))
     terminal.handleInput('/attach notes.txt\r')
     await flush()
     expect(visible(io.text)).toContain('Could not attach /work/app/notes.txt: only PNG')
-    deps.files.readImage.mockRejectedValueOnce('odd')
+    deps.files.readAttachment.mockRejectedValueOnce('odd')
     terminal.handleInput('/attach odd\r')
     await flush()
     expect(visible(io.text)).toContain('Could not attach /work/app/odd: odd')

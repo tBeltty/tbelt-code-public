@@ -8,6 +8,11 @@
  */
 import type { TranscriptEvent } from '@deepseek-ai/dsh-terminal-views'
 import type { ApprovalChoice } from '@deepseek-ai/dsh-presentation-approval'
+import type {
+  CommandsRemotePort, FileReferencesRemotePort, FileUploadPort, GoalsRemotePort, JobsPort, MessageFeedbackRemotePort,
+  PathApplicationPort, ScheduleRemotePort, SessionFeedbackRemotePort, SessionReferencesRemotePort, SkillsRemotePort,
+  SpendBudgetRemotePort, SubagentsRemotePort, UserQuestionsRemotePort, WorkspacesPort,
+} from './panel-ports.ts'
 
 /** A value with a synchronous snapshot and change notification. */
 export interface ObservablePort<T> {
@@ -52,6 +57,7 @@ export interface SessionSnapshotPort {
 export type PromptPartPort =
   | { readonly type: 'text'; readonly text: string }
   | { readonly type: 'image'; readonly mediaType: string; readonly data: string; readonly name?: string }
+  | { readonly type: 'file'; readonly receiptId: string }
 
 /** A stored image read back from the Host. */
 export interface StoredImagePort {
@@ -75,7 +81,17 @@ export interface SessionFacePort extends ObservablePort<SessionSnapshotPort> {
   readAttachment(attachmentId: string): Promise<RemoteResultPort<StoredImagePort>>
   cancel(): Promise<RemoteResultPort<{ readonly accepted: true }>>
   command(line: string): Promise<RemoteResultPort<{ readonly matched: boolean }>>
+  /** Apply one edit, removal or steer to a message still waiting in the queue. */
+  updateQueue(itemId: string, action: QueueActionPort): Promise<RemoteResultPort<{ readonly accepted: true }>>
+  /** Values the Host computes from the session log, by projection key. */
+  readonly projections: { faceOf(key: string): ObservablePort<unknown> }
 }
+
+/** What can be done to a queued message. */
+export type QueueActionPort =
+  | { readonly kind: 'edit'; readonly content: readonly { readonly type: 'text'; readonly text: string }[] }
+  | { readonly kind: 'remove' }
+  | { readonly kind: 'steer' }
 
 /** One row of a session's event window. */
 export interface EventEntryPort {
@@ -135,6 +151,43 @@ export type ApprovalListenerPort = (
   next: () => Promise<ApprovalOutcomePort>,
 ) => Promise<ApprovalOutcomePort>
 
+/** One option of a question the agent asks. */
+export interface QuestionOptionPort {
+  readonly label: string
+  readonly description?: string | undefined
+}
+
+/** One question of a batch forwarded from the Host. */
+export interface QuestionItemPort {
+  readonly id: string
+  readonly question: string
+  readonly detail?: string | undefined
+  readonly header?: string | undefined
+  readonly options?: readonly QuestionOptionPort[] | undefined
+  readonly multiSelect?: boolean | undefined
+  readonly intent?: { readonly kind: 'plan-review' } | undefined
+}
+
+/** The agent's questions, forwarded from the Host while a tool call waits for them. */
+export interface QuestionRequestPort {
+  readonly questions: readonly QuestionItemPort[]
+  /** The tool call that waits; `timed` marks a wait that needs a claim from the answering client. */
+  readonly wait?: { readonly callId: string; readonly timed?: boolean | undefined } | undefined
+  readonly signal?: AbortSignal | undefined
+}
+
+/** The person's answer to a batch, one entry per question. */
+export interface QuestionAnswerPort {
+  readonly answers: readonly { readonly id: string; readonly selected: string[]; readonly custom?: string }[]
+}
+
+/** A listener for the question waterfall; `this` is the Agent-scoped context that raised the event. */
+export type QuestionListenerPort = (
+  this: unknown,
+  request: QuestionRequestPort,
+  next: () => Promise<QuestionAnswerPort>,
+) => Promise<QuestionAnswerPort>
+
 /** The model catalog fields the terminal reads. */
 export interface ModelCatalogPort {
   readonly default: { readonly provider: string; readonly model: string }
@@ -157,6 +210,16 @@ export interface SessionRemotePort {
     readonly provider: string
     readonly model: string
   }): Promise<RemoteResultPort<unknown>>
+  /** Copy the session up to an event into a new session. */
+  fork(request: { readonly sessionId: string; readonly atSeq?: number }): Promise<RemoteResultPort<{ readonly sessionId: string }>>
+  /** Whether this installation can hand a path to the desktop's opener. */
+  canOpenWorkspacePath(): Promise<RemoteResultPort<boolean>>
+  openWorkspacePath(request: {
+    readonly path: string
+    readonly action?: 'reveal'
+    readonly application?: string
+  }): Promise<RemoteResultPort<{ readonly opened: true }>>
+  workspacePathApplications(request: { readonly path: string }): Promise<RemoteResultPort<readonly PathApplicationPort[]>>
 }
 
 /** A model a provider disclosed when asked. */
@@ -348,13 +411,31 @@ export interface RemotePort {
   readonly pluginManager: PluginManagerRemotePort
   readonly agentPresets: AgentPresetsRemotePort
   readonly permissionPresets: PermissionPresetsRemotePort
+  readonly skills: SkillsRemotePort
+  readonly schedule: ScheduleRemotePort
+  readonly goals: GoalsRemotePort
+  readonly subagents: SubagentsRemotePort
+  readonly commands: CommandsRemotePort
+  readonly fileReferences: FileReferencesRemotePort
+  readonly sessionReferenceResolver: SessionReferencesRemotePort
+  readonly messageFeedback: MessageFeedbackRemotePort
+  readonly sessionFeedback: SessionFeedbackRemotePort
+  readonly spendBudget: SpendBudgetRemotePort
+  readonly userQuestions: UserQuestionsRemotePort
   $on(event: 'approval/request', listener: ApprovalListenerPort): () => void
+  $on(event: 'user-questions/request', listener: QuestionListenerPort): () => void
 }
 
 /** The services of the client tree. */
 export interface ClientServicesPort {
   readonly sessions: SessionsPort
   readonly remote: RemotePort
+  /** Background job rosters and output. */
+  readonly jobs: JobsPort
+  /** Workspace registry, worktrees, archive and pin sets. */
+  readonly workspaces: WorkspacesPort
+  /** Staged uploads of files to attach. */
+  readonly fileUpload: FileUploadPort
 }
 
 /** Result of asking the person for a decision. */

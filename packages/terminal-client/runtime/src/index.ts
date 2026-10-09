@@ -38,6 +38,8 @@ export interface Config {
   images: ImageSetting
   /** Largest image file `/attach` accepts, in bytes. */
   imageMaxBytes: number
+  /** Largest other file `/attach` accepts, in bytes. */
+  fileMaxBytes: number
   /** Window title: `auto` keeps it in step with the session, `off` never touches it. */
   title: 'auto' | 'off'
   /** Time between spinner frames in the window title while a turn runs, in milliseconds. */
@@ -50,6 +52,7 @@ export const Config: z<Config> = z.object({
   cwd: z.string(),
   images: z.union([z.const('auto' as const), z.const('kitty' as const), z.const('iterm2' as const), z.const('off' as const)]).default('auto'),
   imageMaxBytes: z.natural().min(1).default(20 * 1024 * 1024),
+  fileMaxBytes: z.natural().min(1).default(20 * 1024 * 1024),
   title: z.union([z.const('auto' as const), z.const('off' as const)]).default('auto'),
   titleFrameMs: z.natural().min(100).default(500),
 })
@@ -76,7 +79,7 @@ export function apply(ctx: Context, config: Config): void {
   let disposed = false
 
   const start = async (): Promise<void> => {
-    const files = nodeFiles(config.imageMaxBytes)
+    const files = nodeFiles(config.imageMaxBytes, config.fileMaxBytes)
     const home = homedir()
     const cwd = resolveTypedPath(config.cwd ?? '', { base: process.cwd(), home })
     if (!await files.isDirectory(cwd)) throw new Error(t('new.notDirectory', { path: cwd }))

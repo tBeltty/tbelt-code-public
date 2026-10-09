@@ -1,7 +1,7 @@
 /**
  * The client tree of the terminal: a Cordis root holding the data-tier client
  * plugins every Remote client needs (Connection, Gateway, Remote proxies, file
- * upload, Session controller), booted from the same `lib/client.js` bundles the
+ * upload, Session controller, job and workspace controllers), booted from the same `lib/client.js` bundles the
  * browser loads, over an {@link InProcessTransport}. No UI plugin is loaded.
  * @module @deepseek-ai/dsh-terminal-client/client-tree
  */
@@ -18,6 +18,8 @@ export const CLIENT_ROSTER: readonly string[] = [
   '@deepseek-ai/dsh-api-remotes',
   '@deepseek-ai/dsh-client-file-upload',
   '@deepseek-ai/dsh-api-session-controller',
+  '@deepseek-ai/dsh-api-job-controller',
+  '@deepseek-ai/dsh-api-workspace-controller',
 ]
 
 /** The Client store every client bundle takes as an external. */
@@ -161,6 +163,9 @@ export async function bootClientTree(
     services: {
       sessions: root.get('sessions') as ClientServicesPort['sessions'],
       remote: root.get('remote') as ClientServicesPort['remote'],
+      jobs: root.get('jobs') as ClientServicesPort['jobs'],
+      workspaces: root.get('workspaces') as ClientServicesPort['workspaces'],
+      fileUpload: root.get('fileUpload') as ClientServicesPort['fileUpload'],
     },
     async dispose() {
       await root.fiber.dispose()

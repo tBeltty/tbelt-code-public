@@ -9,21 +9,26 @@ import { basename } from 'node:path'
 import { ApprovalGrants, approvalModel, approvalOutcome } from '@deepseek-ai/dsh-presentation-approval'
 import type { ApprovalChoice, ApprovalModel } from '@deepseek-ai/dsh-presentation-approval'
 import {
-  EMPTY_COMPOSER, Screen, TranscriptRenderer, approvalKeyChoice, approvalPromptLines, bannerLines, classifyInput,
-  createMultiPicker, createPicker, createPrompt, decodeKeys, farewellLine, helpLines, modelItems, parseModelValue, reduceComposer,
-  reducePicker, reducePrompt, renderComposer, renderPicker, renderPrompt, resolveTypedPath, sessionItems, t, workingLine,
+  EMPTY_COMPOSER, Screen, TranscriptRenderer, answerLine, approvalKeyChoice, approvalPromptLines, bannerLines, classifyInput,
+  completeToken, createMultiPicker, createPicker, createPrompt, decodeKeys, farewellLine, helpLines, modelItems, parseModelValue,
+  queueRows, queueStatusLine, questionLines, reduceComposer, reducePicker, reducePrompt, reduceQuestions, referenceFor,
+  referenceItems, renderComposer, renderPicker, renderPrompt, renderQuestions, resolveTypedPath, sessionItems, startQuestions, t,
+  workingLine,
 } from '@deepseek-ai/dsh-terminal-views'
 import type {
-  ComposerFrame, ComposerState, ImageProtocol, Key, PickerItem, PickerState, PromptOptions, PromptState, SessionChoice, Style,
+  ActiveAtToken, ComposerFrame, ComposerState, ImageProtocol, Key, PanelName, PickerItem, PickerState, PromptOptions, PromptState,
+  QuestionFlow, SessionChoice, Style, TranscriptEvent,
 } from '@deepseek-ai/dsh-terminal-views'
 import { runConfigScreen } from './config/index.ts'
 import type { ConfigScreen, FlowUi } from './config/index.ts'
-import type { TerminalFiles } from './files.ts'
+import { runPanel } from './panels/index.ts'
+import type { PanelContext, PanelServices, SwitchTarget } from './panels/index.ts'
+import type { LoadedFile, TerminalFiles } from './files.ts'
 import { HostTitle } from './host-title.ts'
 import type { HostTitleSettings } from './host-title.ts'
 import type {
-  ApprovalOutcomePort, ApprovalRequestPort, EventWindowPort, PromptPartPort, RemotePort, RemoteResultPort, SessionBindingPort,
-  SessionFacePort, SessionRemotePort, SessionsPort,
+  ApprovalOutcomePort, ApprovalRequestPort, EventWindowPort, PromptPartPort, QuestionAnswerPort, QuestionRequestPort, RemotePort,
+  RemoteResultPort, SessionBindingPort, SessionFacePort, SessionRemotePort, SessionsPort,
 } from './ports.ts'
 
 /** Most lines shown under one tool call. */
@@ -34,6 +39,16 @@ function failure(error: unknown): { readonly ok: false; readonly error: { readon
   return { ok: false, error: { code: 'terminal/call-failed', message: error instanceof Error ? error.message : String(error) } }
 }
 
+/** A rejection of the question waterfall; the Host reads its name and code, which survive the Remote Event wire. */
+function questionError(code: 'ASK_CANCELLED' | 'ASK_ABORTED'): Error {
+  const error = new Error(code === 'ASK_CANCELLED'
+    ? 'the user cancelled ask_user_question'
+    : 'ask_user_question was aborted before the user answered') as Error & { code: string }
+  error.name = 'UserQuestionError'
+  error.code = code
+  return error
+}
+
 /** The terminal as the session sees it. */
 export interface TerminalIo {
   /** Write to standard output. */
@@ -42,10 +57,7 @@ export interface TerminalIo {
   columns(): number
 }
 
-/** Where the person asked to go next. */
-export type SwitchTarget =
-  | { readonly kind: 'resume'; readonly sessionId: string }
-  | { readonly kind: 'new'; readonly cwd: string }
+export type { SwitchTarget } from './panels/index.ts'
 
 /** What a session reads from outside itself. */
 export interface TerminalDeps {
@@ -53,8 +65,10 @@ export interface TerminalDeps {
   readonly sessions: () => readonly SessionChoice[]
   /** The `session` Remote namespace: model catalog and model selection. */
   readonly remote: SessionRemotePort
-  /** Every Remote namespace the configuration screens call. */
+  /** Every Remote namespace the configuration screens and panels call. */
   readonly client: RemotePort
+  /** The client services the panels call besides the Remote namespaces. */
+  readonly services: PanelServices
   readonly files: TerminalFiles
   /** How images are drawn in this terminal. */
   readonly imageProtocol: ImageProtocol
@@ -105,6 +119,15 @@ interface PendingApproval {
   readonly settle: (choice: ApprovalChoice) => void
 }
 
+/** A batch of the agent's questions waiting for the person. */
+interface PendingQuestions {
+  flow: QuestionFlow
+  /** Index of the question whose heading is already printed. */
+  shown: number
+  readonly settle: (answer: QuestionAnswerPort) => void
+  readonly fail: (error: Error) => void
+}
+
 /** Drives one session in the terminal. */
 export class TerminalSession {
   readonly #options: TerminalSessionOptions
@@ -114,6 +137,7 @@ export class TerminalSession {
   readonly #session: SessionFacePort
   readonly #grants = new ApprovalGrants()
   readonly #approvals: PendingApproval[] = []
+  readonly #questions: PendingQuestions[] = []
   readonly #unsubscribe: (() => void)[] = []
   /** Base64 bytes of stored images already fetched, by attachment id; the renderer draws from it. */
   readonly #images = new Map<string, string>()
@@ -121,8 +145,12 @@ export class TerminalSession {
   #attached: PromptPartPort[] = []
   #picker: OpenPicker | undefined
   #prompt: OpenPrompt | undefined
-  /** Whether a configuration screen is running; only one runs at a time. */
+  /** Whether a configuration screen or panel is running; only one runs at a time. */
   #flowOpen = false
+  /** The events of the history window, for panels that read the loaded turns. */
+  #window: readonly TranscriptEvent[] = []
+  /** Messages waiting in the queue, for the line above the composer. */
+  #waiting = 0
   /** Work that must print after earlier work, such as events waiting for their images. */
   #chain: Promise<void> = Promise.resolve()
   #queued = 0
@@ -160,7 +188,17 @@ export class TerminalSession {
     this.#unsubscribe.push(events.subscribe(() => { this.#follow(events.getSnapshot()) }))
     this.#running = this.#session.getSnapshot().running
     this.#unsubscribe.push(this.#session.subscribe(() => { this.#sync() }))
+    const inbox = this.#session.projections.faceOf('inbox')
+    this.#countWaiting(inbox.getSnapshot())
+    this.#unsubscribe.push(inbox.subscribe(() => {
+      this.#countWaiting(inbox.getSnapshot())
+      this.#render()
+    }))
     this.#render()
+  }
+
+  #countWaiting(inbox: unknown): void {
+    this.#waiting = queueRows(inbox).length
   }
 
   /**
@@ -171,6 +209,7 @@ export class TerminalSession {
     if (this.#closed) return
     for (const key of decodeKeys(data)) {
       if (this.#approvals.length > 0) this.#answerApproval(key)
+      else if (this.#questions.length > 0) this.#answerQuestions(key)
       else if (this.#prompt !== undefined) this.#answer(this.#prompt, key)
       else if (this.#picker !== undefined) this.#choose(this.#picker, key)
       else this.#edit(key)
@@ -216,12 +255,44 @@ export class TerminalSession {
     return approvalOutcome(choice)
   }
 
+  /**
+   * Ask the person the agent's questions, one at a time. Called from the Host's question waterfall.
+   * @param request - the forwarded questions.
+   * @returns the answers once the person has given them all.
+   * @throws a `UserQuestionError` with code `ASK_CANCELLED` when the person leaves the questions, interrupts the turn or
+   * closes the session, and one with code `ASK_ABORTED` when the Host withdraws the request.
+   */
+  requestQuestions(request: QuestionRequestPort): Promise<QuestionAnswerPort> {
+    if (this.#closed) return Promise.reject(questionError('ASK_CANCELLED'))
+    return new Promise<QuestionAnswerPort>((resolve, reject) => {
+      const pending: PendingQuestions = { flow: startQuestions(request.questions), shown: -1, settle: resolve, fail: reject }
+      const withdraw = (): void => {
+        const index = this.#questions.indexOf(pending)
+        if (index === -1) return
+        this.#questions.splice(index, 1)
+        reject(questionError('ASK_ABORTED'))
+        this.#showQuestion()
+        this.#render()
+      }
+      if (request.signal?.aborted === true) {
+        reject(questionError('ASK_ABORTED'))
+        return
+      }
+      request.signal?.addEventListener('abort', withdraw, { once: true })
+      this.#questions.push(pending)
+      this.#schedule(() => this.#renderer.flush())
+      this.#showQuestion()
+      this.#render()
+    })
+  }
+
   /** Stop following the session and remove the composer. */
   dispose(): void {
     if (this.#closed) return
     this.#closed = true
     for (const stop of this.#unsubscribe.splice(0)) stop()
     for (const pending of this.#approvals.splice(0)) pending.settle('rejected')
+    for (const pending of this.#questions.splice(0)) pending.fail(questionError('ASK_CANCELLED'))
     const { cancel } = this.#picker ?? {}
     this.#picker = undefined
     cancel?.()
@@ -235,6 +306,7 @@ export class TerminalSession {
   #follow(window: EventWindowPort): void {
     if (window.revision === this.#lastRevision) return
     this.#lastRevision = window.revision
+    this.#window = window.entries.map(entry => entry.event)
     const { change } = window
     // Earlier history shows image markers only; images are fetched for what arrives while the person watches.
     const wanted = change.kind === 'append' || change.kind === 'settle-assistant' ? this.#imageIds(change) : []
@@ -322,7 +394,39 @@ export class TerminalSession {
       case 'clear-screen':
         this.#screen.clear()
         break
+      case 'complete':
+        void this.#complete(effect.token)
+        break
     }
+  }
+
+  /** Offer the files, directories and sessions that fit an `@` token, and put the chosen one in its place. */
+  async #complete(token: ActiveAtToken): Promise<void> {
+    const { binding, deps } = this.#options
+    const [files, sessions] = await Promise.all([
+      deps.client.fileReferences.list(binding.sessionId, token.query).catch((error: unknown) => failure(error)),
+      deps.client.sessionReferenceResolver.candidates(binding.sessionId, token.query).catch((error: unknown) => failure(error)),
+    ])
+    // Another screen may have opened while the Host answered.
+    if (this.#closed || this.#picker !== undefined || this.#prompt !== undefined) return
+    if (!files.ok) {
+      this.#note('reference.failed', files.error.message)
+      return
+    }
+    const items = referenceItems(files.value, sessions.ok ? sessions.value : [])
+    if (items.length === 0) {
+      this.#info(t('reference.none', { query: token.query }))
+      return
+    }
+    this.#pick(t('reference.title'), items, (item) => {
+      const reference = referenceFor(item.value, token)
+      if (reference === undefined) {
+        this.#warn(t('reference.unsafe'))
+        return
+      }
+      this.#composer = completeToken(this.#composer, token, reference.closed ? `${reference.text} ` : reference.text)
+      this.#render()
+    })
   }
 
   #submit(text: string): void {
@@ -344,6 +448,9 @@ export class TerminalSession {
       case 'config':
         this.#openConfig(input.screen)
         break
+      case 'panel':
+        this.#openPanel(input.panel, input.argument)
+        break
       case 'rename':
         void this.#rename(input.title)
         break
@@ -357,7 +464,7 @@ export class TerminalSession {
         this.#detach()
         break
       case 'command':
-        void this.#run(() => this.#session.command(input.line), 'error.commandFailed')
+        void this.#command(input.line)
         break
       case 'prompt':
         this.#send(input.text)
@@ -441,12 +548,28 @@ export class TerminalSession {
     const { cwd, home, deps } = this.#options
     const file = resolveTypedPath(path, { base: cwd, home })
     try {
-      const image = await deps.files.readImage(file)
-      this.#attached.push({ type: 'image', mediaType: image.mediaType, data: image.base64, name: image.name })
-      this.#info(t('attach.added', { name: image.name, count: this.#attached.length }))
+      const loaded = await deps.files.readAttachment(file)
+      if (loaded.kind === 'image') {
+        const { image } = loaded
+        this.#attached.push({ type: 'image', mediaType: image.mediaType, data: image.base64, name: image.name })
+        this.#info(t('attach.added', { name: image.name, count: this.#attached.length }))
+      } else {
+        await this.#upload(loaded.file)
+      }
     } catch (error) {
       this.#note('attach.failed', error instanceof Error ? error.message : String(error), 'message', { path: file })
     }
+  }
+
+  /** Send a file to the Host and keep its receipt for the next message. */
+  async #upload(file: LoadedFile): Promise<void> {
+    const uploaded = await this.#options.deps.services.fileUpload.upload(this.#options.binding.sessionId, file.data, file.name)
+    if (!uploaded.ok) {
+      this.#note('attach.uploadFailed', uploaded.error.message, 'message', { name: file.name })
+      return
+    }
+    this.#attached.push({ type: 'file', receiptId: uploaded.value.receiptId })
+    this.#info(t('attach.added', { name: file.name, count: this.#attached.length }))
   }
 
   #detach(): void {
@@ -484,19 +607,68 @@ export class TerminalSession {
 
   /** Run a configuration screen in place of the composer; one screen at a time. */
   #openConfig(screen: ConfigScreen): void {
+    const { binding, deps } = this.#options
+    const session = { sessionId: binding.sessionId, command: (line: string) => this.#session.command(line) }
+    this.#runFlow(ui => runConfigScreen(screen, deps.client, ui, session))
+  }
+
+  /** Run a panel in place of the composer; one screen or panel at a time. */
+  #openPanel(panel: PanelName, argument: string): void {
+    this.#runFlow(ui => runPanel(panel, argument, this.#panelContext(), ui))
+  }
+
+  /** Run a screen or panel flow, unless another one is open. */
+  #runFlow(flow: (ui: FlowUi) => Promise<void>): void {
     if (this.#flowOpen) {
       this.#note('screen.busy', '')
       return
     }
     this.#flowOpen = true
-    const { binding, deps } = this.#options
-    const session = { sessionId: binding.sessionId, command: (line: string) => this.#session.command(line) }
-    void runConfigScreen(screen, deps.client, this.#flowUi(), session)
+    void flow(this.#flowUi())
       .catch((error: unknown) => { this.#note('screen.failed', error instanceof Error ? error.message : String(error)) })
       .finally(() => {
         this.#flowOpen = false
-        this.#render()
+        // A panel can leave for another session, which closes this one.
+        if (!this.#closed) this.#render()
       })
+  }
+
+  #panelContext(): PanelContext {
+    const { binding, deps, cwd, home } = this.#options
+    const session = this.#session
+    return {
+      remote: deps.client,
+      services: deps.services,
+      files: deps.files,
+      style: this.#options.style,
+      now: deps.now,
+      timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+      sessions: deps.sessions,
+      leave: (target) => { this.#leave(target) },
+      session: {
+        sessionId: binding.sessionId,
+        cwd,
+        home,
+        running: () => this.#running,
+        events: () => this.#window,
+        projection: key => session.projections.faceOf(key).getSnapshot(),
+        prompt: (content, mode) => session.prompt(content, mode),
+        updateQueue: (itemId, action) => session.updateQueue(itemId, action),
+        insertText: (text) => { this.#insert(text) },
+      },
+    }
+  }
+
+  /** Put text into the composer at the cursor. */
+  #insert(text: string): void {
+    const { text: current, cursor } = this.#composer
+    this.#composer = {
+      ...this.#composer,
+      text: current.slice(0, cursor) + text + current.slice(cursor),
+      cursor: cursor + text.length,
+      browsing: undefined,
+      draft: '',
+    }
   }
 
   /** The questions a configuration screen asks, answered at the terminal. */
@@ -530,8 +702,16 @@ export class TerminalSession {
         this.#render()
       }),
       info: (text) => { this.#info(text) },
+      show: (lines) => { this.#show(lines) },
       warn: (text) => { this.#warn(text) },
     }
+  }
+
+  /** Lines above the composer, as they are. */
+  #show(lines: readonly string[]): void {
+    if (this.#closed) return
+    this.#printAbove(`${lines.join('\n')}\n`)
+    this.#render()
   }
 
   /** A red line above the composer. */
@@ -552,7 +732,7 @@ export class TerminalSession {
   /** A failure line above the composer. */
   #note(
     key: 'picker.loadFailed' | 'model.failed' | 'rename.failed' | 'new.notDirectory' | 'new.failed' | 'attach.failed'
-      | 'screen.busy' | 'screen.failed',
+      | 'attach.uploadFailed' | 'reference.failed' | 'screen.busy' | 'screen.failed',
     detail: string,
     name: 'message' | 'path' = 'message',
     extra: Record<string, string> = {},
@@ -579,6 +759,26 @@ export class TerminalSession {
     }
   }
 
+  /** Run a slash command on the Host; a name the Host does not know is said aloud. */
+  async #command(line: string): Promise<void> {
+    try {
+      const result = await this.#session.command(line)
+      if (!result.ok) this.#report('error.commandFailed', result.error.message)
+      else if (!result.value.matched) await this.#unmatched(line)
+    } catch (error) {
+      this.#report('error.commandFailed', error instanceof Error ? error.message : String(error))
+    }
+  }
+
+  /** A name the Host has no command for: a skill is run by sending the line as a message, any other name is said aloud. */
+  async #unmatched(line: string): Promise<void> {
+    const name = line.slice(1).split(/\s+/u, 1)[0] as string
+    const { client } = this.#options.deps
+    const skills = await client.skills.list({ sessionId: this.#options.binding.sessionId }).catch((error: unknown) => failure(error))
+    if (skills.ok && skills.value.skills.some(skill => skill.name === name)) this.#send(line)
+    else this.#warn(t('command.unknown', { name }))
+  }
+
   #report(key: 'error.promptFailed' | 'error.commandFailed', message: string): void {
     if (this.#closed) return
     this.#printAbove(`${this.#options.style.red(t(key, { message }))}\n`)
@@ -590,6 +790,7 @@ export class TerminalSession {
     if (this.#approvals.length > 0) {
       for (const pending of this.#approvals.splice(0)) pending.settle('rejected')
     }
+    for (const pending of this.#questions.splice(0)) pending.fail(questionError('ASK_CANCELLED'))
     if (this.#running && !this.#cancelling) {
       this.#cancelling = true
       void this.#run(() => this.#session.cancel(), 'error.commandFailed')
@@ -612,6 +813,42 @@ export class TerminalSession {
     if (choice === undefined || pending === undefined) return
     this.#approvals.shift()
     pending.settle(choice)
+  }
+
+  /** Print the heading of the question on screen once. */
+  #showQuestion(): void {
+    const pending = this.#questions[0]
+    if (pending === undefined || pending.shown === pending.flow.index) return
+    pending.shown = pending.flow.index
+    this.#printAbove(`${questionLines(this.#options.style, pending.flow).join('\n')}\n`)
+  }
+
+  #answerQuestions(key: Key): void {
+    if (key.type === 'key' && key.name === 'interrupt') {
+      this.#interrupt()
+      return
+    }
+    const pending = this.#questions[0] as PendingQuestions
+    const step = reduceQuestions(pending.flow, key)
+    pending.flow = step.flow
+    const { effect } = step
+    if (effect === undefined) return
+    if (effect.type === 'cancel') {
+      this.#questions.shift()
+      pending.fail(questionError('ASK_CANCELLED'))
+      this.#info(t('question.cancelled'))
+    } else {
+      this.#printAbove(`${answerLine(this.#options.style, effect.answer)}\n`)
+      if (effect.done) {
+        this.#questions.shift()
+        pending.settle({ answers: pending.flow.answers.map(answer => ({
+          id: answer.id,
+          selected: [...answer.selected],
+          ...answer.custom === undefined ? {} : { custom: answer.custom },
+        })) })
+      }
+    }
+    this.#showQuestion()
   }
 
   /** Print the closing text of this session and stop following it. */
@@ -639,6 +876,8 @@ export class TerminalSession {
       const lines = approvalPromptLines(style, pending.model)
       return { lines, cursor: { row: lines.length - 1, column: 0 } }
     }
+    const asked = this.#questions[0]
+    if (asked !== undefined) return renderQuestions(style, asked.flow, io.columns())
     if (this.#prompt !== undefined) return renderPrompt(style, this.#prompt.state, io.columns())
     if (this.#picker !== undefined) return renderPicker(style, this.#picker.state, io.columns())
     const composer = renderComposer(this.#composer, {
@@ -649,6 +888,7 @@ export class TerminalSession {
     })
     const above = [
       ...this.#running ? [workingLine(style, this.#cancelling)] : [],
+      ...this.#waiting > 0 ? [queueStatusLine(style, this.#waiting)] : [],
       ...this.#attached.length > 0 ? [style.dim(t('attach.pending', { count: this.#attached.length }))] : [],
     ]
     if (above.length === 0) return composer
@@ -668,7 +908,7 @@ export class TerminalSession {
     if (this.#title === undefined || this.#closed) return
     const { binding, cwd, deps } = this.#options
     const named = deps.sessions().find(row => row.id === binding.sessionId)?.title?.trim() ?? ''
-    const activity = this.#approvals.length > 0 ? 'waiting' : this.#running ? 'working' : 'idle'
+    const activity = this.#approvals.length > 0 || this.#questions.length > 0 ? 'waiting' : this.#running ? 'working' : 'idle'
     this.#title.update(activity, named === '' ? basename(cwd) : named)
   }
 }
@@ -690,5 +930,26 @@ export function listenForApprovals(
     const terminal = current()
     if (terminal === undefined || sessions.scopeOf(this) !== sessionId) return next()
     return terminal.requestApproval(request)
+  })
+}
+
+/**
+ * Register the question listener on the client tree for one session.
+ * @param services - the client services.
+ * @param sessionId - the session this terminal shows.
+ * @param current - the terminal session that asks the person; read at each request.
+ * @returns a disposer that withdraws the listener.
+ */
+export function listenForQuestions(
+  services: { readonly sessions: SessionsPort; readonly remote: RemotePort },
+  sessionId: string,
+  current: () => Pick<TerminalSession, 'requestQuestions'> | undefined,
+): () => void {
+  const { sessions } = services
+  return services.remote.$on('user-questions/request', function (request, next) {
+    const terminal = current()
+    // A timed wait needs a claim on the Host's countdown, which the terminal does not make.
+    if (terminal === undefined || sessions.scopeOf(this) !== sessionId || request.wait?.timed === true) return next()
+    return terminal.requestQuestions(request)
   })
 }

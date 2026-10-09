@@ -17,20 +17,33 @@ beforeAll(async () => {
 afterAll(async () => { await rm(dir, { recursive: true, force: true }) })
 
 describe('nodeFiles', () => {
-  const files = nodeFiles(64)
+  const files = nodeFiles(64, 32)
 
   it('reads an image by its bytes and names it without the directory', async () => {
-    await expect(files.readImage(join(dir, 'shot.png'))).resolves.toEqual({
-      mediaType: 'image/png', base64: Buffer.from(PNG).toString('base64'), name: 'shot.png', bytes: PNG.length,
+    await expect(files.readAttachment(join(dir, 'shot.png'))).resolves.toEqual({
+      kind: 'image',
+      image: { mediaType: 'image/png', base64: Buffer.from(PNG).toString('base64'), name: 'shot.png', bytes: PNG.length },
     })
   })
 
-  it('refuses a directory, a file that is not an image, an image over the limit and a missing file', async () => {
-    await expect(files.readImage(join(dir, 'sub'))).rejects.toThrow('it is not a file')
-    await expect(files.readImage(join(dir, 'notes.txt'))).rejects.toThrow('only PNG, JPEG, WebP and GIF')
+  it('reads any other file as it is, whatever its extension says', async () => {
+    await writeFile(join(dir, 'looks-like.png'), 'plain text')
+    await expect(files.readAttachment(join(dir, 'notes.txt'))).resolves.toEqual({
+      kind: 'file', file: { name: 'notes.txt', data: Buffer.from('hello') },
+    })
+    await expect(files.readAttachment(join(dir, 'looks-like.png'))).resolves.toMatchObject({ kind: 'file' })
+  })
+
+  it('refuses a directory, a missing file and anything over the limit of its kind', async () => {
+    await expect(files.readAttachment(join(dir, 'sub'))).rejects.toThrow('it is not a file')
+    await expect(files.readAttachment(join(dir, 'gone.png'))).rejects.toThrow('ENOENT')
     await writeFile(join(dir, 'big.png'), Buffer.concat([Buffer.from(PNG), Buffer.alloc(200)]))
-    await expect(nodeFiles(100).readImage(join(dir, 'big.png'))).rejects.toThrow('larger than 0 MB')
-    await expect(files.readImage(join(dir, 'gone.png'))).rejects.toThrow('ENOENT')
+    await expect(nodeFiles(100, 100).readAttachment(join(dir, 'big.png'))).rejects.toThrow('larger than 0 MB')
+    await writeFile(join(dir, 'mid.bin'), Buffer.alloc(40))
+    await expect(files.readAttachment(join(dir, 'mid.bin'))).rejects.toThrow('larger than 0 MB')
+    await writeFile(join(dir, 'mid.png'), Buffer.concat([Buffer.from(PNG), Buffer.alloc(40)]))
+    await expect(nodeFiles(32, 64).readAttachment(join(dir, 'mid.png'))).rejects.toThrow('larger than 0 MB')
+    await expect(nodeFiles(64, 32).readAttachment(join(dir, 'mid.bin'))).rejects.toThrow('larger than 0 MB')
   })
 
   it('tells directories from everything else, and lets other failures through', async () => {

@@ -54,7 +54,7 @@ describe('approval', () => {
 
 describe('help, status and input', () => {
   it('lists keys and commands', () => {
-    expect(helpLines(style)).toHaveLength(20)
+    expect(helpLines(style)).toHaveLength(39)
   })
 
   it('draws the banner and farewell with short ids', () => {
@@ -81,6 +81,14 @@ describe('help, status and input', () => {
     expect(classifyInput('/new ~/work')).toEqual({ kind: 'new', directory: '~/work' })
     expect(classifyInput('/attach a b.png')).toEqual({ kind: 'attach', path: 'a b.png' })
     expect(classifyInput('/detach')).toEqual({ kind: 'detach' })
+    expect(classifyInput('/queue')).toEqual({ kind: 'panel', panel: 'queue', argument: '' })
+    expect(classifyInput('/open src/app')).toEqual({ kind: 'panel', panel: 'open', argument: 'src/app' })
+    expect(classifyInput('/goal')).toEqual({ kind: 'panel', panel: 'goal', argument: '' })
+    expect(classifyInput('/budget')).toEqual({ kind: 'panel', panel: 'budget', argument: '' })
+    expect(classifyInput('/budget 5')).toEqual({ kind: 'command', line: '/budget 5' })
+    expect(classifyInput('/feedback great')).toEqual({ kind: 'command', line: '/feedback great' })
+    expect(classifyInput('/plan')).toEqual({ kind: 'command', line: '/plan' })
+    expect(classifyInput('/plan show')).toEqual({ kind: 'panel', panel: 'plan', argument: 'show' })
     expect(classifyInput('/ path')).toEqual({ kind: 'prompt', text: '/ path' })
     expect(classifyInput('/help\nmore')).toEqual({ kind: 'prompt', text: '/help\nmore' })
   })

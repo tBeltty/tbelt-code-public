@@ -34,6 +34,8 @@ export interface FlowUi {
   ask(label: string, options?: PromptOptions): Promise<string | undefined>
   /** Print a dim line. */
   info(text: string): void
+  /** Print lines as they are, without dimming them. */
+  show(lines: readonly string[]): void
   /** Print a red line. */
   warn(text: string): void
 }
@@ -60,6 +62,50 @@ export async function remoteValue<T>(
   if (result.ok) return result.value
   ui.warn(failedText(result.error.message))
   return undefined
+}
+
+/**
+ * Run a Remote call whose success value may itself be undefined and report its failure.
+ * @param ui - where a failure is printed.
+ * @param failedText - the line that introduces the failure, given the Host's message.
+ * @param call - the Remote call.
+ * @returns the value in a box, so a successful undefined differs from a failure; undefined after the failure was printed.
+ */
+export async function remoteOutcome<T>(
+  ui: FlowUi,
+  failedText: (message: string) => string,
+  call: () => Promise<RemoteResultPort<T>>,
+): Promise<{ readonly value: T } | undefined> {
+  let result: RemoteResultPort<T>
+  try {
+    result = await call()
+  } catch (error) {
+    ui.warn(failedText(error instanceof Error ? error.message : String(error)))
+    return undefined
+  }
+  if (result.ok) return { value: result.value }
+  ui.warn(failedText(result.error.message))
+  return undefined
+}
+
+/**
+ * Run a client service call that throws when the Host refuses.
+ * @param ui - where a failure is printed.
+ * @param failedText - the line that introduces the failure, given the error message.
+ * @param call - the service call.
+ * @returns the value in a box; undefined after the failure was printed.
+ */
+export async function attempt<T>(
+  ui: FlowUi,
+  failedText: (message: string) => string,
+  call: () => Promise<T>,
+): Promise<{ readonly value: T } | undefined> {
+  try {
+    return { value: await call() }
+  } catch (error) {
+    ui.warn(failedText(error instanceof Error ? error.message : String(error)))
+    return undefined
+  }
 }
 
 /**

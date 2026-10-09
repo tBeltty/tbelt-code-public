@@ -3,7 +3,7 @@ import { describe, expect, it, vi } from 'vitest'
 import { runTerminal } from '../src/runner.ts'
 import type { RunnerEnvironment, RunnerInput, RunnerOutput } from '../src/runner.ts'
 import type { ClientServicesPort, SessionBindingPort, SessionListPort } from '../src/ports.ts'
-import { Cell, fakeBinding, fakeFiles, fakeRemote, fakeSessions, visible } from './fakes.ts'
+import { Cell, fakeBinding, fakeFiles, fakeRemote, fakeServices, fakeSessions, visible } from './fakes.ts'
 
 class FakeInput extends EventEmitter implements RunnerInput {
   isTTY: boolean | undefined = true
@@ -51,6 +51,7 @@ function services(list: SessionListPort | Cell<SessionListPort>, binding: Sessio
   const remote = fakeRemote()
   const ports: ClientServicesPort = {
     ...remote,
+    ...fakeServices(),
     sessions: fakeSessions({
       list: cell,
       create,
@@ -60,7 +61,7 @@ function services(list: SessionListPort | Cell<SessionListPort>, binding: Sessio
       },
     }),
   }
-  return { ports, released, retained, create, remote }
+  return { ports, released, retained, create, remote, jobs: ports.jobs as unknown as ReturnType<typeof fakeServices>['jobs'] }
 }
 
 describe('runTerminal', () => {
@@ -103,6 +104,9 @@ describe('runTerminal', () => {
     expect(r.stdin.listenerCount('data')).toBe(0)
     expect(r.stdout.listenerCount('resize')).toBe(0)
     expect(s.remote.disposed).toBe(1)
+    expect(s.remote.questionsDisposed).toBe(1)
+    expect(s.jobs.watchRows).toHaveBeenCalledWith(binding.sessionId)
+    expect(s.jobs.stopWatching).toHaveBeenCalledOnce()
     run.stop()
     expect(s.released).toHaveLength(1)
   })
@@ -169,6 +173,23 @@ describe('runTerminal', () => {
     run.stop()
   })
 
+  it('routes a question of its own session to the person', async () => {
+    const { binding } = fakeBinding()
+    const s = services(listOf(), binding)
+    s.ports.sessions.scopeOf = context => (context as { scope: string }).scope
+    const r = rig()
+    const run = await runTerminal(s.ports, r.env, { continueLatest: false })
+    const answer = s.remote.questionListeners[0]!.call(
+      { scope: binding.sessionId },
+      { questions: [{ id: 'mode', question: 'Which mode?', options: [{ label: 'Fast' }] }] },
+      () => Promise.reject(new Error('delegated')),
+    )
+    expect(visible(r.stdout.text)).toContain('Which mode?')
+    r.stdin.emit('data', '\r')
+    await expect(answer).resolves.toEqual({ answers: [{ id: 'mode', selected: ['Fast'] }] })
+    run.stop()
+  })
+
   it('shows nothing from input that arrives before the session is retained', async () => {
     const { binding } = fakeBinding()
     const r = rig()
@@ -230,6 +251,7 @@ describe('runTerminal', () => {
       expect(r.exits).toEqual([0])
       expect(t.released).toEqual([idA, idB])
       expect(t.remote.disposed).toBe(2)
+      expect(t.remote.questionsDisposed).toBe(2)
       run.stop()
     })
 

@@ -3,6 +3,8 @@
  * decoded keys to it, and the frame that draws it.
  * @module @deepseek-ai/dsh-terminal-views/composer
  */
+import { activeAtToken } from '@deepseek-ai/dsh-file-reference/grammar'
+import type { ActiveAtToken } from '@deepseek-ai/dsh-file-reference/grammar'
 import type { Key, KeyName } from './keys.ts'
 import { graphemes, textWidth, truncate, wrapRows } from './width.ts'
 
@@ -26,6 +28,8 @@ export type ComposerEffect =
   | { readonly type: 'interrupt' }
   | { readonly type: 'eof' }
   | { readonly type: 'clear-screen' }
+  /** Tab pressed after an `@` token: the caller offers references and puts the chosen one in place of the token. */
+  | { readonly type: 'complete'; readonly token: ActiveAtToken }
 
 /** Result of applying one key. */
 export interface ComposerStep {
@@ -161,12 +165,29 @@ function enter(state: ComposerState): ComposerStep {
   }
 }
 
+/**
+ * Put text in place of the `@` token that ends at the cursor.
+ * @param state - the composer.
+ * @param token - the token Tab was pressed after.
+ * @param replacement - the text that replaces it.
+ * @returns the composer with the token replaced and the cursor after it; unchanged when the cursor no longer follows the token.
+ */
+export function completeToken(state: ComposerState, token: ActiveAtToken, replacement: string): ComposerState {
+  const start = state.cursor - token.prefix.length
+  if (start < 0 || state.text.slice(start, state.cursor) !== token.prefix) return state
+  return edit(state, state.text.slice(0, start) + replacement + state.text.slice(state.cursor), start + replacement.length)
+}
+
 function applyKey(state: ComposerState, name: KeyName): ComposerStep {
   const { text, cursor } = state
   switch (name) {
     case 'enter': return enter(state)
     case 'newline': return { state: insert(state, '\n') }
-    case 'tab': return { state: insert(state, '  ') }
+    case 'tab': {
+      const line = text.slice(lineStart(text, cursor), cursor)
+      const token = activeAtToken(line, line.length)
+      return token === undefined ? { state: insert(state, '  ') } : { state, effect: { type: 'complete', token } }
+    }
     case 'escape': return { state }
     case 'backspace': {
       const from = previousBoundary(text, cursor)

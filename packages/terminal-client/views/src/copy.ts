@@ -5,6 +5,7 @@
  */
 import type { ApprovalChoiceKey, ApprovalNeedKey } from '@deepseek-ai/dsh-presentation-approval'
 import type { ToolTitleKey } from '@deepseek-ai/dsh-presentation-tool-call'
+import { PANEL_COPY } from './copy-panels.ts'
 
 /** Title of every tool row, one entry per {@link ToolTitleKey}. */
 const TOOL_TITLES = {
@@ -117,6 +118,10 @@ const TERMINAL = {
   'open.ambiguous': 'More than one session starts with "{id}": {candidates}.',
   'error.promptFailed': 'The message was not sent: {message}',
   'error.commandFailed': 'The command failed: {message}',
+  'command.unknown': 'There is no /{name} command. Type /help for the commands.',
+  'command.unnamed': 'Command',
+  'command.done': '  Done.',
+  'command.failed': '  It did not run.',
   'error.notTty': 'dsh terminal needs an interactive terminal: run it from a shell, not with redirected input or output.',
   'error.connection': 'Lost the connection to the agent: {message}',
   'help.title': 'tBelt Code in the terminal',
@@ -130,18 +135,17 @@ const TERMINAL = {
   'help.rename': '/rename <title>      name this session',
   'help.model': '/model               choose the model',
   'help.new': '/new [directory]     start a session, in another directory if given',
-  'help.attach': '/attach <image>      add an image to your next message · /detach removes them',
+  'help.attach': '/attach <file>       add a file or image to your next message · /detach removes them',
   'help.commands': '/help                this list; any other /command runs in the session',
   'image.marker': '[image {details}]',
   'attach.added': 'Attached {name}. It goes with your next message ({count} waiting).',
-  'attach.cleared': 'Removed {count} attached images.',
-  'attach.none': 'No images are attached.',
-  'attach.usage': 'Usage: /attach <path to a PNG, JPEG, WebP or GIF image>',
+  'attach.cleared': 'Removed {count} attached files.',
+  'attach.none': 'Nothing is attached.',
+  'attach.usage': 'Usage: /attach <path to a file or image>',
   'attach.failed': 'Could not attach {path}: {message}',
-  'attach.unsupported': 'only PNG, JPEG, WebP and GIF images can be attached',
   'attach.tooLarge': 'the file is larger than {limit}',
   'attach.notFile': 'it is not a file',
-  'attach.pending': '{count} image(s) attached · /detach removes them',
+  'attach.pending': '{count} attached · /detach removes them',
   'age.now': 'just now',
   'age.minutes': '{count}m ago',
   'age.hours': '{count}h ago',
@@ -169,6 +173,12 @@ const CONFIG = {
   'picker.keysMulti': 'type to filter · ↑↓ move · Enter tick · pick the first row to continue · Esc cancel',
   'picker.done': 'Continue with {count} ticked',
   'picker.defaultModel': 'Choose the default model for new sessions',
+  'question.heading': 'The agent has a question',
+  'question.position': 'question {index} of {total}',
+  'question.other': 'Type another answer…',
+  'question.typeHint': 'Enter sends your answer · Esc goes back',
+  'question.answered': '→ {answer}',
+  'question.cancelled': 'You left the question unanswered.',
   'confirm.no': 'No, keep things as they are',
   'firstRun.noModel': 'No model is set up yet. Type /providers to add one.',
   'help.providers': '/providers           add a provider, set its API key and choose its models',
@@ -326,7 +336,7 @@ const CONFIG = {
   'model.defaultSet': 'New sessions will start with {model} ({provider}).',
 } as const
 
-const COPY = { ...TOOL_TITLES, ...NEEDS, ...CHOICES, ...APPROVAL, ...TERMINAL, ...CONFIG } as const
+const COPY = { ...TOOL_TITLES, ...NEEDS, ...CHOICES, ...APPROVAL, ...TERMINAL, ...CONFIG, ...PANEL_COPY } as const
 
 /** Key of any message the terminal client shows. */
 export type CopyKey = keyof typeof COPY

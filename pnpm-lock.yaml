@@ -13745,12 +13745,18 @@ importers:
       '@deepseek-ai/dsh-api-gateway':
         specifier: workspace:*
         version: link:../../api/gateway
+      '@deepseek-ai/dsh-api-job-controller':
+        specifier: workspace:*
+        version: link:../../api/job-controller
       '@deepseek-ai/dsh-api-remotes':
         specifier: workspace:*
         version: link:../../api/remotes
       '@deepseek-ai/dsh-api-session-controller':
         specifier: workspace:*
         version: link:../../api/session-controller
+      '@deepseek-ai/dsh-api-workspace-controller':
+        specifier: workspace:*
+        version: link:../../api/workspace-controller
       '@deepseek-ai/dsh-client-connection':
         specifier: workspace:*
         version: link:../../client/connection
@@ -13772,6 +13778,9 @@ importers:
       '@deepseek-ai/dsh-typert-registry':
         specifier: workspace:*
         version: link:../../typert/registry
+      '@deepseek-ai/dsh-util-values':
+        specifier: workspace:*
+        version: link:../../util/values
       '@deepseek-ai/schemastery':
         specifier: link:../../../vendor/schemastery
         version: link:../../../vendor/schemastery
@@ -13794,9 +13803,15 @@ importers:
 
   packages/terminal-client/views:
     dependencies:
+      '@deepseek-ai/dsh-file-reference':
+        specifier: workspace:*
+        version: link:../../context/file-reference
       '@deepseek-ai/dsh-presentation-approval':
         specifier: workspace:*
         version: link:../../presentation/approval
+      '@deepseek-ai/dsh-presentation-plan':
+        specifier: workspace:*
+        version: link:../../presentation/plan
       '@deepseek-ai/dsh-presentation-tool-call':
         specifier: workspace:*
         version: link:../../presentation/tool-call

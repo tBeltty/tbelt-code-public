@@ -9,10 +9,12 @@ import type { SessionEvent } from '@deepseek-ai/dsh-session/types'
 import type { ToolResultNode, StartedToolCall } from '@deepseek-ai/dsh-presentation-tool-call'
 import { t } from './copy.ts'
 import type { Style } from './ansi.ts'
+import { changedSummaryLine, DeliverablesTracker, presentedLines } from './deliverables.ts'
 import { stripAnsi } from './ansi.ts'
 import { renderImage } from './images.ts'
 import type { ImageFacts, ImageProtocol } from './images.ts'
 import { sanitizeOutput, toolCallLine, toolResultLines, type ToolViewContext } from './tool-lines.ts'
+import { isWorkflowEvent, WorkflowRunLines } from './workflow-run.ts'
 
 /** Live Assistant output that has no durable event yet. */
 export interface LiveChunkEvent {
@@ -59,10 +61,21 @@ function contentText(blocks: readonly { readonly type: string; readonly text?: s
   return parts.join('\n')
 }
 
+/** A string field of an event payload that this package does not declare, or undefined when absent or not a string. */
+function textField(data: unknown, key: string): string | undefined {
+  if (typeof data !== 'object' || data === null) return undefined
+  const value: unknown = Reflect.get(data, key)
+  return typeof value === 'string' ? value : undefined
+}
+
 /** Renders events to text, remembering what it already printed. */
 export class TranscriptRenderer {
   readonly #options: TranscriptOptions
   readonly #calls = new Map<string, StartedToolCall>()
+  /** Slash commands that started and have not settled, by command id, as the line the person typed. */
+  readonly #commands = new Map<string, string>()
+  readonly #deliverables = new DeliverablesTracker()
+  readonly #workflows = new WorkflowRunLines()
   /** Steps whose reply was printed from live chunks, as `turn:step`. */
   readonly #streamed = new Set<string>()
   #open: OpenText
@@ -100,7 +113,7 @@ export class TranscriptRenderer {
       case 'tool/call': return this.#call(event)
       case 'tool/result': return this.#result(event)
       case 'turn/end': return this.#turnEnd(event)
-      default: return ''
+      default: return this.#other(event)
     }
   }
 
@@ -198,6 +211,7 @@ export class TranscriptRenderer {
   }
 
   #call(event: SessionEvent<'tool/call'>): string {
+    this.#deliverables.observe(event)
     const { callId, name, arguments: argsRaw, turn, step } = event.data
     const block: StartedToolCall = {
       phase: 'start', callId, name, turn, step, time: event.time, argsRaw, subCalls: [],
@@ -208,6 +222,7 @@ export class TranscriptRenderer {
   }
 
   #result(event: SessionEvent<'tool/result'>): string {
+    this.#deliverables.observe(event)
     const { message, error, meta } = event.data
     const callId = message.toolCallId
     const call = this.#calls.get(callId)
@@ -235,18 +250,66 @@ export class TranscriptRenderer {
     return this.#close() + head + lines.join('\n') + '\n'
   }
 
+  /** Events with their own lines: workflow runs, presented files and slash commands. Any other event shows nothing. */
+  #other(event: TranscriptEvent): string {
+    const record: { readonly type: string; readonly data?: unknown } = event
+    const { style } = this.#options
+    if (isWorkflowEvent(record.type)) {
+      const lines = this.#workflows.lines(style, record.type, record.data)
+      this.#lastCall = undefined
+      return lines.length === 0 ? '' : this.#close() + (record.type === 'tool-workflow/run-start' ? this.#gap() : '') + lines.join('\n') + '\n'
+    }
+    const presented = this.#deliverables.observe(event)
+    if (presented.length > 0) {
+      this.#lastCall = undefined
+      return this.#close() + presentedLines(style, presented).join('\n') + '\n'
+    }
+    return this.#command(event)
+  }
+
+  /**
+   * A slash command's lifecycle events, declared by `dsh-commands`: the start is remembered and the outcome printed
+   * under the command line. Any other event shows nothing.
+   */
+  #command(event: TranscriptEvent): string {
+    const record: { readonly type: string; readonly data?: unknown } = event
+    const commandId = textField(record.data, 'commandId')
+    if (commandId === undefined) return ''
+    if (record.type === 'command/run') {
+      const name = textField(record.data, 'name') ?? ''
+      this.#commands.set(commandId, `/${name}${textField(record.data, 'args') ?? ''}`.trimEnd())
+      return ''
+    }
+    if (record.type !== 'command/done') return ''
+    const line = this.#commands.get(commandId) ?? t('command.unnamed')
+    this.#commands.delete(commandId)
+    const { style } = this.#options
+    const failed = textField(record.data, 'kind') === 'error'
+    const text = sanitizeOutput(textField(record.data, 'text') ?? '').trimEnd()
+    const head = style.dim(sanitizeOutput(line))
+    const body = text === ''
+      ? (failed ? style.red(t('command.failed')) : style.dim(t('command.done')))
+      : text.split('\n').map(row => (failed ? style.red(`  ${row}`) : `  ${row}`)).join('\n')
+    this.#lastCall = undefined
+    return `${this.#close()}${this.#gap()}${head}\n${body}\n`
+  }
+
   #turnEnd(event: SessionEvent<'turn/end'>): string {
     const { style } = this.#options
-    const { reason } = event.data
     this.#lastCall = undefined
-    const closed = this.#close()
+    const changed = this.#deliverables.turn(event.data.turn)?.produced.length ?? 0
+    return this.#close() + this.#reason(event.data.reason) + (changed === 0 ? '' : changedSummaryLine(style, changed) + '\n')
+  }
+
+  /** The line that says why a turn ended, when it did not complete. */
+  #reason(reason: SessionEvent<'turn/end'>['data']['reason']): string {
+    const { style } = this.#options
     switch (reason.kind) {
-      case 'completed': return closed
-      case 'aborted': return closed + style.dim(t('turn.interrupted')) + '\n'
-      case 'blocked': return closed + style.yellow(t('turn.blocked')) + '\n'
-      case 'max-tokens': return closed + style.yellow(t('turn.maxTokens')) + '\n'
-      case 'error': return closed + style.red(t('turn.error', { message: sanitizeOutput(reason.error.message) })) + '\n'
-      default: return closed
+      case 'aborted': return style.dim(t('turn.interrupted')) + '\n'
+      case 'blocked': return style.yellow(t('turn.blocked')) + '\n'
+      case 'max-tokens': return style.yellow(t('turn.maxTokens')) + '\n'
+      case 'error': return style.red(t('turn.error', { message: sanitizeOutput(reason.error.message) })) + '\n'
+      default: return ''
     }
   }
 }

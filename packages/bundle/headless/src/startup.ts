@@ -1,6 +1,6 @@
 /**
  * The one-shot app's command-line provider: it parses the task positional,
- * `--session-id`, `--json`, and `--help`, then publishes
+ * `--session-id`, `--resume`, `--model`, `--json`, and `--help`, then publishes
  * {@link HEADLESS_STARTUP_SERVICE}. The runner is an ordinary consumer whose
  * lazy config waits for that service.
  * @module @deepseek-ai/dsh-headless/startup
@@ -27,6 +27,10 @@ export interface HeadlessStartupValues {
   task: string | undefined
   /** Exact Session identity to adopt; absent for a fresh random identity. */
   sessionId: string | undefined
+  /** Session to adopt, named by its id or the start of it; absent when `--resume` is not given. */
+  resume: string | undefined
+  /** Model for this run as `provider/model` or a model id; absent to use the default model. */
+  model: string | undefined
   /** Whether stdout carries the machine-readable event stream instead of final text. */
   json: boolean
 }
@@ -41,7 +45,9 @@ function headlessCommand(): Command {
     .description('Answer one task and exit; the answer goes to stdout and diagnostics to stderr.')
     .helpOption('-h, --help', 'show this help')
     .option('--json', 'write newline-delimited run events to stdout instead of the final message')
-    .option('--session-id <id>', 'adopt the persisted Session with this id; an unknown id is an error')
+    .option('--session-id <id>', 'adopt the persisted Session with this exact id; an unknown id is an error')
+    .option('--resume <id>', 'adopt the stored Session whose id starts with this text, as `dsh terminal --resume` does')
+    .option('--model <model>', 'run on this model, as provider/model or a model id one provider offers; the default model is unchanged')
     .argument('[task...]', 'the task text; multiple words are joined by spaces, and `-` reads stdin')
     .addHelpText('after', `
 Examples:
@@ -49,12 +55,14 @@ Examples:
   echo "run the tests" | dsh --profile headless   read the task from stdin
   dsh --profile headless --json "run the tests"   emit machine-readable run events
   dsh --profile headless --session-id session-… "continue"   resume an existing Session
+  dsh --profile headless --resume 3f9a "continue"             resume the Session whose id starts with 3f9a
+  dsh --profile headless --model provider/model "run the tests"   run on one model
 `)
 }
 
 /**
  * Whether the raw invocation asks for the machine-readable stream. The scan
- * stops at `--` and skips a `--session-id` value, so a literal `--json` used as
+ * stops at `--` and skips the value of `--session-id`, `--resume` and `--model`, so a literal `--json` used as
  * an option value or a positional never installs the JSON error override.
  * @param argv - the invocation's raw arguments.
  * @returns whether `--json` is a real flag of this invocation.
@@ -64,7 +72,7 @@ function jsonRequested(argv: readonly string[]): boolean {
     const argument = argv[index]
     if (argument === '--') return false
     if (argument === '--json') return true
-    if (argument === '--session-id') index += 1
+    if (argument === '--session-id' || argument === '--resume' || argument === '--model') index += 1
   }
   return false
 }
@@ -104,16 +112,28 @@ export function apply(ctx: Context): void {
     if (task === undefined && internals.stdinIsTty()) {
       program.error('error: a task is required, for example: dsh --profile headless "run the tests"')
     }
-    const options = program.opts<{ json?: boolean; sessionId?: string }>()
+    const options = program.opts<{ json?: boolean; sessionId?: string; resume?: string; model?: string }>()
     // A SessionId is opaque, so whitespace is part of the identity: validate
     // emptiness on the trimmed value but hand the runner the exact string.
     const sessionId = options.sessionId
     if (sessionId !== undefined && sessionId.trim() === '') {
       program.error('error: --session-id requires a non-empty session id')
     }
+    const { resume, model } = options
+    if (resume !== undefined && resume.trim() === '') {
+      program.error('error: --resume requires a non-empty session id or id start')
+    }
+    if (model !== undefined && model.trim() === '') {
+      program.error('error: --model requires a non-empty model')
+    }
+    if (resume !== undefined && sessionId !== undefined) {
+      program.error('error: --resume and --session-id name the same Session; use one of them')
+    }
     ctx.provide(HEADLESS_STARTUP_SERVICE, {
       task,
       sessionId,
+      resume,
+      model: model?.trim(),
       json: options.json === true,
     } satisfies HeadlessStartupValues)
   })

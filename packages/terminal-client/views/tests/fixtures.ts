@@ -60,8 +60,14 @@ export function resultEvent(callId: string, output: string, options: ResultOptio
   }
 }
 
-export function turnEnd(reason: SessionEvent<'turn/end'>['data']['reason']): SessionEvent<'turn/end'> {
-  return { type: 'turn/end', ...next(), data: { turn: 1, reason } }
+export function turnEnd(reason: SessionEvent<'turn/end'>['data']['reason'], turn = 1): SessionEvent<'turn/end'> {
+  return { type: 'turn/end', ...next(), data: { turn, reason } }
+}
+
+/** An event of a type the views read without declaring it, such as `turn/start` or a workflow event. */
+export function wireEvent(type: string, data: unknown, time?: number): SessionEvent {
+  const stamp = next()
+  return { type, ...stamp, ...time === undefined ? {} : { time }, data } as unknown as SessionEvent
 }
 
 /** A live chunk; text deltas may omit the chunk index, which the views do not read. */

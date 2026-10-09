@@ -4,37 +4,63 @@ Notable changes to tBelt Code, newest first. The format follows [Keep a Changelo
 
 ## [Unreleased]
 
+## [0.2.0-rc.2.20261009.2] - 2026-10-09
+
+### Added
+
+- `dsh terminal` asks the questions the agent asks, one at a time. Enter answers and Escape declines.
+- `--resume <id>` and `--model <provider/model>` work with `dsh --profile headless`.
+- `/queue` in `dsh terminal` edits queued messages.
+- `/jobs` shows background jobs and `/subagents` opens subagent sessions.
+- `/schedule` lists scheduled follow-ups.
+- `/goal` sets the session goal and `/skills` runs a skill.
+- `/feedback` rates a reply.
+- `/budget` shows spend and `/status` reports the session.
+- `/deliverables` lists the files each turn changed.
+- `/trajectory` shows the turns with their timing.
+- `/workspaces` and `/worktrees` manage workspaces and git worktrees.
+- `/fork`, `/organize` and `/open` work on sessions.
+- `/commands` lists every command and `/plan show` prints the latest plan.
+- Tab after `@` completes a file, directory or session name.
+- `/attach` adds files of any type.
+
+### Fixed
+
+- Plan mode in `dsh terminal` no longer waits until Ctrl+C. It shows the plan and waits for Approve or Keep planning.
+- `dsh terminal` prints what a slash command answers and says when a command does not exist.
+
 ## [0.2.0-rc.2.20261009] - 2026-10-09
 
 ### Added
 
-- Manage dsh Command now also works on Linux AppImage installs, and installing it adds `tbelt` and `dsh-tui` commands next to `dsh` on macOS, Windows and Linux.
-- A built-in skill, `tbelt-skill-authoring`, teaches agents where skills live and how to write, install and fix them. Ask the agent to add a skill, or run `/tbelt-skill-authoring`. A skill with the same name in your own skills folder replaces it.
-- `dsh terminal` opens a session in your terminal. It streams replies, shows tool calls as short lines, asks for permission in plain words with "Allow for this session", and Ctrl+C cancels the running turn. `--resume <id>` and `--continue` reopen earlier sessions. It sends no telemetry.
-- In `dsh terminal`, `/sessions` switches to another stored session, `/rename` names the current one, `/model` picks the model, and `/new [directory]` starts a session in another directory; `--cwd` does the same at launch. `/attach <image>` adds an image to your next message, and images in the conversation draw inline in Kitty, Ghostty, iTerm2 and WezTerm, or as a one-line marker elsewhere. The npm package installs `tbelt` as another name for `dsh terminal`.
-- In `dsh terminal`, `/providers` adds a provider from the catalog or a local server such as Ollama, checks its API key, lets you tick the models, and replaces or removes keys. `/model default`, `/web-search`, `/settings`, `/plugins`, `/agents` and `/permissions` cover the default model, web search, plain settings, plugins, agent presets and permission modes, so a fresh install is set up without the app.
-- `dsh terminal` sets the window title to the session name with a spinner while a turn runs, so tabs show which sessions work. In an Orca pane it also reports working, finished and the session to resume through Orca's status hooks, whichever tBelt Code home you use. `dsh terminal .` starts in the current directory, the way Orca passes a workspace, and the npm package installs `dsh-tui` as another name for `dsh terminal` so Orca lists the agent.
+- `dsh terminal` runs sessions in your terminal. It streams replies, shows tool calls as short lines and asks for permission in plain words. Ctrl+C cancels the running turn. It sends no telemetry.
+- `dsh terminal` reopens earlier sessions with `--resume <id>` and `--continue`. `/sessions` switches between them, `/rename` names one and `/new [directory]` starts one elsewhere. `--cwd` sets the directory at launch.
+- `/attach <image>` adds an image to your next message. Kitty, Ghostty, iTerm2 and WezTerm draw images inline.
+- `dsh terminal` sets up a fresh install without the app. `/providers` adds a provider or a local server such as Ollama and checks its key. `/model`, `/web-search`, `/settings`, `/plugins`, `/agents` and `/permissions` cover the rest.
+- `dsh terminal` shows the session name and a spinner in the window title while a turn runs. In Orca it reports its status, and `dsh terminal .` starts in the current directory.
+- Manage dsh Command works on Linux AppImage installs. It adds `tbelt` and `dsh-tui` next to `dsh` on macOS, Windows and Linux. The npm package installs the same two names.
+- The built-in skill `tbelt-skill-authoring` teaches agents to write, install and fix skills. Run `/tbelt-skill-authoring` or ask the agent to add a skill. A skill with the same name in your skills folder replaces it.
 
 ### Changed
 
-- The download site moves to code.tbelt.online.
-- The Web app no longer offers the DeepSeek account route or its sign-in. Every provider, DeepSeek included, is added in Settings with its own key.
-- Quote opens a comment box next to the selected text, with focus in the reply field. Enter or the send button adds the quote and your comment above the message box; Escape cancels.
-- A saved API key now reads "API key configured" with a Replace API button, in Web search and on every provider card in Settings. The key field opens only when you press Replace, and Keep current key closes it without touching the saved key.
-- On a provider's card in Settings, the model list and Fetch available models are in view; only the rows fold away, behind "Edit model list". "Customized settings" keeps the base URL and other fine settings.
-- Typing a new API key on a provider's card checks it with the provider and warns if it is rejected or has no credit left. You can still save.
-- The Add provider list in Settings gets a search box once it has more than eight providers.
-- The permission menu, in Settings and in the message box, says what each mode allows under its name. The Settings row shows the same line for the current choice.
+- The download site is now at code.tbelt.online.
+- The Web app no longer offers DeepSeek sign-in. Add every provider in Settings with its own key.
+- Quote opens a comment box next to the selected text. Enter adds the quote and your comment above the message box. Escape cancels.
+- Saved API keys show "API key configured" with a Replace API button, in Web search and on provider cards. The key field opens only when you press Replace.
+- Provider cards show the model list and Fetch available models. "Edit model list" folds the rows, and "Customized settings" keeps the base URL and other advanced settings.
+- A new API key is checked with the provider. A rejected key or an empty balance shows a warning, and you can still save.
+- The Add provider list gets a search box above eight providers.
+- The permission menu describes each mode under its name, in Settings and in the message box.
+- Permission prompts say in plain words what the agent wants to do and why. The tool name, command and file sit in a collapsed "Technical details" block.
+- "Allow for this session", in the arrow beside Allow once, allows the same request from the same tool until the session ends.
 - The sidebar's empty session list offers Add workspace.
-- `dsh --version` prints `tBelt Code` followed by the version.
-- The `dsh` command installed by the desktop app now uses `~/.tbelt-code`, the same home as the app, unless `DSH_HOME` is set.
-- A permission prompt says in plain words what the agent wants to do and why. The tool name and the command or file stay in a collapsed "Technical details" block.
-- The arrow beside Allow once offers "Allow for this session". The same request from the same tool is then allowed without asking until the session ends.
-- The Artifacts tab lists only delivered files. Code changes show as green and red line counts on the tool row.
+- The Artifacts tab lists only delivered files. Code changes show as line counts on the tool row.
+- `dsh --version` prints `tBelt Code` and the version.
+- The `dsh` command from the desktop app uses `~/.tbelt-code` unless `DSH_HOME` is set.
 
 ### Fixed
 
-- `remember_fact` and `/remember` save memories again. Every write used to fail with `per-record key ... is not path-safe`.
+- `remember_fact` and `/remember` save memories again.
 
 ## [0.2.0-rc.2.20261008.2] - 2026-10-08
 
@@ -176,7 +202,8 @@ Notable changes to tBelt Code, newest first. The format follows [Keep a Changelo
 - Downloads no longer return an older installer.
 - A key that ran out of credit or hit its spending limit is reported as a quota problem instead of an invalid API key.
 
-[Unreleased]: https://github.com/tBeltty/tbelt-code-public/compare/v0.2.0-rc.2.20261009...HEAD
+[Unreleased]: https://github.com/tBeltty/tbelt-code-public/compare/v0.2.0-rc.2.20261009.2...HEAD
+[0.2.0-rc.2.20261009.2]: https://github.com/tBeltty/tbelt-code-public/releases/tag/v0.2.0-rc.2.20261009.2
 [0.2.0-rc.2.20261009]: https://github.com/tBeltty/tbelt-code-public/releases/tag/v0.2.0-rc.2.20261009
 [0.2.0-rc.2.20261008.2]: https://github.com/tBeltty/tbelt-code-public/releases/tag/v0.2.0-rc.2.20261008.2
 [0.2.0-rc.2.20261008]: https://github.com/tBeltty/tbelt-code-public/releases/tag/v0.2.0-rc.2.20261008

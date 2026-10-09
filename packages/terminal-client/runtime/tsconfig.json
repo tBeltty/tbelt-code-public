@@ -15,6 +15,7 @@
     { "path": "../../client/connection/tsconfig.host.json" },
     { "path": "../../presentation/approval" },
     { "path": "../../presentation/settings" },
+    { "path": "../../util/values" },
     { "path": "../views" }
   ]
 }

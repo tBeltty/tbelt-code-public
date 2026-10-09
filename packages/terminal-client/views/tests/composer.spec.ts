@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import {
-  EMPTY_COMPOSER, composerWithHistory, reduceComposer, renderComposer, type ComposerState,
+  EMPTY_COMPOSER, completeToken, composerWithHistory, reduceComposer, renderComposer, type ComposerState,
 } from '../src/composer.ts'
 import { decodeKeys } from '../src/keys.ts'
 
@@ -142,5 +142,31 @@ describe('renderComposer', () => {
     expect(frame.cursor).toEqual({ row: 1, column: 2 })
     expect(render(at('abcdefgh', 5), 6).cursor).toEqual({ row: 1, column: 3 })
     expect(render(at('abcdefgh', 8), 6).cursor).toEqual({ row: 1, column: 6 })
+  })
+})
+
+describe('Tab after an @ token', () => {
+  it('still inserts two spaces anywhere else', () => {
+    expect(type('\t').state.text).toBe('  ')
+    expect(type('mail me at a@b.c\t').state.text).toBe('mail me at a@b.c  ')
+  })
+
+  it('asks the caller to complete the token that ends at the cursor', () => {
+    const { state, effects } = type('read @src/ma\t')
+    expect(state.text).toBe('read @src/ma')
+    expect(effects).toEqual([{ type: 'complete', token: { prefix: '@src/ma', query: 'src/ma', quoted: false } }])
+    expect(type('first\nread @"my no\t').effects).toEqual([{ type: 'complete', token: { prefix: '@"my no', query: 'my no', quoted: true } }])
+  })
+
+  it('puts a completion in place of the token and leaves the cursor after it', () => {
+    const token = { prefix: '@sr', query: 'sr', quoted: false }
+    const state = completeToken(at('read @sr now', 8), token, '@src/a.ts ')
+    expect(state).toMatchObject({ text: 'read @src/a.ts  now', cursor: 15 })
+  })
+
+  it('leaves the text alone when the cursor no longer follows the token', () => {
+    const token = { prefix: '@sr', query: 'sr', quoted: false }
+    expect(completeToken(at('read @xx', 8), token, '@src/')).toEqual(at('read @xx', 8))
+    expect(completeToken(at('@s', 2), { prefix: '@some-longer', query: 'some-longer', quoted: false }, 'x')).toEqual(at('@s', 2))
   })
 })

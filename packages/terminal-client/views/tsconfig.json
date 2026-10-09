@@ -8,7 +8,9 @@
     "src"
   ],
   "references": [
+    { "path": "../../context/file-reference" },
     { "path": "../../presentation/approval" },
+    { "path": "../../presentation/plan" },
     { "path": "../../presentation/tool-call" },
     { "path": "../../presentation/tool-card" },
     { "path": "../../util/workspace-path" },

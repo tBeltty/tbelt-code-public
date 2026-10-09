@@ -42,7 +42,7 @@ function fakeContext(provideExit = true): Fake {
 
 /** A complete plugin config; the schema fills these defaults in production. */
 const config = (over: Partial<Parameters<typeof apply>[1]> = {}): Parameters<typeof apply>[1] =>
-  ({ continueLatest: false, images: 'auto', imageMaxBytes: 1024, title: 'auto', titleFrameMs: 500, ...over })
+  ({ continueLatest: false, images: 'auto', imageMaxBytes: 1024, fileMaxBytes: 2048, title: 'auto', titleFrameMs: 500, ...over })
 
 /** Lets the start-up chain, which includes a directory check on the real file system, run to its end. */
 const settle = (): Promise<void> => new Promise(resolve => setTimeout(resolve, 25))
@@ -66,7 +66,7 @@ describe('terminal-client plugin', () => {
     expect(name).toBe('terminal-client')
     expect(inject).toEqual(['connection', 'typertGateway'])
     expect(Config({ continueLatest: true } as never)).toEqual({
-      continueLatest: true, images: 'auto', imageMaxBytes: 20 * 1024 * 1024, title: 'auto', titleFrameMs: 500,
+      continueLatest: true, images: 'auto', imageMaxBytes: 20 * 1024 * 1024, fileMaxBytes: 20 * 1024 * 1024, title: 'auto', titleFrameMs: 500,
     })
     expect(Config({ cwd: '~/app', images: 'off' } as never)).toMatchObject({ cwd: '~/app', images: 'off', continueLatest: false })
     expect(() => Config({ images: 'sixel' } as never)).toThrow()
@@ -94,7 +94,7 @@ describe('terminal-client plugin', () => {
     expect(services).toBe(started.services)
     expect(env).toMatchObject({
       stdin: process.stdin, stdout: process.stdout, cwd: process.cwd(), color: false, exit: expect.any(Function), imageProtocol: 'none',
-      files: { readImage: expect.any(Function), isDirectory: expect.any(Function) }, now: Date.now,
+      files: { readAttachment: expect.any(Function), isDirectory: expect.any(Function) }, now: Date.now,
     })
     expect(request).toEqual({ resume: '3f9a', continueLatest: false })
     await fake.disposers[0]!()

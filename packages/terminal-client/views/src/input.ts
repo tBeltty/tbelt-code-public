@@ -8,6 +8,32 @@ export type ConfigScreenName = 'providers' | 'web-search' | 'settings' | 'plugin
 
 const CONFIG_SCREENS: ReadonlySet<string> = new Set<ConfigScreenName>(['providers', 'web-search', 'settings', 'plugins', 'agents', 'permissions'])
 
+/** The panels a slash command opens: views and actions over the session's queue, files, work in progress and workspace. */
+export type PanelName =
+  | 'queue' | 'skills' | 'subagents' | 'jobs' | 'schedule' | 'goal' | 'deliverables' | 'trajectory' | 'feedback'
+  | 'fork' | 'organize' | 'status' | 'workspaces' | 'worktrees' | 'open' | 'budget' | 'plan' | 'commands'
+
+const PANELS: ReadonlySet<string> = new Set<PanelName>([
+  'queue', 'skills', 'subagents', 'jobs', 'schedule', 'goal', 'deliverables', 'trajectory', 'feedback', 'fork', 'organize',
+  'status', 'workspaces', 'worktrees', 'open', 'budget', 'plan', 'commands',
+])
+
+/** Panels that open only for the bare command; `/goal <objective>`, `/budget 5` and `/feedback <text>` still go to the session. */
+const BARE_ONLY: ReadonlySet<string> = new Set<PanelName>(['goal', 'budget', 'feedback'])
+
+/**
+ * The panel a command name and argument open.
+ * @param name - the word after the slash.
+ * @param argument - the trimmed text after the name.
+ * @returns the panel, or undefined when the line is a command for the session; `/plan` opens its panel only as `/plan show`.
+ */
+function panelFor(name: string, argument: string): PanelName | undefined {
+  if (!PANELS.has(name)) return undefined
+  if (name === 'plan') return argument === 'show' ? 'plan' : undefined
+  if (argument !== '' && BARE_ONLY.has(name)) return undefined
+  return name as PanelName
+}
+
 /** What a submitted line asks for. */
 export type SubmittedInput =
   | { readonly kind: 'prompt'; readonly text: string }
@@ -16,6 +42,7 @@ export type SubmittedInput =
   | { readonly kind: 'sessions' }
   | { readonly kind: 'model'; readonly asDefault: boolean }
   | { readonly kind: 'config'; readonly screen: ConfigScreenName }
+  | { readonly kind: 'panel'; readonly panel: PanelName; readonly argument: string }
   | { readonly kind: 'rename'; readonly title: string }
   | { readonly kind: 'new'; readonly directory: string }
   | { readonly kind: 'attach'; readonly path: string }
@@ -36,6 +63,8 @@ export function classifyInput(text: string): SubmittedInput {
   if (name === 'sessions') return { kind: 'sessions' }
   if (name === 'model') return { kind: 'model', asDefault: argument === 'default' }
   if (CONFIG_SCREENS.has(name)) return { kind: 'config', screen: name as ConfigScreenName }
+  const panel = panelFor(name, argument)
+  if (panel !== undefined) return { kind: 'panel', panel, argument }
   if (name === 'rename') return { kind: 'rename', title: argument }
   if (name === 'new') return { kind: 'new', directory: argument }
   if (name === 'attach') return { kind: 'attach', path: argument }

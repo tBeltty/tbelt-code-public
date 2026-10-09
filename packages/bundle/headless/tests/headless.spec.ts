@@ -45,6 +45,14 @@ interface BenchOptions {
   useStdin?: boolean
   readStdin?: () => Promise<string>
   sessionId?: string
+  /** `--resume` text, resolved against `sessions`. */
+  resume?: string
+  /** `--model` text, resolved against `llm`. */
+  model?: string
+  /** Stored Sessions the query lists for `--resume`. */
+  sessions?: readonly { id: string; origin?: 'subagent' }[]
+  /** Model registry stub for `--model`; the service stays unmounted when absent. */
+  llm?: ModelRegistryStub
   json?: boolean
   observe?: () => Promise<ObservationStub>
   /** Leave the query service unmounted to exercise the fail-loud path. */
@@ -57,6 +65,13 @@ interface BenchOptions {
   preliveMeta?: { cwd?: string; origin?: 'subagent'; agentPreset?: string }
   /** Run when the runner awaits idle, e.g. to append to the attached log. */
   onWhenIdle?: (agent: Agent) => void
+}
+
+/** The model registry calls `--model` reads. */
+interface ModelRegistryStub {
+  listProviders(): { id: string; name: string }[]
+  listModels(provider: string): Promise<{ id: string; name: string }[]>
+  resolveCallConfig(config: { provider: string; model: string }): Promise<{ provider: string; model: string; reasoningEffort?: string }>
 }
 
 const frameStates = new WeakMap<Agent, { attemptId: ReturnType<typeof LlmAttemptId>; revision: number; index: number }>()
@@ -121,6 +136,8 @@ function selectPreset(session: Session, agentPreset: string): void {
 /** Mount the real registries around a small scripted Agent factory. */
 async function bench(script: Script, options: BenchOptions = {}): Promise<{
   ctx: Context
+  /** Provider/model pairs the runner passed to Agent creation or resume. */
+  routes: { provider?: string; model?: string }[]
   output(): { out: string; err: string; order: string[] }
   run(): Promise<{ code: number; out: string; err: string; order: string[] }>
 }> {
@@ -135,12 +152,14 @@ async function bench(script: Script, options: BenchOptions = {}): Promise<{
   let out = ''
   let err = ''
   const order: string[] = []
+  const routes: { provider?: string; model?: string }[] = []
 
   const mount = async (
     ownerCtx: Context,
     session: Session,
     createOptions: CreateAgentOptions | ResumeAgentOptions,
   ): Promise<Agent> => {
+    routes.push({ ...createOptions.agentOptions })
     const inbox = createInboxStub()
     let idle = Promise.resolve()
     const agent: Agent = {
@@ -189,15 +208,19 @@ async function bench(script: Script, options: BenchOptions = {}): Promise<{
       return { agent, dispose: () => Promise.resolve() }
     },
   })
-  if (options.omitSessionQuery !== true && (options.sessionId !== undefined || options.observe !== undefined)) {
+  const adopts = options.sessionId !== undefined || options.resume !== undefined || options.observe !== undefined
+  if (options.omitSessionQuery !== true && adopts) {
     const observe = options.observe ?? (() => Promise.reject(new SessionQueryError('missing', 'SESSION_QUERY_SESSION_NOT_FOUND')))
-    ctx.provide('sessionQuery', { observeSession: () => observe() } as never)
+    const listed = (options.sessions ?? []).map(({ id, origin }) => ({ header: { id, ...origin === undefined ? {} : { origin } } }))
+    ctx.provide('sessionQuery', { observeSession: () => observe(), listSessions: () => Promise.resolve(listed) } as never)
   }
+  if (options.llm !== undefined) ctx.provide('llm', options.llm as never)
   if (options.omitPersistence !== true) {
     ctx.provide('sessionPersistence', {} as never)
   }
   return {
     ctx,
+    routes,
     output: () => ({ out, err, order: [...order] }),
     run: async () => {
       ctx.on('session/flush', () => { order.push('flush') })
@@ -216,6 +239,8 @@ async function bench(script: Script, options: BenchOptions = {}): Promise<{
       apply(ctx, {
         ...options.useStdin === true ? {} : { task: options.task ?? 'do the thing' },
         ...options.sessionId === undefined ? {} : { sessionId: options.sessionId },
+        ...options.resume === undefined ? {} : { resume: options.resume },
+        ...options.model === undefined ? {} : { model: options.model },
         ...options.json === undefined ? {} : { json: options.json },
       })
       return { code: await exited, out, err, order }
@@ -1039,6 +1064,90 @@ describe('headless runner', () => {
     await ctx.fiber.dispose()
   })
 
+  it('adopts the stored Session whose id starts with the --resume text', async () => {
+    const cwd = process.cwd()
+    const test = await bench({
+      afterPrompt(session, message) { appendTurn(session, 1, message, 'resumed by prefix', true) },
+    }, {
+      resume: '3f9',
+      sessions: [{ id: 'session-3f9a01' }, { id: 'session-77aa10' }],
+      observe: () => Promise.resolve({ header: { cwd, origin: 'user' }, events: [], [Symbol.dispose]() {} }),
+    })
+    test.ctx.sessions.create(brandString<SessionId>('session-3f9a01'), { meta: { cwd } })
+    try { expect(await test.run()).toMatchObject({ code: 0, out: 'resumed by prefix\n', err: '' }) }
+    finally { await test.ctx.fiber.dispose() }
+  })
+
+  it.each([
+    { resume: 'zzz', sessions: [{ id: 'session-3f9a01' }], message: 'no stored session starts with "zzz"' },
+    { resume: '3f9', sessions: [{ id: 'session-3f9a01' }, { id: 'session-3f9b02' }], message: '"3f9" matches several sessions' },
+  ])('fails --resume $resume before creating an Agent', async ({ resume, sessions, message }) => {
+    const test = await bench({ afterPrompt: () => {} }, { resume, sessions })
+    try {
+      const result = await test.run()
+      expect(result.code).toBe(1)
+      expect(result.err).toContain(message)
+      expect(test.routes).toEqual([])
+    } finally { await test.ctx.fiber.dispose() }
+  })
+
+  it('requires the Session query service for --resume', async () => {
+    const test = await bench({ afterPrompt: () => {} }, { resume: '3f9', omitSessionQuery: true })
+    try { expect(await test.run()).toMatchObject({ code: 1, err: expect.stringContaining('--resume requires the sessionQuery service') }) }
+    finally { await test.ctx.fiber.dispose() }
+  })
+
+  it.each([
+    { options: { resume: ' ' }, message: 'resume must not be blank' },
+    { options: { model: ' ' }, message: 'model must not be blank' },
+    { options: { resume: 'abc', sessionId: 'session-abc' }, message: 'resume and sessionId name the same Session' },
+  ])('rejects the configuration $message', async ({ options, message }) => {
+    const test = await bench({ afterPrompt: () => {} }, options)
+    try { expect(await test.run()).toMatchObject({ code: 1, err: expect.stringContaining(message) }) }
+    finally { await test.ctx.fiber.dispose() }
+  })
+
+  it('starts the Agent on the --model route and leaves the default model alone', async () => {
+    const test = await bench({
+      afterPrompt(session, message) { appendTurn(session, 1, message, 'on the chosen model', true) },
+    }, {
+      model: 'alpha/a1',
+      llm: {
+        listProviders: () => [{ id: 'alpha', name: 'Alpha' }],
+        listModels: () => Promise.resolve([{ id: 'a1', name: 'A1' }]),
+        resolveCallConfig: config => Promise.resolve(config),
+      },
+    })
+    try {
+      expect(await test.run()).toMatchObject({ code: 0, out: 'on the chosen model\n' })
+      expect(test.routes).toEqual([{ provider: 'alpha', model: 'a1' }])
+      expect(test.ctx.agentDefaultModel.currentSelection()).toMatchObject({ provider: 'test-provider', model: 'test-model' })
+    } finally { await test.ctx.fiber.dispose() }
+  })
+
+  it('fails when the --model text names no model', async () => {
+    const test = await bench({ afterPrompt: () => {} }, {
+      model: 'nope',
+      llm: {
+        listProviders: () => [{ id: 'alpha', name: 'Alpha' }],
+        listModels: () => Promise.resolve([{ id: 'a1', name: 'A1' }]),
+        resolveCallConfig: config => Promise.resolve(config),
+      },
+    })
+    try {
+      const result = await test.run()
+      expect(result.code).toBe(1)
+      expect(result.err).toContain('no provider offers model "nope"')
+      expect(test.routes).toEqual([])
+    } finally { await test.ctx.fiber.dispose() }
+  })
+
+  it('requires the model registry for --model', async () => {
+    const test = await bench({ afterPrompt: () => {} }, { model: 'alpha/a1' })
+    try { expect(await test.run()).toMatchObject({ code: 1, err: expect.stringContaining('--model requires the llm service') }) }
+    finally { await test.ctx.fiber.dispose() }
+  })
+
   it('fails loud without the launcher-provided exit request', () => {
     const ctx = new Context()
     expect(() => { apply(ctx, { task: 't' }) }).toThrow('must provide ctx.appExit')
@@ -1048,5 +1157,6 @@ describe('headless runner', () => {
     expect(new Config({})).toEqual({})
     expect(new Config({ task: 'x', sessionId: 'session-x', json: true }))
       .toEqual({ task: 'x', sessionId: 'session-x', json: true })
+    expect(new Config({ resume: '3f9a', model: 'alpha/a1' })).toEqual({ resume: '3f9a', model: 'alpha/a1' })
   })
 })

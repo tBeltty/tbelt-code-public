@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { TranscriptRenderer } from '../src/transcript.ts'
 import {
-  assistantEvent, callEvent, liveEvent, options, resultEvent, text, turnEnd, userEvent,
+  assistantEvent, callEvent, liveEvent, options, resultEvent, text, turnEnd, userEvent, wireEvent,
 } from './fixtures.ts'
 
 const image = (attachmentId: string): never => ({
@@ -144,6 +144,47 @@ describe('TranscriptRenderer tools', () => {
   })
 })
 
+describe('TranscriptRenderer slash commands', () => {
+  const run = (commandId: string, name: string, args?: string): never => (
+    { type: 'command/run', seq: 1, time: 1, data: { commandId, name, ...args === undefined ? {} : { args }, source: { kind: 'user' } } }
+  ) as never
+  const done = (commandId: string, kind: 'success' | 'error', text?: string): never => (
+    { type: 'command/done', seq: 2, time: 2, data: { commandId, kind, ...text === undefined ? {} : { text } } }
+  ) as never
+
+  it('prints the command line and its outcome under it when the command settles', () => {
+    expect(render([run('k1', 'goal', ' ship the site'), done('k1', 'success', 'Goal set.\nIt has 3 steps.')]))
+      .toBe('/goal ship the site\n  Goal set.\n  It has 3 steps.\n')
+  })
+
+  it('says a command without text is done and an error did not run', () => {
+    expect(render([run('k1', 'clear'), done('k1', 'success')])).toBe('/clear\n  Done.\n')
+    expect(render([run('k1', 'undo'), done('k1', 'error')])).toBe('/undo\n  It did not run.\n')
+    expect(render([run('k1', 'undo'), done('k1', 'error', 'nothing to undo')])).toBe('/undo\n  nothing to undo\n')
+  })
+
+  it('separates the command from earlier output and names one whose start was not seen', () => {
+    expect(render([userEvent([text('hi')]), run('k1', 'budget'), done('k1', 'success', '12 USD left')]))
+      .toBe('› hi\n\n/budget\n  12 USD left\n')
+    expect(render([done('k9', 'success', 'ok')])).toBe('Command\n  ok\n')
+  })
+
+  it('shows nothing for a start, and ignores events that carry no command id', () => {
+    expect(render([run('k1', 'goal')])).toBe('')
+    expect(render([{ type: 'command/done', seq: 1, time: 1, data: {} } as never, { type: 'turn/start', seq: 2, time: 2, data: null } as never])).toBe('')
+    expect(render([{ type: 'command/other', seq: 1, time: 1, data: { commandId: 'k1' } } as never])).toBe('')
+  })
+
+  it('prints a bare slash for a start that carries no name', () => {
+    const nameless = { type: 'command/run', seq: 1, time: 1, data: { commandId: 'k1' } } as never
+    expect(render([nameless, done('k1', 'success')])).toBe('/\n  Done.\n')
+  })
+
+  it('removes terminal escapes from the line and the text', () => {
+    expect(render([run('k1', 'x', ' \u001B[31mred'), done('k1', 'success', 'a\u001B[0mb')])).toBe('/x red\n  ab\n')
+  })
+})
+
 describe('TranscriptRenderer turn ends', () => {
   const end = (reason: unknown): string => render([turnEnd(reason as never)])
 
@@ -168,5 +209,48 @@ describe('TranscriptRenderer history', () => {
     const renderer = new TranscriptRenderer(options())
     const out = renderer.history([userEvent([text('q')]), liveEvent({ type: 'text-delta', text: 'a' })])
     expect(out).toBe('› q\n\na\n')
+  })
+})
+
+describe('TranscriptRenderer files a turn produced', () => {
+  const write = (callId: string, path: string, turn = 1) => callEvent(callId, 'write', { file_path: path, content: 'x' }, turn)
+
+  it('says how many files a turn changed when it ends, once their writes succeeded', () => {
+    const out = render([
+      write('c1', '/work/app/a.ts'), resultEvent('c1', 'ok'),
+      write('c2', '/work/app/b.ts'), resultEvent('c2', 'denied', { isError: true }),
+      turnEnd({ kind: 'completed' }),
+    ])
+    expect(out.endsWith('Files changed: 1 · /deliverables lists them\n')).toBe(true)
+  })
+
+  it('puts the count after the reason an interrupted turn ended', () => {
+    const out = render([write('c1', '/work/app/a.ts'), resultEvent('c1', 'ok'), turnEnd({ kind: 'aborted', reason: { kind: 'legacy' } })])
+    expect(out.endsWith('Interrupted\nFiles changed: 1 · /deliverables lists them\n')).toBe(true)
+  })
+
+  it('prints the files the agent presents as they are declared', () => {
+    const out = render([
+      assistantEvent(1, 1, [text('Done')]),
+      wireEvent('deliverables/presented', { turn: 1, callId: 'c9', files: [{ path: 'report.md', description: 'Summary' }] }),
+    ])
+    expect(out).toBe('Done\nPresented report.md — Summary\n')
+  })
+})
+
+describe('TranscriptRenderer workflow runs', () => {
+  it('prints a run, its members and how it ended, with a blank line before the run', () => {
+    const out = render([
+      userEvent([text('go')]),
+      wireEvent('tool-workflow/run-start', { runId: 'r1', name: 'review' }),
+      wireEvent('tool-workflow/agent-start', { runId: 'r1', seq: 1, label: 'lint' }),
+      wireEvent('tool-workflow/agent-end', { runId: 'r1', seq: 1, outcome: 'completed' }),
+      wireEvent('tool-workflow/run-end', { runId: 'r1', stopReason: 'completed' }),
+    ])
+    expect(out).toBe('› go\n\nWorkflow review\n  lint started\n  lint completed\nWorkflow review completed\n')
+  })
+
+  it('shows nothing for a workflow event without a run id', () => {
+    expect(render([wireEvent('tool-workflow/agent-start', {})])).toBe('')
   })
 })

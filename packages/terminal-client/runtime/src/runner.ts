@@ -12,7 +12,7 @@ import type { ImageProtocol, OpenCandidate } from '@deepseek-ai/dsh-terminal-vie
 import type { TerminalFiles } from './files.ts'
 import type { HostTitleSettings } from './host-title.ts'
 import type { ClientServicesPort, SessionBindingPort, SessionListPort } from './ports.ts'
-import { listenForApprovals, TerminalSession } from './terminal-session.ts'
+import { listenForApprovals, listenForQuestions, TerminalSession } from './terminal-session.ts'
 import type { SwitchTarget } from './terminal-session.ts'
 
 /** Standard input as the runner uses it. */
@@ -109,6 +109,9 @@ type Opening =
 interface Mounted {
   readonly terminal: TerminalSession
   readonly stopApprovals: () => void
+  readonly stopQuestions: () => void
+  /** Stops following the jobs this session can see. */
+  readonly stopJobs: () => void
   readonly release: () => void
 }
 
@@ -147,6 +150,8 @@ export async function runTerminal(
     mounted = undefined
     if (current === undefined) return
     current.stopApprovals()
+    current.stopQuestions()
+    current.stopJobs()
     current.terminal.dispose()
     current.release()
   }
@@ -183,6 +188,7 @@ export async function runTerminal(
         sessions: () => Object.values(services.sessions.list.getSnapshot().byId),
         remote: services.remote.session,
         client: services.remote,
+        services: { jobs: services.jobs, workspaces: services.workspaces, fileUpload: services.fileUpload },
         files: env.files,
         imageProtocol: env.imageProtocol,
         now: env.now,
@@ -192,7 +198,9 @@ export async function runTerminal(
       onSwitch: (next) => { void switchTo(next, { kind: 'resume', sessionId: binding.sessionId, cwd: opening.cwd }) },
     })
     const stopApprovals = listenForApprovals(services, binding.sessionId, () => terminal)
-    mounted = { terminal, stopApprovals, release }
+    const stopQuestions = listenForQuestions(services, binding.sessionId, () => terminal)
+    const stopJobs = services.jobs.watchRows(binding.sessionId)
+    mounted = { terminal, stopApprovals, stopQuestions, stopJobs, release }
     return terminal
   }
 

@@ -15,7 +15,7 @@ import type { Context } from '@deepseek-ai/cordis'
 import z from '@deepseek-ai/schemastery'
 import { brandString } from '@deepseek-ai/dsh-brand'
 import { installModelSelection } from '@deepseek-ai/dsh-agent'
-import type { Agent, ModelSelectionRef } from '@deepseek-ai/dsh-agent'
+import type { Agent, ModelSelection, ModelSelectionRef } from '@deepseek-ai/dsh-agent'
 import type {} from '@deepseek-ai/dsh-agent-default-model'
 import type {} from '@deepseek-ai/dsh-fs'
 import { createUserMessage } from '@deepseek-ai/dsh-llm'
@@ -29,6 +29,7 @@ import { SessionQueryError } from '@deepseek-ai/dsh-session-query'
 import type {} from '@deepseek-ai/cordis-plugin-loader'
 import type {} from '@deepseek-ai/dsh-cmdline'
 import type {} from '@deepseek-ai/dsh-session-query'
+import { resolveModel, resolveResume } from './choose.ts'
 import { internals } from './runner-internals.ts'
 import { projectJsonRun, boundJsonLine } from './json-stream.ts'
 
@@ -44,6 +45,10 @@ export interface Config {
   task?: string
   /** Exact Session identity to adopt; absent for a fresh random identity. An id with no stored Session fails. */
   sessionId?: string
+  /** Session to adopt, named by its id or the start of it, as `dsh terminal --resume` does. An unmatched or ambiguous value fails. */
+  resume?: string
+  /** Model for this run, as `provider/model` or a model id that exactly one provider offers. The default model stays unchanged. */
+  model?: string
   /** Whether stdout carries the machine-readable event stream instead of final text. */
   json?: boolean
 }
@@ -51,6 +56,8 @@ export interface Config {
 export const Config: z<Config> = z.object({
   task: z.string(),
   sessionId: z.string(),
+  resume: z.string(),
+  model: z.string(),
   json: z.boolean(),
 })
 
@@ -292,6 +299,34 @@ async function resolveAgent(
   }
 }
 
+/**
+ * Find the stored Session a `--resume` value names.
+ * @param ctx - plugin context carrying the Session query service.
+ * @param spec - a full Session id, or the start of one.
+ * @returns the Session id to adopt.
+ */
+async function resumeTarget(ctx: Context, spec: string): Promise<string> {
+  const query = ctx.get('sessionQuery')
+  if (query === undefined) {
+    throw new Error('headless --resume requires the sessionQuery service; dsh-base provides it')
+  }
+  return resolveResume(spec, (await query.listSessions()).map(record => record.header))
+}
+
+/**
+ * Validate a `--model` value against the registered providers.
+ * @param ctx - plugin context carrying the model registry.
+ * @param spec - `provider/model`, or a model id that one provider offers.
+ * @returns the selection this run starts on; the saved default model is untouched.
+ */
+async function modelSelection(ctx: Context, spec: string): Promise<ModelSelection> {
+  const llm = ctx.get('llm')
+  if (llm === undefined) {
+    throw new Error('headless --model requires the llm service; dsh-base provides it')
+  }
+  return resolveModel(spec, llm)
+}
+
 /** Report an unexpected direct-driver failure and request a failing exit. */
 function fail(io: HeadlessIo, error: unknown, json: boolean): void {
   const message = error instanceof Error ? error.message : String(error)
@@ -321,6 +356,15 @@ async function run(ctx: Context, config: Config, io: HeadlessIo): Promise<void> 
   if (config.sessionId !== undefined && config.sessionId.trim() === '') {
     throw new Error('headless-runner: sessionId must not be blank')
   }
+  if (config.resume !== undefined && config.resume.trim() === '') {
+    throw new Error('headless-runner: resume must not be blank')
+  }
+  if (config.model !== undefined && config.model.trim() === '') {
+    throw new Error('headless-runner: model must not be blank')
+  }
+  if (config.resume !== undefined && config.sessionId !== undefined) {
+    throw new Error('headless-runner: resume and sessionId name the same Session; set only one')
+  }
 
   const task = config.task === undefined || config.task === '-'
     ? await internals.readStdin()
@@ -329,7 +373,8 @@ async function run(ctx: Context, config: Config, io: HeadlessIo): Promise<void> 
     throw new Error('a task is required, for example: dsh --profile headless "run the tests"')
   }
 
-  const selection = defaultModel.currentSelection()
+  const adoptId = config.resume === undefined ? config.sessionId : await resumeTarget(ctx, config.resume)
+  const selection = config.model === undefined ? defaultModel.currentSelection() : await modelSelection(ctx, config.model)
   const agentOptions = { provider: selection.provider, model: selection.model }
   // This bundle composes no preset roster, so the model-facing rows sit in the
   // host plane and the agent reads them from the global layer. A deployment
@@ -339,10 +384,10 @@ async function run(ctx: Context, config: Config, io: HeadlessIo): Promise<void> 
     const selected: ModelSelectionRef = { current: selection, assembled: undefined }
     installModelSelection(agentCtx, selected)
   }
-  const sessionId = brandString<SessionId>(config.sessionId ?? `session-${randomUUID()}`)
+  const sessionId = brandString<SessionId>(adoptId ?? `session-${randomUUID()}`)
   const fs = ctx.get('fs')
   const cwd = fs === undefined ? process.cwd() : fs.processPath(await fs.resolve('.'))
-  const agent = config.sessionId === undefined
+  const agent = adoptId === undefined
     ? (await agents.create({
       sessionId,
       meta: { cwd },
@@ -351,7 +396,7 @@ async function run(ctx: Context, config: Config, io: HeadlessIo): Promise<void> 
     })).agent
     : await resolveAgent(ctx, agents, sessionId, agentOptions, setup, cwd)
   await agent.whenIdle()
-  if (config.sessionId !== undefined) {
+  if (adoptId !== undefined) {
     // The resume-time check read a snapshot; an overlay can still append a
     // preset selection between it and the interval this run now owns, so
     // re-read the log the runner holds before submitting the task.

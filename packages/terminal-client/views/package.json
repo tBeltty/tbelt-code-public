@@ -27,7 +27,9 @@
   ],
   "license": "MIT",
   "dependencies": {
+    "@deepseek-ai/dsh-file-reference": "workspace:*",
     "@deepseek-ai/dsh-presentation-approval": "workspace:*",
+    "@deepseek-ai/dsh-presentation-plan": "workspace:*",
     "@deepseek-ai/dsh-presentation-tool-call": "workspace:*",
     "@deepseek-ai/dsh-presentation-tool-card": "workspace:*",
     "@deepseek-ai/dsh-util-workspace-path": "workspace:*",

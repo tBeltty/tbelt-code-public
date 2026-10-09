@@ -44,14 +44,25 @@ interface ClientRuntime {
 }
 
 interface TestClient {
-  readonly ctx: { readonly sessions: ClientServicesPort['sessions']; readonly remote: ClientServicesPort['remote'] }
+  readonly ctx: {
+    readonly sessions: ClientServicesPort['sessions']
+    readonly remote: ClientServicesPort['remote']
+    readonly jobs: ClientServicesPort['jobs']
+    readonly workspaces: ClientServicesPort['workspaces']
+    readonly fileUpload: ClientServicesPort['fileUpload']
+  }
 }
 
 const RUNTIME_SPECIFIER: string = '@deepseek-ai/dsh-client-test-runtime/src/assembly/index.ts'
 const MOCK_SPECIFIER: string = '@deepseek-ai/dsh-remote-mock'
 const { ok } = await import(MOCK_SPECIFIER) as { ok: (value: unknown) => unknown }
 const { createClientTest, webApp } = await import(RUNTIME_SPECIFIER) as ClientRuntime
-const roster = webApp.closure(['@deepseek-ai/dsh-api-session-controller'])
+const roster = webApp.closure([
+  '@deepseek-ai/dsh-api-session-controller',
+  '@deepseek-ai/dsh-api-job-controller',
+  '@deepseek-ai/dsh-api-workspace-controller',
+  '@deepseek-ai/dsh-client-file-upload',
+])
 
 /** Carrier hooks of the in-process transport over the real Host Connection, answering from the same mock. */
 function terminalCarrier(mock: RemoteMock): InProcessTransport {
@@ -131,6 +142,16 @@ function scriptHost(mock: RemoteMock): void {
   mock.unary('session/page', ok({ records: history.map(wire), hasMore: false }))
   mock.unary('$events/result', ok(undefined))
   mock.unary('commands/execute', ok(undefined))
+  mock.unary('skills/list', ok({ skills: [{ name: 'review', description: 'Review changes' }] }))
+  mock.unary('commands/list', ok([{ name: 'review', description: 'Review changes' }]))
+  mock.unary('schedule/catalog', ok([]))
+  mock.unary('goals/get', ok(undefined))
+  mock.unary('fileReferences/list', ok([{ path: 'src/app.ts', kind: 'file' }]))
+  mock.unary('sessionReferenceResolver/candidates', ok([]))
+  mock.unary('messageFeedback/list', ok({ ok: true, value: { items: [] } }))
+  mock.unary('sessionFeedback/record', ok({ ok: true }))
+  mock.unary('session/fork', ok({ sessionId: 'session-forked' }))
+  mock.unary('session/canOpenWorkspacePath', ok(true))
   mock.stream('session/follow', ([request], stream) => {
     const id = (request as { address: { sessionId: string } }).address.sessionId
     stream.push({
@@ -205,6 +226,23 @@ async function exercise(client: TestClient, mock: RemoteMock): Promise<void> {
   expect(vi.mocked(mock.remote['$events']!['result']!).mock.calls[0]![0]).toMatchObject({ eventId: 'event-1', outcome: { kind: 'result', value: 'allowed-once' } })
   expect(outcomes).toEqual(['allowed-once'])
   stop()
+
+  const asked: unknown[] = []
+  const stopQuestions = remote.$on('user-questions/request', async function (request, next) {
+    if (sessions.scopeOf(this) !== OLD) return await next()
+    asked.push(request.questions)
+    return { answers: [{ id: 'mode', selected: ['Careful'] }] }
+  })
+  mock.streams.push('$events', {
+    type: 'waterfall', event: 'user-questions/request', eventId: 'event-2', agentId: OLD,
+    request: { questions: [{ id: 'mode', question: 'Which mode?', options: [{ label: 'Fast' }, { label: 'Careful' }] }], wait: { callId: 'c2' } },
+  })
+  await vi.waitFor(() => { expect(mock.remote['$events']!['result']).toHaveBeenCalledTimes(2) })
+  expect(vi.mocked(mock.remote['$events']!['result']!).mock.calls[1]![0]).toMatchObject({
+    eventId: 'event-2', outcome: { kind: 'result', value: { answers: [{ id: 'mode', selected: ['Careful'] }] } },
+  })
+  expect(asked).toEqual([[{ id: 'mode', question: 'Which mode?', options: [{ label: 'Fast' }, { label: 'Careful' }] }]])
+  stopQuestions()
   reference.release()
 }
 
@@ -253,6 +291,34 @@ async function exerciseConfig(client: TestClient, mock: RemoteMock): Promise<voi
   await expect(remote.permissionPresets.catalog()).resolves.toMatchObject({ ok: true, value: { defaultPreset: 'default' } })
 }
 
+/** The namespaces and services of the panels: each reaches the Host with its arguments and returns the Host's answer. */
+async function exercisePanels(client: TestClient, mock: RemoteMock): Promise<void> {
+  const { remote, jobs, workspaces, fileUpload } = client.ctx
+  const calls = (path: string, endpoint: string): unknown[][] => vi.mocked(mock.remote[path]![endpoint]!).mock.calls
+
+  await expect(remote.skills.list({ sessionId: OLD })).resolves.toMatchObject({ ok: true, value: { skills: [{ name: 'review' }] } })
+  expect(calls('skills', 'list')[0]).toEqual([{ sessionId: OLD }])
+  await expect(remote.commands.list(OLD)).resolves.toMatchObject({ ok: true, value: [{ name: 'review' }] })
+  expect(calls('commands', 'list')[0]).toEqual([OLD])
+  await expect(remote.schedule.catalog()).resolves.toMatchObject({ ok: true, value: [] })
+  await expect(remote.goals.get(OLD)).resolves.toMatchObject({ ok: true })
+  expect(calls('goals', 'get')[0]).toEqual([OLD])
+  await expect(remote.fileReferences.list(OLD, 'sr')).resolves.toMatchObject({ ok: true, value: [{ path: 'src/app.ts', kind: 'file' }] })
+  expect(calls('fileReferences', 'list')[0]).toEqual([OLD, 'sr'])
+  await expect(remote.sessionReferenceResolver.candidates(OLD, 'sr')).resolves.toMatchObject({ ok: true, value: [] })
+  await expect(remote.messageFeedback.list({ sessionId: OLD })).resolves.toMatchObject({ ok: true, value: { ok: true } })
+  await expect(remote.sessionFeedback.record({ sessionId: OLD, text: 'good' })).resolves.toMatchObject({ ok: true, value: { ok: true } })
+  expect(calls('sessionFeedback', 'record')[0]).toEqual([{ sessionId: OLD, text: 'good' }])
+  await expect(remote.session.fork({ sessionId: OLD, atSeq: 4 })).resolves.toMatchObject({ ok: true, value: { sessionId: 'session-forked' } })
+  expect(calls('session', 'fork')[0]).toEqual([{ sessionId: OLD, atSeq: 4 }])
+  await expect(remote.session.canOpenWorkspacePath()).resolves.toMatchObject({ ok: true, value: true })
+
+  expect(jobs.state.getSnapshot()).toMatchObject({ rows: {}, observed: {} })
+  expect(workspaces.list.getSnapshot()).toMatchObject({ items: [], phase: 'ready' })
+  expect(typeof jobs.watchRows).toBe('function')
+  expect(typeof fileUpload.upload).toBe('function')
+}
+
 describe('Remote carriers, phase 2 to 4 methods', () => {
   const gui = createClientTest({ roster })
   gui('over the decoded logical carrier of the GUI', async ({ mock, start }) => {
@@ -260,6 +326,7 @@ describe('Remote carriers, phase 2 to 4 methods', () => {
     const client = await start()
     await exercise(client, mock)
     await exerciseConfig(client, mock)
+    await exercisePanels(client, mock)
   }, 60_000)
 
   const terminal = createClientTest({ roster }, { carrier: terminalCarrier })
@@ -268,5 +335,6 @@ describe('Remote carriers, phase 2 to 4 methods', () => {
     const client = await start()
     await exercise(client, mock)
     await exerciseConfig(client, mock)
+    await exercisePanels(client, mock)
   }, 60_000)
 })

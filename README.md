@@ -21,8 +21,9 @@ Download it from [code.tbelt.online](https://code.tbelt.online). It is a develop
 - An Artifacts page listing the files each turn delivered or changed.
 - A side panel preview for HTML pages, images, PDFs and local dev servers.
 - Point at an element in the preview and the agent knows exactly which one.
-- `dsh terminal`: the same sessions in a terminal, with streaming, tool lines, plain-language permission prompts and resume.
+- `dsh terminal`: the same sessions in a terminal, with streaming, tool lines, plain-language permission prompts, agent questions, plan review and resume.
 - In the terminal, switch sessions, rename them, pick the model, start in another directory, and attach images that draw inline.
+- In the terminal, manage the queue, background jobs, subagents, scheduled follow-ups, goals, skills, workspaces and worktrees, and complete `@` references with Tab.
 - In the terminal, add providers and API keys, choose models, set web search, edit settings, manage plugins and agent presets, and pick permission modes.
 - In Orca, a `dsh terminal` pane shows live status in the tab.
 - Run buttons on shell commands, executed in a terminal in the side panel.

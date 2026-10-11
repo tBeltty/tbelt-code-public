@@ -3,8 +3,8 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>tBelt Code | Desktop coding agent for Windows, macOS and Linux</title>
-  <meta name="description" content="A desktop coding agent that reads your code, edits files and runs commands in a sandbox, with the model you choose. Free for Windows, macOS and Linux.">
+  <title>tBelt Code | Coding agent for desktop and terminal</title>
+  <meta name="description" content="A coding agent for your desktop and your terminal. It reads your code, edits files and runs commands in a sandbox, with the model you choose. Free for Windows, macOS and Linux.">
   <meta name="theme-color" content="#101010">
   <meta name="color-scheme" content="dark">
   <link rel="canonical" href="https://code.tbelt.online/">
@@ -12,18 +12,18 @@
   <meta property="og:site_name" content="tBelt Code">
   <meta property="og:locale" content="en_US">
   <meta property="og:url" content="https://code.tbelt.online/">
-  <meta property="og:title" content="tBelt Code, a desktop coding agent">
-  <meta property="og:description" content="Reads your code, edits files and runs commands in a sandbox, with the model you choose. Free for Windows, macOS and Linux.">
+  <meta property="og:title" content="tBelt Code, a coding agent for desktop and terminal">
+  <meta property="og:description" content="Reads your code, edits files and runs commands in a sandbox, with the model you choose. In an app or in your terminal. Free for Windows, macOS and Linux.">
   <meta property="og:image" content="https://code.tbelt.online/assets/og.png">
   <meta property="og:image:type" content="image/png">
   <meta property="og:image:width" content="1200">
   <meta property="og:image:height" content="630">
-  <meta property="og:image:alt" content="tBelt Code, coding agent for your desktop. Windows, macOS and Linux.">
+  <meta property="og:image:alt" content="tBelt Code, coding agent for desktop and terminal. Windows, macOS and Linux.">
   <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:title" content="tBelt Code, a desktop coding agent">
-  <meta name="twitter:description" content="Reads your code, edits files and runs commands in a sandbox, with the model you choose. Free for Windows, macOS and Linux.">
+  <meta name="twitter:title" content="tBelt Code, a coding agent for desktop and terminal">
+  <meta name="twitter:description" content="Reads your code, edits files and runs commands in a sandbox, with the model you choose. In an app or in your terminal. Free for Windows, macOS and Linux.">
   <meta name="twitter:image" content="https://code.tbelt.online/assets/og.png">
-  <meta name="twitter:image:alt" content="tBelt Code, coding agent for your desktop. Windows, macOS and Linux.">
+  <meta name="twitter:image:alt" content="tBelt Code, coding agent for desktop and terminal. Windows, macOS and Linux.">
   <link rel="icon" href="/favicon.ico" sizes="48x48">
   <link rel="icon" type="image/png" sizes="32x32" href="/assets/favicon-32.png">
   <link rel="icon" type="image/png" sizes="192x192" href="/assets/icon-192.png">
@@ -34,7 +34,7 @@
     "@type": "SoftwareApplication",
     "name": "tBelt Code",
     "url": "https://code.tbelt.online/",
-    "description": "A desktop coding agent that reads your code, edits files and runs commands in a sandbox, with the model you choose.",
+    "description": "A coding agent for desktop and terminal that reads your code, edits files and runs commands in a sandbox, with the model you choose.",
     "applicationCategory": "DeveloperApplication",
     "operatingSystem": "Windows, macOS, Linux",
     "downloadUrl": "https://code.tbelt.online/#download",
@@ -66,7 +66,7 @@
       <div class="hero-copy">
         <img class="hero-logo" src="/assets/logo.png" alt="tBelt logo" width="96" height="105">
         <h1>A coding agent that works inside your projects</h1>
-        <p class="lead">tBelt Code reads your code, edits files and runs commands in a sandbox on your own machine, with the model you choose. You decide what each session is allowed to touch.</p>
+        <p class="lead">tBelt Code reads your code, edits files and runs commands in a sandbox on your own machine, with the model you choose. Use it as a desktop app or in your terminal. You decide what each session is allowed to touch.</p>
         <div class="actions">
           <a class="button button-primary" id="hero-download" href="#download" data-hero-label>Download tBelt Code</a>
           <a class="button button-secondary" href="#download">All platforms</a>
@@ -104,6 +104,10 @@
           <dd>Connect a hosted provider with an API key, or run a model locally with Ollama or LM Studio. tBelt Code doesn't pick a provider for you.</dd>
         </div>
         <div>
+          <dt>Desktop app or terminal</dt>
+          <dd>Run <code>tbelt</code> in your terminal to work in the same sessions, providers and settings as the app. It streams replies, asks permission in plain words, shows plans for review and resumes earlier sessions.</dd>
+        </div>
+        <div>
           <dt>Works through the task</dt>
           <dd>It searches and reads your code, edits files with targeted search and replace, then runs your tests or build to check the change. Each step shows up in the session as it happens.</dd>
         </div>
@@ -137,7 +141,7 @@
         </div>
         <div>
           <dt>Stays up to date</dt>
-          <dd>On Windows and Linux the app checks for new versions and tells you when one is out. One click downloads it and restarts into the new version. On macOS, download the new version from this page.</dd>
+          <dd>On Windows and Linux the app checks for new versions and tells you when one is out. One click downloads it and restarts into the new version. On macOS, download the new version from this page. The terminal command runs the version of the installed app.</dd>
         </div>
       </dl>
       <img class="screenshot" src="/assets/app-inicio.png" alt="The tBelt Code start screen, with the workspace picker and the message box" width="1280" height="800" loading="lazy" decoding="async">
@@ -166,18 +170,30 @@
           <p class="platform-version" data-version>Checking for the latest version</p>
           <a class="button button-primary" href="/download/windows" data-download>Download .exe</a>
           <p class="platform-help">If Windows shows "Windows protected your PC", choose <em>More info</em>, then <em>Run anyway</em>. The app installs later versions itself.</p>
+          <div class="os-cli">
+            <h4>In your terminal</h4>
+            <p class="platform-help">In the app menu, choose <em>Manage dsh Command</em>, then <em>Install</em>. Open a new terminal and run <code>tbelt</code>. <code>dsh-tui</code> is an alias.</p>
+          </div>
         </div>
         <div class="os-panel" data-platform="mac">
           <h3>macOS <span>12 or later, Apple silicon</span></h3>
           <p class="platform-version" data-version>Checking for the latest version</p>
           <a class="button button-primary" href="/download/mac" data-download>Download .dmg</a>
           <p class="platform-help">Drag tBelt Code into Applications. macOS blocks the first launch: open System Settings, then Privacy &amp; Security, and choose <em>Open Anyway</em>. Or run <code>xattr -dr com.apple.quarantine "/Applications/tBelt Code.app"</code> once. The app does not update itself on macOS; download each new version here.</p>
+          <div class="os-cli">
+            <h4>In your terminal</h4>
+            <p class="platform-help">In the app menu, choose <em>Manage dsh Command</em>, then <em>Install</em>, and enter your password. Open a new terminal and run <code>tbelt</code>. <code>dsh-tui</code> is an alias.</p>
+          </div>
         </div>
         <div class="os-panel" data-platform="linux">
           <h3>Linux <span>AppImage, x86-64</span></h3>
           <p class="platform-version" data-version>Checking for the latest version</p>
           <a class="button button-primary" href="/download/linux" data-download>Download AppImage</a>
           <p class="platform-help">Run <code>chmod +x tbelt-code-*.AppImage &amp;&amp; ./tbelt-code-*.AppImage</code>. Ubuntu 22.04 and later also need <code>libfuse2</code>. The app updates itself while the file stays where you put it.</p>
+          <div class="os-cli">
+            <h4>In your terminal</h4>
+            <p class="platform-help">In the app menu, choose <em>Manage dsh Command</em>, then <em>Install</em>. The commands go in <code>~/.local/bin</code>; add it to your <code>PATH</code> if the dialog says so. Open a new terminal and run <code>tbelt</code>. <code>dsh-tui</code> is an alias.</p>
+          </div>
         </div>
       </div>
       </div>

@@ -4,6 +4,12 @@ Notable changes to tBelt Code, newest first. The format follows [Keep a Changelo
 
 ## [Unreleased]
 
+## [0.2.0-rc.2.20261011] - 2026-10-11
+
+### Added
+
+- Questions with a time limit appear in `dsh terminal`, with the seconds the agent waits.
+
 ## [0.2.0-rc.2.20261009.2] - 2026-10-09
 
 ### Added
@@ -202,7 +208,8 @@ Notable changes to tBelt Code, newest first. The format follows [Keep a Changelo
 - Downloads no longer return an older installer.
 - A key that ran out of credit or hit its spending limit is reported as a quota problem instead of an invalid API key.
 
-[Unreleased]: https://github.com/tBeltty/tbelt-code-public/compare/v0.2.0-rc.2.20261009.2...HEAD
+[Unreleased]: https://github.com/tBeltty/tbelt-code-public/compare/v0.2.0-rc.2.20261011...HEAD
+[0.2.0-rc.2.20261011]: https://github.com/tBeltty/tbelt-code-public/releases/tag/v0.2.0-rc.2.20261011
 [0.2.0-rc.2.20261009.2]: https://github.com/tBeltty/tbelt-code-public/releases/tag/v0.2.0-rc.2.20261009.2
 [0.2.0-rc.2.20261009]: https://github.com/tBeltty/tbelt-code-public/releases/tag/v0.2.0-rc.2.20261009
 [0.2.0-rc.2.20261008.2]: https://github.com/tBeltty/tbelt-code-public/releases/tag/v0.2.0-rc.2.20261008.2

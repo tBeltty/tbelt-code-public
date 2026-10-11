@@ -25,6 +25,8 @@ import { runPanel } from './panels/index.ts'
 import type { PanelContext, PanelServices, SwitchTarget } from './panels/index.ts'
 import type { LoadedFile, TerminalFiles } from './files.ts'
 import { HostTitle } from './host-title.ts'
+import { questionError } from './question-error.ts'
+import { answerTimedQuestion } from './timed-question.ts'
 import type { HostTitleSettings } from './host-title.ts'
 import type {
   ApprovalOutcomePort, ApprovalRequestPort, EventWindowPort, PromptPartPort, QuestionAnswerPort, QuestionRequestPort, RemotePort,
@@ -37,16 +39,6 @@ const MAX_OUTPUT_LINES = 12
 /** A failed Remote result for a call that threw, so callers handle one shape. */
 function failure(error: unknown): { readonly ok: false; readonly error: { readonly code: string; readonly message: string } } {
   return { ok: false, error: { code: 'terminal/call-failed', message: error instanceof Error ? error.message : String(error) } }
-}
-
-/** A rejection of the question waterfall; the Host reads its name and code, which survive the Remote Event wire. */
-function questionError(code: 'ASK_CANCELLED' | 'ASK_ABORTED'): Error {
-  const error = new Error(code === 'ASK_CANCELLED'
-    ? 'the user cancelled ask_user_question'
-    : 'ask_user_question was aborted before the user answered') as Error & { code: string }
-  error.name = 'UserQuestionError'
-  error.code = code
-  return error
 }
 
 /** The terminal as the session sees it. */
@@ -124,6 +116,8 @@ interface PendingQuestions {
   flow: QuestionFlow
   /** Index of the question whose heading is already printed. */
   shown: number
+  /** Milliseconds the Host still waits for a timed batch; absent for a batch that waits for as long as it takes. */
+  readonly remainingMs?: number | undefined
   readonly settle: (answer: QuestionAnswerPort) => void
   readonly fail: (error: Error) => void
 }
@@ -258,14 +252,15 @@ export class TerminalSession {
   /**
    * Ask the person the agent's questions, one at a time. Called from the Host's question waterfall.
    * @param request - the forwarded questions.
+   * @param remainingMs - for a timed batch, how long the Host still waits; the first heading says so.
    * @returns the answers once the person has given them all.
    * @throws a `UserQuestionError` with code `ASK_CANCELLED` when the person leaves the questions, interrupts the turn or
    * closes the session, and one with code `ASK_ABORTED` when the Host withdraws the request.
    */
-  requestQuestions(request: QuestionRequestPort): Promise<QuestionAnswerPort> {
+  requestQuestions(request: QuestionRequestPort, remainingMs?: number): Promise<QuestionAnswerPort> {
     if (this.#closed) return Promise.reject(questionError('ASK_CANCELLED'))
     return new Promise<QuestionAnswerPort>((resolve, reject) => {
-      const pending: PendingQuestions = { flow: startQuestions(request.questions), shown: -1, settle: resolve, fail: reject }
+      const pending: PendingQuestions = { flow: startQuestions(request.questions), shown: -1, remainingMs, settle: resolve, fail: reject }
       const withdraw = (): void => {
         const index = this.#questions.indexOf(pending)
         if (index === -1) return
@@ -819,8 +814,12 @@ export class TerminalSession {
   #showQuestion(): void {
     const pending = this.#questions[0]
     if (pending === undefined || pending.shown === pending.flow.index) return
+    const { style } = this.#options
+    if (pending.shown === -1 && pending.remainingMs !== undefined) {
+      this.#printAbove(`${style.dim(t('question.timed', { seconds: Math.ceil(pending.remainingMs / 1000) }))}\n`)
+    }
     pending.shown = pending.flow.index
-    this.#printAbove(`${questionLines(this.#options.style, pending.flow).join('\n')}\n`)
+    this.#printAbove(`${questionLines(style, pending.flow).join('\n')}\n`)
   }
 
   #answerQuestions(key: Key): void {
@@ -948,8 +947,15 @@ export function listenForQuestions(
   const { sessions } = services
   return services.remote.$on('user-questions/request', function (request, next) {
     const terminal = current()
-    // A timed wait needs a claim on the Host's countdown, which the terminal does not make.
-    if (terminal === undefined || sessions.scopeOf(this) !== sessionId || request.wait?.timed === true) return next()
-    return terminal.requestQuestions(request)
+    if (terminal === undefined || sessions.scopeOf(this) !== sessionId) return next()
+    if (request.wait?.timed !== true) return terminal.requestQuestions(request)
+    return answerTimedQuestion({
+      remote: services.remote,
+      sessionId,
+      callId: request.wait.callId,
+      request,
+      ask: (shown, remainingMs) => terminal.requestQuestions(shown, remainingMs),
+      next,
+    })
   })
 }

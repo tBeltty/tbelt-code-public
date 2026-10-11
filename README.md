@@ -2,9 +2,9 @@
 
 <img src="docs/brand/tbelt_logo.png" alt="tBelt logo" width="64" />
 
-tBelt Code is a desktop coding agent. It works with any model provider and runs commands in the operating system's sandbox on your machine.
+tBelt Code is a coding agent for your desktop and your terminal. It works with any model provider and runs commands in the operating system's sandbox on your machine.
 
-Download it from [code.tbelt.online](https://code.tbelt.online). It is a developer preview; see [SAFETY.md](SAFETY.md).
+Download the app from [code.tbelt.online](https://code.tbelt.online). It can install the `tbelt` command for your terminal. It is a developer preview; see [SAFETY.md](SAFETY.md).
 
 ## Features
 
@@ -21,7 +21,7 @@ Download it from [code.tbelt.online](https://code.tbelt.online). It is a develop
 - An Artifacts page listing the files each turn delivered or changed.
 - A side panel preview for HTML pages, images, PDFs and local dev servers.
 - Point at an element in the preview and the agent knows exactly which one.
-- `dsh terminal`: the same sessions in a terminal, with streaming, tool lines, plain-language permission prompts, agent questions, plan review and resume.
+- `dsh terminal`: the same sessions in a terminal, with streaming, tool lines, plain-language permission prompts, agent questions with or without a time limit, plan review and resume.
 - In the terminal, switch sessions, rename them, pick the model, start in another directory, and attach images that draw inline.
 - In the terminal, manage the queue, background jobs, subagents, scheduled follow-ups, goals, skills, workspaces and worktrees, and complete `@` references with Tab.
 - In the terminal, add providers and API keys, choose models, set web search, edit settings, manage plugins and agent presets, and pick permission modes.
@@ -35,7 +35,7 @@ Download it from [code.tbelt.online](https://code.tbelt.online). It is a develop
 - A repository map in context at the start of each session.
 - Inspector, Coder and Tester subagents, and saved agent presets.
 - MCP servers, skills and plugins.
-- A `dsh` command for your terminal, installed from the app on macOS, Windows and Linux.
+- `tbelt` opens `dsh terminal`, and `dsh-tui` does the same. Install both, and `dsh`, from the app on macOS, Windows and Linux.
 - A built-in skill that shows agents how to write and install new skills.
 - Sessions are stored locally, and usage analytics are off.
 
@@ -47,7 +47,7 @@ Download it from [code.tbelt.online](https://code.tbelt.online). It is a develop
 | macOS 12+, Apple silicon | `.dmg` | Manual |
 | Linux x64 | AppImage | In the app |
 
-Builds are not code-signed yet.
+The terminal command installs from the app on all three. Builds are not code-signed yet.
 
 ## Contributing
 

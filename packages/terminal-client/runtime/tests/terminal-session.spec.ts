@@ -444,6 +444,24 @@ describe('TerminalSession questions', () => {
     expect(io.text.lastIndexOf('\u001B]0;')).toBeGreaterThan(io.text.indexOf('\u001B]0;! '))
   })
 
+  it('says how long the agent waits for a timed batch', async () => {
+    const { terminal, io } = open()
+    const asked = terminal.requestQuestions(mode, 29_001)
+    const shown = visible(io.text)
+    expect(shown).toContain('The agent stops waiting for an answer in 30s.')
+    expect(shown.indexOf('stops waiting')).toBeLessThan(shown.indexOf('The agent has a question'))
+    terminal.handleInput('\u001B')
+    await expect(asked).rejects.toMatchObject({ code: 'ASK_CANCELLED' })
+  })
+
+  it('says nothing about time for a batch that waits as long as it takes', async () => {
+    const { terminal, io } = open()
+    const asked = terminal.requestQuestions(mode)
+    expect(visible(io.text)).not.toContain('stops waiting')
+    terminal.handleInput('\u001B')
+    await expect(asked).rejects.toMatchObject({ code: 'ASK_CANCELLED' })
+  })
+
   it('puts an approval before a question', async () => {
     const { terminal, io } = open()
     const question = terminal.requestQuestions(mode)
@@ -478,10 +496,40 @@ describe('listenForQuestions', () => {
     await expect(listener.call({ scope: 'session-a' }, request, next)).resolves.toBe(fallback)
     shown.terminal = terminal
     await expect(listener.call({ scope: 'session-b' }, request, next)).resolves.toBe(fallback)
-    await expect(listener.call({ scope: 'session-a' }, { ...request, wait: { callId: 'c1', timed: true } }, next)).resolves.toBe(fallback)
     await expect(listener.call({ scope: 'session-a' }, { ...request, wait: { callId: 'c1' } }, next)).resolves.toBe(answer)
     expect(asked).toHaveLength(1)
     stop()
+  })
+
+  it('holds the Host claim while the terminal asks a timed question', async () => {
+    const { remote, questionListeners } = fakeRemote()
+    const answer: QuestionAnswerPort = { answers: [{ id: 'q', selected: ['Yes'] }] }
+    const terminal = { requestQuestions: vi.fn((_request: QuestionRequestPort, _remainingMs?: number) => Promise.resolve(answer)) }
+    const frames = (async function* () { yield { remainingMs: 30_000 } })()
+    const attachWait = vi.mocked(remote.userQuestions.attachWait)
+    attachWait.mockReturnValueOnce(frames as ReturnType<typeof attachWait>)
+    const sessions = fakeSessions({ scopeOf: context => (context as { scope?: string }).scope })
+    listenForQuestions({ sessions, remote }, 'session-a', () => terminal)
+    const next = vi.fn(() => Promise.resolve({ answers: [] }))
+    const request: QuestionRequestPort = { questions: [{ id: 'q', question: 'Sure?' }], wait: { callId: 'c1', timed: true } }
+
+    await expect(questionListeners[0]!.call({ scope: 'session-a' }, request, next)).resolves.toBe(answer)
+    expect(attachWait).toHaveBeenCalledWith('session-a', 'c1', expect.any(AbortSignal))
+    expect(terminal.requestQuestions).toHaveBeenCalledWith(expect.objectContaining({ questions: request.questions }), 30_000)
+    expect(next).not.toHaveBeenCalled()
+  })
+
+  it('delegates a timed question when the Host holds no wait for it', async () => {
+    const { remote, questionListeners } = fakeRemote()
+    const terminal = { requestQuestions: vi.fn() }
+    const sessions = fakeSessions({ scopeOf: context => (context as { scope?: string }).scope })
+    listenForQuestions({ sessions, remote }, 'session-a', () => terminal)
+    const fallback: QuestionAnswerPort = { answers: [] }
+    const next = vi.fn(() => Promise.resolve(fallback))
+    const request: QuestionRequestPort = { questions: [{ id: 'q', question: 'Sure?' }], wait: { callId: 'c1', timed: true } }
+
+    await expect(questionListeners[0]!.call({ scope: 'session-a' }, request, next)).resolves.toBe(fallback)
+    expect(terminal.requestQuestions).not.toHaveBeenCalled()
   })
 })
 

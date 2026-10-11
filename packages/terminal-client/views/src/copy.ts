@@ -179,6 +179,7 @@ const CONFIG = {
   'question.typeHint': 'Enter sends your answer · Esc goes back',
   'question.answered': '→ {answer}',
   'question.cancelled': 'You left the question unanswered.',
+  'question.timed': 'The agent stops waiting for an answer in {seconds}s.',
   'confirm.no': 'No, keep things as they are',
   'firstRun.noModel': 'No model is set up yet. Type /providers to add one.',
   'help.providers': '/providers           add a provider, set its API key and choose its models',

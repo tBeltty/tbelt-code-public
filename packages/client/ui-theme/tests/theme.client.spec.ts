@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { describe, expect, it } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 import { Context } from '@deepseek-ai/cordis'
 import { stubConfigForm, type StubConfigForm } from '@deepseek-ai/dsh-client-test-runtime'
 import type {
@@ -22,12 +22,11 @@ const make = (host = stubConfigForm<ThemeSettings>()): {
 }
 
 describe('ThemeRuntime', () => {
-  it('defaults to the system preference, which resolves to dark (dark-only, P6-T2)', () => {
+  it('defaults to the dark preference', () => {
     const { theme } = make()
     const snapshot = theme.getTheme()
-    expect(snapshot.preference).toBe('system')
+    expect(snapshot.preference).toBe('dark')
     expect(snapshot.fontSize).toBe(14)
-    // Dark-only: `system` no longer consults prefers-color-scheme.
     expect(snapshot.active.id).toBe('dark')
     expect(snapshot.active.colorScheme).toBe('dark')
     expect(snapshot.themes.map(t => t.id)).toEqual(['light', 'dark'])
@@ -76,35 +75,35 @@ describe('ThemeRuntime', () => {
 
   it('setTheme switches, writes through the scope, republishes, and keeps DOM untouched', () => {
     const { theme, events, host } = make()
-    theme.setTheme('dark')
-    expect(theme.getTheme().preference).toBe('dark')
-    expect(theme.getTheme().active.colorScheme).toBe('dark')
-    expect(host.set).toHaveBeenCalledWith('preference', 'dark')
+    theme.setTheme('light')
+    expect(theme.getTheme().preference).toBe('light')
+    expect(theme.getTheme().active.colorScheme).toBe('light')
+    expect(host.set).toHaveBeenCalledWith('preference', 'light')
     expect(events).toHaveLength(1)
     expect(events[0]).toBe(theme.getTheme())
     // The service never touches presentation state.
     expect(document.body.hasAttribute('data-ds-dark-theme')).toBe(false)
     // Same-value set is a no-op (no extra event).
-    theme.setTheme('dark')
+    theme.setTheme('light')
     expect(events).toHaveLength(1)
     expect(host.set).toHaveBeenCalledOnce()
   })
 
   it('adopts a published Host section without writing it back', () => {
     const { theme, events, host } = make()
-    host.publish({ status: 'ready', value: { preference: 'dark', fontSize: 14 }, revision: 1, writable: true })
-    expect(theme.getTheme().preference).toBe('dark')
+    host.publish({ status: 'ready', value: { preference: 'light', fontSize: 14 }, revision: 1, writable: true })
+    expect(theme.getTheme().preference).toBe('light')
     expect(events).toHaveLength(1)
     expect(host.set).not.toHaveBeenCalled()
-    host.publish({ value: { preference: 'dark', fontSize: 14 }, revision: 2 })
+    host.publish({ value: { preference: 'light', fontSize: 14 }, revision: 2 })
     expect(events).toHaveLength(1)
   })
 
   it('adopts a section already standing at construction', () => {
     const host = stubConfigForm<ThemeSettings>()
-    host.publish({ status: 'ready', value: { preference: 'dark', fontSize: 14 }, revision: 1, writable: true })
+    host.publish({ status: 'ready', value: { preference: 'light', fontSize: 14 }, revision: 1, writable: true })
     const { theme } = make(host)
-    expect(theme.getTheme().preference).toBe('dark')
+    expect(theme.getTheme().preference).toBe('light')
   })
 
   it('throws on unknown setTheme ids, duplicate registration, and the system id', () => {
@@ -121,7 +120,7 @@ describe('ThemeRuntime', () => {
     theme.setTheme('sepia')
     expect(theme.getTheme().active.tokens['--dsw-alias-bg-base']).toBe('red')
     dispose()
-    expect(theme.getTheme().preference).toBe('system')
+    expect(theme.getTheme().preference).toBe('dark')
     expect(theme.getTheme().themes.map(t => t.id)).toEqual(['light', 'dark'])
     // Custom ids are in-process extension themes; only the built-in product
     // preferences cross the Host settings schema.
@@ -135,15 +134,15 @@ describe('ThemeRuntime', () => {
   it('disposing an inactive theme keeps the active preference', () => {
     const { theme } = make()
     const dispose = theme.register({ id: 'sepia', colorScheme: 'light', tokens: {} })
-    theme.setTheme('dark')
+    theme.setTheme('light')
     dispose()
-    expect(theme.getTheme().preference).toBe('dark')
+    expect(theme.getTheme().preference).toBe('light')
   })
 
   it('revision increases monotonically across every publish', () => {
     const { theme, events } = make()
-    theme.setTheme('dark')
     theme.setTheme('light')
+    theme.setTheme('system')
     const dispose = theme.register({ id: 'sepia', colorScheme: 'dark', tokens: {} })
     dispose()
     expect(events.map(e => e.revision)).toEqual([1, 2, 3, 4])
@@ -161,7 +160,7 @@ describe('ThemeRuntime', () => {
       '--shared': { light: 'second-light', dark: 'second-dark' },
     })
 
-    // Default preference is `system`, which resolves to dark (dark-only, P6-T2).
+    // The default preference is `dark`.
     expect(theme.getTheme().active.tokens).toMatchObject({
       '--first': 'first-only-dark',
       '--shared': 'second-dark',
@@ -187,7 +186,7 @@ describe('ThemeRuntime', () => {
       '--new': { light: 'new-light', dark: 'new-dark' },
     })
     stale()
-    // Default preference is `system`, which resolves to dark (dark-only, P6-T2).
+    // The default preference is `dark`.
     expect(theme.getTheme().active.tokens).toEqual({ '--new': 'new-dark' })
     current()
     current()
@@ -243,11 +242,52 @@ describe('ThemeRuntime', () => {
     expect(host.listenerCount()).toBe(0)
   })
 
-  it('a concrete `light` preference still resolves to dark (dark-only, P6-T2)', () => {
+  it('resolves a concrete `light` preference to the light palette', () => {
     const { theme } = make()
     theme.setTheme('light')
     expect(theme.getTheme().preference).toBe('light')
-    expect(theme.getTheme().active.id).toBe('dark')
-    expect(theme.getTheme().active.colorScheme).toBe('dark')
+    expect(theme.getTheme().active.id).toBe('light')
+    expect(theme.getTheme().active.colorScheme).toBe('light')
+  })
+
+  describe('system preference', () => {
+    const listeners = new Set<(event: MediaQueryListEvent) => void>()
+    const stubSystem = (matches: boolean): void => {
+      listeners.clear()
+      vi.stubGlobal('matchMedia', vi.fn(() => ({
+        matches,
+        addEventListener: (_type: string, listener: (event: MediaQueryListEvent) => void) => { listeners.add(listener) },
+        removeEventListener: (_type: string, listener: (event: MediaQueryListEvent) => void) => { listeners.delete(listener) },
+      }) as unknown as MediaQueryList))
+    }
+    afterEach(() => { vi.unstubAllGlobals() })
+
+    it('follows a light OS scheme and a dark OS scheme', () => {
+      stubSystem(false)
+      const light = make().theme
+      light.setTheme('system')
+      expect(light.getTheme().active.id).toBe('light')
+      stubSystem(true)
+      const dark = make().theme
+      dark.setTheme('system')
+      expect(dark.getTheme().active.id).toBe('dark')
+    })
+
+    it('re-emits when the OS scheme flips only while the preference is `system`', async () => {
+      stubSystem(true)
+      const { ctx, theme, events } = make()
+      const flip = (matches: boolean): void => {
+        for (const listener of [...listeners]) listener({ matches } as MediaQueryListEvent)
+      }
+      flip(false)
+      expect(events).toHaveLength(0)
+      theme.setTheme('system')
+      expect(theme.getTheme().active.id).toBe('light')
+      flip(true)
+      expect(theme.getTheme().active.id).toBe('dark')
+      expect(events).toHaveLength(2)
+      await ctx.fiber.dispose()
+      expect(listeners.size).toBe(0)
+    })
   })
 })

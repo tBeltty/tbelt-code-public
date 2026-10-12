@@ -4,6 +4,13 @@ Notable changes to tBelt Code, newest first. The format follows [Keep a Changelo
 
 ## [Unreleased]
 
+## [0.2.0-rc.2.20261012.2] - 2026-10-12
+
+### Added
+
+- A light theme. Choose Light, Dark or System in Settings > General. Dark is the default.
+- A worktree's row in the sidebar shows its branch.
+
 ## [0.2.0-rc.2.20261012] - 2026-10-12
 
 ### Added
@@ -236,7 +243,8 @@ Notable changes to tBelt Code, newest first. The format follows [Keep a Changelo
 - Downloads no longer return an older installer.
 - A key that ran out of credit or hit its spending limit is reported as a quota problem instead of an invalid API key.
 
-[Unreleased]: https://github.com/tBeltty/tbelt-code-public/compare/v0.2.0-rc.2.20261012...HEAD
+[Unreleased]: https://github.com/tBeltty/tbelt-code-public/compare/v0.2.0-rc.2.20261012.2...HEAD
+[0.2.0-rc.2.20261012.2]: https://github.com/tBeltty/tbelt-code-public/releases/tag/v0.2.0-rc.2.20261012.2
 [0.2.0-rc.2.20261012]: https://github.com/tBeltty/tbelt-code-public/releases/tag/v0.2.0-rc.2.20261012
 [0.2.0-rc.2.20261011]: https://github.com/tBeltty/tbelt-code-public/releases/tag/v0.2.0-rc.2.20261011
 [0.2.0-rc.2.20261009.2]: https://github.com/tBeltty/tbelt-code-public/releases/tag/v0.2.0-rc.2.20261009.2

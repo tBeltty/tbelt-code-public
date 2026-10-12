@@ -1,9 +1,6 @@
 /** ui-theme apply wiring: service provision, settings dictionaries riding the
- * locale service, the font-size row registration, snapshot projection into
- * the row store, and HMR collapse recovery. Dark-only (P6-T2): the Appearance
- * (theme-selection) row is no longer registered — see appearance-row.client.spec.tsx
- * and settings-store.client.spec.ts for the still-exported component/store's
- * own direct-render coverage. */
+ * locale service, the Appearance and font-size row registrations, snapshot
+ * projection into the row stores, and HMR collapse recovery. */
 import { Context } from '@deepseek-ai/cordis'
 import { describe, expect, it, vi } from 'vitest'
 import { SlotRegistry } from '@deepseek-ai/dsh-client-ui-renderer/client'
@@ -13,6 +10,7 @@ import { apply as settingsApply, inject as settingsInject } from '@deepseek-ai/d
 import { apply, inject, SETTINGS_NS } from '@deepseek-ai/dsh-client-ui-theme/client'
 import type { FontSizeRowInjected, ThemeRuntime } from '@deepseek-ai/dsh-client-ui-theme/client'
 import { THEME_SETTINGS_NAMESPACE, ThemeSettingsSchema } from '../src/theme-settings.ts'
+import { AppearanceRow } from '../src/client/AppearanceRow.tsx'
 import { FontSizeRow } from '../src/client/FontSizeRow.tsx'
 import type { createFontSizeRowStore } from '../src/client/settings-store.ts'
 
@@ -93,8 +91,9 @@ describe('ui-theme apply', () => {
     const fontEntry = before.slots.entries(SLOT).find(e => e.component === FontSizeRow)!
     expect(fontEntry.options).toMatchObject({ id: 'font-size', order: 11 })
     expect(fontEntry.locale).toBe(SETTINGS_NS)
-    // Dark-only (P6-T2): no theme-selection row is exposed.
-    expect(before.slots.entries(SLOT)).toHaveLength(1)
+    const appearanceEntry = before.slots.entries(SLOT).find(e => e.component === AppearanceRow)!
+    expect(appearanceEntry.options).toMatchObject({ id: 'appearance', order: 10 })
+    expect(before.slots.entries(SLOT)).toHaveLength(2)
 
     const after = await bench()
     const fiber = after.ctx.plugin({ inject: [...inject], apply })
@@ -103,10 +102,10 @@ describe('ui-theme apply', () => {
     declareItems(after.slots)
     await Promise.resolve()
     expect(after.slots.entries(SLOT).some(e => e.component === FontSizeRow)).toBe(true)
-    expect(after.slots.entries(SLOT)).toHaveLength(1)
+    expect(after.slots.entries(SLOT)).toHaveLength(2)
   })
 
-  it('resolves every stored preference to the dark active theme (dark-only, P6-T2)', async () => {
+  it('resolves stored preferences to their palettes', async () => {
     const b = await bench()
     declareItems(b.slots)
     await b.ctx.plugin({ inject: [...inject], apply }).await()
@@ -115,9 +114,10 @@ describe('ui-theme apply', () => {
     expect(theme.getTheme().active.id).toBe('dark')
     theme.setTheme('light')
     expect(theme.getTheme().preference).toBe('light')
-    expect(theme.getTheme().active.id).toBe('dark')
+    expect(theme.getTheme().active.id).toBe('light')
     theme.setTheme('system')
     expect(theme.getTheme().preference).toBe('system')
+    // jsdom has no matchMedia, so `system` falls back to dark.
     expect(theme.getTheme().active.id).toBe('dark')
     await vi.waitFor(() => { expect(b.mutate).toHaveBeenCalledTimes(3) })
   })
@@ -205,7 +205,7 @@ describe('ui-theme apply', () => {
     const b = await bench()
     const host = declareItems(b.slots)
     await b.ctx.plugin({ inject: [...inject], apply }).await()
-    expect(b.slots.entries(SLOT)).toHaveLength(1)
+    expect(b.slots.entries(SLOT)).toHaveLength(2)
 
     // Collapse: the declarer dies, the cascade removes our entries while the
     // apply closure still holds its (now stale) disposers.
@@ -222,7 +222,7 @@ describe('ui-theme apply', () => {
     declareItems(b.slots)
     const fiber = b.ctx.plugin({ inject: [...inject], apply })
     await fiber.await()
-    expect(b.slots.entries(SLOT)).toHaveLength(1)
+    expect(b.slots.entries(SLOT)).toHaveLength(2)
     await fiber.dispose()
     expect(b.slots.entries(SLOT)).toHaveLength(0)
     // Dictionary disposal: translation falls back to the bare key.

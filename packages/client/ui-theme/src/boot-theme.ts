@@ -8,28 +8,39 @@
 import type { IndexInjection } from '@deepseek-ai/dsh-host-webserver'
 import { DEFAULT_FONT_SIZE, DEFAULT_PREFERENCE, type ThemePreference } from './theme-settings.ts'
 
-const DARK_BACKGROUND = '#151517'
+const DARK_BACKGROUND = '#101010'
+const LIGHT_BACKGROUND = '#fafafa'
+const SYSTEM_DARK_QUERY = '(prefers-color-scheme: dark)'
+
+function canvasCss(scheme: 'light' | 'dark'): string {
+  const background = scheme === 'dark' ? DARK_BACKGROUND : LIGHT_BACKGROUND
+  return `:root{color-scheme:${scheme}}body{background-color:${background};--dsh-boot-bg:${background}}`
+}
 
 /**
- * CSS that colors the document canvas before any script executes.
- * Dark-only (P6-T2): the stored preference and `prefers-color-scheme` no
- * longer branch the boot canvas — it is always the dark background, so
- * there is never a light flash regardless of preference or OS scheme.
+ * CSS that colors the document canvas before any script executes. `light` and
+ * `dark` fix the canvas; `system` starts from the dark canvas and switches to
+ * the light one under a light OS scheme, so neither scheme flashes the other.
  */
-function bootThemeStyle(): string {
-  return `:root{color-scheme:dark}body{background-color:${DARK_BACKGROUND};--dsh-boot-bg:${DARK_BACKGROUND}}`
+function bootThemeStyle(preference: ThemePreference): string {
+  if (preference === 'light') return canvasCss('light')
+  if (preference === 'dark') return canvasCss('dark')
+  return `${canvasCss('dark')}@media (prefers-color-scheme: light){${canvasCss('light')}}`
 }
 
 /**
  * Build the body script that installs the palette selector and content size.
- * Dark-only (P6-T2): the palette selector is unconditionally set; preference
- * no longer participates in the resolution.
+ * `system` reads `prefers-color-scheme` and falls back to dark when
+ * `matchMedia` is unavailable.
  */
 function bootThemeBodyScript(preference: ThemePreference, fontSize: number): string {
   return `(() => {
   const preference = ${JSON.stringify(preference)}
+  const dark = preference === 'system'
+    ? typeof matchMedia !== 'function' || matchMedia(${JSON.stringify(SYSTEM_DARK_QUERY)}).matches
+    : preference === 'dark'
   document.documentElement.dataset.dsThemeSource = preference
-  document.body.toggleAttribute('data-ds-dark-theme', true)
+  document.body.toggleAttribute('data-ds-dark-theme', dark)
   document.body.style.setProperty('--dsh-content-font-size', ${JSON.stringify(`${fontSize}px`)})
 })()`
 }
@@ -38,9 +49,8 @@ function bootThemeBodyScript(preference: ThemePreference, fontSize: number): str
  * Theme bootstrap rows: head CSS colors the document canvas before
  * first paint, then the body script installs the palette selector and font
  * size before the shell mount and module script.
- * @param preference - Current Host-backed built-in preference. Dark-only
- * (P6-T2): it no longer picks the palette; it is only published as
- * `data-ds-theme-source` for presenters that report the stored choice.
+ * @param preference - Current Host-backed built-in preference; picks the
+ * boot palette and is published as `data-ds-theme-source`.
  * @param fontSize - Current Host-backed content font size in px.
  * @returns head and body script rows in execution order.
  */
@@ -49,7 +59,7 @@ export function bootThemeInjections(
   fontSize: number = DEFAULT_FONT_SIZE,
 ): IndexInjection[] {
   return [
-    { kind: 'style', text: bootThemeStyle() },
+    { kind: 'style', text: bootThemeStyle(preference) },
     { kind: 'script', placement: 'body', text: bootThemeBodyScript(preference, fontSize) },
   ]
 }

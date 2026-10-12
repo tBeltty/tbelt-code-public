@@ -208,6 +208,7 @@ function rowHalf(e: { clientY: number; currentTarget: HTMLElement }): 'before' |
  * Workspace shows its hover card (the ungrouped bucket has none).
  * `containsCurrent` arrives on the node (derivation fact, no renderer scan).
  * @param props.group - derived group node.
+ * @param props.branch - branch label shown after the title for a linked-worktree Workspace.
  * @param props.containsCurrentDescendant - highlight an ancestor even when its subtree is collapsed.
  * @param props.onToggle - expand/collapse the group.
  * @param props.onCreate - start a frontend Session inside this Workspace.
@@ -216,8 +217,12 @@ function rowHalf(e: { clientY: number; currentTarget: HTMLElement }): 'before' |
  * @param props.t - the browser root's locale seat.
  * @returns the row element.
  */
-export function ProjectRowItem({ group, containsCurrentDescendant = false, onToggle, onCreate, actions, drag, home, newShortcut, t }: {
+export function ProjectRowItem({
+  group, branch, containsCurrentDescendant = false, onToggle, onCreate, actions, drag, home, newShortcut, t,
+}: {
   group: GroupNode
+  /** Branch checked out in this Workspace when it is a linked worktree. */
+  branch?: string | undefined
   newShortcut?: ShortcutCatalogEntry | undefined
   containsCurrentDescendant?: boolean
   onToggle: () => void
@@ -265,6 +270,12 @@ export function ProjectRowItem({ group, containsCurrentDescendant = false, onTog
       </span>
       <span className={css.projectText}>
         <span className={css.title}>{label}</span>
+        {branch !== undefined && (
+          <span className={css.branchTag} title={branch}>
+            <IconBranchOutlineRegular size={12} className={css.branchIcon} />
+            <span className={css.branchName}>{branch}</span>
+          </span>
+        )}
       </span>
       <span className={css.rowActions}>
         {actions !== undefined && (

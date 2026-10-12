@@ -130,7 +130,7 @@ describe('ui-layout client apply', () => {
     const { ctx } = await bench()
     const fiber = ctx.plugin({ inject: [...inject], apply })
     await fiber.await()
-    // Initial getter application: dark-only (P6-T2) — `system` resolves dark.
+    // Initial getter application: the default preference is dark.
     expect(document.documentElement.style.colorScheme).toBe('dark')
     expect(document.body.hasAttribute('data-ds-dark-theme')).toBe(true)
     const themeColorMeta = document.head.querySelector<HTMLMetaElement>('meta[name="theme-color"]')

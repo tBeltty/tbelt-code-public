@@ -2460,6 +2460,47 @@ describe('WorkspaceBrowser', () => {
     expect(screen.queryByRole('alert')).toBeNull()
   })
 
+  it('labels a linked-worktree Workspace row with its branch and leaves other rows plain', async () => {
+    const inspectWorktree = vi.fn(async (workspaceId: unknown) => workspaceId === wid('feature-tree')
+      ? { linked: true, branch: 'feature/login', uncommitted: [] }
+      : { linked: false, uncommitted: [] })
+    mount({
+      useWorkspaces: hook(workspaceState([workspace('main-checkout', [], 'Main'), workspace('feature-tree', [], 'Feature')])),
+      inspectWorktree,
+    })
+    expect(await screen.findByText('feature/login')).toBeTruthy()
+    expect(screen.getByTitle('feature/login')).toBeTruthy()
+    expect(screen.getAllByText('feature/login')).toHaveLength(1)
+    expect(inspectWorktree).toHaveBeenCalledTimes(2)
+  })
+
+  it('inspects each Workspace once and labels a Workspace added later', async () => {
+    const inspectWorktree = vi.fn(async (workspaceId: unknown) => workspaceId === wid('later')
+      ? { linked: true, branch: 'later-branch', uncommitted: [] }
+      : { linked: false, uncommitted: [] })
+    const b = mount({ useWorkspaces: hook(workspaceState([workspace('first', [], 'First')])), inspectWorktree })
+    await waitFor(() => { expect(inspectWorktree).toHaveBeenCalledTimes(1) })
+    rerender(b, { useWorkspaces: hook(workspaceState([workspace('first', [], 'First'), workspace('later', [], 'Later')])) })
+    expect(await screen.findByText('later-branch')).toBeTruthy()
+    expect(inspectWorktree.mock.calls.map(([id]) => id)).toEqual([wid('first'), wid('later')])
+  })
+
+  it('shows no branch for a detached linked worktree or an unreadable repository', async () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
+    const inspectWorktree = vi.fn(async (workspaceId: unknown) => {
+      if (workspaceId === wid('broken')) throw new Error('git unavailable')
+      return { linked: true, uncommitted: [] }
+    })
+    mount({
+      useWorkspaces: hook(workspaceState([workspace('detached', [], 'Detached'), workspace('broken', [], 'Broken')])),
+      inspectWorktree,
+    })
+    await waitFor(() => { expect(warn).toHaveBeenCalledWith('worktree inspection rejected:', expect.any(Error)) })
+    expect(inspectWorktree).toHaveBeenCalledTimes(2)
+    expect(document.querySelector('[title]')).toBeNull()
+    warn.mockRestore()
+  })
+
   it('removes a clean linked worktree through the worktree action', async () => {
     const inspectWorktree = vi.fn(async () => ({ linked: true, branch: 'feature', uncommitted: [] }))
     const removeWorktree = vi.fn(async () => {})

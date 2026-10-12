@@ -51,20 +51,20 @@ describe('ui-theme host', () => {
     expect(rows[1]).toMatchObject({ kind: 'script', placement: 'body' })
     expect(rows[2]).toMatchObject({ kind: 'script', placement: 'head', text: 'window.afterTheme=true' })
     expect(rowText(rows[0])).toContain('color-scheme:dark')
-    expect(rowText(rows[1])).toContain('const preference = "system"')
+    expect(rowText(rows[1])).toContain('const preference = "dark"')
     expect(rowText(rows[1])).toContain('"14px"')
-    await configuration.update({ preference: 'dark', fontSize: 22 })
-    expect(rowText(collect(ctx)[0])).toContain('color-scheme:dark')
-    expect(rowText(collect(ctx)[1])).toContain('const preference = "dark"')
+    await configuration.update({ preference: 'light', fontSize: 22 })
+    expect(rowText(collect(ctx)[0])).toContain(':root{color-scheme:light}')
+    expect(rowText(collect(ctx)[1])).toContain('const preference = "light"')
     expect(rowText(collect(ctx)[1])).toContain('"22px"')
     await fiber.dispose()
     expect(collect(ctx)).toEqual([{ kind: 'script', placement: 'head', text: 'window.afterTheme=true' }])
   })
 
-  it('uses the system preference without a settings provider', async () => {
+  it('uses the default preference without a settings provider', async () => {
     const ctx = new Context()
     await ctx.plugin({ Config, apply }).await()
-    expect(rowText(collect(ctx)[1])).toContain('const preference = "system"')
+    expect(rowText(collect(ctx)[1])).toContain('const preference = "dark"')
   })
 
 

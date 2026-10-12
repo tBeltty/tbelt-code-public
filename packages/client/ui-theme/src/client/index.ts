@@ -2,13 +2,9 @@
  * Browser theme registry over the `--dsw-*` token stylesheets. The service
  * owns the live theme preference and publishes immutable snapshots; it never
  * touches the DOM — ui-layout's presenter consumes the resolved snapshot.
- * Dark-only (P6-T2): every built-in preference (`light`/`dark`/`system`)
- * resolves to the `dark` built-in — the `prefers-color-scheme` branch is
- * gone. The stored preference itself, and custom registered theme ids, still
- * round-trip through the Host settings scope unchanged; only the built-in
- * resolution is pinned. The plugin no longer registers an Appearance
- * (theme-selection) row — dark-only mode exposes no toggle — but still
- * registers the unrelated font-size row into the settings General section.
+ * The built-in preferences resolve to `light` or `dark`; `system` follows
+ * `prefers-color-scheme`. The plugin registers the Appearance (theme-selection)
+ * and font-size rows into the settings General section.
  */
 import type { Context as ClientContext } from '@deepseek-ai/cordis'
 import type { BoundActions } from '@deepseek-ai/dsh-client-ui-slots'
@@ -19,9 +15,11 @@ import type { ConfigForm } from '@deepseek-ai/dsh-client-ui-settings/client'
 import type {} from '@deepseek-ai/dsh-client-locale/client'
 // Type-only: pulls the SlotRegistry service merge (ctx.slots).
 import type {} from '@deepseek-ai/dsh-client-ui-renderer/client'
+import type { AppearanceRowInjected } from './AppearanceRow.tsx'
+import { AppearanceRow } from './AppearanceRow.tsx'
 import type { FontSizeRowInjected } from './FontSizeRow.tsx'
 import { FontSizeRow } from './FontSizeRow.tsx'
-import { createFontSizeRowStore } from './settings-store.ts'
+import { createAppearanceRowStore, createFontSizeRowStore } from './settings-store.ts'
 import { installThemeStyles } from './styles.ts'
 import { en, zh, type ThemeKey } from './locales.ts'
 import {
@@ -124,6 +122,9 @@ declare module '@deepseek-ai/cordis' {
   }
 }
 
+/** Media query the `system` preference resolves through. */
+const SYSTEM_DARK_QUERY = '(prefers-color-scheme: dark)'
+
 const BUILTIN_THEMES: readonly ThemeDefinition[] = Object.freeze([
   Object.freeze({ id: 'light', colorScheme: 'light' as const, tokens: Object.freeze({}) }),
   Object.freeze({ id: 'dark', colorScheme: 'dark' as const, tokens: Object.freeze({}) }),
@@ -164,6 +165,8 @@ export class ThemeRuntime {
   private preference: ThemePreference
   private fontSize: number = bootstrapFontSize()
   private revision = 0
+  /** Whether the OS currently prefers dark; read only while the preference is `system`. */
+  private systemDark = true
   private snapshot: ThemeSnapshot
   /** Override layers by source; seq (monotonic) is the stacking order. */
   private readonly overrides = new Map<string, { seq: number; tokens: ThemeTokenOverrides }>()
@@ -179,8 +182,19 @@ export class ThemeRuntime {
     this.host = host
     this.preference = DEFAULT_PREFERENCE
     this.snapshot = this.buildSnapshot()
-    // Dark-only (P6-T2): resolution no longer depends on `prefers-color-scheme`,
-    // so there is nothing left for a media-query listener to drive — removed.
+    const query = typeof matchMedia === 'function' ? matchMedia(SYSTEM_DARK_QUERY) : undefined
+    if (query !== undefined) {
+      this.systemDark = query.matches
+      const onChange = (event: MediaQueryListEvent): void => {
+        this.systemDark = event.matches
+        if (this.preference === 'system') this.publish()
+      }
+      ctx.effect(() => {
+        query.addEventListener('change', onChange)
+        return () => { query.removeEventListener('change', onChange) }
+      }, 'ui-theme: prefers-color-scheme listener')
+      this.snapshot = this.buildSnapshot()
+    }
     ctx.effect(() => host.subscribe(() => { this.adopt() }), 'ui-theme: settings scope adoption')
     this.adopt()
   }
@@ -307,12 +321,8 @@ export class ThemeRuntime {
   }
 
   private buildSnapshot(): ThemeSnapshot {
-    // Dark-only (P6-T2): the built-in `light`/`system` preferences no longer
-    // resolve to their own palette or to `prefers-color-scheme` — both pin to
-    // `dark`. A custom registered theme id (dynamic-package extensibility,
-    // unrelated to this task) still resolves to itself.
-    const resolvedId = this.preference === 'light' || this.preference === 'system'
-      ? 'dark'
+    const resolvedId = this.preference === 'system'
+      ? (this.systemDark ? 'dark' : 'light')
       : this.preference
     // Both built-ins always exist; a registered preference id resolves or has
     // been reset by its disposer, so the lookup cannot miss.
@@ -415,12 +425,8 @@ export const inject = ['slots', 'locale', 'remote', 'configForms']
 
 /**
  * Client plugin body: provide the theme service and register the
- * feature-owned font-size row into the General section's item slot (a
- * feature owns its settings surface). Dark-only (P6-T2): the Appearance
- * (theme-selection) row is intentionally not registered here — the app
- * exposes no light/dark/system toggle. `AppearanceRow`/`createAppearanceRowStore`
- * stay exported and covered by their own unit tests but are unreachable from
- * the settings UI.
+ * feature-owned Appearance and font-size rows into the General section's item
+ * slot (a feature owns its settings surface).
  * @param ctx - client cordis context.
  */
 export function apply(ctx: ClientContext): void {
@@ -431,12 +437,31 @@ export function apply(ctx: ClientContext): void {
 
   ctx.effect(() => ctx.locale.register(SETTINGS_NS, { zh, en }), 'ui-theme: settings row dictionaries')
 
+  const appearanceStore = createAppearanceRowStore()
+  let appearanceBound: BoundActions<typeof appearanceStore> | undefined
   const fontSizeStore = createFontSizeRowStore()
   let fontSizeBound: BoundActions<typeof fontSizeStore> | undefined
   const sync = (snapshot: ThemeSnapshot): void => {
+    appearanceBound?.sync(snapshot.preference, snapshot.revision)
     fontSizeBound?.sync(snapshot.fontSize, snapshot.revision)
   }
   ctx.on('theme/change', sync)
+
+  const appearanceInjected = (actions: BoundActions<typeof appearanceStore>): AppearanceRowInjected => {
+    appearanceBound = actions
+    sync(theme.getTheme())
+    return {
+      setTheme: (id) => { theme.setTheme(id) },
+    }
+  }
+  ctx.slots.inject('settings.general.item', () => ctx.slots.register({
+    name: 'settings.general.item',
+    id: 'appearance',
+    order: 10,
+    store: appearanceStore,
+    locale: SETTINGS_NS,
+    inject: appearanceInjected,
+  }, AppearanceRow))
 
   const fontSizeInjected = (actions: BoundActions<typeof fontSizeStore>): FontSizeRowInjected => {
     fontSizeBound = actions

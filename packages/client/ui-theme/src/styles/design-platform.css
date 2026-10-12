@@ -281,11 +281,96 @@ body {
   background-color: var(--dsw-alias-bg-base);
 }
 
-/* tBelt Code palette, shared with the tBelt AI app. Each selector matches the specificity of the
-   plain `body` rule or the `body[data-ds-dark-theme]` rule above and is
-   declared later, so it always wins the cascade — the palette stays the same
-   regardless of `data-ds-dark-theme` or the system color-scheme preference. */
-body,
+/* tBelt Code light palette. Greys are neutral and the accent is the dark-theme cyan
+   darkened until text and links reach 4.5:1 on the light surfaces. It matches the
+   specificity of the `body[data-ds-dark-theme]` palette below and the two never
+   apply together. */
+body:not([data-ds-dark-theme]) {
+  --tbelt-bg-base: #fafafa;
+  --tbelt-bg-elevated: #ffffff;
+  --tbelt-bg-raised: #f4f4f4;
+  --tbelt-bg-active: #ebebeb;
+  --tbelt-border-subtle: #e3e3e3;
+  --tbelt-text-primary: #141414;
+  --tbelt-text-secondary: #525252;
+  --tbelt-text-muted: #636363;
+  --tbelt-accent-blue: #007acd;
+  --tbelt-accent-blue-hover: #0068b0;
+  --tbelt-accent-cyan: #0b6fb0;
+  --tbelt-accent-cyan-tint: #e3f1fb;
+  --tbelt-accent-green: #08795a;
+  --tbelt-accent-red: #bd342d;
+  --tbelt-code-bg: #f4f4f4;
+  --tbelt-code-banner: #ebebeb;
+  --tbelt-glow: rgba(0, 122, 205, 0.2);
+
+  /* The platform's light ramp is blue-tinted; restating it re-tints every alias that reads it. */
+  --dsw-static-neutral-bluish-00: #ffffff;
+  --dsw-static-neutral-bluish-50: #fafafa;
+  --dsw-static-neutral-bluish-60: #f6f6f6;
+  --dsw-static-neutral-bluish-75: #f1f1f1;
+  --dsw-static-neutral-bluish-100: #ebebeb;
+  --dsw-static-neutral-bluish-150: #e6e6e6;
+  --dsw-static-neutral-bluish-200: #e0e0e0;
+  --dsw-static-neutral-bluish-300: #cfcfcf;
+  --dsw-static-neutral-bluish-400: #8a8a8a;
+  --dsw-static-neutral-bluish-500: #7a7a7a;
+  --dsw-static-neutral-bluish-600: var(--tbelt-text-muted);
+  --dsw-static-neutral-bluish-700: var(--tbelt-text-secondary);
+  --dsw-static-neutral-bluish-750: #3d3d3d;
+  --dsw-static-neutral-bluish-800: #2e2e2e;
+  --dsw-static-neutral-bluish-850: #262626;
+  --dsw-static-neutral-bluish-875: #1f1f1f;
+  --dsw-static-neutral-bluish-900: #181818;
+  --dsw-static-neutral-bluish-950: #121212;
+  --dsw-static-neutral-bluish-1000: var(--tbelt-text-primary);
+
+  /* The tBelt blue scale replaces the platform blue behind links, info fills and focus rings. */
+  --dsw-static-deepseek-50: #eef7fd;
+  --dsw-static-deepseek-100: #dcedfa;
+  --dsw-static-deepseek-200: #bfe0f7;
+  --dsw-static-deepseek-300: #8fcbf2;
+  --dsw-static-deepseek-400: #3ea6f0;
+  --dsw-static-deepseek-450: #1d8fe0;
+  --dsw-static-deepseek-500: var(--tbelt-accent-cyan);
+  --dsw-static-deepseek-600: #0a5f9a;
+
+  --dsw-alias-bg-base: var(--tbelt-bg-base);
+  --dsw-alias-bg-layer-1: var(--tbelt-bg-elevated);
+  --dsw-alias-bg-layer-2: var(--tbelt-bg-elevated);
+  --dsw-alias-bg-layer-3: var(--tbelt-bg-elevated);
+  --dsw-alias-border-l1: var(--tbelt-border-subtle);
+  --dsw-alias-brand-primary-new-colorprimary-new-color: var(--tbelt-accent-cyan);
+  --dsw-alias-brand-primary: var(--tbelt-text-primary);
+  --dsw-alias-button-info-fill: var(--tbelt-accent-blue);
+  --dsw-alias-button-info-hover: var(--tbelt-accent-blue-hover);
+  --dsw-alias-button-primary-fill: var(--tbelt-text-primary);
+  --dsw-alias-button-primary-hover: var(--dsw-static-neutral-bluish-750);
+  --dsw-alias-label-caption: var(--dsw-static-neutral-bluish-600);
+  --dsw-alias-label-tertiary: var(--tbelt-text-muted);
+  --dsw-alias-link: var(--tbelt-accent-cyan);
+  --dsw-alias-markdown-code-block-banner: var(--tbelt-code-banner);
+  --dsw-alias-markdown-code-block: var(--tbelt-code-bg);
+  --dsw-alias-markdown-inline-code: var(--dsw-static-neutral-bluish-100);
+  --dsw-alias-state-business-primary: var(--tbelt-accent-cyan);
+  --dsw-alias-state-business-tertiary: var(--tbelt-accent-cyan-tint);
+  --dsw-alias-state-error-primary: var(--tbelt-accent-red);
+  --dsw-alias-state-success-primary: var(--tbelt-accent-green);
+  --dsw-alias-state-warn-label: #8a5a00;
+  --dsw-specific-bubble: var(--tbelt-bg-active);
+  --dsw-specific-bubble-highlight: var(--dsw-static-neutral-bluish-150);
+  --dsw-specific-input-major: var(--tbelt-bg-elevated);
+  --dsw-specific-login-input: var(--tbelt-bg-raised);
+  --dsw-menu-surface-fill: rgba(255, 255, 255, 0.94);
+  --dsw-alias-menu-group-header-fill: rgba(250, 250, 250, 0.94);
+  --dsw-specific-sidebar-fill: var(--tbelt-bg-base);
+  --dsw-specific-sidebar-nav-item-active-accent: var(--dsw-static-neutral-bluish-100);
+  --dsw-specific-sidebar-nav-item-active: var(--tbelt-bg-active);
+}
+
+/* tBelt Code dark palette, shared with the tBelt AI app. The selector outranks
+   the plain `body` rule and is declared after the `body[data-ds-dark-theme]`
+   static rule above, so it wins the cascade. */
 body[data-ds-dark-theme] {
   /* tBelt source tokens. Every alias below resolves to one of these. */
   --tbelt-bg-base: #101010;

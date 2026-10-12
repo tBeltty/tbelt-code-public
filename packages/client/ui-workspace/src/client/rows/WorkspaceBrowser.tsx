@@ -283,6 +283,8 @@ type SessionTreeProps = Pick<
   onDeleteRequest: (workspaceId: WorkspaceId, currentTitle: string) => void
   /** Create a worktree of a real Workspace group's repository and start a Session in it. */
   onWorktreeRequest: (workspaceId: WorkspaceId) => void
+  /** Branch checked out in each Workspace that is a linked worktree; other Workspaces have no entry. */
+  worktreeBranches: ReadonlyMap<WorkspaceId, string>
   /** Open the rename dialog from a row title double-click. */
   onSessionRenameRequest: (sessionId: SessionNode['id'], currentTitle: string) => void
   /** One Session chosen from search that must be exposed and scrolled into view. */
@@ -318,7 +320,7 @@ function SessionTree({
   list, useSessionStatus, startSession, open, workspaces, ungroupedSessionIds,
   rowState, onLeaveArchivedOnly, onAddWorkspace,
   workspaceReady, animationResetKey, usePanelInfo,
-  onRenameRequest, onDeleteRequest, onWorktreeRequest, onSessionRenameRequest,
+  onRenameRequest, onDeleteRequest, onWorktreeRequest, worktreeBranches, onSessionRenameRequest,
   renderSlot,
   insertWorkspaceBefore,
   nestWorkspaces, groupExpansion, setGroupExpanded,
@@ -532,6 +534,7 @@ function SessionTree({
         <ProjectRowItem
           newShortcut={shortcuts.find(row => row.id === 'session.new')}
           group={group}
+          branch={group.workspaceId === undefined ? undefined : worktreeBranches.get(group.workspaceId)}
           containsCurrentDescendant={currentAncestors.has(group.key)}
           home={home}
           t={t}
@@ -1243,6 +1246,32 @@ export function WorkspaceBrowser({
     })
     return () => { current = false }
   }, [deleteTargetId])
+  // Branch labels for linked-worktree Workspaces. Each Workspace is inspected once, in order, so the
+  // sidebar never runs the Host's git queries in parallel; a Workspace added later is inspected on arrival.
+  const [worktreeBranches, setWorktreeBranches] = useState<ReadonlyMap<WorkspaceId, string>>(new Map())
+  const inspectedWorkspaces = useRef(new Set<WorkspaceId>())
+  useEffect(() => {
+    const run = { active: true }
+    const pending = workspaces.map(workspace => workspace.workspaceId)
+      .filter(workspaceId => !inspectedWorkspaces.current.has(workspaceId))
+    void (async () => {
+      for (const workspaceId of pending) {
+        if (!run.active) return
+        inspectedWorkspaces.current.add(workspaceId)
+        try {
+          const inspection = await inspectWorktreeRef.current(workspaceId)
+          if (inspection.linked && inspection.branch !== undefined) {
+            const branch = inspection.branch
+            setWorktreeBranches(branches => new Map(branches).set(workspaceId, branch))
+          }
+        } catch (reason) {
+          // An unreadable repository leaves that row without a branch label.
+          console.warn('worktree inspection rejected:', reason)
+        }
+      }
+    })()
+    return () => { run.active = false }
+  }, [workspaces])
   useEffect(() => {
     if (deleteCommittedId === null
       || workspaces.some(workspace => workspace.workspaceId === deleteCommittedId)) return
@@ -1515,6 +1544,7 @@ export function WorkspaceBrowser({
                   setDeleteError(null)
                 }}
                 onWorktreeRequest={requestWorktree}
+                worktreeBranches={worktreeBranches}
               />
             ))}
       </div>

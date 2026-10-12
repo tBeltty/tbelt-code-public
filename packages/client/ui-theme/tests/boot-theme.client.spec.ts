@@ -25,49 +25,51 @@ afterEach(() => {
   document.body.style.removeProperty('--dsh-content-font-size')
 })
 
-describe('theme bootstrap row (dark-only, P6-T2)', () => {
-  it('colors the body with dark head CSS and sets the dark body attribute', () => {
-    mockSystemDark(false)
+const DARK_CANVAS = ':root{color-scheme:dark}body{background-color:#101010;--dsh-boot-bg:#101010}'
+const LIGHT_CANVAS = ':root{color-scheme:light}body{background-color:#fafafa;--dsh-boot-bg:#fafafa}'
+
+function headText(preference: ThemePreference): string {
+  const [head] = bootThemeInjections(preference)
+  if (head?.kind !== 'style') throw new Error('theme head bootstrap row is not a style')
+  return head.text
+}
+
+describe('theme bootstrap row', () => {
+  it('emits a style row and a body script row', () => {
     const [head, body] = bootThemeInjections('dark')
     expect(head).toMatchObject({ kind: 'style' })
     expect(body).toMatchObject({ kind: 'script', placement: 'body' })
-    if (head?.kind !== 'style') throw new Error('theme head bootstrap row is not a style')
-    expect(head.text).toBe(':root{color-scheme:dark}body{background-color:#151517;--dsh-boot-bg:#151517}')
-    expect(document.body.hasAttribute(DARK_ATTRIBUTE)).toBe(false)
-    if (body?.kind !== 'script') throw new Error('theme body bootstrap row is not a script')
-    runInNewContext(body.text, { document, matchMedia: globalThis.matchMedia })
-    expect(document.documentElement.dataset.dsThemeSource).toBe('dark')
-    expect(document.body.hasAttribute(DARK_ATTRIBUTE)).toBe(true)
   })
 
-  it('ignores a `light` preference and a dark-preferring OS alike — always dark', () => {
-    mockSystemDark(true)
-    const [head] = bootThemeInjections('light')
-    if (head?.kind !== 'style') throw new Error('theme head bootstrap row is not a style')
-    expect(head.text).toBe(':root{color-scheme:dark}body{background-color:#151517;--dsh-boot-bg:#151517}')
-    executeBootstrap('light')
-    expect(document.body.hasAttribute(DARK_ATTRIBUTE)).toBe(true)
+  it('colors the canvas from a fixed preference regardless of the OS scheme', () => {
+    expect(headText('dark')).toBe(DARK_CANVAS)
+    expect(headText('light')).toBe(LIGHT_CANVAS)
+  })
+
+  it('starts the `system` canvas dark and switches it under a light OS scheme', () => {
+    expect(headText('system')).toBe(`${DARK_CANVAS}@media (prefers-color-scheme: light){${LIGHT_CANVAS}}`)
   })
 
   it.each([
-    ['light', true],
-    ['dark', true],
-    ['system', true],
-  ] as const)('preference=%s always resolves to the dark body palette', (preference, dark) => {
+    ['light', true, false],
+    ['light', false, false],
+    ['dark', true, true],
+    ['dark', false, true],
+    ['system', true, true],
+    ['system', false, false],
+  ] as const)('preference=%s with OS dark=%s sets the dark body attribute to %s', (preference, osDark, dark) => {
+    mockSystemDark(osDark)
     executeBootstrap(preference)
+    expect(document.documentElement.dataset.dsThemeSource).toBe(preference)
     expect(document.body.hasAttribute(DARK_ATTRIBUTE)).toBe(dark)
   })
 
-  it('emits no `prefers-color-scheme` media query in the head CSS', () => {
-    const [head] = bootThemeInjections('system')
-    if (head?.kind !== 'style') throw new Error('theme head bootstrap row is not a style')
-    expect(head.text).not.toContain('prefers-color-scheme')
-    expect(head.text).toBe(':root{color-scheme:dark}body{background-color:#151517;--dsh-boot-bg:#151517}')
-  })
-
-  it('defaults to dark regardless of matchMedia availability', () => {
+  it('defaults to dark and resolves `system` as dark without matchMedia', () => {
     vi.stubGlobal('matchMedia', undefined)
     executeBootstrap()
+    expect(document.body.hasAttribute(DARK_ATTRIBUTE)).toBe(true)
+    document.body.removeAttribute(DARK_ATTRIBUTE)
+    executeBootstrap('system')
     expect(document.body.hasAttribute(DARK_ATTRIBUTE)).toBe(true)
   })
 

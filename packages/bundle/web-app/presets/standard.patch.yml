@@ -11,7 +11,6 @@
           - id: persona
             name: '@deepseek-ai/dsh-persona'
             config:
-              suffix: Your working directory is {{cwd}}.
               prefix: You are a coding agent powered by the {{model}} model.
           - id: agent-instructions
             name: '@deepseek-ai/dsh-agent-instructions'
@@ -41,6 +40,8 @@
           # `/undo` restores the files the current turn changed from the host's git safety net.
           - id: command-undo
             name: '@deepseek-ai/dsh-command-undo'
+          - id: time-context
+            name: '@deepseek-ai/dsh-time-context'
           - id: tool-bash
             name: '@deepseek-ai/dsh-tool-bash'
             disabled: !!js process.platform === 'win32'
@@ -57,6 +58,8 @@
             name: '@deepseek-ai/dsh-tool-search-replace'
           - id: tool-jobs
             name: '@deepseek-ai/dsh-tool-jobs'
+          - id: tool-schedule
+            name: '@deepseek-ai/dsh-tool-schedule'
           # `agentsHome` is pinned under this product's own `.dsh` directory rather
           # than the package's shared-across-agent-tools `~/.agents` default: an
           # operator's personal skills authored for a different agent CLI must not
@@ -82,7 +85,7 @@
                 name: '@deepseek-ai/dsh-plan-mode'
                 config:
                   section: |
-                    You are in plan mode. Stay in plan mode until exit_plan_mode succeeds or the user switches the session mode. Imperative language to implement changes means plan the implementation, not execute it. A user's conversational agreement — including an answer confirming something you asked — approves nothing and does not end plan mode; fold the confirmed decision into the plan and submit it through exit_plan_mode.
+                    You are in plan mode. Stay in plan mode until the user approves your plan through exit_plan_mode or switches the session mode. Imperative language to implement changes means plan the implementation, not execute it. A user's conversational agreement — including an answer confirming something you asked — approves nothing and does not end plan mode; fold the confirmed decision into the plan and submit it through exit_plan_mode.
 
                     Explore first. Use non-mutating reads, searches, static analysis, and checks to ground the plan in the actual repository. Do not edit or write files, change configuration, run formatters or code generation that rewrites tracked files, commit, or otherwise carry out the plan. Prefer existing functions and patterns over new machinery.
 
@@ -128,13 +131,24 @@
                   provider: spawn
                   toolName: subagent
                   modelSelectionSettings: true
-                  backgroundMode: continuable
+                  toolFilter:
+                    deny:
+                      - schedule_create
+                      - schedule_delete
+                      - schedule_list
+                      - schedule_update
               - id: tool-subagent-fork
                 name: '@deepseek-ai/dsh-tool-subagent'
                 config:
                   provider: fork
                   toolName: subagent_fork
                   backgroundMode: continuable
+                  toolFilter:
+                    deny:
+                      - schedule_create
+                      - schedule_delete
+                      - schedule_list
+                      - schedule_update
               # Three named delegation roles over the same spawn backend, distinguished
               # by real config, not persona text alone: Inspector cannot write or run
               # shell commands and cannot delegate further; Coder is the unrestricted
@@ -154,7 +168,7 @@
                     recommendations. Never write, edit, or run shell commands, and never
                     delegate to another subagent.
                   toolFilter:
-                    deny: [write, edit, bash, pwsh]
+                    deny: [write, edit, bash, pwsh, schedule_create, schedule_delete, schedule_list, schedule_update]
               - id: tool-subagent-coder
                 name: '@deepseek-ai/dsh-tool-subagent'
                 config:
@@ -165,6 +179,12 @@
                   persona: >-
                     You are the Coder: implement the requested change. Use the full
                     tool set to read, write, edit, and run commands as the task needs.
+                  toolFilter:
+                    deny:
+                      - schedule_create
+                      - schedule_delete
+                      - schedule_list
+                      - schedule_update
               - id: tool-subagent-tester
                 name: '@deepseek-ai/dsh-tool-subagent'
                 config:
@@ -177,34 +197,18 @@
                     reproduce reported bugs, and report pass/fail results with evidence.
                     Do not implement unrelated features; scope changes to what
                     verification requires.
-              - id: tool-subagent-codex
-                name: '@deepseek-ai/dsh-tool-subagent'
-                disabled: true
-                config:
-                  provider: codex
-                  toolName: subagent_codex
-                  backgroundMode: one-shot
-                  maxDepth: provider-managed
-              - id: tool-subagent-claude-code
-                name: '@deepseek-ai/dsh-tool-subagent'
-                disabled: true
-                config:
-                  provider: claude-code
-                  toolName: subagent_claude_code
-                  backgroundMode: one-shot
-                  maxDepth: provider-managed
+                  toolFilter:
+                    deny:
+                      - schedule_create
+                      - schedule_delete
+                      - schedule_list
+                      - schedule_update
               - id: workflow-ptc
                 name: '@deepseek-ai/dsh-workflow-ptc'
                 config:
                   provider: spawn
               - id: tool-workflow
                 name: '@deepseek-ai/dsh-tool-workflow'
-              - id: tool-ralph
-                name: '@deepseek-ai/dsh-tool-ralph'
-                disabled: true
-                config:
-                  subagentProvider: spawn
-                  maxRounds: 64
           - id: tool-ask-user
             name: '@deepseek-ai/dsh-tool-ask-user'
           - id: tool-todo

@@ -1,16 +1,17 @@
-/** Raw tool call narrowing: argument parsing, single-text results and the escalation pair. */
+/** Raw tool call narrowing: argument parsing, single-text results. */
 import { describe, expect, it } from 'vitest'
 import {
-  parsedToolCall, singleResultText, validEscalationFields,
+  parsedToolCall, singleResultText,
   type StartedToolCall, type ToolResultNode,
 } from '../src/index.ts'
+import { PartialArguments } from '@deepseek-ai/dsh-util-values'
 
 const started = (argsRaw: string): StartedToolCall => ({
-  phase: 'start', callId: 'c1', name: 'bash', argsRaw, turn: 1, step: 1, time: 1, subCalls: [],
+  phase: 'start', callId: 'c1', name: 'bash', argsRaw, args: PartialArguments.fromText(argsRaw), turn: 1, step: 1, time: 1, subCalls: [],
 })
 
 const settled = (over: Partial<ToolResultNode> = {}): ToolResultNode => ({
-  kind: 'tool-result', seq: 1, time: 2, callId: 'c1', call: { name: 'bash', argsRaw: '{"a":1}' },
+  kind: 'tool-result', seq: 1, time: 2, callId: 'c1', name: 'bash', args: PartialArguments.fromText('{"a":1}'), call: { name: 'bash', argsRaw: '{"a":1}' },
   callTime: 1, content: [], isError: false, subCalls: [], ...over,
 })
 
@@ -24,7 +25,7 @@ describe('parsedToolCall', () => {
   })
 
   it('returns null while preparing, without a call head, and for payloads that are not an object', () => {
-    expect(parsedToolCall({ phase: 'preparing', callId: 'c1', name: 'bash', turn: 1, step: 1, time: 1, subCalls: [] }))
+    expect(parsedToolCall({ phase: 'preparing', callId: 'c1', name: 'bash', turn: 1, step: 1, time: 1, args: PartialArguments.EMPTY, subCalls: [] }))
       .toBeNull()
     const windowless = settled({ call: null })
     expect(parsedToolCall(windowless)).toBeNull()
@@ -43,21 +44,5 @@ describe('singleResultText', () => {
     expect(singleResultText(settled({ content: [] }))).toBeUndefined()
     expect(singleResultText(settled({ content: [{ type: 'text', text: 'a' }, { type: 'text', text: 'b' }] }))).toBeUndefined()
     expect(singleResultText(settled({ content: [{ type: 'image', data: 'x' } as never] }))).toBeUndefined()
-  })
-})
-
-describe('validEscalationFields', () => {
-  it('accepts no fields, or a known permission with a non-blank justification', () => {
-    expect(validEscalationFields({})).toBe(true)
-    expect(validEscalationFields({ sandbox_permissions: 'workspace-write', justification: 'needs network' })).toBe(true)
-    expect(validEscalationFields({ sandbox_permissions: 'danger-full-access', justification: 'x' })).toBe(true)
-  })
-
-  it('rejects a lone field, an unknown permission and a blank justification', () => {
-    expect(validEscalationFields({ justification: 'why' })).toBe(false)
-    expect(validEscalationFields({ sandbox_permissions: 'workspace-write' })).toBe(false)
-    expect(validEscalationFields({ sandbox_permissions: 'root', justification: 'why' })).toBe(false)
-    expect(validEscalationFields({ sandbox_permissions: 'workspace-write', justification: '  ' })).toBe(false)
-    expect(validEscalationFields({ sandbox_permissions: 'workspace-write', justification: 7 })).toBe(false)
   })
 })

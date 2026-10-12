@@ -4,16 +4,18 @@ import { cleanup, fireEvent, render } from '@testing-library/react'
 import { afterEach, expect, it, vi } from 'vitest'
 import type { StartedToolCall, ToolResultNode } from '@deepseek-ai/dsh-client-ui-chat/client'
 import { makeTranslate } from '@deepseek-ai/dsh-client-test-runtime'
+import { PartialArguments } from '@deepseek-ai/dsh-util-values'
 import { PreviewRow, previewTarget } from '../src/client/PreviewRow.tsx'
 import { en } from '../src/client/locales.ts'
 
 afterEach(cleanup)
 type Props = Parameters<typeof PreviewRow>[0]
 function running(target: string): StartedToolCall {
-  return { phase: 'start', callId: 'v', name: 'preview', argsRaw: JSON.stringify({ target }), turn: 1, step: 1, time: 1, subCalls: [] }
+  const argsRaw = JSON.stringify({ target })
+  return { phase: 'start', args: PartialArguments.fromText(argsRaw), callId: 'v', name: 'preview', argsRaw, turn: 1, step: 1, time: 1, subCalls: [] }
 }
 function settled(target: string, extra: Partial<ToolResultNode> = {}): ToolResultNode {
-  return { kind: 'tool-result', seq: 2, time: 2, callId: 'v', call: { name: 'preview', argsRaw: JSON.stringify({ target }) }, callTime: 1, content: [{ type: 'text', text: `Showing ${target} in the preview panel` }], isError: false, subCalls: [], ...extra }
+  return { kind: 'tool-result', seq: 2, time: 2, callId: 'v', name: 'preview', args: PartialArguments.fromText(JSON.stringify({ target })), call: { name: 'preview', argsRaw: JSON.stringify({ target }) }, callTime: 1, content: [{ type: 'text', text: `Showing ${target} in the preview panel` }], isError: false, subCalls: [], ...extra }
 }
 function props(block: Props['block'], openFile = vi.fn(), openUrl = vi.fn()): Props {
   return { ...('kind' in block ? { phase: 'result' as const, block } : { phase: block.phase, block }), callId: 'v', toolName: 'preview', openFile, openUrl, t: makeTranslate(en) } as Props
@@ -61,9 +63,9 @@ it.each([
 })
 
 it('shows preparation and an orphaned result without a target', () => {
-  const view = render(<PreviewRow {...props({ phase: 'preparing', callId: 'v', name: 'preview', turn: 1, step: 1, time: 1, subCalls: [] })} />)
+  const view = render(<PreviewRow {...props({ phase: 'preparing', args: PartialArguments.EMPTY, callId: 'v', name: 'preview', turn: 1, step: 1, time: 1, subCalls: [] })} />)
   expect(view.container.querySelector('[data-tool="preview"]')?.getAttribute('data-state')).toBe('preparing')
-  view.rerender(<PreviewRow {...props(settled('', { call: null }))} />)
+  view.rerender(<PreviewRow {...props(settled('', { call: null, name: '', args: PartialArguments.EMPTY }))} />)
   expect(view.queryByRole('button', { name: 'Open' })).toBeNull()
 })
 

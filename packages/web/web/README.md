@@ -111,7 +111,6 @@ The package is built on one deliberate separation:
 | [`src/api-key.ts`](src/api-key.ts) | `SearchApiKey`: a provider key resolved through the credentials service |
 | [`src/provider-http.ts`](src/provider-http.ts) | `requestProviderJson` and refusal classification shared by key-authenticated providers |
 | [`src/types.ts`](src/types.ts) | Vocabulary: request/result types, the closed `WebFetchBody` union, and the `WebError` taxonomy |
-| — | No runtime invariant companion is published; provider maps are private and selection/result caps are enforced on each call; the seam publishes no independent registry or request/result observation stream. |
 
 ### Data model
 

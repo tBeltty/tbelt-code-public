@@ -1,0 +1,6 @@
+{
+  "meta": {
+    "title": "Git Worktrees",
+    "description": "Permite al agente crear una rama y un worktree de Git nuevos y continuar allí."
+  }
+}

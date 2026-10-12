@@ -107,7 +107,6 @@ This section explains how the service realizes the behavior above; the observabl
 | [`src/types.ts`](src/types.ts) | Pure client-safe types: `GoalView`, `GoalSnapshot`, `GoalActivationChanged`, projection-key declaration |
 | [`src/fold.ts`](src/fold.ts) | Strict replay fold and decoder for durable goal changes |
 | [`src/runtime.ts`](src/runtime.ts) | `GoalId` brand, `GoalError` codes, change-version constant |
-| [`src/invariant.ts`](src/invariant.ts) | Invariant companion: independent incremental fold over every attached session |
 
 ### Events and attribution
 
@@ -125,7 +124,7 @@ The package-level contract is enough for most consumers; read these when you nee
 - Goal subsystem — the goal types, durable change payloads, and generated service API.
 - [Goal group map](../README.md) — the goal packages and how they compose.
 - Generated configuration catalog — every accepted config field and its source declaration.
-- Goal domain Agent Note — the domain design, alternatives, and decisions.
+- historical Goal domain Agent Note — the domain design, alternatives, and decisions.
 
 -----
 

@@ -128,6 +128,16 @@
     },
     {
       "doc": "docs/subsystems/llm-streaming.md",
+      "symbol": "LlmCallControls",
+      "source": "packages/llm/llm/src/call-config.ts"
+    },
+    {
+      "doc": "docs/subsystems/llm-streaming.md",
+      "symbol": "ConfigureCall",
+      "source": "packages/llm/llm/src/call-config.ts"
+    },
+    {
+      "doc": "docs/subsystems/llm-streaming.md",
       "symbol": "LlmCallConfigAdapterDefaults",
       "source": "packages/llm/llm/src/call-config.ts"
     },
@@ -622,6 +632,21 @@
     {
       "doc": "docs/subsystems/session.md",
       "symbol": "SessionEvent",
+      "source": "packages/core/session/src/types.ts"
+    },
+    {
+      "doc": "docs/subsystems/session.md",
+      "symbol": "PluginRecordType",
+      "source": "packages/core/session/src/types.ts"
+    },
+    {
+      "doc": "docs/subsystems/session.md",
+      "symbol": "PluginRecordMap",
+      "source": "packages/core/session/src/types.ts"
+    },
+    {
+      "doc": "docs/subsystems/session.md",
+      "symbol": "PluginRecord",
       "source": "packages/core/session/src/types.ts"
     },
     {
@@ -1568,16 +1593,6 @@
     },
     {
       "doc": "docs/subsystems/subagent.md",
-      "symbol": "SubagentDescendantListEntry",
-      "source": "packages/subagent/subagent/src/list-children.ts"
-    },
-    {
-      "doc": "docs/subsystems/subagent.md",
-      "symbol": "ContinuableStart",
-      "source": "packages/subagent/subagent/src/types.ts"
-    },
-    {
-      "doc": "docs/subsystems/subagent.md",
       "symbol": "ContinuableCreateRequest",
       "source": "packages/subagent/subagent/src/types.ts"
     },
@@ -1887,21 +1902,6 @@
       "source": "packages/plan/plan-mode/src/index.ts"
     },
     {
-      "doc": "docs/subsystems/invariants.md",
-      "symbol": "Config",
-      "source": "packages/runtime-diagnostics/invariants/src/index.ts"
-    },
-    {
-      "doc": "docs/subsystems/invariants.md",
-      "symbol": "InvariantFailure",
-      "source": "packages/runtime-diagnostics/invariants/src/index.ts"
-    },
-    {
-      "doc": "docs/subsystems/invariants.md",
-      "symbol": "InvariantInstaller",
-      "source": "packages/runtime-diagnostics/invariants/src/index.ts"
-    },
-    {
       "doc": "docs/subsystems/web-server.md",
       "symbol": "WebRouteKind",
       "source": "packages/host/webserver/src/index.ts"
@@ -1914,6 +1914,11 @@
     {
       "doc": "docs/subsystems/web-server.md",
       "symbol": "Config",
+      "source": "packages/host/webserver/src/index.ts"
+    },
+    {
+      "doc": "docs/subsystems/web-server.md",
+      "symbol": "TlsConfig",
       "source": "packages/host/webserver/src/index.ts"
     },
     {
@@ -2308,6 +2313,11 @@
     },
     {
       "doc": "docs/subsystems/ssh.md",
+      "symbol": "HelperLaunch",
+      "source": "packages/ssh/ssh/src/index.ts"
+    },
+    {
+      "doc": "docs/subsystems/ssh.md",
       "symbol": "Config",
       "source": "packages/ssh/ssh/src/index.ts"
     },
@@ -2358,6 +2368,16 @@
       "source": "packages/deliverables/workspace-changes/src/types.ts"
     },
     {
+      "doc": "docs/subsystems/subagent.md",
+      "symbol": "SubagentActivationSpec",
+      "source": "packages/subagent/subagent/src/types.ts"
+    },
+    {
+      "doc": "docs/subsystems/subagent.md",
+      "symbol": "SubagentActivation",
+      "source": "packages/subagent/subagent/src/types.ts"
+    },
+    {
       "doc": "docs/subsystems/product-telemetry.md",
       "symbol": "ProductTelemetryScalar",
       "source": "packages/host/product-telemetry-otel/src/index.ts"
@@ -2401,6 +2421,26 @@
       "doc": "docs/subsystems/memory.md",
       "symbol": "MemoryEntryType",
       "source": "packages/memory/memory-storage/src/spec.ts"
+    },
+    {
+      "doc": "docs/subsystems/subagent.md",
+      "symbol": "SubagentDescendantListEntry",
+      "source": "packages/subagent/subagent/src/list-children.ts"
+    },
+    {
+      "doc": "docs/subsystems/system-prompt.md",
+      "symbol": "AssembledContext",
+      "source": "packages/core/system-prompt/src/index.ts"
+    },
+    {
+      "doc": "docs/subsystems/worktrees.md",
+      "symbol": "CreateWorktreeRequest",
+      "source": "packages/experimental/worktree/src/types.ts"
+    },
+    {
+      "doc": "docs/subsystems/worktrees.md",
+      "symbol": "CreatedWorktree",
+      "source": "packages/experimental/worktree/src/types.ts"
     }
   ]
 }

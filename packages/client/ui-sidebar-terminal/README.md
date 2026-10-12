@@ -7,7 +7,7 @@ kind: "package-reference"
 
 ## Summary
 
-Choose an installed shell from the right sidebar's Start page to run commands in the Session workspace. Rename terminals in their tabs and recover retained processes after reloading the page. Collapse the sidebar to keep commands running; close a terminal tab to request process termination. Tab completion follows the shell configuration. Commands use the execution environment’s system-user permissions independently of Agent permissions; see [user-terminal execution](../../api/terminal-controller/README.md#use-this-package).
+Choose an installed shell from the right sidebar's Start page to run commands in the Session's current working directory. Rename terminals in their tabs and recover retained processes after reloading the page. Collapse the sidebar to keep commands running; close a terminal tab to request process termination. Tab completion follows the shell configuration. Commands use the execution environment’s system-user permissions independently of Agent permissions; see [user-terminal execution](../../api/terminal-controller/README.md#use-this-package).
 
 ## Table of Contents
 
@@ -35,7 +35,7 @@ After reload, the [sidebar restores its layout](../../client/ui-sidebar-right/RE
 
 Settled `bash`, `sh`, `shell` and `zsh` fences in the conversation show **Run in terminal** in their header. Clicking it runs the fence source in the execution environment's default shell, in a new terminal tab with the same user permissions as **New terminal**, so the user can answer prompts such as a `sudo` password there. A status row below the fence shows progress and exit status and offers **Show terminal**. When the process exits, or the user closes its tab, the conversation queues a user message with the command, its exit status and the final screen text. Identical fences in one Session share one run state; **Run again** starts a new terminal. A run continues and reports its result after the fence scrolls away or another Session is shown.
 
-The terminal background, default text, cursor, and selection follow the DSH theme, including system preference and theme-token overrides. Theme changes preserve the running shell, output, and application OSC color overrides. Reset commands restore colors to the current DSH defaults. xterm adjusts text toward 4.5:1 contrast; the cursor keeps at least 3:1 contrast against its cell background, including Vim colorschemes.
+The terminal background, default text, cursor, and selection follow the DSH theme, including system preference and theme-token overrides. Theme changes preserve the running shell, output, and application OSC color overrides. Reset commands restore colors to the current DSH defaults. The screen uses the Settings terminal font size and places the Settings terminal font ahead of its built-in monospace stack; changing either keeps the shell and output, and a visible writable screen refits the Host grid to the new cell size. xterm adjusts text toward 4.5:1 contrast; the cursor keeps at least 3:1 contrast against its cell background, including Vim colorschemes.
 
 <a id="understand-the-implementation"></a>
 ## Understand the implementation
@@ -116,6 +116,6 @@ The message is appended after the existing conversation, so earlier request pref
 <details>
 <summary>Working context for maintainers — click to expand</summary>
 
-No runtime invariant companion is published. One owner orders terminal metadata and screen updates; the provider exposes no independently observed dimensions to compare.
+None.
 
 </details>

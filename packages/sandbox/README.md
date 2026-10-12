@@ -37,8 +37,8 @@ Four packages play the confinement roles; the subsystem reference owns the exhau
 Start with the subsystem reference for the shared vocabulary, then the confinement decision and its cross-family extension.
 
 - Process sandbox subsystem — modes, per-call policy, wrapped-argv dialects, and fail-closed errors.
-- The subprocess sandbox decision — the capability boundary, escalation choreography, and deferred phases.
-- Cross-family file sandbox decision — the shared policy home and the sandboxed filesystem provider.
+- The historical subprocess sandbox decision — the capability boundary, escalation choreography, and deferred phases.
+- [Cross-family file sandbox reference](../fs/fs-sandbox/README.md) — the shared policy home and the sandboxed filesystem provider.
 - Windows ACL restricted-token sandbox decision — why raw ACL restricted tokens over mxc and AppContainer.
 
 <a id="dev-note"></a>

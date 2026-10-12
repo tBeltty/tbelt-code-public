@@ -1,5 +1,5 @@
 /** Pure diff-card derivation from raw file-mutation calls and result metadata. @module @deepseek-ai/dsh-presentation-tool-card/diff-card */
-import { parsedToolCall, validEscalationFields, type ToolCallBlock } from '@deepseek-ai/dsh-presentation-tool-call'
+import { parsedToolCall, recordedAbsolutePath, type ToolCallBlock } from '@deepseek-ai/dsh-presentation-tool-call'
 import type { DiffHunk } from './diff-lines.ts'
 
 /** Diff card data a client draws; `maxLines` and styling belong to each render site. */
@@ -56,7 +56,6 @@ function intendedDiff(block: ToolCallBlock): IntendedDiff | null {
   }
   const { file_path: path } = parsed.args
   if (typeof path !== 'string' || path.trim() === '') return null
-  if (!validEscalationFields(parsed.args)) return null
   if (parsed.name === 'write') {
     const { content } = parsed.args
     return typeof content === 'string'
@@ -98,5 +97,6 @@ export function diffCardModel(block: ToolCallBlock): DiffCardModel | null {
   if (applied === null || applied === 'empty') {
     return intended.tool === 'write' ? { card: { diffs: [intended.diff] } } : null
   }
-  return { card: { diffs: applied } }
+  const path = recordedAbsolutePath(block.meta, 'path')
+  return { card: { diffs: applied.map(diff => diff.path === path ? { ...diff, path: intended.diff.path } : diff) } }
 }

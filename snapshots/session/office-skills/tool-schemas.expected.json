@@ -28,7 +28,7 @@
         "properties": {
           "file_path": {
             "type": "string",
-            "description": "Path to edit, resolved by the filesystem backend."
+            "description": "Path to edit, resolved by the filesystem backend. Provide `file_path` before `old_string` and `new_string` in the arguments."
           },
           "old_string": {
             "type": "string",
@@ -132,7 +132,7 @@
     },
     {
       "name": "interrupt_agent",
-      "description": "Ask a subagent to stop its current work. This call returns without waiting for it to stop. You can continue a direct child's conversation later with send_message. Subagents it started will keep running.",
+      "description": "Ask a subagent to stop its current work. This call returns without waiting for it to stop. You can continue a local direct child's conversation later with send_message. External executions stop permanently and cannot receive follow-ups. Subagents it started will keep running.",
       "parameters": {
         "type": "object",
         "properties": {
@@ -256,6 +256,108 @@
       }
     },
     {
+      "name": "recall_memory",
+      "description": "Search durably remembered memory entries (written by /remember or remember_fact) for a literal keyword or phrase. Matches entry names, descriptions, and full content by case-insensitive substring — this is not a semantic or fuzzy search. Use it to pull a matching entry's full stored content into context; the always-visible memory index only carries short descriptions.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "query": {
+            "type": "string",
+            "description": "Literal keyword or phrase to search for (case-insensitive substring match; no semantic search)."
+          },
+          "type": {
+            "type": "string",
+            "description": "Restrict to one memory category.",
+            "enum": [
+              "user",
+              "feedback",
+              "project",
+              "reference"
+            ]
+          },
+          "scope": {
+            "type": "string",
+            "description": "project | global | both (default: both).",
+            "enum": [
+              "project",
+              "global",
+              "both"
+            ]
+          }
+        },
+        "required": [
+          "query"
+        ]
+      }
+    },
+    {
+      "name": "remember_fact",
+      "description": "Durably remember something worth recalling in a later, unrelated session: a fact or preference about the user, a correction about how to work, ongoing project state, or a pointer to an external system. Use this when the user states something durably useful — not for information only relevant to the current task. Content is screened for secrets before it is stored; a value that looks like a credential is withheld.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "A short, stable, lowercase, hyphen-separated slug identifying this entry (e.g. \"ci-commit-policy\")."
+          },
+          "type": {
+            "type": "string",
+            "description": "user (about the person) | feedback (how to work) | project (ongoing work) | reference (external pointers).",
+            "enum": [
+              "user",
+              "feedback",
+              "project",
+              "reference"
+            ]
+          },
+          "description": {
+            "type": "string",
+            "description": "One-sentence summary shown in the always-visible memory index."
+          },
+          "content": {
+            "type": "string",
+            "description": "The full text to remember. Screened for secrets before it is stored."
+          },
+          "projectScope": {
+            "type": "string",
+            "description": "project (scoped to the current project only) | global (available in every project).",
+            "enum": [
+              "project",
+              "global"
+            ]
+          }
+        },
+        "required": [
+          "name",
+          "type",
+          "description",
+          "content",
+          "projectScope"
+        ]
+      }
+    },
+    {
+      "name": "search_replace",
+      "description": "Edit a file by applying one or more SEARCH/REPLACE blocks.\n\nEach block has the form:\n\n<<<<<<< SEARCH\nexact text to find\n=======\nreplacement text\n>>>>>>> REPLACE\n\nMultiple blocks may be concatenated in one `diff` string; they are applied in order, each against the result of the previous one. Each block's SEARCH text must match exactly one place in the file, verbatim, including whitespace.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "path": {
+            "type": "string",
+            "description": "Absolute path to the file to edit, e.g. `/repo/file.py`."
+          },
+          "diff": {
+            "type": "string",
+            "description": "One or more concatenated SEARCH/REPLACE blocks to apply, in order."
+          }
+        },
+        "required": [
+          "path",
+          "diff"
+        ]
+      }
+    },
+    {
       "name": "send_message",
       "description": "Send a message to an agent. A working agent receives it at its next step; an idle agent starts a new turn with it. Returns delivery confirmation, not the agent's answer.",
       "parameters": {
@@ -294,10 +396,14 @@
     },
     {
       "name": "subagent",
-      "description": "Delegate a self-contained task to a subagent (a separate agent that works in its own context) to offload focused, independent work — research, a scoped implementation, an analysis — so it does not consume this conversation's context. The subagent returns its result, not its intermediate steps. It runs in the background by default and returns a subagent id you can continue with `send_message`; you are notified when the run settles.",
+      "description": "Delegate a self-contained task to a subagent (a separate agent that works in its own context) to offload focused, independent work — research, a scoped implementation, an analysis — so it does not consume this conversation's context. The subagent returns its result, not its intermediate steps. This tool starts an independently managed subagent and immediately returns its id. The runtime notifies you when it finishes. The child reports results with `send_message`; use `send_message` to steer it while running or continue its conversation after it finishes.",
       "parameters": {
         "type": "object",
         "properties": {
+          "cwd": {
+            "type": "string",
+            "description": "Initial child working directory. Relative paths use your current directory; omitted inherits it. Later directory changes in either agent are independent."
+          },
           "description": {
             "type": "string",
             "description": "A short (3-5 word) description of the delegated task, for display."
@@ -305,10 +411,6 @@
           "prompt": {
             "type": "string",
             "description": "The complete, self-contained task for the subagent. It does not share this conversation's context, so include everything it needs."
-          },
-          "run_in_background": {
-            "type": "boolean",
-            "description": "Defaults to true. Set false only when your next action depends on the result."
           }
         },
         "required": [
@@ -319,10 +421,14 @@
     },
     {
       "name": "subagent_fork",
-      "description": "Delegate a task to a subagent that inherits this conversation: a child agent seeded with all completed turns so far (it does not see the current in-flight turn). Use this when the subtask builds on this conversation's context — a follow-up analysis, a review, a continuation — without consuming this conversation's context for the work itself. You receive its result, not its intermediate steps. This call waits for the subagent and returns its result.",
+      "description": "Delegate a task to a subagent that inherits this conversation: a child agent seeded with all completed turns so far (it does not see the current in-flight turn). Use this when the subtask builds on this conversation's context — a follow-up analysis, a review, a continuation — without consuming this conversation's context for the work itself. You receive its result, not its intermediate steps. This tool starts an independently managed subagent and immediately returns its id. The runtime notifies you when it finishes. The child reports results with `send_message`; use `send_message` to steer it while running or continue its conversation after it finishes.",
       "parameters": {
         "type": "object",
         "properties": {
+          "cwd": {
+            "type": "string",
+            "description": "Initial child working directory. Relative paths use your current directory; omitted inherits it. Later directory changes in either agent are independent."
+          },
           "description": {
             "type": "string",
             "description": "A short (3-5 word) description of the delegated task, for display."
@@ -536,6 +642,19 @@
       }
     },
     {
+      "name": "working_directory",
+      "description": "Read the current working directory, or change it with cd. Relative paths use the current directory. Existing shells and running processes keep their own directories.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "cd": {
+            "type": "string",
+            "description": "Existing directory to enter. Omit to read the current directory."
+          }
+        }
+      }
+    },
+    {
       "name": "write",
       "description": "Create or fully replace a UTF-8 text file.",
       "parameters": {
@@ -543,7 +662,7 @@
         "properties": {
           "file_path": {
             "type": "string",
-            "description": "Path to write, resolved by the filesystem backend."
+            "description": "Path to write, resolved by the filesystem backend. Provide `file_path` before `content` in the arguments."
           },
           "content": {
             "type": "string",

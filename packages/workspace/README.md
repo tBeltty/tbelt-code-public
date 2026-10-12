@@ -33,7 +33,7 @@ The workspace family lets a host product keep an ordered list of named projects 
 - Workspace subsystem — the authoritative feature contract for projects and their sessions.
 - domain KV storage Agent Note — the storage design behind project records.
 - Workspace UI product-flow Agent Note — how the first start builds projects from session history and how the GUI orders them.
-- Workspace registration deletion decision — why removing a project never deletes its folder or sessions.
+- historical Workspace registration deletion decision — why removing a project never deletes its folder or sessions.
 
 -----
 

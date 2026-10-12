@@ -25,8 +25,14 @@ export type AgentPresetSettingsKey =
   | 'noDescription'
   | 'brokenBadge'
   | 'switchRefused'
+  | 'standardUnavailable'
   | 'close'
   | 'creatorDraft'
+  | 'createPlugin'
+  | 'createPluginDescription'
+  | 'createPluginChecking'
+  | 'createPluginUnavailable'
+  | 'createPluginMissing'
 
 /** English copy. */
 export const en = {
@@ -60,10 +66,16 @@ export const en = {
   brokenBadge: 'Failed to load',
 
   switchRefused: 'Could not switch to {name}: {reason}',
+  standardUnavailable: 'Standard mode is unavailable. Restore it or choose another available mode.',
 
   close: 'Close',
 
   creatorDraft: 'Let the agent help me create a preset',
+  createPlugin: 'Let the agent create a plugin',
+  createPluginDescription: 'Enter Creator mode and make your own tBelt Code plugin',
+  createPluginChecking: 'Checking whether Creator mode is available',
+  createPluginUnavailable: 'Temporarily unavailable. Reopen this menu to retry',
+  createPluginMissing: 'Creator mode is not included in this configuration',
 
 } satisfies Record<string, string>
 
@@ -92,6 +104,12 @@ export const es = {
   switchRefused: 'No se pudo cambiar a {name}: {reason}',
   close: 'Cerrar',
   creatorDraft: 'Quiero que el agente me ayude a crear un preajuste',
+  standardUnavailable: 'El modo estándar no está disponible. Restáuralo o elige otro modo disponible.',
+  createPlugin: 'Que el agente cree un plugin',
+  createPluginDescription: 'Entra en el modo creador y crea tu propio plugin de tBelt Code',
+  createPluginChecking: 'Comprobando si el modo creador está disponible',
+  createPluginUnavailable: 'No disponible por ahora. Vuelve a abrir este menú para reintentar',
+  createPluginMissing: 'El modo creador no está incluido en esta configuración',
 } satisfies Record<keyof typeof en, string>
 
 // The resolution itself is the shared fold in `dsh-agent-preset-registry/display`,

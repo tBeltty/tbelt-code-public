@@ -9,7 +9,7 @@
  */
 import type { GlobalStandardProps } from '@deepseek-ai/dsh-client-ui-slots'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { act, cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
+import { act, cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import { createElement, type ComponentProps, type FC, type ReactNode } from 'react'
 import { bindSnapshotSelector, SlotTestRuntime, stubConfigForm } from '@deepseek-ai/dsh-client-test-runtime'
 import { resolveSlotLabel } from '@deepseek-ai/dsh-client-ui-slots'
@@ -42,6 +42,7 @@ import { es as conversationEs } from '@deepseek-ai/dsh-client-ui-conversation/sr
 import * as localePlugin from '@deepseek-ai/dsh-client-locale/client'
 import { apply, inject } from '@deepseek-ai/dsh-client-ui-trajectory/client'
 import { apply as nodeApply } from '@deepseek-ai/dsh-client-ui-trajectory'
+import { PartialArguments } from '@deepseek-ai/dsh-util-values'
 import type { TrajectoryTurnModel } from '../src/client/layout.ts'
 import { TrajectoryTimeline as LocalizedTrajectoryTimeline } from '../src/client/TrajectoryTimeline.tsx'
 import {
@@ -91,6 +92,7 @@ const NODES: LegacyConversationSlice['nodes'] = [
   },
   {
     kind: 'tool-result', seq: 3, time: 3_000, callId: 'c1', call: null, callTime: 2_200,
+    name: '', args: PartialArguments.EMPTY,
     content: [], isError: false, subCalls: [],
   },
   {
@@ -217,6 +219,7 @@ function standaloneProps(
     captureInsertion: () => ({ start: 0, end: 0, draftRev: 0 }),
     insertText: () => false,
     setDraft: () => {},
+    persistDraft: () => {},
     addAttachments: () => false,
     removeAttachment: () => {},
     pruneAttachments: () => {},
@@ -345,6 +348,7 @@ function mount(fixture: Awaited<ReturnType<typeof bench>>) {
     captureInsertion: () => ({ start: 0, end: 0, draftRev: 0 }),
     insertText: () => false,
     setDraft: vi.fn(),
+    persistDraft: vi.fn(),
     addAttachments: vi.fn(() => false),
     removeAttachment: vi.fn(),
     pruneAttachments: vi.fn(),
@@ -417,7 +421,7 @@ function mount(fixture: Awaited<ReturnType<typeof bench>>) {
         useStore={bindSnapshotSelector(conversation)}
         actions={conversation.actions}
         renderSlot={renderSlot}
-        bindDraftMirror={() => () => {}}
+        bindDraftPersistence={() => () => {}}
         openView={conversation.actions.openView}
         useInspectCall={selector => selector(undefined)}
       />
@@ -591,6 +595,37 @@ describe('tab switching in ConversationRoot', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Solicitud #2 · Compactación' }))
     expect(screen.getByText('Compactación · Entre turnos')).toBeTruthy()
     expect(view.container.textContent).not.toContain('Turn null')
+  })
+
+  it('reports a streaming Assistant record and a running compaction as pending', async () => {
+    const nodes: LegacyConversationSlice['nodes'] = [
+      { kind: 'user', seq: 1, time: 1_000, content: [], source: null },
+    ]
+    const requests: RequestView[] = [
+      {
+        purpose: 'assistant', startSeq: 2, turn: 1, step: 1,
+        startedAt: 2_000, completedAt: null, status: 'running',
+      },
+      {
+        purpose: 'compaction', startSeq: 3, turn: 1, step: 0,
+        startedAt: 3_000, completedAt: null, status: 'running',
+      },
+    ]
+    const b = await bench(historySnapshot(nodes, {
+      requests,
+      partial: { turn: 1, step: 1, blocks: [{ kind: 'text', text: 'still streaming' }] },
+    }))
+    mount(b)
+    fireEvent.click(screen.getByRole('tab', { name: 'Trajectory' }))
+    const detail = () => screen.getByRole('complementary', { name: 'Detalles del evento' })
+
+    fireEvent.click(screen.getByRole('row', { name: /still streaming/ }))
+    expect(within(detail()).getByText('Pendiente')).toBeTruthy()
+    expect(within(detail()).queryByText('Completado')).toBeNull()
+
+    fireEvent.click(screen.getByRole('button', { name: 'Solicitud #2 · Compactación' }))
+    expect(within(detail()).getByText('Pendiente')).toBeTruthy()
+    expect(within(detail()).queryByText('Compactado')).toBeNull()
   })
 
   it('activates only the selected standalone compaction section', async () => {
@@ -1289,6 +1324,28 @@ describe('timeline projection', () => {
 })
 
 describe('TrajectoryView state', () => {
+  it.each([
+    { interrupted: true, status: 'Fallido' },
+    { interrupted: false, status: 'Completado' },
+  ])('uses the settled response status when the Step start is unloaded: $status', ({ interrupted, status }) => {
+    const nodes: LegacyConversationSlice['nodes'] = [{
+      kind: 'assistant', seq: 10, time: 10_000, turn: 2, step: 3,
+      blocks: [{ kind: 'text', text: 'loaded response' }],
+      ...(interrupted ? { interrupted: true } : {}),
+    }]
+    render(<TrajectoryView
+      {...standaloneProps(nodes)}
+      {...standaloneHistory(historySnapshot(nodes))}
+      {...standaloneDuration()}
+    />)
+    fireEvent.click(screen.getByRole('row', { name: /loaded response/ }))
+    expect(within(screen.getByRole('tabpanel')).getByText(status)).toBeTruthy()
+    fireEvent.click(within(screen.getByRole('table')).getByRole('button', { name: 'Solicitud #1' }))
+    expect(within(screen.getByRole('tabpanel')).getByText(status)).toBeTruthy()
+    fireEvent.click(screen.getByRole('button', { name: 'Mensaje del asistente' }))
+    expect(within(screen.getByRole('tabpanel')).getByText(status)).toBeTruthy()
+  })
+
   it('reveals resident history one bounded page at a time', async () => {
     const nodes: LegacyConversationSlice['nodes'] = Array.from({ length: 5_000 }, (_, index) => ({
       kind: 'user' as const,
@@ -1370,6 +1427,7 @@ describe('TrajectoryView state', () => {
       blocks: [{ kind: 'tool-call', callId: 'boundary-call', name: 'bash', argsRaw: '{}' }],
     }, {
       kind: 'tool-result', seq: 3, time: 3, callId: 'boundary-call',
+      name: 'bash', args: PartialArguments.fromText('{}'),
       call: { name: 'bash', argsRaw: '{}' }, callTime: 2,
       content: [], isError: false, subCalls: [],
     }, ...Array.from({ length: 39 }, (_, index) => ({
@@ -1424,12 +1482,13 @@ describe('TrajectoryView state', () => {
       seq: 3,
       time: 3,
       callId: 'hidden-root',
+      name: 'run_code', args: PartialArguments.fromText('{}'),
       call: { name: 'run_code', argsRaw: '{}' },
       callTime: 2,
       content: [],
       isError: false,
       subCalls: [{
-        phase: 'start' as const, callId: 'hidden-child', parentCallId: 'hidden-root', name: 'bash', argsRaw: '{}',
+        phase: 'start' as const, args: PartialArguments.fromText('{}'), callId: 'hidden-child', parentCallId: 'hidden-root', name: 'bash', argsRaw: '{}',
         turn: 1, step: 1, time: 3, subCalls: [],
       }],
     }, 'hidden-child'],
@@ -1438,6 +1497,7 @@ describe('TrajectoryView state', () => {
       { kind: 'user', seq: 1, time: 1, content: [], source: null },
       {
         kind: 'tool-result', seq: 2, time: 2, callId: 'unrelated', call: null, callTime: null,
+        name: '', args: PartialArguments.EMPTY,
         content: [], isError: false, subCalls: [],
       },
       target,

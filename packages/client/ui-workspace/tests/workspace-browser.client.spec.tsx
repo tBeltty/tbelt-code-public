@@ -2593,7 +2593,7 @@ describe('Workspace tree grouping', () => {
   const child = { ...workspace('child', ['child-session'], 'Child'), path: '/projects/team/child' }
   const section = (title: string) => screen.getByText(title).closest<HTMLElement>('[class*="groupSection"]')!
 
-  it('adopts a parent directory and opens its Session without confirmation', async () => {
+  it('adopts a parent directory and preserves its existing draft without confirmation', async () => {
     const b = mount({
       useWorkspaces: hook(workspaceState([child])),
       createWorkspace: vi.fn(async () => root),
@@ -2602,7 +2602,7 @@ describe('Workspace tree grouping', () => {
     })
     fireEvent.click(screen.getByRole('button', { name: 'Añadir espacio de trabajo' }))
     fireEvent.click(screen.getByRole('button', { name: 'Pick directory' }))
-    await waitFor(() => { expect(b.props.startSession).toHaveBeenCalledWith(wid('root')) })
+    await waitFor(() => { expect(b.props.startSession).toHaveBeenCalledWith(wid('root'), { clearPreviousDraft: false }) })
     expect(b.props.createWorkspace).toHaveBeenCalledWith({ path: '/projects' })
     expect(screen.queryByRole('dialog')).toBeNull()
     rerender(b, { useWorkspaces: hook(workspaceState([child, root])) })

@@ -3,6 +3,13 @@
  * @module @deepseek-ai/dsh-presentation-tool-call/blocks
  */
 import type { ContentBlock } from '@deepseek-ai/dsh-llm/types'
+import type { PartialArguments } from '@deepseek-ai/dsh-util-values'
+
+/**
+ * Lazy top-level argument reader that grows while a call is preparing and is sealed once the call is dispatched.
+ * It is empty for a result whose call left the loaded window.
+ */
+export type ToolArgs = PartialArguments
 
 /** A tool result paired (when in-window) with its call head. */
 export interface ToolResultNode {
@@ -13,6 +20,8 @@ export interface ToolResultNode {
   callId: string
   /** Parent Tool call for a PTC dispatch result; absent on a root Session result. */
   parentCallId?: string
+  /** Wire tool name from the paired tool/call; empty when that call left the loaded window. */
+  name: string
   /** Call head backfilled from the in-window tool/call; null when window truncation left the call outside (card head shows callId). */
   call: { name: string; argsRaw: string } | null
   /** Unix epoch ms of the paired tool/call when the call is still in-window; used for call-row duration. */
@@ -23,6 +32,8 @@ export interface ToolResultNode {
   meta?: unknown
   /** Child calls owned by this call, in dispatch order. */
   subCalls: readonly ToolCallBlock[]
+  /** Argument view of the paired call; empty when the call left the loaded window. */
+  args: ToolArgs
 }
 
 /** Identity and placement shared by tool preparation and dispatch. */
@@ -37,6 +48,8 @@ interface ToolCallHead {
   time: number
   /** Child calls owned by this call, in dispatch order. */
   subCalls: readonly ToolCallBlock[]
+  /** Argument view shared by the preparing, start, and result stages. */
+  args: ToolArgs
 }
 
 /** A named model call whose arguments are not yet available to tool views. */

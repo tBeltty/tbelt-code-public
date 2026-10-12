@@ -1,7 +1,7 @@
 {
   "name": "@deepseek-ai/dsh-spend-budget",
   "description": "Local model spend ledger and spend limits (ctx.spendBudget): prices provider-reported token usage at each route's list price and refuses model steps once a session or monthly limit is reached",
-  "version": "0.2.0-rc.2",
+  "version": "0.2.1-alpha.2",
   "publishConfig": {
     "access": "public"
   },

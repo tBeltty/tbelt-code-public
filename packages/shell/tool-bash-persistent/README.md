@@ -23,6 +23,8 @@ This package gives an agent a `bash` tool whose cwd, exported variables, functio
 <a id="use-this-package"></a>
 ## Use this package
 
+A new shell starts in the Session's current working directory. Once created, its directory and environment remain independent of later Session directory changes.
+
 Load this plugin in any composition where the agent should keep shell state between commands — for example long build sessions, activated environments, or scripts that export variables for later steps. It registers the `bash` tool and requires the `ctx.tools` and `ctx.terminals` services plus an owning agent session at execution time.
 
 ### When to choose it
@@ -78,7 +80,6 @@ This section explains the design decisions behind the tool and points at the cod
 | File | Role |
 |---|---|
 | [`src/index.ts`](src/index.ts) | Plugin entry: shell registry, command wrapping, scrollback polling, extraction and rendering |
-| — | No runtime invariant companion is published; the adapter's private owner-to-shell cache has no observable event or data relation. Shell reuse remains observable through tool execution. Lifecycle tests prove its cleanup without adding a public API solely for an invariant. |
 
 ### Command flow
 
@@ -96,7 +97,7 @@ Read these pages when the package-level contract is not enough. They move from t
 - [terminal package map](../../terminal/README.md) — the persistent PTY capability family.
 - [terminal seam](../../terminal/terminal/README.md) — the `ctx.terminals` service behind the tool.
 - [terminal-bash backend](../../terminal/terminal-bash/README.md) — the default `shell` backend.
-- [tool-terminal](../../terminal/tool-terminal/README.md) — six model-facing terminal tools for interactive work.
+- [tool-terminal](../../experimental/tool-terminal/README.md) — six model-facing terminal tools for interactive work.
 - Persistent PTY sessions Agent Note — the owner-scoped session design and its rationale.
 - Generated tool catalog — the exact `bash` argument schema.
 - Generated configuration catalog — every accepted config field and its source declaration.

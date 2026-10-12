@@ -23,6 +23,7 @@ export { SegmentedControl } from './SegmentedControl.tsx'
 export type { SegmentedControlOption } from './SegmentedControl.tsx'
 export { Checkbox } from './Checkbox.tsx'
 export { Input } from './Input.tsx'
+export { InlineEditor } from './InlineEditor.tsx'
 export { Menu, MenuItemButton } from './Menu.tsx'
 export { MenuSurface } from './MenuSurface.tsx'
 export type { MenuSurfaceProps } from './MenuSurface.tsx'
@@ -48,6 +49,7 @@ export {
 export { BrandWordmark } from './BrandWordmark.tsx'
 export type { BrandWordmarkProps } from './BrandWordmark.tsx'
 export {
+  PermissionIconAutoReviewMedium, PermissionIconAutoReviewRegular,
   PermissionIconFullAccessMedium, PermissionIconFullAccessRegular,
   PermissionIconReadOnlyMedium, PermissionIconReadOnlyRegular,
   PermissionIconWorkspaceWriteMedium, PermissionIconWorkspaceWriteRegular,
@@ -88,6 +90,8 @@ export type { RelativeTime, RelativeTimeUnit } from './relative-time.ts'
 export { JsonTree } from './JsonTree.tsx'
 export type { JsonTreeProps, JsonTreeLabels } from './JsonTree.tsx'
 export { TerminalBlock, DEFAULT_TERMINAL_MAX_LINES } from './TerminalBlock.tsx'
+export { CommandText } from './CommandText.tsx'
+export type { CommandTextProps } from './CommandText.tsx'
 export type { TerminalBlockProps, TerminalBlockLabels } from './TerminalBlock.tsx'
 export { ReadBlock, DEFAULT_READ_MAX_LINES } from './ReadBlock.tsx'
 export type { ReadBlockProps, ReadBlockLine, ReadBlockLabels } from './ReadBlock.tsx'

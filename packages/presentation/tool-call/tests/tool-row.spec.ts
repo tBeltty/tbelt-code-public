@@ -4,14 +4,20 @@ import {
   classifyTool, formatToolBody, resultText, toolRowModel, toolTitleKey,
   type StartedToolCall, type ToolResultNode,
 } from '../src/index.ts'
+import { PartialArguments } from '@deepseek-ai/dsh-util-values'
 
-const running = (over?: Partial<StartedToolCall>): StartedToolCall => ({
-  phase: 'start' as const, callId: 'c1', name: 'bash', argsRaw: '{"command":"ls -la","description":"List files"}',
-  turn: 1, step: 1, time: 1_000, subCalls: [], ...over,
-})
+const running = (over?: Partial<StartedToolCall>): StartedToolCall => {
+  const block: StartedToolCall = {
+    phase: 'start' as const, callId: 'c1', name: 'bash', argsRaw: '{"command":"ls -la","description":"List files"}',
+    turn: 1, step: 1, time: 1_000, subCalls: [],
+    args: PartialArguments.fromText('{"command":"ls -la","description":"List files"}'), ...over,
+  }
+  return over?.argsRaw !== undefined && over.args === undefined ? { ...block, args: PartialArguments.fromText(over.argsRaw) } : block
+}
 
 const result = (over?: Partial<ToolResultNode>): ToolResultNode => ({
-  kind: 'tool-result', seq: 10, time: 2_000, callId: 'c1',
+  kind: 'tool-result', seq: 10, time: 2_000, callId: 'c1', name: 'bash',
+  args: PartialArguments.fromText('{"command":"ls -la","description":"List files"}'),
   call: { name: 'bash', argsRaw: '{"command":"ls -la","description":"List files"}' },
   callTime: 1_000,
   content: [], isError: false, subCalls: [], ...over,
@@ -52,7 +58,7 @@ describe('tool row model', () => {
 
   it('derives the preparing state and no arguments before the call is dispatched', () => {
     const preparing = toolRowModel('bash', {
-      phase: 'preparing', callId: 'c1', name: 'bash', turn: 1, step: 1, time: 1_000, subCalls: [],
+      phase: 'preparing', callId: 'c1', name: 'bash', turn: 1, step: 1, time: 1_000, args: PartialArguments.EMPTY, subCalls: [],
     })
     expect(preparing).toMatchObject({ state: 'preparing', summary: '', bodyRaw: null, filePath: undefined, output: null })
   })
@@ -102,10 +108,14 @@ describe('tool row model', () => {
     })).summary).toBe('first query, second')
   })
 
-  it('exposes filePath for path/file_path args and skips URL-only reads', () => {
-    expect(toolRowModel('read', running({ name: 'read', argsRaw: '{"path":"src/a.ts"}' })).filePath).toBe('src/a.ts')
-    expect(toolRowModel('write', running({ name: 'write', argsRaw: '{"file_path":"src/a.ts"}' })).filePath).toBe('src/a.ts')
-    expect(toolRowModel('edit', running({ name: 'edit', argsRaw: '{"file_path":"src/a.ts"}' })).filePath).toBe('src/a.ts')
+  it('exposes filePath only once the target is identified, and skips URL-only reads', () => {
+    const settledFor = (name: string, argsRaw: string, over?: Partial<ToolResultNode>) =>
+      result({ name, call: { name, argsRaw }, args: PartialArguments.fromText(argsRaw), ...over })
+    expect(toolRowModel('write', running({ name: 'write', argsRaw: '{"file_path":"src/a.ts"}' })).filePath).toBeUndefined()
+    expect(toolRowModel('write', running({ name: 'write', argsRaw: '{"file_path":"/w/src/a.ts"}' })).filePath).toBe('/w/src/a.ts')
+    expect(toolRowModel('edit', settledFor('edit', '{"file_path":"src/a.ts"}')).filePath).toBe('src/a.ts')
+    expect(toolRowModel('edit', settledFor('edit', '{"file_path":"src/a.ts"}', { meta: { path: '/w/src/a.ts' } })).filePath)
+      .toBe('/w/src/a.ts')
     expect(toolRowModel('web_fetch', running({ name: 'web_fetch', argsRaw: '{"url":"https://example.com"}' })).filePath)
       .toBeUndefined()
     expect(toolRowModel('bash', running()).filePath).toBeUndefined()
@@ -233,6 +243,8 @@ describe('tool row model', () => {
       summary: 'dyn-2',
     })
     expect(toolRowModel('cordis_undefine', result({
+      name: 'cordis_undefine',
+      args: PartialArguments.fromText('{"id":"dyn-2"}'),
       call: { name: 'cordis_undefine', argsRaw: '{"id":"dyn-2"}' },
     }))).toMatchObject({
       variant: 'others',

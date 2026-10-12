@@ -1,0 +1,167 @@
+/** Generate the CLI reference by invoking the shipped launcher and profile help. */
+
+import { execFile } from 'node:child_process'
+import { existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
+import { tmpdir } from 'node:os'
+import { join, resolve } from 'node:path'
+import { promisify } from 'node:util'
+import { PROFILE_TEMPLATES } from '@deepseek-ai/dsh-app-boot'
+
+const root = resolve(import.meta.dirname, '..')
+const OUT = 'docs/cli-help.md'
+const execFileAsync = promisify(execFile)
+
+/** Complete help text and the immediate subcommands it advertises. */
+export interface CliHelp {
+  /** Complete help text with LF line endings. */
+  output: string
+  /** Immediate command names and aliases listed in the `Commands:` section, in their displayed order. */
+  commands: string[]
+}
+
+interface HelpPage {
+  help: CliHelp
+  invocations: [string, ...string[]]
+  children: Map<string, HelpPage>
+}
+
+/**
+ * Discover commands from actual text help while preserving every displayed line.
+ * @param stdout - Successful CLI help output.
+ * @returns Help text with LF line endings and the command names and aliases (`serve|s`) listed in its `Commands:` section.
+ * @throws When the output is empty.
+ */
+export function parseCliHelp(stdout: string): CliHelp {
+  const output = stdout.replaceAll('\r\n', '\n')
+  if (output.trim() === '') throw new Error('CLI help returned empty output')
+  const section = /^Commands:\n((?:[ \t][^\n]*\n|\n)*)/mu.exec(output)?.[1] ?? ''
+  const commands = [...section.matchAll(/^ {2}\S+/gmu)].flatMap(match => match[0].slice(2).split('|'))
+  return { output, commands }
+}
+
+// A `help [command]` row prints its parent's help, so a page can list itself as a child.
+// An invocation that reaches a page already on the current path joins that page without
+// extending its children, which keeps alias propagation finite.
+function addAlias(page: HelpPage, invocation: string, path: ReadonlySet<HelpPage>): void {
+  if (page.invocations.includes(invocation)) return
+  page.invocations.push(invocation)
+  if (path.has(page)) return
+  const childPath = new Set([...path, page])
+  for (const [name, child] of page.children) addAlias(child, `${invocation} ${name}`, childPath)
+}
+
+/**
+ * Collect launcher, plugin, and profile help even when root help lists no commands.
+ * @param readHelp - run one help invocation and return its complete stdout.
+ * @param profiles - shipped profile names whose explicit and shorthand forms must be documented.
+ * @returns distinct help pages with every discovered invocation and nested command.
+ */
+export async function collectCliHelp(
+  readHelp: (args: readonly string[]) => Promise<string>, profiles: readonly string[],
+): Promise<HelpPage[]> {
+  const pages = new Map<string, HelpPage>()
+  const visit = async (args: string[], path: ReadonlySet<HelpPage>): Promise<HelpPage> => {
+    const invocation = ['dsh', ...args].join(' ')
+    const help = parseCliHelp(await readHelp(args))
+    const existing = pages.get(help.output)
+    if (existing !== undefined) {
+      addAlias(existing, invocation, path)
+      return existing
+    }
+    const page: HelpPage = { help, invocations: [invocation], children: new Map() }
+    pages.set(help.output, page)
+    const childPath = new Set([...path, page])
+    for (const name of help.commands) page.children.set(name, await visit([...args, name], childPath))
+    return page
+  }
+  const top = new Set<HelpPage>()
+  await visit([], top)
+  await visit(['plugin'], top)
+  for (const profile of [...profiles].sort()) {
+    await visit([profile], top)
+    await visit(['--profile', profile], top)
+  }
+  return [...pages.values()]
+}
+
+async function collectHelp(): Promise<HelpPage[]> {
+  const directory = mkdtempSync(join(tmpdir(), 'dsh-cli-help-'))
+  const environment = {
+    ...process.env,
+    DSH_HOME: join(directory, 'harness'),
+    DSH_AGENTS_HOME: join(directory, 'agents'),
+    DSH_TELEMETRY_DISABLED: '1',
+    NO_COLOR: '1',
+  }
+  for (const name of ['NODE_OPTIONS', 'FORCE_COLOR']) Reflect.deleteProperty(environment, name)
+  try {
+    return await collectCliHelp(async (args) => {
+      const { stdout, stderr } = await execFileAsync(process.execPath, [
+        '--import', 'tsx/esm', 'apps/cli/src/bin.ts', ...args, '--help',
+      ], {
+        cwd: root, env: environment, encoding: 'utf8', timeout: 30_000,
+        killSignal: 'SIGKILL', maxBuffer: 2 * 1024 * 1024,
+      })
+      if (stderr !== '') throw new Error(`${['dsh', ...args].join(' ')} --help wrote diagnostics: ${stderr}`)
+      return stdout
+    }, Object.keys(PROFILE_TEMPLATES))
+  } finally {
+    rmSync(directory, { recursive: true, force: true })
+  }
+}
+
+function anchor(page: HelpPage): string {
+  return page.invocations[0].replaceAll(/[^a-zA-Z0-9]+/gu, '-').replace(/-$/u, '').toLowerCase()
+}
+
+function renderHelp(pages: readonly HelpPage[]): string {
+  const lines = [
+    '<!-- Generated by scripts/gen-cli-help.ts — do not edit by hand.',
+    '     Run `pnpm run gen-cli-help` to regenerate. -->',
+    '',
+    '# dsh CLI help',
+    '',
+    'This reference contains complete help for the launcher, subcommands, and shipped profiles. Identical help appears once with every invocation listed. Help output retains its original language.',
+    '',
+    'Run `pnpm run gen-cli-help` to regenerate; run `pnpm run verify-cli-help` to check freshness.',
+    '',
+    '## Contents',
+    '',
+    ...pages.map(page => `- [\`${page.invocations[0]}\`](#${anchor(page)})`),
+    '',
+  ]
+  for (const page of pages) {
+    lines.push(
+      `<a id="${anchor(page)}"></a>`,
+      `## \`${page.invocations[0]}\``,
+      '',
+      `Invocations: ${page.invocations.map(invocation => `\`${invocation} --help\``).join(', ')}`,
+      '',
+      `\`\`\`text\n${page.help.output}${page.help.output.endsWith('\n') ? '' : '\n'}\`\`\``,
+      '',
+    )
+  }
+  return lines.join('\n')
+}
+
+/** Regenerate the CLI reference page, or check its bytes with --check. @returns Nothing. */
+export async function main(): Promise<void> {
+  const check = process.argv.includes('--check')
+  const pages = await collectHelp()
+  const outputs = new Map([[OUT, renderHelp(pages)]])
+  const changed: string[] = []
+  for (const [path, content] of outputs) {
+    const destination = resolve(root, path)
+    if (existsSync(destination) && readFileSync(destination, 'utf8') === content) continue
+    changed.push(path)
+    if (!check) writeFileSync(destination, content)
+  }
+  if (check && changed.length > 0) {
+    console.error(`gen-cli-help: stale — ${changed.join(', ')}. Run pnpm run gen-cli-help.`)
+    process.exitCode = 1
+  } else {
+    console.log(`gen-cli-help: ${pages.length} help pages; ${check ? 'all outputs are current' : `${changed.length} files written`}.`)
+  }
+}
+
+if (process.argv[1] !== undefined && import.meta.filename === resolve(process.argv[1])) await main()

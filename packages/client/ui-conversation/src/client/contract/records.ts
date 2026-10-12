@@ -12,7 +12,7 @@ import type { ToolResultNode } from '@deepseek-ai/dsh-presentation-tool-call'
 import type { ContextProducerView, KnownContextForm } from './context-producer.ts'
 export type { TodoItem }
 export type {
-  PreparingToolCall, RunningToolCall, StartedToolCall, ToolCallBlock, ToolResultNode,
+  PreparingToolCall, RunningToolCall, StartedToolCall, ToolArgs, ToolCallBlock, ToolResultNode,
 } from '@deepseek-ai/dsh-presentation-tool-call'
 
 /** Request configuration recorded for one provider call. */
@@ -81,7 +81,7 @@ export interface AssistantMessageNode {
   requestConfig?: AssistantRequestConfig
   /** Timing derived from the recorded step/chunk/message event sequence. */
   timing?: AssistantTiming
-  /** Prefix of an aborted turn, rendered with a 已停止 marker. A durable
+  /** Prefix of an aborted turn, rendered with a Stopped marker. A durable
    *  finalized prefix uses its event seq; a chunk-only fallback uses a fractional
    *  seq derived from the closing boundary to keep it ordered inside the flow. */
   interrupted?: true

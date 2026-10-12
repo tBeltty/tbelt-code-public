@@ -21,6 +21,8 @@ interface DraftViewGate {
   showToast: (text: string) => void
   t: ComposerBarProps['t']
   canAcceptDrop: boolean
+  /** Whether long pasted text may become a file attachment; false for a child composer, which takes images only. */
+  canPasteToFile: boolean
 }
 
 /**
@@ -93,7 +95,7 @@ export function installDraftFilePicker(
   fileInputRef: RefObject<HTMLInputElement>,
 ): () => void {
   return keyboard.bindFilePicker({
-    available: () => gate.current.canAcceptDrop && fileInputRef.current !== null,
+    available: () => gate.current.canAcceptDrop && fileInputRef.current !== null && !fileInputRef.current.disabled,
     open: () => { fileInputRef.current?.click() },
   })
 }
@@ -142,8 +144,8 @@ export function installDraftKeymap(
     pasteText: (text) => {
       const g = gate.current
       if (g.machineBusy || g.locked) return
-      // Text the composer cannot attach (no file intake, e.g. a subagent) stays inline.
-      if (g.pasteToFileChars > 0 && text.length > g.pasteToFileChars && g.canAcceptDrop) {
+      // Text the composer cannot attach as a file (no file intake, or a child composer that takes images only) stays inline.
+      if (g.pasteToFileChars > 0 && text.length > g.pasteToFileChars && g.canPasteToFile) {
         g.intakeFiles([pastedTextFile(text)])
         return
       }

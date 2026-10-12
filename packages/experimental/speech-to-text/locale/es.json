@@ -1,0 +1,6 @@
+{
+  "meta": {
+    "title": "Reconocimiento de voz",
+    "description": "Gestiona la transcripción de voz y permite elegir un servicio de reconocimiento."
+  }
+}

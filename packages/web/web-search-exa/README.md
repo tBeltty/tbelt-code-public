@@ -79,8 +79,8 @@ The provider is a thin adapter over Exa's API with two deliberate rules:
 | File | Role |
 |---|---|
 | [`src/index.ts`](src/index.ts) | Plugin entry: config schema, credential reference, provider registration |
-| [`src/provider.ts`](src/provider.ts) | The `ExaSearchProvider`: request dispatch, key check, result mapping |
-| [`src/types.ts`](src/types.ts) | Exa wire types: `ExaSearchResponse`, `ExaResult` |
+| [`src/provider.ts`](src/provider.ts) | The `ExaSearchProvider`: request dispatch, abort classification, result mapping |
+| [`src/types.ts`](src/types.ts) | Exa wire types: `ExaSearchResponse`, `ExaResult`, `ExaError` |
 | — | No runtime invariant companion is published; this package exposes no independent event sequence or mutable data relation beyond contracts enforced at its owning seam. |
 
 ### Request and mapping flow

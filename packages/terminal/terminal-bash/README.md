@@ -23,6 +23,8 @@ kind: "package-reference"
 <a id="use-this-package"></a>
 ## Use this package
 
+A terminal without an explicit initial directory starts in the owner's current Session directory. Its sandbox permission root remains governed by Session policy.
+
 Mount this backend when a composition needs persistent shell sessions — state such as cwd, exported variables, functions, or running interactive children must survive across tool calls. It is the default `shell` type: a composition that mounts `@deepseek-ai/dsh-terminal` without it has no sessions to open.
 
 ### When to choose it
@@ -83,7 +85,7 @@ This section explains the design behind the backend and points at the code that 
 
 One backend serves both dialects: bash and pwsh share the same session machinery — sanitizer, bounded buffers, readiness polling, cancellation, and teardown — and differ only in argv, environment, and prompt installation. Bash receives a private marker through `PS1` plus `PROMPT_COMMAND`. Pwsh writes a prompt function, pins UTF-8 console encoding, and publishes startup only after the backend reports `stdin_read`; echoed setup text cannot publish the shell. A zero-scrollback `@xterm/headless` instance consumes raw PTY data and returns terminal-protocol replies through the same handle, while the line sanitizer remains the only output projection.
 
-Scrollback and unread send output retain independently owned strings with incremental byte and newline counts, so sanitized slices cannot retain discarded control sequences. Appending and evicting text takes amortized time proportional to incoming text; reads assemble the retained chunks. Retention preserves code-point boundaries and counts the empty line after a trailing newline. The retention decision owns the complexity and measurement rationale.
+Scrollback and unread send output retain independently owned strings with incremental byte and newline counts, so sanitized slices cannot retain discarded control sequences. Appending and evicting text takes amortized time proportional to incoming text; reads assemble the retained chunks. Retention preserves code-point boundaries and counts the empty line after a trailing newline. The historical retention decision records the complexity and measurement rationale.
 
 ### Source map
 
@@ -117,7 +119,7 @@ Read these pages when the package-level contract is not enough. They move from t
 
 - Terminal subsystem reference — the service contract this backend implements and the generated `ctx.terminals` surface.
 - [terminal service](../terminal/README.md) — backend registration, owner fencing, and cleanup semantics.
-- [tool-terminal tools](../tool-terminal/README.md) — the model-facing tools that operate sessions.
+- [tool-terminal tools](../../experimental/tool-terminal/README.md) — the model-facing tools that operate sessions.
 - Subprocess seam — the terminal primitive that owns PTY allocation and process-tree cleanup.
 - Persistent PTY Agent Note — the capability design and deferred boundaries.
 - Persistent pwsh Agent Note — the Windows substrate and the pwsh dialect.
@@ -177,5 +179,3 @@ These limits define where the backend is a poor fit or needs special operational
 None.
 
 </details>
-
-**Runtime invariant:** No companion is published. Readiness, terminal buffers, and process-tree state are private per-session implementation state, and the backend publishes no independent lifecycle stream or snapshot.

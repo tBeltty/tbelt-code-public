@@ -1,7 +1,7 @@
 {
   "name": "@deepseek-ai/dsh-client-ui-settings-web-search",
   "description": "Web search settings page on the dsh web client's Plugins page: the search provider the agent uses and its API key",
-  "version": "0.2.0-rc.2",
+  "version": "0.2.1-alpha.2",
   "publishConfig": {
     "access": "public"
   },

@@ -62,8 +62,6 @@ Canonical results retain the complete JSON for programmatic callers. The pure te
 | [`src/tools.ts`](src/tools.ts) | Shared resource operations and argument schemas |
 | [`src/render.ts`](src/render.ts) | Attributed text projection without inline binary payloads |
 
-No runtime invariant companion is published: tools, prompt names, and dispatch derive from the same effect-owned provider registrations. They supply no independent observation to reconcile; registry-effect checks are not runtime invariants.
-
 </details>
 
 -----
@@ -75,8 +73,8 @@ These pages cover server configuration, execution, and the decisions behind reso
 
 - [MCP client](../mcp-client/README.md) — server transports, instructions, and connection lifecycle.
 - Tools subsystem — canonical values and model-visible results.
-- Resource visibility decision — shared profile mounting and visibility from configured servers.
-- Resources and instructions decision — scope, on-demand access, and excluded mechanisms.
+- [Resource visibility reference](README.md) — shared profile mounting and visibility from configured servers.
+- [Resources and instructions reference](README.md) — scope, on-demand access, and excluded mechanisms.
 
 -----
 

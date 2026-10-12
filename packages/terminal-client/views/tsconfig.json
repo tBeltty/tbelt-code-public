@@ -13,6 +13,7 @@
     { "path": "../../presentation/plan" },
     { "path": "../../presentation/tool-call" },
     { "path": "../../presentation/tool-card" },
+    { "path": "../../util/values" },
     { "path": "../../util/workspace-path" },
     { "path": "../../llm/llm" },
     { "path": "../../core/session" }

@@ -31,7 +31,7 @@ const FADE_MS = 1000
  * @param props.tone - 'success' renders the design's circled green check as
  * the leading glyph; omitted, the icon seat keeps its warning tint.
  * @param props.actions - optional inline actions continuing the sentence:
- * each renders its plain-text `prefix` (a connective like 或) followed by its
+ * each renders its plain-text `prefix` (a connective like "or") followed by its
  * localized `label` as blue clickable text, flowing after `text` as one
  * sentence. Each press is the owner's to handle (e.g. undo the reported
  * change, then unmount the toast). The banner surface stays click-through —

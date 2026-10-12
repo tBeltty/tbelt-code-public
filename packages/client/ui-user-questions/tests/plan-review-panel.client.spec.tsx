@@ -74,6 +74,7 @@ const chatState: ChatState = {
   nodes: {
     get: () => undefined,
     source: () => emptyNodeSource,
+    bottomSource: () => ({ getSnapshot: () => false, subscribe: () => () => {} }),
     turnDataSource: () => { throw new Error('unused') },
     processSource: () => emptyNodeSource,
     values: () => [],
@@ -132,6 +133,7 @@ const kit: Omit<QuestionComposerProps, 'matched'> = {
     captureInsertion: () => ({ start: 0, end: 0, draftRev: 0 }),
     insertText: () => false,
     setDraft: () => { throw new Error('unused') },
+    persistDraft: () => { throw new Error('unused') },
     addAttachments: () => { throw new Error('unused') },
     removeAttachment: () => { throw new Error('unused') },
     pruneAttachments: () => { throw new Error('unused') },

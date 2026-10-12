@@ -7,6 +7,7 @@
 import type { StreamChunk } from '@deepseek-ai/dsh-llm/types'
 import type { SessionEvent } from '@deepseek-ai/dsh-session/types'
 import type { ToolResultNode, StartedToolCall } from '@deepseek-ai/dsh-presentation-tool-call'
+import { PartialArguments } from '@deepseek-ai/dsh-util-values'
 import { t } from './copy.ts'
 import type { Style } from './ansi.ts'
 import { changedSummaryLine, DeliverablesTracker, presentedLines } from './deliverables.ts'
@@ -214,7 +215,7 @@ export class TranscriptRenderer {
     this.#deliverables.observe(event)
     const { callId, name, arguments: argsRaw, turn, step } = event.data
     const block: StartedToolCall = {
-      phase: 'start', callId, name, turn, step, time: event.time, argsRaw, subCalls: [],
+      phase: 'start', callId, name, turn, step, time: event.time, argsRaw, args: PartialArguments.fromText(argsRaw), subCalls: [],
     }
     this.#calls.set(callId, block)
     this.#lastCall = callId
@@ -232,6 +233,8 @@ export class TranscriptRenderer {
       seq: event.seq,
       time: event.time,
       callId,
+      name: call?.name ?? '',
+      args: call?.args ?? PartialArguments.EMPTY,
       call: call === undefined ? null : { name: call.name, argsRaw: call.argsRaw },
       callTime: call?.time ?? null,
       content: message.content,
@@ -245,7 +248,7 @@ export class TranscriptRenderer {
     const adjacent = this.#lastCall === callId
     this.#lastCall = undefined
     const head = adjacent || call === undefined ? '' : toolCallLine(this.#context(), {
-      phase: 'start', callId, name: call.name, turn: call.turn, step: call.step, time: call.time, argsRaw: call.argsRaw, subCalls: [],
+      phase: 'start', callId, name: call.name, turn: call.turn, step: call.step, time: call.time, argsRaw: call.argsRaw, args: call.args, subCalls: [],
     }) + '\n'
     return this.#close() + head + lines.join('\n') + '\n'
   }

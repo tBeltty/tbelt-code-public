@@ -40,7 +40,9 @@ const windowsUnsupportedPackages = process.platform === 'win32'
       'packages/shell/bash-local',
       'packages/shell/bash-sandbox',
       'packages/shell/tool-bash',
-      'packages/hooks/*',
+      'packages/experimental/hook-protocol',
+      'packages/experimental/hooks-claude-code',
+      'packages/experimental/hooks-codex',
       'packages/terminal/terminal-bash',
       'packages/experimental/ptc-runtime-python',
       'packages/sandbox/sandbox-local',
@@ -178,7 +180,7 @@ const processBoundTests = [
 export default defineConfig({
   plugins: [pathsPlugin(), standardDecoratorPlugin()],
   test: {
-    setupFiles: ['./scripts/test-proxy-environment.ts', './scripts/test-invariants.ts', './scripts/test-dom-environment.ts'],
+    setupFiles: ['./scripts/test-proxy-environment.ts', './scripts/test-dom-environment.ts'],
     // Default 5000ms is tight for a TypeScript-compiler-heavy spec sharing a
     // 2-vCPU CI runner with every other gate's worker; a slower host should
     // not turn a correct, merely-slow test into a flaky failure.
@@ -199,7 +201,7 @@ export default defineConfig({
           // Linux, and Windows. Forked workers avoid that shared thread path.
           pool: 'forks',
           ...laneTestBudget,
-          setupFiles: ['./scripts/test-proxy-environment.ts', './scripts/test-invariants.ts', './scripts/test-dom-environment.ts'],
+          setupFiles: ['./scripts/test-proxy-environment.ts', './scripts/test-dom-environment.ts'],
           include: testIncludes,
           exclude: [
             ...platformUnsupportedTests,
@@ -215,7 +217,7 @@ export default defineConfig({
           execArgv: vitestExecArgv,
           pool: 'forks',
           ...laneTestBudget,
-          setupFiles: ['./scripts/test-proxy-environment.ts', './scripts/test-invariants.ts', './scripts/test-dom-environment.ts'],
+          setupFiles: ['./scripts/test-proxy-environment.ts', './scripts/test-dom-environment.ts'],
           include: processBoundTests,
           exclude: [
             ...platformUnsupportedTests,
@@ -314,11 +316,9 @@ export default defineConfig({
         // whose remaining branches need real-composition/process harnesses.
         // TODO(gui): cover and remove with the client test lane above.
         'packages/client/modules/src/index.ts',
-        'packages/client/modules/src/invariant.ts',
         'packages/client/modules/src/client/index.ts',
         'packages/client/modules/src/client/manifest.ts',
         'packages/client/hmr/src/index.ts',
-        'packages/client/hmr/src/invariant.ts',
         'packages/client/connection/src/index.ts',
         'packages/client/connection/src/http-bridge.ts',
         // This assembly imports generated Host-for-Client code that exists
@@ -371,7 +371,6 @@ export default defineConfig({
         // registry's drive tails need the same maturing lanes. TODO(gui):
         // cover and remove with the client test lane above.
         'packages/interaction/commands/src/index.ts',
-        'packages/interaction/commands/src/invariant.ts',
         'packages/session/session-projection/src/index.ts',
         ...windowsUnsupportedCoveragePackages.map(path => `${path}/src/**/*.ts`),
         ...windowsOnlyCoverageExclusions,
@@ -380,8 +379,8 @@ export default defineConfig({
       ],
       // 100% or it doesn't merge (docs/testing.md: excessive tests are welcome).
       // Per-file so a well-covered big file can't subsidize a bare one.
-      // Every v8 ignore comment must carry a reason — see the quality-gates Agent Note
-      // (.agents/notes/implemented/process/2026-06-11-quality-gates.md).
+      // Every v8 ignore comment must carry a reason — see the testing policy
+      // (docs/testing.md).
       thresholds: coveragePartitionMode
         ? undefined
         : {

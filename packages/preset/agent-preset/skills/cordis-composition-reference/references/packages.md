@@ -51,6 +51,7 @@ Every package below exports a Cordis plugin that a bundle patch can name in a Lo
 | `@deepseek-ai/dsh-acp-app` | no | The dsh ACP profile bundle: automation-only JSON-RPC stdio and process lifecycle over dsh-base |
 | `@deepseek-ai/dsh-headless` | yes | The dsh one-shot bundle: a direct core Agent/Session runner over dsh-base with no Host, HTTP, or browser layer |
 | `@deepseek-ai/dsh-sdk-app` | yes | The dsh SDK profile bundle: stdio JSON-RPC serving and process lifecycle over dsh-base |
+| `@deepseek-ai/dsh-terminal-app` | yes | The dsh terminal bundle: the web bundle's Host without its web server or browser plugins, plus the terminal client |
 | `@deepseek-ai/dsh-web-app` | yes | The dsh browser-surface bundle: the web patch layer over dsh-base plus the runtime glue plugin (frontend dist serving, web-surface prompt, bash runtime variables, URL line) |
 
 ## client
@@ -148,7 +149,7 @@ Every package below exports a Cordis plugin that a bundle patch can name in a Lo
 | `@deepseek-ai/dsh-agent` | no | Agent interface, registry, initiator scope, and event vocabulary for tBelt Code |
 | `@deepseek-ai/dsh-agent-default-model` | yes | Default model selection shared by Agent entry points |
 | `@deepseek-ai/dsh-agent-loop` | yes | The concrete agent loop plugin for tBelt Code |
-| `@deepseek-ai/dsh-agent-tool-presentation` | yes | Agent-plane presentation selector: composes one agent's tools as PTC mode, native, or both |
+| `@deepseek-ai/dsh-agent-tool-presentation` | yes | Agent-plane presentation selector: composes one agent's tools as PTC mode or native tool calls |
 | `@deepseek-ai/dsh-session` | no | Event-sourced session store for tBelt Code |
 | `@deepseek-ai/dsh-system-prompt` | yes | System prompt assembly registry for tBelt Code |
 | `@deepseek-ai/dsh-tools` | yes | Tool registry and execution pipeline for tBelt Code |
@@ -178,7 +179,7 @@ Every package below exports a Cordis plugin that a bundle patch can name in a Lo
 
 | Package | Config | Description |
 |---|---|---|
-| `@deepseek-ai/dsh-experimental-agent-team` | yes | Implicit-root Agent Teams roster, durable peer mailbox, and shared task DAG |
+| `@deepseek-ai/dsh-experimental-agent-team` | yes | Implicit-root Agent Teams roster, direct peer messaging, and shared task DAG |
 | `@deepseek-ai/dsh-experimental-api-speech-to-text` | yes | Authenticated experimental speech transcription for browser clients |
 | `@deepseek-ai/dsh-experimental-auto-review` | no | Per-tool LLM authorization review for the tBelt Code Auto permission preset |
 | `@deepseek-ai/dsh-experimental-browser-use-chrome-devtools-mcp` | yes | Experimental per-Session Chromium browser tools through chrome-devtools-mcp |
@@ -190,9 +191,21 @@ Every package below exports a Cordis plugin that a bundle patch can name in a Lo
 | `@deepseek-ai/dsh-experimental-computer-use-cua-driver-native` | no | Experimental computer-use provider embedding the Cua Driver native npm SDK |
 | `@deepseek-ai/dsh-experimental-inspector` | yes | Experimental cross-realm CDP hub for Host debugging and Client Runtime inspection |
 | `@deepseek-ai/dsh-experimental-ptc-runtime-python` | yes | CPython subprocess implementation of the tBelt Code PTC execution seam |
+| `@deepseek-ai/dsh-experimental-session-inspector` | no | Experimental virtualized Session log and live Chat group/node inspectors |
 | `@deepseek-ai/dsh-experimental-speech-to-text` | yes | Experimental speech recognition with independently selectable providers |
 | `@deepseek-ai/dsh-experimental-speech-to-text-sensevoice` | yes | Local SenseVoice ONNX transcription with a managed sherpa-onnx process |
 | `@deepseek-ai/dsh-experimental-tool-agent-team` | yes | Scoped model-facing Agent Teams tools over ctx.agentTeams |
+| `@deepseek-ai/dsh-experimental-tool-worktree` | no | Model tool that creates and enters a new Git worktree |
+| `@deepseek-ai/dsh-experimental-worktree` | yes | Creates a named Git worktree and changes the calling Session working directory |
+| `@deepseek-ai/dsh-hooks-claude-code` | yes | Bridge plugin: run a Claude Code hooks.json / settings hook config on the tBelt Code interception seams |
+| `@deepseek-ai/dsh-hooks-codex` | yes | Bridge plugin: run a Codex hooks.json hook config on the tBelt Code interception seams |
+| `@deepseek-ai/dsh-session-title-all-prompts-llm` | yes | All-user-messages LLM provider plugin for tBelt Code session titles |
+| `@deepseek-ai/dsh-skill-badge` | no | Bundled dsh badge skill provider for tBelt Code |
+| `@deepseek-ai/dsh-tool-ralph` | yes | Model-facing fresh-agent Ralph loop over the workflow and subagent seams |
+| `@deepseek-ai/dsh-tool-session-query` | yes | Workspace-authorized model-facing session history search, trace, and event read tools |
+| `@deepseek-ai/dsh-tool-terminal` | yes | Six model-facing persistent PTY tools with owner isolation and generic background-job integration |
+| `@deepseek-ai/dsh-webhook` | no | Fire-and-forget webhook rule runtime that creates Workspace-backed tBelt Code Sessions |
+| `@deepseek-ai/dsh-webhook-github` | yes | Signed GitHub HTTP webhook adapter for the tBelt Code webhook runtime |
 
 ## extensions
 
@@ -247,13 +260,6 @@ Every package below exports a Cordis plugin that a bundle patch can name in a Lo
 | `@deepseek-ai/dsh-repeat-tool-reminder` | yes | Repeat-tool-call guard plugin: advisory reminders when an agent loops on identical tool calls |
 | `@deepseek-ai/dsh-spend-budget` | yes | Local model spend ledger and spend limits (ctx.spendBudget): prices provider-reported token usage at each route's list price and refuses model steps once a session or monthly limit is reached |
 | `@deepseek-ai/dsh-tool-call-timeout-policy` | no | Tool-call timeout policy: a tools/execute wrapper that arms a per-tool deadline on exec.signal and returns TOOL_TIMEOUT when it wins |
-
-## hooks
-
-| Package | Config | Description |
-|---|---|---|
-| `@deepseek-ai/dsh-hooks-claude-code` | yes | Bridge plugin: run a Claude Code hooks.json / settings hook config on the tBelt Code interception seams |
-| `@deepseek-ai/dsh-hooks-codex` | yes | Bridge plugin: run a Codex hooks.json hook config on the tBelt Code interception seams |
 
 ## host
 
@@ -343,12 +349,6 @@ Every package below exports a Cordis plugin that a bundle patch can name in a Lo
 |---|---|---|
 | `@deepseek-ai/dsh-ptc-runtime-node` | yes | Sandboxed Node process implementation of the tBelt Code PTC execution capability |
 
-## runtime-diagnostics
-
-| Package | Config | Description |
-|---|---|---|
-| `@deepseek-ai/dsh-invariants` | yes | Registry service for package-owned tBelt Code runtime invariants |
-
 ## sandbox
 
 | Package | Config | Description |
@@ -361,6 +361,7 @@ Every package below exports a Cordis plugin that a bundle patch can name in a Lo
 | Package | Config | Description |
 |---|---|---|
 | `@deepseek-ai/dsh-schedule` | yes | Host-wide durable reminders with shared management and original-Session delivery |
+| `@deepseek-ai/dsh-tool-schedule` | no | Model-facing reminder management tools (schedule_create, schedule_list, schedule_update, schedule_delete) over the Host ctx.schedule service |
 
 ## sdk
 
@@ -381,9 +382,10 @@ Every package below exports a Cordis plugin that a bundle patch can name in a Lo
 | `@deepseek-ai/dsh-session-stats` | no | Whole-log conversation counts and wall times projection (sessionStats) for tBelt Code |
 | `@deepseek-ai/dsh-session-telemetry-otel` | yes | Feedback-authorized Session logs over byte-bounded OpenTelemetry HTTP requests |
 | `@deepseek-ai/dsh-session-title` | yes | Log-backed session title service and provider registry for tBelt Code |
-| `@deepseek-ai/dsh-session-title-all-prompts-llm` | yes | All-user-messages LLM provider plugin for tBelt Code session titles |
 | `@deepseek-ai/dsh-session-title-first-prompt-llm` | yes | First-message LLM provider plugin for tBelt Code session titles |
 | `@deepseek-ai/dsh-session-turn-outline` | no | Whole-log turn outline projection (turnOutline) for tBelt Code |
+| `@deepseek-ai/dsh-tool-working-directory` | no | Read and change the active Session working directory |
+| `@deepseek-ai/dsh-working-directory` | yes | Session working directories with durable changes and model context |
 
 ## session-query
 
@@ -391,7 +393,6 @@ Every package below exports a Cordis plugin that a bundle patch can name in a Lo
 |---|---|---|
 | `@deepseek-ai/dsh-session-log-export` | yes | Web Session-log export command and shared download dialog |
 | `@deepseek-ai/dsh-session-query-sqlite` | yes | Concrete ctx.sessionQuery backend with SQLite FTS5 search |
-| `@deepseek-ai/dsh-tool-session-query` | yes | Workspace-authorized model-facing session history search, trace, and event read tools |
 
 ## settings
 
@@ -419,7 +420,6 @@ Every package below exports a Cordis plugin that a bundle patch can name in a Lo
 |---|---|---|
 | `@deepseek-ai/dsh-skill` | yes | Agent skill provider registry for tBelt Code |
 | `@deepseek-ai/dsh-skill-authoring` | no | Bundled skill-authoring guide provider for tBelt Code |
-| `@deepseek-ai/dsh-skill-badge` | no | Bundled dsh badge skill provider for tBelt Code |
 | `@deepseek-ai/dsh-skill-filesystem` | yes | Local filesystem skill provider for tBelt Code |
 | `@deepseek-ai/dsh-skill-office` | yes | Bundled Word, PowerPoint, and Excel workflows and structural checks |
 | `@deepseek-ai/dsh-tool-skill` | yes | Model-facing skill loading tool for tBelt Code |
@@ -482,7 +482,12 @@ Every package below exports a Cordis plugin that a bundle patch can name in a Lo
 |---|---|---|
 | `@deepseek-ai/dsh-terminal` | no | Persistent PTY session seam for the tBelt Code — owner-scoped ids, backend registry, interactive sends, reads, signals, and awaited cleanup |
 | `@deepseek-ai/dsh-terminal-bash` | yes | Persistent shell PTY backend over the tBelt Code subprocess terminal primitive |
-| `@deepseek-ai/dsh-tool-terminal` | yes | Six model-facing persistent PTY tools with owner isolation and generic background-job integration |
+
+## terminal-client
+
+| Package | Config | Description |
+|---|---|---|
+| `@deepseek-ai/dsh-terminal-client` | yes | The terminal client: a Remote API client that runs in the Host process, over an in-process carrier, and draws a Session in a terminal |
 
 ## test-support
 
@@ -515,18 +520,10 @@ Every package below exports a Cordis plugin that a bundle patch can name in a Lo
 | `@deepseek-ai/dsh-web-search-perplexity` | yes | Perplexity-backed search provider for the tBelt Code web capability seam (ctx.web) |
 | `@deepseek-ai/dsh-web-search-tavily` | yes | Tavily-backed search provider for the tBelt Code web capability seam (ctx.web) |
 
-## webhook
-
-| Package | Config | Description |
-|---|---|---|
-| `@deepseek-ai/dsh-webhook` | no | Fire-and-forget webhook rule runtime that creates Workspace-backed tBelt Code Sessions |
-| `@deepseek-ai/dsh-webhook-github` | yes | Signed GitHub HTTP webhook adapter for the tBelt Code webhook runtime |
-
 ## workflow
 
 | Package | Config | Description |
 |---|---|---|
-| `@deepseek-ai/dsh-tool-ralph` | yes | Model-facing fresh-agent Ralph loop over the workflow and subagent seams |
 | `@deepseek-ai/dsh-tool-workflow` | yes | Model-facing workflow tool: run a JavaScript orchestration script over ctx.workflowEngine |
 | `@deepseek-ai/dsh-workflow-ptc` | yes | Workflow orchestration in the shared sandboxed Node PTC runtime |
 
@@ -535,3 +532,4 @@ Every package below exports a Cordis plugin that a bundle patch can name in a Lo
 | Package | Config | Description |
 |---|---|---|
 | `@deepseek-ai/dsh-workspace` | no | Workspace entity registry (ctx.workspaceRegistry): durable workspace records with validated session attachment over the domain data form for tBelt Code |
+| `@deepseek-ai/dsh-worktree` | yes | Git worktree service (ctx.worktrees): per-session linked worktrees with shared and copied paths, setup commands, and sandbox git access for tBelt Code |

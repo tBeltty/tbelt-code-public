@@ -75,7 +75,6 @@ The package separates the script, run, result, and event contracts from executio
 | [`src/index.ts`](src/index.ts) | Service definition, `workflow/*` event declarations, `WorkflowError` and its fatal flag |
 | [`src/types.ts`](src/types.ts) | Browser-safe vocabulary: `WorkflowMeta`, `WorkflowResult`, run and agent event info |
 | [`src/runtime-types.ts`](src/runtime-types.ts) | Host-only `WorkflowStartRequest` and `WorkflowRun` handles |
-| [`src/invariant.ts`](src/invariant.ts) | Invariant companion: event pairing and identity checks |
 
 ### Lifecycle and ownership
 
@@ -102,7 +101,7 @@ Read these pages when the package-level contract is not enough. They move from t
 - [Group map](../README.md) — the workflow capability family and its packages.
 - [workflow tool](../tool-workflow/README.md) — the model-facing consumer that owns the call schema and result envelope.
 - [PTC workflow engine](../workflow-ptc/README.md) — the current execution engine and its isolation boundary.
-- Dynamic workflows Agent Note — the seam design and its decisions.
+- historical Dynamic workflows Agent Note — the seam design and its decisions.
 
 -----
 

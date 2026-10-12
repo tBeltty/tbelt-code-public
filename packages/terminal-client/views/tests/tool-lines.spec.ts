@@ -2,16 +2,17 @@ import type { StartedToolCall, ToolResultNode } from '@deepseek-ai/dsh-presentat
 import { describe, expect, it } from 'vitest'
 import { createStyle } from '../src/ansi.ts'
 import { sanitizeOutput, toolCallLine, toolResultLines, type ToolViewContext } from '../src/tool-lines.ts'
+import { PartialArguments } from '@deepseek-ai/dsh-util-values'
 
 const ctx = (over: Partial<ToolViewContext> = {}): ToolViewContext =>
   ({ style: createStyle(false), cwd: '/w', home: '/home/me', columns: 80, maxOutputLines: 3, ...over })
 
 const started = (name: string, args: unknown): StartedToolCall => ({
-  phase: 'start', callId: 'c1', name, argsRaw: JSON.stringify(args), turn: 1, step: 1, time: 1, subCalls: [],
+  phase: 'start', callId: 'c1', name, argsRaw: JSON.stringify(args), args: PartialArguments.fromObject(args), turn: 1, step: 1, time: 1, subCalls: [],
 })
 
 const settled = (name: string, args: unknown, text: string | undefined, over: Partial<ToolResultNode> = {}): ToolResultNode => ({
-  kind: 'tool-result', seq: 2, time: 2, callId: 'c1', call: { name, argsRaw: JSON.stringify(args) }, callTime: 1,
+  kind: 'tool-result', seq: 2, time: 2, callId: 'c1', name, args: PartialArguments.fromObject(args), call: { name, argsRaw: JSON.stringify(args) }, callTime: 1,
   content: text === undefined ? [] : [{ type: 'text', text }], isError: false, subCalls: [], ...over,
 })
 
@@ -27,7 +28,7 @@ describe('toolCallLine', () => {
   })
 
   it('shows only the title when there is no summary and works for a call still being prepared', () => {
-    const preparing = { phase: 'preparing', callId: 'c1', name: 'bash', turn: 1, step: 1, time: 1, subCalls: [] } as const
+    const preparing = { phase: 'preparing', callId: 'c1', name: 'bash', turn: 1, step: 1, time: 1, args: PartialArguments.EMPTY, subCalls: [] } as const
     expect(toolCallLine(ctx(), preparing)).toMatch(/^● \S/u)
     expect(toolCallLine(ctx(), preparing)).not.toContain('  ')
   })

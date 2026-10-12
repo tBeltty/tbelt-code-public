@@ -11,6 +11,7 @@ import type {} from '@deepseek-ai/dsh-client-file-upload'
 import { canOpenNativePath, nativeFileManager, nativeFileApplications, openNativeFileApplication, openNativeAssociatedPath, revealNativePath } from '@deepseek-ai/dsh-native-command'
 import type { SessionId } from '@deepseek-ai/dsh-session'
 import type { SessionInspection } from '@deepseek-ai/dsh-session-persistence'
+import type {} from '@deepseek-ai/dsh-session-projection-cache'
 import { SessionQueryError, type SessionObservation } from '@deepseek-ai/dsh-session-query'
 import { Remote, RemoteError, TypertRemoteService } from '@deepseek-ai/dsh-typert-protocol'
 import {
@@ -81,7 +82,12 @@ declare module '@deepseek-ai/cordis' {
 export interface Config {
   /** Override platform desktop-opener detection. */
   readonly nativeOpen?: boolean
+  /** Positive integral milliseconds of list work before yielding between complete rows. */
+  readonly listWorkSliceMs?: number
 }
+
+/** Deployment policy after schema defaults have been applied. */
+type ResolvedConfig = Config & { readonly listWorkSliceMs: number }
 
 /** Host integrations replaceable by direct unit tests. */
 export interface SessionControllerInternals {
@@ -113,8 +119,9 @@ export class SessionController extends TypertRemoteService {
     'workspaceRegistry',
   ]
 
-  static Config: z<Config> = z.object({
+  static Config: z<Config, ResolvedConfig> = z.object({
     nativeOpen: z.boolean(),
+    listWorkSliceMs: z.natural().min(1).default(16),
   })
 
   private readonly agents: ApiSessionAgentController
@@ -131,11 +138,12 @@ export class SessionController extends TypertRemoteService {
 
   /**
    * @param ctx - Host context containing the Session capability assembly.
-   * @param config - native-opener deployment policy.
+   * @param config - native-opener and list-scheduling deployment policy.
    * @param internals - host integrations replaceable by direct unit tests.
    */
   constructor(ctx: Context, config: Config, internals: SessionControllerInternals = {}) {
     super(ctx, 'sessionController', { namespace: 'session' })
+    const resolved = SessionController.Config(config)
     installModelSelectionProjection(ctx)
     this.agents = new ApiSessionAgentController(ctx)
     this.commands = new SessionCommandController(ctx, this.agents, process.cwd())
@@ -151,7 +159,7 @@ export class SessionController extends TypertRemoteService {
       await Promise.allSettled([...this.promotions])
     }, 'session-controller.promotions')
     this.history = new SessionHistoryController(ctx, (observation) => { this.promote(observation) })
-    this.listState = new ApiSessionList(ctx)
+    this.listState = new ApiSessionList(ctx, resolved.listWorkSliceMs)
     this.fileApplications = internals.fileApplications ?? nativeFileApplications
     this.openFileApplication = internals.openFileApplication ?? openNativeFileApplication
     this.openPath = internals.openPath ?? openNativeAssociatedPath
@@ -247,7 +255,7 @@ export class SessionController extends TypertRemoteService {
   /**
    * Read all visible Session rows without resuming an Agent.
    * @param _request - reserved empty list request.
-   * @param signal - cancellation for persistence reads.
+   * @param signal - cancellation for persistence reads and summary generation.
    * @returns visible Session summaries ordered by activity.
    */
   @Remote('list')
@@ -422,11 +430,19 @@ export class SessionController extends TypertRemoteService {
    * Fork one cold-readable exact event prefix into a new Session. An omitted
    * boundary selects the latest completed-turn prefix; an open cut receives
    * synthetic fork closers.
-   * @param request - source Session and optional exact inclusive event boundary.
+   * @param request - source Session, optional exact inclusive event boundary, and migration preflight choice.
    * @returns the new Session identity.
    */
   @Remote('fork')
-  fork(request: SessionForkRequest): Promise<SessionForkValue> {
+  async fork(request: SessionForkRequest): Promise<SessionForkValue> {
+    if (request.allowMigration === false && this.ctx.sessions.get(request.sessionId) === undefined) {
+      const stored = await this.ctx.get('sessionPersistence')?.stat(request.sessionId)
+      if (stored?.formatStatus === 'migration-required' && this.ctx.sessions.get(request.sessionId) === undefined) {
+        throw new RemoteError('session/migration-required', 'Open the source Session to complete migration before forking', {
+          sessionId: request.sessionId,
+        })
+      }
+    }
     return this.commands.fork(request)
   }
 
@@ -496,10 +512,10 @@ export class SessionController extends TypertRemoteService {
   }
 
   /**
-   * Read all registered projections without activating an Agent.
+   * Read exact projections, returning cached hints only when migration is required.
    * @param request - Session whose current values are required.
-   * @param signal - cancellation for the Session observation.
-   * @returns complete baseline, or null when the Session does not exist.
+   * @param signal - cancellation for the Session read.
+   * @returns a sequenced baseline, cached hints when migration is deferred, or null when absent.
    */
   @Remote('projections')
   async projections(request: SessionProjectionsRequest, signal: AbortSignal): Promise<SessionProjectionsValue> {
@@ -508,21 +524,43 @@ export class SessionController extends TypertRemoteService {
       throw new RemoteError('gateway/bad-request', 'sessionId must not be empty', {})
     }
     try {
+      signal.throwIfAborted()
+      const live = this.liveProjections(sessionId)
+      if (live !== undefined) return live
+      const stored = await this.ctx.get('sessionPersistence')?.stat(sessionId, { signal })
+      signal.throwIfAborted()
+      const attached = this.liveProjections(sessionId)
+      if (attached !== undefined) return attached
+      if (stored === undefined) return null
+      if (stored.formatStatus === 'migration-required') {
+        const cached = this.ctx.get('sessionProjectionCache')?.cachedSnapshot(stored.header)
+        return { kind: 'migration-required', values: { ...cached?.values } as SessionProjectionValues }
+      }
       using observation = await this.ctx.sessionQuery.observeSession(sessionId, { signal })
       const projections = observation.projections
       if (projections === undefined) {
         throw new RemoteError('session/projections-unavailable', 'Session projections are unavailable', {})
       }
-      return { asOfSeq: projections.asOfSeq, values: projections.values as SessionProjectionValues }
+      return { kind: 'sequenced', asOfSeq: projections.asOfSeq, values: projections.values as SessionProjectionValues }
     } catch (error: unknown) {
-      if (error instanceof SessionQueryError && error.code === 'SESSION_QUERY_SESSION_NOT_FOUND') return null
-      if (signal.aborted
-        || (error instanceof SessionQueryError && error.code === 'SESSION_QUERY_ABORTED')) {
+      if (error instanceof SessionQueryError && error.code === 'SESSION_QUERY_SESSION_NOT_FOUND') {
+        return this.liveProjections(sessionId) ?? null
+      }
+      if (signal.aborted || (error instanceof SessionQueryError && error.code === 'SESSION_QUERY_ABORTED')) {
         throw new RemoteError('gateway/cancelled', 'Session projection read was cancelled', {}, { cause: error })
       }
       if (error instanceof RemoteError) throw error
       throw new RemoteError('gateway/internal', 'Session projection read failed', {}, { cause: error })
     }
+  }
+
+  private liveProjections(
+    sessionId: SessionId,
+  ): Extract<SessionProjectionsValue, { readonly kind: 'sequenced' }> | undefined {
+    const session = this.ctx.sessions.get(sessionId)
+    if (session === undefined) return undefined
+    const snapshot = this.ctx.sessionProjections.snapshot(session)
+    return { kind: 'sequenced', asOfSeq: snapshot.asOfSeq, values: snapshot.values as SessionProjectionValues }
   }
 
   /**

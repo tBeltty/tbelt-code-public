@@ -95,7 +95,7 @@ Start with the subsystem reference and the two notes that own the cross-package 
 
 - Client modules subsystem — the web plugin table: `dsh.client` declarations, the boot graph wire, and the bundle route.
 - Slot system standard — the definitive slot model: registration, props shares, and stores.
-- Web client architecture note — the loading chain, object layer, and client services.
+- Web client architecture reference — the loading chain, object layer, and client services.
 - [Host group map](../host/README.md) — the host half that serves this browser half.
 
 <a id="dev-note"></a>

@@ -90,7 +90,7 @@ Read these pages when the package-level contract is not enough. They move from t
 - [fs-local](../fs-local/README.md) — the local backend this one extends.
 - [sandbox-policy](../../sandbox/sandbox-policy/README.md) — the shared per-session policy resolver this backend requires.
 - Process sandbox subsystem — modes, per-call policy, and fail-closed errors.
-- Cross-family fs sandbox decision — the shared mode fence and its escalation choreography.
+- [Cross-family fs sandbox reference](../../sandbox/sandbox-policy/README.md) — the shared mode fence and its escalation choreography.
 
 -----
 
@@ -131,5 +131,3 @@ These limits define when the sandbox backend is a poor fit or needs special oper
 None.
 
 </details>
-
-**Runtime invariant:** No companion is published. This stateless adapter delegates policy and filesystem relations to their owning seams.

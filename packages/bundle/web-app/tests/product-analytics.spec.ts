@@ -37,7 +37,13 @@ it.each(['desktop', 'web'])('limits collection and its shutdown to the Desktop l
   ctx.loader.builtins.analytics = Analytics
   const rows = loadOverlayPatches('analytics', fileURLToPath(new URL('../cordis.patch.yml', import.meta.url)))
     .flatMap(patch => patch.insert ?? []).filter(row => row.id === 'desktop-product-telemetry' || row.id === 'product-analytics')
-  const entries = rows.map(row => ({ ...row, name: row.id === 'desktop-product-telemetry' ? 'cordis:telemetry' : 'cordis:analytics' }))
+  // Collection ships off in every profile; the Desktop case opts in explicitly to exercise the policy path.
+  expect(rows.every(row => row.disabled === true)).toBe(true)
+  const entries = rows.map(row => ({
+    ...row,
+    ...profile === 'desktop' ? { disabled: false } : {},
+    name: row.id === 'desktop-product-telemetry' ? 'cordis:telemetry' : 'cordis:analytics',
+  }))
   await ctx.loader.root.update(entries)
   await ctx.loader.await()
   const entry = ctx.loader.resolve('desktop-product-telemetry')

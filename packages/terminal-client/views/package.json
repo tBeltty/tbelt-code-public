@@ -1,7 +1,7 @@
 {
   "name": "@deepseek-ai/dsh-terminal-views",
   "description": "Pure terminal views: transcript, tool lines, composer, approval prompt and session choice for the terminal client",
-  "version": "0.2.0-rc.2",
+  "version": "0.2.1-alpha.2",
   "publishConfig": {
     "access": "public"
   },
@@ -32,6 +32,7 @@
     "@deepseek-ai/dsh-presentation-plan": "workspace:*",
     "@deepseek-ai/dsh-presentation-tool-call": "workspace:*",
     "@deepseek-ai/dsh-presentation-tool-card": "workspace:*",
+    "@deepseek-ai/dsh-util-values": "workspace:*",
     "@deepseek-ai/dsh-util-workspace-path": "workspace:*",
     "get-east-asian-width": "^1.6.0"
   },

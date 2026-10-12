@@ -7,7 +7,7 @@ kind: "package-group"
 
 ## Summary
 
-The workflow group lets an agent run orchestration scripts that delegate work to subagents and return a final value. The `workflow` tool supports scripted fan-out; the opt-in `ralph` tool runs a fixed sequence of fresh agents. Scripts use the shared PTC Node process runtime under the calling Session's file policy. Workflow hooks and child lifecycle remain owned by the workflow engine.
+The workflow group lets an agent run orchestration scripts that delegate work to subagents and return a final value. The `workflow` tool supports scripted fan-out. Scripts use the shared PTC Node process runtime under the calling Session's file policy. Workflow hooks and child lifecycle remain owned by the workflow engine.
 
 ## Table of Contents
 
@@ -25,7 +25,6 @@ The workflow group lets an agent run orchestration scripts that delegate work to
 | [`workflow`](workflow/README.md) | Runs a model-written orchestration script that fans out subagents | `ctx.workflowEngine` |
 | [`workflow-ptc`](workflow-ptc/README.md) | Runs workflow scripts through the shared sandboxed PTC Node process runtime | registers on `ctx.workflowEngine` |
 | [`tool-workflow`](tool-workflow/README.md) | Gives the model the `workflow` tool for scripted multi-agent orchestration | registers on `ctx.tools` |
-| [`tool-ralph`](tool-ralph/README.md) | Gives the model the `ralph` tool for fresh-agent iterative loops | registers on `ctx.tools` |
 
 -----
 
@@ -36,8 +35,8 @@ The workflow group lets an agent run orchestration scripts that delegate work to
 - Generated tool catalog — the `workflow` tool schema the model receives.
 - Generated tool catalog — the `ralph` tool schema the model receives.
 - Generated configuration catalog — every accepted engine config field.
-- Dynamic workflows Agent Note — the seam design and its decisions.
-- Harness-level goal-based execution Agent Note — the fixed fresh-agent loop design and deferred work.
+- historical Dynamic workflows Agent Note — the seam design and its decisions.
+- [Harness-level goal-based execution reference](../experimental/tool-ralph/README.md) — the fixed fresh-agent loop design and deferred work.
 
 -----
 

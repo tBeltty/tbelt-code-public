@@ -7,16 +7,19 @@ import {
   diffCardModel, isSettledPersistentShellCall, isSpilledShellCall, readCallLine, readCardModel,
   searchCardModel, terminalCardModel, terminalFailed,
 } from '../src/index.ts'
+import { PartialArguments } from '@deepseek-ai/dsh-util-values'
 
 const running = (name: string, args: unknown, over?: Partial<StartedToolCall>): StartedToolCall => ({
   phase: 'start', callId: 'c1', name, argsRaw: typeof args === 'string' ? args : JSON.stringify(args),
+  args: PartialArguments.fromText(typeof args === 'string' ? args : JSON.stringify(args)),
   turn: 1, step: 1, time: 1_000, subCalls: [], ...over,
 })
 
 const settled = (
   name: string, args: unknown, text: string | undefined, meta?: unknown, over?: Partial<ToolResultNode>,
 ): ToolResultNode => ({
-  kind: 'tool-result', seq: 10, time: 2_000, callId: 'c1',
+  kind: 'tool-result', seq: 10, time: 2_000, callId: 'c1', name,
+  args: PartialArguments.fromText(typeof args === 'string' ? args : JSON.stringify(args)),
   call: { name, argsRaw: typeof args === 'string' ? args : JSON.stringify(args) },
   callTime: 1_000,
   content: text === undefined ? [] : [{ type: 'text', text }], isError: false,
@@ -73,7 +76,6 @@ describe('diffCardModel', () => {
     ['no arguments', running('edit', '{')],
     ['a blank path', running('edit', { ...edit, file_path: ' ' })],
     ['a numeric path', running('edit', { ...edit, file_path: 3 })],
-    ['a bad escalation pair', running('edit', { ...edit, sandbox_permissions: 'x' })],
     ['a numeric old string', running('edit', { ...edit, old_string: 1 })],
     ['a numeric new string', running('edit', { ...edit, new_string: 1 })],
     ['a non-boolean replace_all', running('edit', { ...edit, replace_all: 'yes' })],
@@ -215,10 +217,10 @@ describe('searchCardModel', () => {
 describe('terminalCardModel', () => {
   const bash = { command: 'ls', description: 'List' }
 
-  it('shows a running command with the workspace as its directory', () => {
+  it('shows a running command without a directory until its result records one', () => {
     expect(terminalCardModel(running('bash', bash), '/w')).toEqual({
       copy: { kind: 'shell', command: 'ls', description: 'List' },
-      card: { cwd: '/w', output: undefined, exitCode: undefined, signal: undefined, running: true },
+      card: { cwd: undefined, output: undefined, exitCode: undefined, signal: undefined, running: true },
     })
   })
 
@@ -238,7 +240,7 @@ describe('terminalCardModel', () => {
   })
 
   it('resolves the working directory against the session workspace', () => {
-    const dir = (workdir?: string, cwd?: string) => terminalCardModel(running('bash', { ...bash, workdir }), cwd)?.card.cwd
+    const dir = (workdir?: string, cwd?: string) => terminalCardModel(settled('bash', { ...bash, workdir }, 'ok'), cwd)?.card.cwd
     expect(dir(undefined, '/w')).toBe('/w')
     expect(dir('', '/w')).toBe('/w')
     expect(dir('/abs/./x/..', '/w')).toBe('/abs')
@@ -296,7 +298,6 @@ describe('terminalCardModel', () => {
     ['a numeric timeout string', running('bash', { ...bash, timeoutMs: 'x' })],
     ['a numeric workdir', running('bash', { ...bash, workdir: 1 })],
     ['a non-boolean background flag', running('bash', { ...bash, run_in_background: 'x' })],
-    ['a bad escalation pair', running('bash', { ...bash, sandbox_permissions: 'x' })],
     ['a blank description', running('bash', { ...bash, description: ' ' })],
     ['a numeric description', running('bash', { ...bash, description: 1 })],
     ['a background command', running('bash', { ...bash, run_in_background: true })],

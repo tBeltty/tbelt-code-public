@@ -58,6 +58,25 @@ After a successful mount, `ctx.llm.listProviders()` reports the registered route
 
 `GenerateOptions.messages` accepts durable `Message` values and request-only `RequestUserInput` values. Request-only inputs carry user-role content with no `id` or `source`; Session writes and Agent delivery still require durable messages. Callers keep auxiliary inputs unchanged until the stream settles. A caller that records its exact request, such as session-title generation, must use durable messages.
 
+`prepareCall(config, signal, configure?)` accepts concrete `LlmCallConfig` values. The optional synchronous, pure `ConfigureCall` function receives detached, deeply frozen `LlmCallControls` and model metadata from the captured adapter generation. Callers can compose ordinary functions to choose concrete controls; later writes replace earlier ones. Preparation retains the captured route, applies defaults to omitted controls, validates the result, and returns a frozen configuration for recording and dispatch. Callback failures or cancellation reject before dispatch. Preparation requires a registered adapter.
+
+Configuration functions select controls before adapter defaults are materialized. For example, combine least-effort selection with an explicit output cap, then pass `configure(maxTokens)` as the third argument:
+
+```ts
+import type { ConfigureCall } from '@deepseek-ai/dsh-llm'
+
+const leastReasoning: ConfigureCall = (controls, model) => {
+  const first = model.reasoning?.efforts[0]
+  return first === undefined ? controls : { ...controls, reasoningEffort: first.id }
+}
+
+const outputLimit = (maxTokens: number): ConfigureCall =>
+  controls => ({ ...controls, maxTokens })
+
+const configure = (maxTokens: number): ConfigureCall =>
+  (controls, model) => outputLimit(maxTokens)(leastReasoning(controls, model), model)
+```
+
 ### What you can do
 
 - **Stream one model call** — `ctx.llm.stream(options)` yields raw chunks (token-level deltas) for any registered provider and model; consumers assemble them with `BlockAssembler`.
@@ -105,7 +124,7 @@ The service is built on one separation: **the logical contract is provider-neutr
 
 A request is validated against its exact model's capability — context window, output default, reasoning efforts, input modalities, and `systemPromptUpdate` mode — and any adapter-configured defaults are materialized. The runtime preserves freezing for already-frozen input; hand-built callers own input immutability. `prepareCall()` binds those facts, detached context, and retry policy to the exact adapter generation that performs terminal dispatch, so HMR or dynamic settings cannot combine one generation's image capability with another generation's endpoint. An image-capable adapter projects durable references into route-specific request versions; `resolveImageAttachmentAccess()` separately maps an attachment provider's optional host object into the current tool execution world without changing the request image or its `variantId`. A text-only route receives deterministic per-image placeholders, including tool-role result images, without rewriting append-only session history. Durable `FileBlock` references never reach any adapter: request assembly replaces each one, including tool-role result occurrences, with deterministic handle text naming the file and its saved read-only path, resolved through the mounted attachment and filesystem providers. `ctx.llm.fileRequestText(ref)` exposes that exact synchronous projection to request measurement. An image occurrence derived with `offloaded: true` reaches every route as placeholder text through `projectOffloadedImages()`. An image-capable route whose retained occurrences exceed its `LlmImageRequestBudget` at their exact bytes fails with `IMAGE_OFFLOAD_REQUIRED` naming the additional oldest occurrences (`requiredImageOffload()`), never with an unlogged projection; `dsh-compaction-image-offload` logs the selected occurrences in one `image/offload` event and retries. Adapters that charge visual tokens declare per-route `imageRequestPricing`, which `ctx.llm.imageRequestPricing(provider, model)` resolves synchronously for the token meter. Dispatch goes through the `llm/stream` waterfall, then chunks return as token-level deltas and every adapter outcome reaches the consumer as one terminal `finish` chunk.
 
-File detection reads current content, including tool-role result content, on every request without caching message identities or freeze state. The file-scan decision records the measured traversal cost.
+File detection reads current content, including tool-role result content, on every request without caching message identities or freeze state. The archived file-scan decision records the measured traversal cost.
 
 ### Invariants
 

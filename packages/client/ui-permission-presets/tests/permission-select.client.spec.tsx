@@ -148,7 +148,12 @@ describe('PermissionSelect', () => {
   it('marks Auto experimental and uses the current-session risk copy', async () => {
     const { select, selection } = setup()
     fireEvent.click(trigger())
-    fireEvent.click(screen.getByRole('menuitem', { name: 'Revisión automática EXP' }))
+    const autoOption = screen.getByRole('menuitem', { name: 'Revisión automática EXP' })
+    const autoGlyph = autoOption.querySelector('svg[aria-hidden="true"]')
+    expect(autoGlyph).not.toBeNull()
+    expect(autoGlyph!.innerHTML)
+      .not.toBe(screen.getByRole('menuitem', { name: /^Acceso total/ }).querySelector('svg')!.innerHTML)
+    fireEvent.click(autoOption)
 
     const dialog = screen.getByRole('dialog', { name: '¿Activar la revisión automática (experimental)?' })
     expect(dialog.textContent).toContain('se ejecuta sin sandbox')
@@ -159,8 +164,9 @@ describe('PermissionSelect', () => {
     act(() => { selection.set({ value: { currentValue: 'auto' } }) })
     await act(async () => {})
 
-    expect(trigger().getAttribute('aria-label')).toBe('Modo de acceso, actual: Revisión automática EXP')
-    expect(trigger().querySelector('sup')?.textContent).toBe('EXP')
+    expect(trigger().getAttribute('aria-label')).toBe('Modo de acceso, actual: Revisión automática')
+    expect(trigger().textContent).toBe('Revisión automática')
+    expect(trigger().querySelectorAll('svg[aria-hidden="true"]')).toHaveLength(2)
     expect(trigger().getAttribute('title')).toBe('Se ejecuta sin sandbox tras una revisión experimental, con el mismo modelo, de cada llamada a herramientas nativas y cada llamada interna de PTC.')
   })
 
@@ -208,7 +214,7 @@ describe('PermissionSelect', () => {
       fireEvent.click(screen.getByRole('checkbox'))
       fireEvent.click(screen.getByRole('button', { name: 'Activar revisión automática' }))
       expect(select).toHaveBeenCalledExactlyOnceWith('auto')
-      expect(trigger().textContent).toBe('Revisión automáticaEXP')
+      expect(trigger().textContent).toBe('Revisión automática')
 
       act(() => {
         selection.set({ value: { currentValue: 'danger-full-access' } })

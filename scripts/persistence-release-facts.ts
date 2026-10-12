@@ -28,11 +28,11 @@ function structuralChanges(entry: PersistenceReleaseEntry): string {
   if (entry.differences.length === 0) {
     return 'Normalized root types and their transitive digests are unchanged from the preceding tag.'
   }
-  const summary = `Detected ${count(entry.record.changes.length, 'changed root')} and ${count(entry.differences.length, 'structural difference')}. The minimum below is calculated using current rules for comparison only; it does not assert historical compliance, migration correctness, or runtime compatibility.`
-  const heading = '| Path | Change | Current minimum |'
+  const summary = `Detected ${count(entry.record.changes.length, 'changed root')} and ${count(entry.differences.length, 'structural difference')}. The review requirement below is calculated using current rules for comparison only; it does not assert historical compliance, migration correctness, or runtime compatibility.`
+  const heading = '| Path | Change | Review requirement |'
   const rows = entry.differences.map((change) => {
     const path = change.path.replaceAll('`', '\\`').replaceAll('|', '\\|')
-    return `| \`${path}\` | \`${change.kind}\` | \`${change.requiresVersionBump ? 'version-bump' : 'same-version'}\` |`
+    return `| \`${path}\` | \`${change.kind}\` | \`${change.requiresCompatibilityReview ? 'review-required' : 'not-required'}\` |`
   })
   return [summary, '', heading, '|---|---|---|', ...rows].join('\n')
 }

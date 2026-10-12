@@ -283,7 +283,7 @@ export class CodexAppServerWire {
 
   /**
    * Create the run's private ephemeral thread and retain its identity.
-   * @param cwd - parent Session workspace.
+   * @param cwd - selected child working directory.
    * @param signal - unpublished-start cancellation.
    */
   async startThread(cwd: string, signal: AbortSignal): Promise<void> {

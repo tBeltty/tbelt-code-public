@@ -10,6 +10,7 @@ import { fileURLToPath } from 'node:url'
 import { join } from 'node:path'
 import type { Browser, Page } from 'playwright'
 import { chromium } from 'playwright'
+import { credentialRef } from '@deepseek-ai/dsh-credentials'
 import { afterAll, beforeAll, describe, expect, it, onTestFailed } from 'vitest'
 import {
   acknowledgeReloadConnectionLoss, assertFixtureInventory, captureStableAria, compareOrRefreshGolden,
@@ -176,7 +177,7 @@ describe.skipIf(MODE === 'record')('web e2e: first-run DeepSeek credential setup
     await deepSeek.locator('xpath=ancestor::li').getByRole('button', { name: '编辑' }).click()
     await settings.getByText('自定义设置').click()
     expect(await settings.getByLabel('模型 ID 1').inputValue()).toBe('deepseek-flash')
-    expect(await settings.getByLabel('显示名称 1').inputValue()).toBe('DeepSeek-V41-Flash')
+    expect(await settings.getByLabel('显示名称 1').inputValue()).toBe('DeepSeek-V4.1-Flash')
     expect(await settings.getByLabel('模型 ID 2').inputValue()).toBe('deepseek-v4-pro')
     expect(await settings.getByRole('button', { name: /删除模型/ }).count()).toBe(2)
     await settings.getByRole('button', { name: '模型选项 1' }).click()
@@ -188,6 +189,8 @@ describe.skipIf(MODE === 'record')('web e2e: first-run DeepSeek credential setup
     await settings.getByRole('group', { name: '输入类型 1' }).getByRole('checkbox', { name: '图片' }).uncheck()
     await settings.getByRole('button', { name: '保存', exact: true }).click()
     await settings.getByLabel('模型 ID 1').waitFor({ state: 'detached', timeout: 15_000 })
+    // The save notice settles the directory refresh before Edit clears it for the next draft.
+    await settings.getByText('已保存 DeepSeek (deepseek-official)。', { exact: true }).waitFor({ timeout: 15_000 })
     const savedDefaults = await readFile(join(scaffold.harnessHome, 'profiles', 'scaffold', 'cordis.patch.yml'), 'utf8')
     expect(savedDefaults).toContain('id: deepseek-flash')
     expect(savedDefaults).toContain('inputModalities:')
@@ -222,6 +225,7 @@ describe.skipIf(MODE === 'record')('web e2e: first-run DeepSeek credential setup
     await compareOrRefreshGolden(MODELS_EXPECTED, modelEditor, MODE)
     await settings.getByRole('button', { name: '保存', exact: true }).click()
     await customModelId.waitFor({ state: 'detached', timeout: 15_000 })
+    await settings.getByText('已保存 DeepSeek (deepseek-official)。', { exact: true }).waitFor({ timeout: 15_000 })
 
     const document = await readFile(join(scaffold.harnessHome, 'profiles', 'scaffold', 'cordis.patch.yml'), 'utf8')
     expect(document).toContain('id: private-preview')
@@ -257,20 +261,37 @@ describe.skipIf(MODE === 'record')('web e2e: first-run DeepSeek credential setup
     await pathInput.press('Enter')
     await workspaceDialog.getByRole('button', { name: '打开', exact: true }).click()
 
-    const modelTrigger = page.getByRole('button', { name: /^选择模型|unconfigured\/none/ })
+    const modelTrigger = page.getByRole('button', { name: /^(请)?选择模型|unconfigured\/none/ })
     await modelTrigger.waitFor({ timeout: 10_000 })
     await modelTrigger.click()
-    await page.getByRole('menuitem', { name: /^模型/ }).click()
     expect(await page.getByText('Configured Flash', { exact: true }).count()).toBe(0)
     await page.getByRole('menuitemradio', { name: 'Private Preview' }).waitFor({ timeout: 10_000 })
     expect(tripwire.warnings).toEqual([])
     expect(tripwire.pageErrors).toEqual([])
   }, 60_000)
 
+  it('shows an empty model list after removing the API key without replacing the saved default', async () => {
+    onTestFailed(() => saveFailureShot(page, 'web-e2e-model-catalog-empty'))
+    await page.keyboard.press('Escape')
+    const selection = scaffold.ctx.agentDefaultModel.currentSelection()
+    await scaffold.ctx.credentials.unset(credentialRef('DEEPSEEK_API_KEY'))
+    const seat = page.getByRole('button', { name: '请选择模型', exact: true })
+    await seat.waitFor()
+    await seat.click()
+    const picker = page.getByRole('group', { name: '模型与推理等级' })
+    await picker.getByText('暂无可用模型', { exact: true }).waitFor()
+    expect(await picker.getByRole('menuitemradio').count()).toBe(0)
+    expect(scaffold.ctx.agentDefaultModel.currentSelection()).toEqual(selection)
+    await compareOrRefreshGolden(join(SNAPSHOT_DIR, 'empty.expected.md'), await picker.ariaSnapshot(), MODE)
+    await seat.press('Escape')
+    await picker.waitFor({ state: 'hidden' })
+    expect(tripwire.pageErrors).toEqual([])
+  })
+
   it('keeps the fixture inventory closed', async () => {
     await assertFixtureInventory(
       SNAPSHOT_DIR,
-      ['onboarding.expected.md', 'missing.expected.md', 'models.expected.md', 'default-models.expected.md'],
+      ['onboarding.expected.md', 'missing.expected.md', 'models.expected.md', 'default-models.expected.md', 'empty.expected.md'],
     )
   })
 })

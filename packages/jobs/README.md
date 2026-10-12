@@ -32,7 +32,7 @@ The jobs group is the background-work capability family: tools that run long wor
 ## Related documentation
 
 - Background task runtime subsystem — the job types, snapshot fields, and the `ctx.jobs` API.
-- Generic long-running tool runtime Agent Note — the design behind the background-job runtime.
+- [Generic long-running tool runtime reference](jobs/README.md) — the design behind the background-job runtime.
 - job-registry seam Agent Note — the owner-fenced registry contract and its rationale.
 
 -----

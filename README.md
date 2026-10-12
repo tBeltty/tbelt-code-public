@@ -24,6 +24,7 @@ Download the app from [code.tbelt.online](https://code.tbelt.online). It can ins
 - Plans with inline comments and versions, reviewed before you approve.
 - The app and `dsh terminal` are available in English and Spanish, and follow your system language until you pick one.
 - A light theme next to the dark one, or follow the system setting.
+- Choose the font for text, code and the terminal.
 - An Artifacts page listing the files each turn delivered or changed.
 - A side panel preview for HTML pages, images, PDFs and local dev servers.
 - Point at an element in the preview and the agent knows exactly which one.
@@ -39,6 +40,7 @@ Download the app from [code.tbelt.online](https://code.tbelt.online). It can ins
 - Automatic context compaction, including for local models with small context windows.
 - Memory per project or global with `/remember`, with secrets redacted.
 - A repository map in context at the start of each session.
+- An Automation tasks page for the tasks and reminders agents schedule.
 - Inspector, Coder and Tester subagents, and saved agent presets.
 - MCP servers, skills and plugins.
 - `tbelt` opens `dsh terminal`, and `dsh-tui` does the same. Install both, and `dsh`, from the app on macOS, Windows and Linux.

@@ -73,7 +73,7 @@ async function mountPlugin() {
   } as never)
   const prompt = vi.fn(async (_content: unknown, _mode: string) => ({ ok: true as const, value: undefined }))
   ctx.provide('sessions', { binding: (sessionId: SessionId) => sessionId === 'session' ? { session: { prompt } } : undefined } as never)
-  const theme = { preference: 'light' as const, fontSize: 14, active: { id: 'light', colorScheme: 'light' as const, tokens: {} }, themes: [], revision: 0 }
+  const theme = { preference: 'light' as const, fontSizes: { text: 14, code: 11, terminal: 13 }, fontFamilies: { text: '', code: '', terminal: '' }, active: { id: 'light', colorScheme: 'light' as const, tokens: {} }, themes: [], revision: 0 }
   ctx.provide('theme', { getTheme: () => theme } as never)
   const fiber = await ctx.plugin({ inject, apply })
   return {

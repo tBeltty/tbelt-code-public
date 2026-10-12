@@ -39,6 +39,7 @@
     "packages/client/tsdown.client.ts",
     "scripts/client-build-environment.ts",
     "scripts/bundle-input-isolation.ts",
+    "scripts/experimental-package-policy.ts",
     "scripts/*.client.spec.ts",
     "scripts/client-bundle-css.spec.ts",
     "scripts/client-bundle-purity.spec.ts"
@@ -74,6 +75,7 @@
     { "path": "./packages/client/ui-primitives" },
     { "path": "./packages/client/modules" },
     { "path": "./packages/experimental/inspector/tsconfig.client.json" },
+    { "path": "./packages/experimental/session-inspector" },
     { "path": "./packages/client/hmr" },
     { "path": "./packages/client/connection/tsconfig.client.json" },
     { "path": "./packages/client/file-upload/tsconfig.client.json" },

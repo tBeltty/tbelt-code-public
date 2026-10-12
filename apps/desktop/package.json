@@ -1,7 +1,7 @@
 {
   "name": "@deepseek-ai/dsh-desktop",
   "description": "Electron desktop shell for a bundled dsh runtime and external plugins",
-  "version": "0.2.0-rc.2",
+  "version": "0.2.1-alpha.2",
   "private": true,
   "license": "MIT",
   "type": "module",
@@ -72,7 +72,7 @@
     "extract-zip": "^2.0.1",
     "js-yaml": "^4.3.2",
     "koffi": "3.1.1",
-    "pnpm": "11.7.0",
+    "pnpm": "11.28.5",
     "sharp": "^0.35.3",
     "typescript": "^6.0.3",
     "@deepseek-ai/dsh-deepseek-account": "workspace:*",

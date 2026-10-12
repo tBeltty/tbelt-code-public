@@ -117,7 +117,6 @@ This section explains the design decisions behind the bridge and points at the c
 | [`src/server-context.ts`](src/server-context.ts) | Resource-provider registration and literal server instructions |
 | [`src/tools.ts`](src/tools.ts) | Tool bridge: discovery, naming, registration swap, execution, image projection |
 | [`src/transport.ts`](src/transport.ts) | Transport factory: stdio spawn with scrubbed env, Streamable HTTP |
-| — | No runtime invariant companion is published; MCP generations contribute through the tool registry, but the bridge exposes no independent server-to-tool snapshot after an asynchronous resync. |
 
 The exported `createMcpToolDefinition(ctx, options)` adapts an upstream tool schema and raw-result callback to the same canonical values, errors, and durable image projection. Each callback receives the exact `ToolExecution`, including its Agent and cancellation signal; SDK spec-type validation checks its result before projection. Callers own registration, cancellation deadlines, and provider teardown. The native Cua Driver provider uses this adapter without opening an MCP transport.
 
@@ -145,8 +144,8 @@ The child environment starts from the subprocess seam's `scrubbedParentEnv()` �
 Read these pages when the package-level contract is not enough. They move from the shared tool registry to the bridge's design evidence and worked example configurations.
 
 - Tools subsystem reference — the `ToolRuntime` and `ctx.tools.register()` contract that receives the bridged tools.
-- MCP client plugin Agent Note — the naming invariants, discovery and execution design, alternatives, and consequences.
-- Canonical tool output contract Agent Note — how MCP results map into the canonical tool-output contract.
+- historical MCP client plugin Agent Note — the naming invariants, discovery and execution design, alternatives, and consequences.
+- [Canonical tool output contract reference](../../core/tools/README.md) — how MCP results map into the canonical tool-output contract.
 - Third-party memory MCP guide — three memory-server overlays using this package.
 - Generated configuration catalog — every accepted config field and its source declaration.
 

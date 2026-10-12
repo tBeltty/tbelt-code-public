@@ -1,7 +1,7 @@
 {
   "name": "@deepseek-ai/dsh-session-turn-outline",
   "description": "Whole-log turn outline projection (turnOutline) for tBelt Code",
-  "version": "0.2.0-rc.2",
+  "version": "0.2.1-alpha.2",
   "publishConfig": {
     "access": "public"
   },

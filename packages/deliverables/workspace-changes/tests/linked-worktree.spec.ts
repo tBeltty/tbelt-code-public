@@ -45,11 +45,11 @@ describe('workspace-changes in a linked worktree', () => {
     startTurn(session, 1)
     await settle(ctx, session)
 
-    await mutate(ctx, session, 1, 'edit', { file_path: 'a.txt', old_string: 'l2', new_string: 'l2 model' },
+    await mutate(ctx, session, 1, 'edit', { file_path: 'a.txt', old_string: 'l2', new_string: 'l2 model' }, 'a.txt',
       () => writeFile(join(linked, 'a.txt'), 'l1\nl2 model\n'))
     await writeFile(join(linked, 'new.txt'), 'n1\n')
     toolCall(session, 1, 'bash', { command: 'printf > new.txt' })
-    await mutate(ctx, session, 1, 'write', { file_path: '.env', content: 'A=1\n' }, () => writeFile(join(linked, '.env'), 'A=1\n'))
+    await mutate(ctx, session, 1, 'write', { file_path: '.env', content: 'A=1\n' }, '.env', () => writeFile(join(linked, '.env'), 'A=1\n'))
     endTurn(session, 1)
     await settle(ctx, session)
 

@@ -10,6 +10,8 @@ export type WorkspaceKey = keyof typeof en
 /** English dictionary and key-set source of truth. */
 export const en = {
   'defaultWorkspace.failed': 'Unable to create default workspace. Use Choose workspace to select a folder.',
+  'draft.workspaceRequired': 'Choose a workspace first.',
+  'draft.initializationFailed': 'Could not fill the draft. Please try again shortly.',
   'group.ungrouped': 'Ungrouped',
   'session.new': 'New Session',
   'session.untitled': 'Untitled',
@@ -103,6 +105,8 @@ export const en = {
   'toast.pinFailed': 'Pin failed. Try again later.',
   'toast.unpinFailed': 'Unpin failed. Try again later.',
   'toast.createFailed': 'New session failed: {message}',
+  'toast.forkRequiresOpen': 'Open the original session to complete migration before creating a branch.',
+  'toast.openForkSource': 'Open original session',
   'sessions.count.one': '{n} session',
   'sessions.count.other': '{n} sessions',
   'actions.workspace.aria': 'Workspace actions for {name}',
@@ -139,6 +143,8 @@ export const en = {
 /** Spanish dictionary, checked complete against the English key set. */
 export const es = {
   'defaultWorkspace.failed': 'No se pudo crear el espacio de trabajo predeterminado. Usa Elegir espacio de trabajo para seleccionar una carpeta.',
+  'draft.workspaceRequired': 'Elige primero un espacio de trabajo.',
+  'draft.initializationFailed': 'No se pudo rellenar el borrador. Inténtalo de nuevo en un momento.',
   'group.ungrouped': 'Sin agrupar',
   'session.new': 'Nueva sesión',
   'session.untitled': 'Sin título',
@@ -232,6 +238,8 @@ export const es = {
   'toast.pinFailed': 'No se pudo fijar. Inténtalo más tarde.',
   'toast.unpinFailed': 'No se pudo dejar de fijar. Inténtalo más tarde.',
   'toast.createFailed': 'No se pudo crear la sesión: {message}',
+  'toast.forkRequiresOpen': 'Abre la sesión original para completar la migración antes de crear una rama.',
+  'toast.openForkSource': 'Abrir sesión original',
   'sessions.count.one': '{n} sesión',
   'sessions.count.other': '{n} sesiones',
   'actions.workspace.aria': 'Acciones del espacio de trabajo {name}',

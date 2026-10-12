@@ -42,7 +42,7 @@ The policy is a plugin, not a service the tools inject: removing it leaves the b
 Start with the subsystem reference for the shared vocabulary and error taxonomy, then the decisions that shaped the family.
 
 - Filesystem subsystem — targets, outcomes, guards, policy events, and the error taxonomy.
-- Cross-family fs sandbox decision — the shared sandbox mode fence over the filesystem seam.
+- [Cross-family fs sandbox reference](../sandbox/sandbox-policy/README.md) — the shared sandbox mode fence over the filesystem seam.
 - Portable execution world consumers decision — why filesystem and subprocess providers share one execution world.
 
 <a id="dev-note"></a>

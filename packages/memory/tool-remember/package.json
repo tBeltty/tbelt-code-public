@@ -1,7 +1,7 @@
 {
   "name": "@deepseek-ai/dsh-tool-remember",
   "description": "Model-facing remember_fact tool: the automatic write path for a durable memory entry, over the memory storage write path",
-  "version": "0.2.0-rc.2",
+  "version": "0.2.1-alpha.2",
   "publishConfig": {
     "access": "public"
   },

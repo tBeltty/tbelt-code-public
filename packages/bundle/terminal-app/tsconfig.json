@@ -18,7 +18,7 @@
       "path": "../../boot/cmdline"
     },
     {
-      "path": "../../hooks/hooks-claude-code"
+      "path": "../../experimental/hooks-claude-code"
     },
     {
       "path": "../../util/home-paths"

@@ -64,7 +64,7 @@ describe('ui-settings-web-search apply', () => {
 
     await vi.waitFor(() => { expect(slots.entries('plugins.item')).toHaveLength(1) })
     const entry = slots.entries('plugins.item')[0]!
-    expect(entry.options).toMatchObject({ id: 'web-search', order: 40 })
+    expect(entry.options).toMatchObject({ id: 'web-search', order: 20 })
     expect(resolveSlotLabel(entry.options.label)).toBe('Búsqueda web')
     expect(entry.locale).toBe(NS)
     const face = (entry.inject as () => Pick<WebSearchCardFace, 'hooks'>)()

@@ -3,9 +3,10 @@
  * @module @deepseek-ai/dsh-presentation-tool-call
  */
 export type {
-  PreparingToolCall, RunningToolCall, StartedToolCall, ToolCallBlock, ToolResultNode,
+  PreparingToolCall, RunningToolCall, StartedToolCall, ToolArgs, ToolCallBlock, ToolResultNode,
 } from './blocks.ts'
-export { parsedToolCall, singleResultText, validEscalationFields } from './raw-tool-call.ts'
+export { parsedToolCall, singleResultText } from './raw-tool-call.ts'
+export { recordedAbsolutePath } from './recorded-path.ts'
 export type { ParsedToolCall } from './raw-tool-call.ts'
 export {
   VARIANT_TITLE_KEYS, classifyTool, formatToolBody, resultText, toolRowModel, toolTitleKey,

@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 
-import { act, cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
+import { act, cleanup, createEvent, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import type { GoalSnapshot } from '@deepseek-ai/dsh-goal/client'
 import { makeTranslate, RemoteError } from '@deepseek-ai/dsh-client-test-runtime'
@@ -48,7 +48,7 @@ describe('GoalBar', () => {
     expect(complete.container.firstChild).toBeNull()
   })
 
-  it('active goal: goal glyph, "进行中的目标", truncated objective, edit and clear actions', () => {
+  it('active goal: goal glyph, "Objetivo en curso", truncated objective, edit and clear actions', () => {
     const actions = makeActions()
     render(<GoalBar goal={makeGoal()} {...actions} t={t} />)
     expect(screen.getByText('Objetivo en curso')).toBeTruthy()
@@ -94,6 +94,25 @@ describe('GoalBar', () => {
     await waitFor(() => { expect(screen.getByText('Objetivo en curso')).toBeTruthy() })
   })
 
+  it('edits a multi-line objective: Shift+Enter and IME confirmation do not save', () => {
+    const actions = makeActions()
+    render(<GoalBar goal={makeGoal({ objective: 'Line one\nLine two' })} {...actions} t={t} />)
+    fireEvent.click(screen.getByRole('button', { name: 'Editar objetivo' }))
+    const box = screen.getByRole('textbox', { name: 'Meta del objetivo' })
+    expect(box).toHaveProperty('value', 'Line one\nLine two')
+
+    fireEvent.keyDown(box, { key: 'Enter', shiftKey: true })
+    fireEvent.keyDown(box, { key: 'Enter', isComposing: true })
+    fireEvent.keyDown(box, { key: 'Enter', keyCode: 229 })
+    expect(actions.onEdit).not.toHaveBeenCalled()
+
+    fireEvent.change(box, { target: { value: 'Line one\nLine three' } })
+    const enter = createEvent.keyDown(box, { key: 'Enter' })
+    fireEvent(box, enter)
+    expect(enter.defaultPrevented).toBe(true)
+    expect(actions.onEdit).toHaveBeenCalledWith('Line one\nLine three')
+  })
+
   it('Esc cancels the edit without calling onEdit', () => {
     const actions = makeActions()
     render(<GoalBar goal={makeGoal()} {...actions} t={t} />)
@@ -134,7 +153,7 @@ describe('GoalBar', () => {
     expect(actions.onPause).toHaveBeenCalledTimes(1)
   })
 
-  it('active disarmed goal: "未运行的目标" with a resume action instead of pause', () => {
+  it('active disarmed goal: "Objetivo inactivo" with a resume action instead of pause', () => {
     const actions = makeActions()
     render(<GoalBar goal={makeGoal()} activation="disarmed" {...actions} t={t} />)
     expect(screen.getByText('Objetivo inactivo')).toBeTruthy()
@@ -143,7 +162,7 @@ describe('GoalBar', () => {
     expect(screen.queryByRole('button', { name: 'Pausar objetivo' })).toBeNull()
   })
 
-  it('paused goal: "已暂停的目标" with a resume action before edit', () => {
+  it('paused goal: "Objetivo en pausa" with a resume action before edit', () => {
     const actions = makeActions()
     render(<GoalBar goal={makeGoal({ phase: 'paused' })} {...actions} t={t} />)
     expect(screen.getByText('Objetivo en pausa')).toBeTruthy()
@@ -180,7 +199,7 @@ describe('GoalBar', () => {
     expect(screen.queryByText('Objetivo en curso')).toBeNull()
   })
 
-  it('blocked goal: "受阻的目标" with the block reason as the strip tooltip', () => {
+  it('blocked goal: "Objetivo bloqueado" with the block reason as the strip tooltip', () => {
     const actions = makeActions()
     const goal = makeGoal({ phase: 'blocked', blockedReason: { code: 'stalled', message: 'No progress in 3 rounds' } })
     render(<GoalBar goal={goal} {...actions} t={t} />)

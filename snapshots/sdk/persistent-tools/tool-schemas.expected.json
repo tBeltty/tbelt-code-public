@@ -17,6 +17,87 @@
       }
     },
     {
+      "name": "recall_memory",
+      "description": "Search durably remembered memory entries (written by /remember or remember_fact) for a literal keyword or phrase. Matches entry names, descriptions, and full content by case-insensitive substring — this is not a semantic or fuzzy search. Use it to pull a matching entry's full stored content into context; the always-visible memory index only carries short descriptions.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "query": {
+            "type": "string",
+            "description": "Literal keyword or phrase to search for (case-insensitive substring match; no semantic search)."
+          },
+          "type": {
+            "type": "string",
+            "description": "Restrict to one memory category.",
+            "enum": [
+              "user",
+              "feedback",
+              "project",
+              "reference"
+            ]
+          },
+          "scope": {
+            "type": "string",
+            "description": "project | global | both (default: both).",
+            "enum": [
+              "project",
+              "global",
+              "both"
+            ]
+          }
+        },
+        "required": [
+          "query"
+        ]
+      }
+    },
+    {
+      "name": "remember_fact",
+      "description": "Durably remember something worth recalling in a later, unrelated session: a fact or preference about the user, a correction about how to work, ongoing project state, or a pointer to an external system. Use this when the user states something durably useful — not for information only relevant to the current task. Content is screened for secrets before it is stored; a value that looks like a credential is withheld.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "A short, stable, lowercase, hyphen-separated slug identifying this entry (e.g. \"ci-commit-policy\")."
+          },
+          "type": {
+            "type": "string",
+            "description": "user (about the person) | feedback (how to work) | project (ongoing work) | reference (external pointers).",
+            "enum": [
+              "user",
+              "feedback",
+              "project",
+              "reference"
+            ]
+          },
+          "description": {
+            "type": "string",
+            "description": "One-sentence summary shown in the always-visible memory index."
+          },
+          "content": {
+            "type": "string",
+            "description": "The full text to remember. Screened for secrets before it is stored."
+          },
+          "projectScope": {
+            "type": "string",
+            "description": "project (scoped to the current project only) | global (available in every project).",
+            "enum": [
+              "project",
+              "global"
+            ]
+          }
+        },
+        "required": [
+          "name",
+          "type",
+          "description",
+          "content",
+          "projectScope"
+        ]
+      }
+    },
+    {
       "name": "search_replace",
       "description": "Edit a file by applying one or more SEARCH/REPLACE blocks.\n\nEach block has the form:\n\n<<<<<<< SEARCH\nexact text to find\n=======\nreplacement text\n>>>>>>> REPLACE\n\nMultiple blocks may be concatenated in one `diff` string; they are applied in order, each against the result of the previous one. Each block's SEARCH text must match exactly one place in the file, verbatim, including whitespace.",
       "parameters": {
@@ -120,6 +201,19 @@
           "command",
           "path"
         ]
+      }
+    },
+    {
+      "name": "working_directory",
+      "description": "Read the current working directory, or change it with cd. Relative paths use the current directory. Existing shells and running processes keep their own directories.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "cd": {
+            "type": "string",
+            "description": "Existing directory to enter. Omit to read the current directory."
+          }
+        }
       }
     }
   ],

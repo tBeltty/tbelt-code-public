@@ -42,6 +42,7 @@ export const searchBlockLabels: SearchBlockLabels = {
 }
 
 export const terminalBlockLabels: TerminalBlockLabels = {
+  commandLine: line => `Command line ${line}`,
   signal: signal => `Signal ${signal}`,
   exitCode: code => `Exit code ${code}`,
   noExitCode: 'no exit code',

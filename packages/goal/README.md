@@ -35,7 +35,7 @@ The goal group lets one agent session pursue a durable completion objective acro
 - Goal subsystem — goal types, durable `goal/change` events, and the generated service API.
 - Generated tool catalog — the three goal-tool schemas the model receives.
 - Generated configuration catalog — every accepted config field of the goal service.
-- Goal domain Agent Note — the domain design and its decisions.
+- historical Goal domain Agent Note — the domain design and its decisions.
 
 -----
 

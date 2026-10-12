@@ -63,6 +63,9 @@
 - id: ui-session
   disabled: true
 
+- id: ui-schedule
+  disabled: true
+
 - id: resources
   disabled: true
 

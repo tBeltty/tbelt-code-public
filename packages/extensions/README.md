@@ -35,7 +35,7 @@ The extensions group provides read-only runtime API discovery for agents, proces
 - Extensions subsystem — the generated `ctx.cordisInspect` and `ctx.dynamicCordisRunner` service API.
 - Generated tool catalog — the two read-only tool schemas.
 - Generated configuration catalog — the runner's accepted config fields.
-- Self-referential Cordis toolset Agent Note — design home for sandbox semantics, lifecycle, and composition.
+- [Self-referential Cordis toolset reference](cordis-host-runner/README.md) — design home for sandbox semantics, lifecycle, and composition.
 - Client shells and dynamic packages Agent Note — package placement and build faces for the client halves.
 
 -----

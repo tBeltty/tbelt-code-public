@@ -38,8 +38,8 @@ Each package below provides one piece of the feature; open a package page for ho
 Start with the subsystem reference for the shared vocabulary, then read the two Agent Notes for the design rationale.
 
 - Compaction subsystem reference — the condensation vocabulary, results, and service behavior.
-- Compaction capability-seam Agent Note — how the family is split and why it depends on session and LLM vocabulary.
-- Queued manual compaction Agent Note — how on-demand `/compact` serializes against running turns.
+- historical Compaction capability-seam Agent Note — how the family is split and why it depends on session and LLM vocabulary.
+- [Queued manual compaction reference](compaction/README.md) — how on-demand `/compact` serializes against running turns.
 - Capability seams — the Service Definition / Service Provider / Consumer split this family follows.
 
 <a id="dev-note"></a>

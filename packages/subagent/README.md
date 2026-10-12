@@ -23,7 +23,6 @@ The subagent package family lets an agent delegate a task to a child, continue t
 | Package | Role | ctx key |
 |---|---|---|
 | [`subagent/`](subagent/README.md) | Defines the delegation service: provider registry, one-shot runs, continuable children, and discovery | `ctx.subagents` |
-| [`subagent-in-process-driver/`](subagent-in-process-driver/README.md) | Provides the shared in-process run driver | — |
 | [`subagent-spawn-in-process/`](subagent-spawn-in-process/README.md) | Runs a fresh in-process child | registers on `ctx.subagents` |
 | [`subagent-fork-in-process/`](subagent-fork-in-process/README.md) | Runs an in-process child seeded from the parent's completed history | registers on `ctx.subagents` |
 | [`subagent-acp/`](subagent-acp/README.md) | Runs an out-of-process child over the Agent Client Protocol | registers on `ctx.subagents` |
@@ -39,7 +38,7 @@ The subagent package family lets an agent delegate a task to a child, continue t
 ## Related documentation
 
 - Subagent subsystem — the service contract, provider contract, and terminal result semantics.
-- Subagent capability seam — the design record for the delegation capability family.
+- historical Subagent capability seam — the design record for the delegation capability family.
 - Continuable subagents — durable children that accept follow-up turns.
 - [tool-subagent-control README](tool-subagent-control/README.md) — the follow-up, interrupt, and listing surface.
 

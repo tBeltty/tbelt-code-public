@@ -201,16 +201,23 @@ describe('ProviderOnboardingDialog', () => {
     expect(screen.getByRole('button', { name: en.onboardingLater })).toBeTruthy()
   })
 
-  it('lists every provider in one searchable list, catalog first and alphabetical, none picked', async () => {
+  it('lists popular providers first, then local servers and the rest alphabetically, none picked', async () => {
     const h = harness({ catalog: [
       { provider: 'zeta', displayName: 'Zeta AI' },
       { provider: 'acme', displayName: 'Acme Models' },
+      { provider: 'groq', displayName: 'groq' },
+      { provider: 'openai', displayName: 'openai' },
+      { provider: 'amazon-bedrock', displayName: 'amazon-bedrock' },
     ] })
     render(<ProviderOnboardingDialog {...h.props} />)
     const list = await screen.findByRole('list', { name: en.provider })
     const names = [...list.querySelectorAll('button')].map(button => button.getAttribute('aria-label'))
     expect(names).toEqual([
-      'Acme Models', 'Zeta AI', ...LOCAL_PROVIDER_TEMPLATES.map(template => template.displayName), en.addCustom,
+      'OpenAI', 'Groq', ...LOCAL_PROVIDER_TEMPLATES.map(template => template.displayName),
+      'Acme Models', 'Amazon Bedrock', 'Zeta AI', en.addCustom,
+    ])
+    expect([...list.querySelectorAll('[role="presentation"]')].map(node => node.textContent)).toEqual([
+      en.onboardingGroupPopular, en.onboardingGroupLocal, en.onboardingGroupOther,
     ])
     expect(list.querySelector('[aria-pressed="true"]')).toBeNull()
 

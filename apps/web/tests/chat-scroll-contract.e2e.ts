@@ -703,7 +703,7 @@ describe('web e2e: long Chat scroll contract', () => {
       await openSeed(world.page, HISTORY_FIXTURE, HISTORY_FIXTURE.markers.assistant(HISTORY_FIXTURE.turns))
       await openSettings(world.page, 'en')
       await world.page.getByRole('dialog', { name: 'Settings', exact: true })
-        .getByText('Work details', { exact: true }).locator('../..')
+        .getByText('Tool call details', { exact: true }).locator('../..')
         .getByRole('button', { name: 'Detailed', exact: true }).click()
       await world.page.getByRole('menuitem', { name: 'Standard', exact: true }).click()
       await expect.poll(() => world.scaffold.ctx.settings.describe().find(row => row.ns === 'ui-chat')?.value)

@@ -312,6 +312,7 @@
 
 /* Attach circle (figma + control): 28px, selector fill, primary glyph. */
 .add {
+  position: relative;
   display: grid;
   place-items: center;
   flex: none;
@@ -395,7 +396,8 @@
 }
 
 .primary:disabled {
-  opacity: 0.4;
+  background: var(--dsw-alias-interactive-bg-hover);
+  color: var(--dsw-alias-label-tertiary);
   cursor: default;
 }
 
@@ -416,3 +418,10 @@
 .activity { display: flex; align-items: center; flex: none; }
 .activity:empty { display: none; }
 .activityExpanded { flex: 1; min-width: 0; }
+
+/* Extends the click area of the 28px button to 32px without changing its layout. */
+.add::before {
+  position: absolute;
+  inset: -2px;
+  content: '';
+}

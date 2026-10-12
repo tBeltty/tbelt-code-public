@@ -665,3 +665,10 @@
     animation: none;
   }
 }
+
+/* Extends the click area of the 28px button to 32px without changing its layout. */
+.iconButton::before {
+  position: absolute;
+  inset: -2px;
+  content: '';
+}

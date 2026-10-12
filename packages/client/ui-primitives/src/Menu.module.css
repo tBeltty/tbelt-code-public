@@ -141,7 +141,7 @@
   gap: 5px;
   padding: 2px 6px;
   border-radius: var(--dsw-radius-sm);
-  font-size: 11px;
+  font-size: 12px;
   line-height: 17px;
 }
 
@@ -156,8 +156,8 @@
 
 .compactList .label {
   padding: 3px 6px;
-  font-size: 10px;
-  line-height: 15px;
+  font-size: 12px;
+  line-height: 16px;
 }
 
 .item:disabled {
@@ -243,8 +243,8 @@
 /* Heading row: non-interactive small grey text, padding aligned with items. */
 .label {
   padding: 6px 8px;
-  font-size: 11px;
-  line-height: 15px;
+  font-size: 12px;
+  line-height: 16px;
   color: var(--dsw-alias-label-tertiary);
 }
 

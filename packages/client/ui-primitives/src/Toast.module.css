@@ -7,9 +7,10 @@
   position: fixed;
   top: 40px;
   left: 50%;
-  /* Above the 1000 the image lightbox backdrop uses: a failure reported while
-     a preview is open must stay readable. */
-  z-index: 1100;
+  /* Above every dialog layer (1000 for the Modal, Settings panel and image
+     lightbox, 1001 for the account overlay) and above popovers (1100): a
+     failure reported while a dialog is open must stay readable. */
+  z-index: 1200;
   /* Announcements never intercept clicks. */
   pointer-events: none;
   display: flex;
@@ -35,6 +36,12 @@
   animation:
     dsh-toast-in 160ms ease-out,
     dsh-toast-fade 1000ms ease var(--dsh-toast-hold, 3000ms) forwards;
+}
+
+/* Over a dialog the banner moves to the top edge so it covers less of the
+   dialog; it stays click-through, so no dialog control is blocked. */
+:global(body):has([aria-modal='true']) .toast {
+  top: 12px;
 }
 
 .icon {

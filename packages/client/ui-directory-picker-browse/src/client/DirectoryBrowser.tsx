@@ -17,7 +17,7 @@
  * to the listed level. Pure consumer of the injected browse calls — the
  * owning flow decides what "Open" means and owns the workspace-creation
  * error surface. Hidden entries are host-flagged and hidden by default; the
- * footer's fixed-label "Show hidden files" toggle (aria-pressed, check when
+ * footer's fixed-label "Show hidden files" toggle (aria-pressed, boxed check when
  * on) reveals them (client-side only). The path editor announces itself with
  * a pencil glyph and a bar-wide hover-lit outline, opens seeded with a
  * trailing separator, and keeps the panes under the draft: the final segment
@@ -985,10 +985,12 @@ export function DirectoryBrowser({ open, listDirectory, createDirectory, onOpen,
             onMouseDown={draftPending ? (event) => { event.preventDefault() } : undefined}
             onClick={() => { setShowHidden(prev => !prev) }}
           >
+            {/* Leading box so the toggle reads as a checkbox; aria-pressed stays
+              * the accessible state. */}
+            <span className={clsx(css.showHiddenBox, showHidden && css.showHiddenBoxChecked)} aria-hidden="true">
+              {showHidden && <IconCheckOutlineRegular size={12} />}
+            </span>
             {t('browser.showHidden')}
-            {/* Trailing check (Menu's selected vocabulary): the label never
-              * shifts when the pressed state toggles. */}
-            {showHidden && <IconCheckOutlineRegular size={14} />}
           </button>
           <span className={css.footerGap} />
           <Button variant="outline" className={clsx(css.footerAction)} disabled={parentInert} onClick={onClose}>{t('browser.cancel')}</Button>

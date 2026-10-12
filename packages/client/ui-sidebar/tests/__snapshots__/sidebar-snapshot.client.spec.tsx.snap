@@ -107,6 +107,7 @@ exports[`sidebar shell snapshots > renders Windows caption controls in expanded 
       <button
         aria-label="New session"
         class="brand wide"
+        tabindex="-1"
         type="button"
       >
         <span
@@ -365,6 +366,7 @@ exports[`sidebar shell snapshots > renders the expanded column (wordmark, capsul
       <button
         aria-label="New session"
         class="brand wide"
+        tabindex="-1"
         type="button"
       >
         <span
@@ -514,6 +516,7 @@ exports[`sidebar shell snapshots > renders the expanded column in the default lo
       <button
         aria-label="新建会话"
         class="brand wide"
+        tabindex="-1"
         type="button"
       >
         <span

@@ -1,5 +1,6 @@
 /* Align with the shared compact Button used by the adjacent More action. */
 .button {
+  position: relative;
   flex: none;
   width: 28px;
   padding: 0;
@@ -14,4 +15,11 @@
 /* The left sidebar's panel icon, mirrored: the divider moves to the right side. */
 .icon {
   transform: scaleX(-1);
+}
+
+/* Extends the click area of the 28px button to 32px without changing its layout. */
+.button::before {
+  position: absolute;
+  inset: -2px;
+  content: '';
 }

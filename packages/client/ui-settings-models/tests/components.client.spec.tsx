@@ -351,7 +351,7 @@ describe('ModelsSection', () => {
     expect(screen.queryByRole('tablist')).toBeNull()
     expect(screen.queryByRole('textbox', { name: en.customRoute })).toBeNull()
     expect(screen.queryByRole('option', { name: 'anthropic' })).toBeNull()
-    expect(screen.getByRole('option', { name: 'plain' })).toBeTruthy()
+    expect(screen.getByRole('option', { name: 'Plain' })).toBeTruthy()
   })
 
   it('shows a catalog diagnostic while keeping the provider editable', async () => {

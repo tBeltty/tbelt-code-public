@@ -274,7 +274,7 @@ describe('web e2e: assistant IconActions wait for the turn to end', () => {
 
     await openSettings(page, 'en')
     const dialog = page.getByRole('dialog', { name: 'Settings' })
-    await dialog.getByText('Work details', { exact: true }).locator('../..')
+    await dialog.getByText('Tool call details', { exact: true }).locator('../..')
       .getByRole('button', { name: 'Detailed', exact: true }).click()
     await page.getByRole('menuitem', { name: label, exact: true }).click()
     await page.keyboard.press('Escape')
@@ -304,7 +304,7 @@ describe('web e2e: assistant IconActions wait for the turn to end', () => {
 
     await openSettings(page, 'en')
     const restored = page.getByRole('dialog', { name: 'Settings' })
-    await restored.getByText('Work details', { exact: true }).locator('../..')
+    await restored.getByText('Tool call details', { exact: true }).locator('../..')
       .getByRole('button', { name: label, exact: true }).click()
     await page.getByRole('menuitem', { name: 'Standard', exact: true }).click()
     await page.keyboard.press('Escape')

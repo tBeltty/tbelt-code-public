@@ -330,7 +330,7 @@ describe('web e2e: message IconActions and clocks on settled history', () => {
     const stats = page.locator('[data-composer-stats]')
     await openSettings(page, 'en')
     const dialog = page.getByRole('dialog', { name: 'Settings', exact: true })
-    const row = dialog.getByText('Performance & usage', { exact: true }).locator('../..')
+    const row = dialog.getByText('Timing and token usage', { exact: true }).locator('../..')
     await row.getByRole('button', { name: 'Detailed', exact: true }).click()
     await page.getByRole('menuitem', { name: 'Compact', exact: true }).click()
     await expect.poll(() => scaffold.ctx.settings.describe().find(row => row.ns === 'ui-chat')?.value).toMatchObject({ performanceUsage: 'compact' })

@@ -4,6 +4,34 @@ Notable changes to tBelt Code, newest first. The format follows [Keep a Changelo
 
 ## [Unreleased]
 
+## [0.2.0-rc.2.20261012] - 2026-10-12
+
+### Added
+
+- Spanish as an app language, selectable in Settings > General.
+
+### Changed
+
+- Settings, presets, plugin messages and errors say tBelt Code wherever they said DSH.
+- The first-run balance step no longer names a provider or credits.
+- The preset list shows a short Default tag and hides the ids of built-in presets.
+- Spending has its own icon in Settings.
+- The first-run provider list shows readable names, popular providers first, then local servers and the rest.
+- The empty welcome screen has an Open folder button.
+- The send button looks disabled until a message can be sent.
+- Notifications stay above every dialog and move to the top edge while one is open.
+- "Show hidden files" in the folder picker has a visible checkbox.
+- Settings > Built-in plugins is now System inspector.
+- Three Settings rows have plainer names and descriptions: Timing and token usage, Tool call details, and Sending while the agent works.
+- A disabled Save button in Settings is outlined, not grey on grey, and Open configuration file has no filled background.
+- Menus, job lists and preset cards use 12 px text, and the sidebar and composer icon buttons have a larger click area.
+- The sidebar logo no longer takes a Tab stop next to New session.
+
+### Removed
+
+- The session log upload switch in Settings > General.
+- The second Preview badge on the welcome screen. The sidebar keeps one.
+
 ## [0.2.0-rc.2.20261011] - 2026-10-11
 
 ### Added
@@ -208,7 +236,8 @@ Notable changes to tBelt Code, newest first. The format follows [Keep a Changelo
 - Downloads no longer return an older installer.
 - A key that ran out of credit or hit its spending limit is reported as a quota problem instead of an invalid API key.
 
-[Unreleased]: https://github.com/tBeltty/tbelt-code-public/compare/v0.2.0-rc.2.20261011...HEAD
+[Unreleased]: https://github.com/tBeltty/tbelt-code-public/compare/v0.2.0-rc.2.20261012...HEAD
+[0.2.0-rc.2.20261012]: https://github.com/tBeltty/tbelt-code-public/releases/tag/v0.2.0-rc.2.20261012
 [0.2.0-rc.2.20261011]: https://github.com/tBeltty/tbelt-code-public/releases/tag/v0.2.0-rc.2.20261011
 [0.2.0-rc.2.20261009.2]: https://github.com/tBeltty/tbelt-code-public/releases/tag/v0.2.0-rc.2.20261009.2
 [0.2.0-rc.2.20261009]: https://github.com/tBeltty/tbelt-code-public/releases/tag/v0.2.0-rc.2.20261009

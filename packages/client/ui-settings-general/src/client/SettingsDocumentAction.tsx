@@ -39,7 +39,7 @@ export function SettingsDocumentAction({ controller, useSnapshot, t }: SettingsD
     <div className={css.action}>
       {state.error === null ? null : <span className={css.error} role="alert">{t('openDocument.error')}</span>}
       <Button
-        variant="outline"
+        variant="ghost"
         size="sm"
         disabled={state.opening}
         onClick={() => { void controller.open() }}

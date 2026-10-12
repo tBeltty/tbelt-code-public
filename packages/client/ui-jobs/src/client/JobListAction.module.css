@@ -73,7 +73,7 @@
   padding: 4px 0 3px;
   border-top: 0.5px solid var(--dsw-alias-border-l1);
   color: var(--dsw-alias-label-tertiary);
-  font-size: 11px;
+  font-size: 12px;
   line-height: 16px;
 }
 
@@ -94,7 +94,7 @@
   border-radius: var(--dsw-radius-sm);
   background: transparent;
   color: var(--dsw-alias-label-tertiary);
-  font-size: 11px;
+  font-size: 12px;
   line-height: 16px;
   cursor: pointer;
 }
@@ -214,7 +214,7 @@
 }
 
 .stopLabel {
-  font-size: 11px;
+  font-size: 12px;
   line-height: 18px;
   white-space: nowrap;
 }
@@ -321,7 +321,7 @@
 .duration {
   flex: none;
   color: var(--dsw-alias-label-tertiary);
-  font-size: 11px;
+  font-size: 12px;
   line-height: 18px;
   font-variant-numeric: tabular-nums;
 }
@@ -356,7 +356,7 @@
 .notice {
   margin: 0 8px 6px;
   color: var(--dsw-alias-label-tertiary);
-  font-size: 11px;
+  font-size: 12px;
   line-height: 16px;
 }
 

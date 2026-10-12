@@ -39,7 +39,7 @@ describe('ui-settings-plugins apply', () => {
     expect(inject).toEqual(['slots', 'locale'])
   })
 
-  it('registers one Built-in plugins section and declares its tab slot, contributing no tab of its own', async () => {
+  it('registers one System inspector section and declares its tab slot, contributing no tab of its own', async () => {
     const { ctx, slots } = await bench()
     declareRoot(slots)
 

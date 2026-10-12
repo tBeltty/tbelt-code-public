@@ -381,11 +381,23 @@ function mount(
 }
 
 describe('Hero chrome', () => {
-  it('renders the English preview badge through the hero locale seat', () => {
+  it('shows the Open folder button only when the owner can open the picker', () => {
+    const renderSlot = vi.fn<HeroShellProps['renderSlot']>(() => null)
+    const t = makeTranslate(en, commonEn)
+    const none = render(<HeroShell t={t} renderSlot={renderSlot} />)
+    expect(none.queryByRole('button', { name: 'Open folder' })).toBeNull()
+    none.unmount()
+    const open = vi.fn()
+    const view = render(<HeroShell t={t} renderSlot={renderSlot} onOpenWorkspace={open} />)
+    fireEvent.click(view.getByRole('button', { name: 'Open folder' }))
+    expect(open).toHaveBeenCalledOnce()
+  })
+
+  it('renders the English headline without a preview badge', () => {
     const renderSlot = vi.fn<HeroShellProps['renderSlot']>(() => null)
     const view = render(<HeroShell t={makeTranslate(en, commonEn)} renderSlot={renderSlot} />)
     expect(view.getByText('Welcome to tBelt Code')).toBeTruthy()
-    expect(view.getByText('Preview')).toBeTruthy()
+    expect(view.queryByText('Preview')).toBeNull()
     expect(renderSlot).toHaveBeenCalledOnce()
     expect(renderSlot.mock.calls[0]?.[0]).toBe('conversation.hero.brand.mark')
     const brandMarkOwner = renderSlot.mock.calls[0]?.[1]
@@ -549,7 +561,7 @@ describe('ConversationRoot resident composer', () => {
     expect(b.slotCalls).not.toContain('conversation.session.header.utilities')
     expect(b.slotCalls).not.toContain('conversation.session.header.actions')
     expect(b.view.getByText('欢迎使用 tBelt Code')).toBeTruthy()
-    expect(b.view.getByText('预览版')).toBeTruthy()
+    expect(b.view.queryByText('预览版')).toBeNull()
     expect(b.view.queryByTestId('view-chat')).toBeNull()
     // The same machine-backed textarea is live in the hero, and the
     // persistence mirror stays bound (ConversationSession mounts chrome-hidden
@@ -656,6 +668,17 @@ describe('ConversationRoot resident composer', () => {
     expect(b.view.getByRole('tab', { name: 'New view' }).getAttribute('aria-selected')).toBe('false')
     // The browser drag lane anchors its header tab-strip probe on this marker.
     expect(b.view.getByRole('tablist').hasAttribute('data-conversation-tabs')).toBe(true)
+  })
+
+  it('opens the workspace picker from the Open folder button while no workspace is chosen', () => {
+    const b = mount(sessionSnapshotOf({ blank: true }), [])
+    fireEvent.click(b.view.getByRole('button', { name: '打开文件夹' }))
+    expect((b.pickerOwner() as { open: boolean }).open).toBe(true)
+  })
+
+  it('hides the Open folder button once a workspace is chosen', () => {
+    const b = mount(sessionSnapshotOf({ blank: true }), [{ ...workspace('one'), sessionIds: [SID] }])
+    expect(b.view.queryByRole('button', { name: '打开文件夹' })).toBeNull()
   })
 
   it('rolls the pending workspace label back when switching fails', async () => {

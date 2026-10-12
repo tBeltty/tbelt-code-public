@@ -3,8 +3,8 @@
  * the same provider/settings/credential join the Models page uses, and ANY
  * usable provider ends the step — no route is named or preferred. When none
  * exists, the step shows one searchable list: the catalog routes in
- * alphabetical order, then the local-server templates and the custom-provider
- * form, with nothing preselected. A pi-ai catalog route is set up on the same
+ * popular providers first, then the local-server templates, the other catalog
+ * routes alphabetically and the custom-provider form, with nothing preselected. A pi-ai catalog route is set up on the same
  * screen: the key is checked as it is typed and the models it can use are
  * listed below it, none selected.
  */
@@ -20,6 +20,7 @@ import type { SettingsSchemaOperations } from './schema-operations.ts'
 import { CustomProviderCard } from './CustomProviderCard.tsx'
 import { ProviderEditor } from './ProviderEditor.tsx'
 import { LOCAL_PROVIDER_TEMPLATES } from './provider-templates.ts'
+import { POPULAR_PROVIDERS, providerDisplayName } from './provider-names.ts'
 import type { ProviderTemplate } from './provider-templates.ts'
 import type { en } from './locales.ts'
 import { OnboardingModal } from './OnboardingModal.tsx'
@@ -47,16 +48,45 @@ export interface ProviderOnboardingInjected {
 export type ProviderOnboardingDialogProps =
   PropsRuntime<'settings.onboarding'> & InjectFace<ProviderOnboardingInjected>
 
+/** Order of the list groups. */
+const GROUPS = ['popular', 'local', 'other', 'custom'] as const
+
+/** A list group. */
+type OnboardingGroup = typeof GROUPS[number]
+
 /** One entry of the provider list: a catalog route, a local-server template, or the custom form. */
 interface OnboardingChoice {
   /** Stable list key; a catalog route's key is its provider id. */
   key: string
   /** Name shown in the list. */
   label: string
-  /** Secondary text, also matched by the search. */
+  /** Secondary text shown beside the name; empty for a catalog route. */
   detail: string
+  /** Group the entry is listed under. */
+  group: OnboardingGroup
+  /** Route id, matched by the search without being shown. */
+  search: string
   /** Select this entry. */
   pick: () => void
+}
+
+/**
+ * Reader-facing name of a catalog route.
+ * @param entry - the route's directory entry.
+ * @returns its name, never the bare id.
+ */
+function nameOf(entry: { provider: string; displayName: string }): string {
+  return providerDisplayName(entry.provider, entry.displayName)
+}
+
+/**
+ * Position of a route in the popular list; routes outside it sort after it.
+ * @param provider - route id.
+ * @returns the rank used to order the catalog routes.
+ */
+function popularRank(provider: string): number {
+  const index = POPULAR_PROVIDERS.indexOf(provider)
+  return index === -1 ? POPULAR_PROVIDERS.length : index
 }
 
 /* v8 ignore next 3 -- closed-union defaults only defend future source widening */
@@ -129,44 +159,52 @@ export function ProviderOnboardingDialog(props: ProviderOnboardingDialogProps): 
     )
   }
 
-  // Catalog routes that can still take a key, alphabetical so no provider is favored.
+  // Catalog routes that can still take a key: the popular ones in their fixed
+  // order, the rest alphabetical.
   const addable = state.rows
     .flatMap((row) => {
       const rowNamespace = state.namespaces.get(row.entry.settingsNs)
       return rowNamespace === undefined || row.configured ? [] : [{ row, namespace: rowNamespace }]
     })
-    .sort((a, b) => a.row.entry.displayName.localeCompare(b.row.entry.displayName))
+    .sort((a, b) => nameOf(a.row.entry).localeCompare(nameOf(b.row.entry)))
+    .sort((a, b) => popularRank(a.row.entry.provider) - popularRank(b.row.entry.provider))
   const chosen = addable.find(candidate => candidate.row.entry.provider === picked)
   const localOffered = namespace !== undefined && protocols.length > 0
   const choices: readonly OnboardingChoice[] = [
     ...addable.map(({ row }): OnboardingChoice => ({
-      key: row.entry.provider, label: row.entry.displayName, detail: row.entry.provider,
+      key: row.entry.provider, label: nameOf(row.entry), detail: '', search: row.entry.provider,
+      group: POPULAR_PROVIDERS.includes(row.entry.provider) ? 'popular' : 'other',
       pick: () => { setPicked(row.entry.provider) },
     })),
     ...localOffered
-      ? [
+      ? ([
         ...LOCAL_PROVIDER_TEMPLATES.map((candidate): OnboardingChoice => ({
-          key: `local:${candidate.id}`, label: candidate.displayName, detail: t('onboardingLocalTag'),
+          key: `local:${candidate.id}`, label: candidate.displayName, detail: '', search: candidate.id, group: 'local',
           pick: () => {
             setTemplate(candidate)
             setCustomOpen(true)
           },
         })),
         {
-          key: 'custom', label: t('addCustom'), detail: t('onboardingCustomTag'),
+          key: 'custom', label: t('addCustom'), detail: t('onboardingCustomTag'), search: 'custom', group: 'custom',
           pick: () => {
             setTemplate(undefined)
             setCustomOpen(true)
           },
         },
-      ]
+      ] satisfies OnboardingChoice[])
       : [],
   ]
   const needle = query.trim().toLowerCase()
   const visible = needle.length === 0
     ? choices
     : choices.filter(choice => choice.label.toLowerCase().includes(needle)
+      || choice.search.toLowerCase().includes(needle)
       || choice.detail.toLowerCase().includes(needle))
+  const groupLabels: Record<OnboardingGroup, string | undefined> = {
+    popular: t('onboardingGroupPopular'), local: t('onboardingGroupLocal'), other: t('onboardingGroupOther'),
+    custom: undefined,
+  }
 
   return (
     <OnboardingModal title={t('onboardingTitle')} focusTitle>
@@ -184,22 +222,38 @@ export function ProviderOnboardingDialog(props: ProviderOnboardingDialogProps): 
         ? <p className={styles['candidateEmpty']} role="status">{t('onboardingNoProviders')}</p>
         : (
           <ul className={onboardingStyles['providerList']} aria-label={t('provider')}>
-            {visible.map(choice => (
-              <li key={choice.key}>
-                <button
-                  type="button"
-                  className={`${onboardingStyles['providerItem']} ${choice.key === picked ? onboardingStyles['providerItemActive'] : ''}`}
-                  aria-label={choice.label}
-                  aria-describedby={`${listId}-${choice.key}`}
-                  aria-pressed={choice.key === picked}
-                  disabled={!state.writable}
-                  onClick={choice.pick}
-                >
-                  <span className={onboardingStyles['providerName']}>{choice.label}</span>
-                  <span id={`${listId}-${choice.key}`} className={onboardingStyles['providerDetail']}>{choice.detail}</span>
-                </button>
-              </li>
-            ))}
+            {GROUPS.flatMap((group) => {
+              const entries = visible
+                .filter(choice => choice.group === group)
+                .toSorted((a, b) => group === 'popular'
+                  ? POPULAR_PROVIDERS.indexOf(a.key) - POPULAR_PROVIDERS.indexOf(b.key)
+                  : 0)
+              if (entries.length === 0) return []
+              const heading = groupLabels[group]
+              return [
+                ...heading === undefined ? [] : [
+                  <li key={`group:${group}`} role="presentation" className={onboardingStyles['providerGroup']}>{heading}</li>,
+                ],
+                ...entries.map(choice => (
+                  <li key={choice.key}>
+                    <button
+                      type="button"
+                      className={`${onboardingStyles['providerItem']} ${choice.key === picked ? onboardingStyles['providerItemActive'] : ''}`}
+                      aria-label={choice.label}
+                      aria-describedby={choice.detail === '' ? undefined : `${listId}-${choice.key}`}
+                      aria-pressed={choice.key === picked}
+                      disabled={!state.writable}
+                      onClick={choice.pick}
+                    >
+                      <span className={onboardingStyles['providerName']}>{choice.label}</span>
+                      {choice.detail === ''
+                        ? null
+                        : <span id={`${listId}-${choice.key}`} className={onboardingStyles['providerDetail']}>{choice.detail}</span>}
+                    </button>
+                  </li>
+                )),
+              ]
+            })}
           </ul>
         )}
       {chosen === undefined

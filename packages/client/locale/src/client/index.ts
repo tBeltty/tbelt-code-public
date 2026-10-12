@@ -20,7 +20,7 @@ import {
   LOCALE_ID_PATTERN, LOCALE_IDS, LOCALE_PREFERENCE_FIELD, LOCALE_SETTINGS_NAMESPACE,
   type BuiltInLocaleId, type LocaleId, type LocaleSettings,
 } from '../locale-settings.ts'
-import { en, zh, type CommonKey } from '../locales/index.ts'
+import { en, es, zh, type CommonKey } from '../locales/index.ts'
 import {
   en as settingsEn, zh as settingsZh, type SettingsLocaleKey,
 } from '../locales/settings.ts'
@@ -122,6 +122,9 @@ const BUILT_IN_LOCALE_METADATA = {
 const BUILT_IN_LOCALES: readonly LocaleDefinition[] = Object.freeze(
   LOCALE_IDS.map(id => Object.freeze({ id, ...BUILT_IN_LOCALE_METADATA[id] })),
 )
+
+/** Spanish ships with the locale package; its dictionaries fall back to English per key. */
+const SPANISH = Object.freeze({ id: 'es', label: 'Español', fallback: 'en' } satisfies LanguageRegistration)
 
 /** Case-insensitive key for BCP 47-style ids. */
 function localeKey(value: string): string {
@@ -579,6 +582,10 @@ export async function apply(ctx: ClientContext): Promise<void> {
   locale.register(COMMON_NS, { zh, en })
   locale.register(SETTINGS_NS, { zh: settingsZh, en: settingsEn })
   ctx.provide('locale', locale)
+  ctx.effect(() => locale.addLanguage(SPANISH), 'locale: Spanish language')
+  for (const [ns, dict] of Object.entries(es)) {
+    ctx.effect(() => locale.register(ns, SPANISH.id, dict), `locale: Spanish ${ns} dictionary`)
+  }
   if (bridge !== undefined) {
     ctx.on('locale/change', (snapshot) => { bridge.onChange(snapshot.active) })
     bridge.onChange(locale.getSnapshot().active)

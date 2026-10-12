@@ -345,7 +345,7 @@
 .showHiddenToggle {
   display: inline-flex;
   align-items: center;
-  gap: 4px;
+  gap: 8px;
   border: none;
   background: transparent;
   padding: 0;
@@ -355,6 +355,22 @@
   color: var(--dsw-alias-label-secondary);
   cursor: pointer;
   white-space: nowrap;
+}
+
+.showHiddenBox {
+  display: inline-grid;
+  place-items: center;
+  flex: none;
+  width: 16px;
+  height: 16px;
+  border: 1px solid var(--dsw-alias-label-tertiary);
+  border-radius: var(--dsw-radius-sm);
+  color: var(--dsw-alias-label-primary);
+}
+
+.showHiddenBoxChecked {
+  background: var(--dsw-alias-interactive-bg-hover);
+  border-color: var(--dsw-alias-link);
 }
 
 .showHiddenToggle:hover {

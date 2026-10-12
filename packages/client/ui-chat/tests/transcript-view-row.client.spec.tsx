@@ -55,7 +55,7 @@ function mount(mode: TranscriptViewMode = 'standard', dictionary: typeof en | ty
 describe('TranscriptViewRow', () => {
   it('explains the preference and shows Standard by default', () => {
     mount()
-    expect(screen.getByText('Work details')).toBeDefined()
+    expect(screen.getByText('Tool call details')).toBeDefined()
     expect(screen.getByText('Choose how much detail to show for tool calls')).toBeDefined()
     expect(screen.getByRole('button', { name: /Standard/ }).getAttribute('aria-expanded')).toBe('false')
   })
@@ -175,7 +175,7 @@ describe('PerformanceUsageRow', () => {
       usePerformanceUsage={bindSnapshotSelector(source)}
       setPerformanceUsage={setPerformanceUsage}
     />)
-    expect(screen.getByText('Performance & usage')).toBeDefined()
+    expect(screen.getByText('Timing and token usage')).toBeDefined()
     fireEvent.click(screen.getByRole('button', { name: 'Detailed' }))
     fireEvent.click(screen.getByRole('menuitem', { name: 'Compact' }))
     expect(setPerformanceUsage).toHaveBeenCalledWith('compact')

@@ -18,6 +18,7 @@ Download the app from [code.tbelt.online](https://code.tbelt.online). It can ins
 - Long pasted text becomes a file attachment with a preview, and one click puts it back as text.
 - Images over 30 MB attach as files, with an upload percentage, instead of being refused.
 - Plans with inline comments and versions, reviewed before you approve.
+- The app is available in English and Spanish.
 - An Artifacts page listing the files each turn delivered or changed.
 - A side panel preview for HTML pages, images, PDFs and local dev servers.
 - Point at an element in the preview and the agent knows exactly which one.

@@ -258,6 +258,7 @@ export function SidebarRoot({
               <button
                 type="button"
                 className={clsx(css.brand, css.wide)}
+                tabIndex={-1}
                 aria-label={t('session.new.label')}
                 aria-keyshortcuts={newShortcut?.aria}
                 onClick={() => { startSession() }}

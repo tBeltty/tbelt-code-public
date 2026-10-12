@@ -10,6 +10,7 @@
 }
 
 .iconButton {
+  position: relative;
   flex: none;
   display: inline-flex;
   align-items: center;
@@ -26,4 +27,11 @@
 
 .iconButton:hover {
   background: var(--dsw-alias-interactive-bg-hover);
+}
+
+/* Extends the click area of the 28px button to 32px without changing its layout. */
+.iconButton::before {
+  position: absolute;
+  inset: -2px;
+  content: '';
 }

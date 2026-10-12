@@ -112,6 +112,7 @@
 /* The geometry of a message's action row button (ui-chat MessageIconActions),
    shared with the kit's split control beside it: a 28px circle around a 15px glyph. */
 .iconButton {
+  position: relative;
   display: inline-flex;
   flex: none;
   align-items: center;
@@ -166,4 +167,11 @@
   min-height: 0;
   min-width: 0;
   overflow: hidden;
+}
+
+/* Extends the click area of the 28px button to 32px without changing its layout. */
+.iconButton::before {
+  position: absolute;
+  inset: -2px;
+  content: '';
 }

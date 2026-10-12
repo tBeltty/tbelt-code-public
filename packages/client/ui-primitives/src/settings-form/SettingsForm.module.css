@@ -43,7 +43,9 @@
 }
 
 .save:disabled {
-  opacity: 0.4;
+  border: 0.5px solid var(--dsw-alias-border-l3);
+  background: transparent;
+  color: var(--dsw-alias-label-secondary);
   cursor: default;
 }
 

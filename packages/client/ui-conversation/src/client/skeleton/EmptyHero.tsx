@@ -3,7 +3,7 @@
 
 import type { ReactNode, RefObject } from 'react'
 import {
-  FishLogo, IconChevronDownOutlineRegular, IconFolderCloseRegular, IconFolderOpenRegular,
+  Button, FishLogo, IconChevronDownOutlineRegular, IconFolderCloseRegular, IconFolderOpenRegular,
 } from '@deepseek-ai/dsh-client-ui-primitives'
 import { workspaceTitleOf } from '@deepseek-ai/dsh-util-workspace-path'
 import type { ConversationContentProps } from '../contract/slots.ts'
@@ -66,6 +66,8 @@ export interface HeroShellProps {
   t: HeroTranslate
   /** Authorized renderer for the hero brand-mark slot. */
   renderSlot: ConversationContentProps['renderSlot']
+  /** Open the workspace picker; given only while no workspace is chosen, which shows the Open folder button. */
+  onOpenWorkspace?: (() => void) | undefined
   /** Overlay content after the stack (modals). */
   children?: ReactNode
 }
@@ -75,7 +77,7 @@ export interface HeroShellProps {
  * @param props - see {@link HeroShellProps}.
  * @returns the centered hero element tree.
  */
-export function HeroShell({ t, renderSlot, children }: HeroShellProps) {
+export function HeroShell({ t, renderSlot, onOpenWorkspace, children }: HeroShellProps) {
   return (
     <div className={css.root}>
       <div className={css.stack}>
@@ -88,13 +90,16 @@ export function HeroShell({ t, renderSlot, children }: HeroShellProps) {
             })}
           </span>
           <span className={css.titleGroup}>
-            {/* Own element: keeps the headline text addressable apart from the badge. */}
             <span>{t('hero.headline')}</span>
-            <span className={css.previewBadge}>{t('hero.preview')}</span>
           </span>
         </div>
         <div className={css.body}>
           {/* The composer remains mounted outside this component. */}
+          {onOpenWorkspace !== undefined && (
+            <Button variant="primary" icon={<IconFolderOpenRegular size={16} />} onClick={onOpenWorkspace}>
+              {t('hero.openFolder')}
+            </Button>
+          )}
         </div>
       </div>
       {children}

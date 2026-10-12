@@ -37,6 +37,7 @@ import type { ModelsOperations } from './operations.ts'
 import type { SettingsSchemaOperations } from './schema-operations.ts'
 import { OnboardingProviderSetup } from './OnboardingProviderSetup.tsx'
 import { ProviderEditor, type ProviderEditorProps } from './ProviderEditor.tsx'
+import { providerDisplayName } from './provider-names.ts'
 import type { en } from './locales.ts'
 import styles from './ModelsSection.module.css'
 
@@ -627,7 +628,9 @@ function Loaded({ injected, renderSlot }: { injected: ModelsSectionFace; renderS
                           .filter(({ row }) => row.entry.provider === draft.target.provider
                             || matchesProviderQuery(row.entry, providerQuery))
                           .map(({ row }) => (
-                            <option key={row.entry.provider} value={row.entry.provider}>{row.entry.displayName}</option>
+                            <option key={row.entry.provider} value={row.entry.provider}>
+                              {providerDisplayName(row.entry.provider, row.entry.displayName)}
+                            </option>
                           ))}
                       </select>
                     </div>

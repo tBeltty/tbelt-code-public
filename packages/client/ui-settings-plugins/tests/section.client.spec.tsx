@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-/** The Built-in plugins section: its heading, its tab row, and which tab is mounted. */
+/** The System inspector section: its heading, its tab row, and which tab is mounted. */
 
 import { cleanup, fireEvent, render, screen } from '@testing-library/react'
 import { afterEach, describe, expect, it } from 'vitest'

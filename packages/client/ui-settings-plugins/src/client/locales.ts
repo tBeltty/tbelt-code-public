@@ -5,8 +5,8 @@ export type PluginsSettingsLocaleKey = 'nav' | 'title' | 'intro' | 'tabs' | 'emp
 
 /** English copy. */
 export const en: Record<PluginsSettingsLocaleKey, string> = {
-  nav: 'Built-in plugins',
-  title: 'Built-in plugins',
+  nav: 'System inspector',
+  title: 'System inspector',
   intro: 'Inspect the plugins this deployment ships.',
   tabs: 'Plugin views',
   empty: 'This deployment exposes no plugin views.',

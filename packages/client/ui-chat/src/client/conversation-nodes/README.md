@@ -108,7 +108,7 @@ Automatic collapse keeps the process open if hiding it would hide keyboard focus
 <a id="display-modes"></a>
 ## Display modes
 
-Settings → General → Work details offers four modes for choosing how much tool-call detail to show: Compact `compact`, Standard `standard`, Detailed `detailed`, and Verbose `verbose`.
+Settings → General → Tool call details offers four modes for choosing how much tool-call detail to show: Compact `compact`, Standard `standard`, Detailed `detailed`, and Verbose `verbose`.
 
 | Behavior | Compact | Standard | Detailed | Verbose |
 |---|---|---|---|---|
@@ -120,7 +120,7 @@ Settings → General → Work details offers four modes for choosing how much to
 
 ### Defaults and saving preferences
 
-Work details uses the Host setting `ui-chat.transcriptView`. The client reads it according to these rules:
+Tool call details uses the Host setting `ui-chat.transcriptView`. The client reads it according to these rules:
 
 - Saved values for the four modes are used directly, regardless of changes to defaults.
 - Legacy `normal` and `expanded` values display as `detailed`, without automatically rewriting the saved values on disk.

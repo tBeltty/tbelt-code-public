@@ -155,7 +155,7 @@ describe('locale apply', () => {
     const { entry, instance, face } = faceOf(b.slots)
     // The inject-time re-sync sealed the init window: the mirror is current.
     expect(instance.getSnapshot().active).toBe('en')
-    expect(instance.getSnapshot().options.map(o => o.id)).toEqual(['zh', 'en'])
+    expect(instance.getSnapshot().options.map(o => o.id)).toEqual(['zh', 'en', 'es'])
     // Copy rides the standard locale seat: the entry declares the namespace.
     expect(entry.locale).toBe(SETTINGS_NS)
     expect(locale.bind(SETTINGS_NS)('language.title')).toBe('Language')
@@ -184,11 +184,23 @@ describe('locale apply', () => {
     expect(instance.getSnapshot().options).toEqual([
       { id: 'zh', label: '中文' },
       { id: 'en', label: 'English' },
+      { id: 'es', label: 'Español' },
       { id: 'ja', label: '日本語' },
     ])
 
     await languagePack.dispose()
-    expect(instance.getSnapshot().options.map(option => option.id)).toEqual(['zh', 'en'])
+    expect(instance.getSnapshot().options.map(option => option.id)).toEqual(['zh', 'en', 'es'])
+  })
+
+  it('ships Spanish with English fallback for untranslated keys', async () => {
+    const b = await bench('es')
+    await b.ctx.plugin({ inject: [...inject], apply }).await()
+    const locale = b.ctx.get('locale') as LocaleRuntime
+    expect(locale.getLocale().active).toBe('es')
+    expect(locale.bind('common')('cancel')).toBe('Cancelar')
+    locale.register('sidebarExcel', 'en', { language: 'en' })
+    expect(locale.bind('sidebarExcel')('language')).toBe('en')
+    expect(locale.bind('workspace')('time.minutes', { n: 5 })).toBe('5 min')
   })
 
   it('loads and refreshes the explicit Host preference after nonblocking activation', async () => {

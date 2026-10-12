@@ -189,6 +189,7 @@ export function fakeDeps(
     files: fakeFiles(),
     imageProtocol: 'none',
     now: () => 10_000_000,
+    languageEnvironment: {},
     ...overrides,
   } as ReturnType<typeof fakeDeps>
 }

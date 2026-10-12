@@ -6,6 +6,7 @@ import {
 import {
   Button, IconCloseOutlineRegular, IconEditOutlineRegular, IconListPenOutlineRegular, IconPlusOutlineRegular,
   IconTrashOutlineRegular, MarkdownText, type MarkdownLabels,
+  pluralSuffix,
 } from '@deepseek-ai/dsh-client-ui-primitives'
 import type { PropsLocale } from '@deepseek-ai/dsh-client-ui-slots'
 import {
@@ -219,7 +220,7 @@ export function PlanCommentLayer({ markdown, labels, comments, onAdd, onUpdate, 
         <button key={entry.block} type="button" className={css.marker} style={{ top: entry.top }} data-plan-comment-ui=""
           data-plan-comment-marker={entry.block} aria-expanded={openBlock === entry.block}
           data-resolved={entry.comments.every(comment => comment.resolved === true) ? '' : undefined}
-          aria-label={t(entry.comments.length === 1 ? 'comment.marker.one' : 'comment.marker.other', { count: entry.comments.length })}
+          aria-label={t(`comment.marker.${pluralSuffix(t('format.locale'), entry.comments.length)}`, { count: entry.comments.length })}
           onClick={() => { setOpenBlock(openBlock === entry.block ? undefined : entry.block) }}>
           <IconListPenOutlineRegular size={14} />
           {entry.comments.length > 1 && <span className={css.markerCount}>{entry.comments.length}</span>}

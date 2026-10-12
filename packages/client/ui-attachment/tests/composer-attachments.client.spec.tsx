@@ -22,42 +22,42 @@ afterEach(() => {
 
 const t = ((key: string, params?: Readonly<Record<string, unknown>>): string => {
   const messages: Record<string, string> = {
-    'attachment.pending': '待发送附件',
-    'attachment.scrollLeft': '向左滚动附件',
-    'attachment.scrollRight': '向右滚动附件',
-    'file.pending': '待发送文件',
-    'file.uploading': '上传中…',
-    'file.uploadFailed': '上传失败，点击重试',
-    'file.label': '文件',
-    'image.pending': '待发送图片',
-    'image.original': '原图',
-    'image.preview': '原图预览',
-    'image.closePreview': '关闭原图预览',
-    'image.openOriginal': '查看原图',
-    'attachment.dropBlocked': '当前无法添加文件或图片',
-    'attachment.dropTitle': '文件或图片拖动到此处即可添加',
+    'attachment.pending': 'Adjuntos pendientes',
+    'attachment.scrollLeft': 'Desplazar adjuntos a la izquierda',
+    'attachment.scrollRight': 'Desplazar adjuntos a la derecha',
+    'file.pending': 'Archivos pendientes',
+    'file.uploading': 'Subiendo…',
+    'file.uploadFailed': 'Falló la subida; haz clic para reintentar',
+    'file.label': 'Archivo',
+    'image.pending': 'Imágenes pendientes',
+    'image.original': 'Imagen original',
+    'image.preview': 'Vista previa de la imagen original',
+    'image.closePreview': 'Cerrar vista previa de la imagen original',
+    'image.openOriginal': 'Ver original',
+    'attachment.dropBlocked': 'Ahora no se pueden añadir archivos ni imágenes',
+    'attachment.dropTitle': 'Arrastra archivos o imágenes aquí para añadirlos',
   }
   if (key === 'file.remove') {
     const name = params?.name
-    return `移除文件 ${typeof name === 'string' ? name : ''}`
+    return `Quitar el archivo ${typeof name === 'string' ? name : ''}`
   }
-  if (key === 'file.insertAsText') return '作为文本插入'
+  if (key === 'file.insertAsText') return 'Insertar como texto'
   if (key === 'file.insertAsTextNamed') {
     const name = params?.name
-    return `将 ${typeof name === 'string' ? name : ''} 作为文本插入输入框`
+    return `Insertar ${typeof name === 'string' ? name : ''} en el borrador como texto`
   }
   if (key === 'file.retry') {
     const name = params?.name
-    return `重试上传 ${typeof name === 'string' ? name : ''}`
+    return `Reintentar la subida de ${typeof name === 'string' ? name : ''}`
   }
   if (key === 'image.remove') {
     const name = params?.name
-    return `移除图片 ${typeof name === 'string' ? name : ''}`
+    return `Quitar la imagen ${typeof name === 'string' ? name : ''}`
   }
   if (key === 'attachment.dropDesc') {
     const count = params?.count
     const size = params?.size
-    return `图片限制：最多 ${typeof count === 'number' ? String(count) : ''} 张，每张 ${typeof size === 'string' ? size : ''}`
+    return `Límite de imágenes: hasta ${typeof count === 'number' ? String(count) : ''}, de ${typeof size === 'string' ? size : ''} cada una`
   }
   return messages[key] ?? key
 }) as ComposerAttachmentsProps['t']
@@ -112,8 +112,8 @@ describe('ComposerAttachments', () => {
     const image = attachment('dropped').file
     const dataTransfer = { types: ['Files'], files: [image], items: [], dropEffect: 'none' }
     expect(fireEvent.dragEnter(document.body, { dataTransfer })).toBe(false)
-    expect(view.getByRole('status').textContent).toContain('文件或图片拖动到此处即可添加')
-    expect(view.getByRole('status').textContent).toContain('图片限制：最多 20 张，每张 5MB')
+    expect(view.getByRole('status').textContent).toContain('Arrastra archivos o imágenes aquí para añadirlos')
+    expect(view.getByRole('status').textContent).toContain('Límite de imágenes: hasta 20, de 5MB cada una')
     expect(fireEvent.dragOver(document.body, { dataTransfer })).toBe(false)
     expect(dataTransfer.dropEffect).toBe('copy')
     expect(fireEvent.drop(document.body, { dataTransfer })).toBe(false)
@@ -182,7 +182,7 @@ describe('ComposerAttachments', () => {
     const image = attachment('blocked').file
     const dataTransfer = { types: ['Files'], files: [image], items: [], dropEffect: 'copy' }
     fireEvent.dragEnter(document.body, { dataTransfer })
-    expect(view.getByRole('status').textContent).toBe('当前无法添加文件或图片')
+    expect(view.getByRole('status').textContent).toBe('Ahora no se pueden añadir archivos ni imágenes')
     fireEvent.dragOver(document.body, { dataTransfer })
     expect(dataTransfer.dropEffect).toBe('none')
     fireEvent.drop(document.body, { dataTransfer })
@@ -196,17 +196,17 @@ describe('ComposerAttachments', () => {
     const initial = props({ attachments: [image], onRemoveAttachment })
     const view = render(<ComposerAttachments {...initial} />)
 
-    fireEvent.click(view.getByRole('button', { name: '移除图片 pixel.png' }))
+    fireEvent.click(view.getByRole('button', { name: 'Quitar la imagen pixel.png' }))
     expect(onRemoveAttachment).toHaveBeenCalledWith(image.id)
-    fireEvent.click(view.getByTitle('查看原图'))
-    expect(view.getByRole('dialog', { name: '原图预览' })).toBeTruthy()
+    fireEvent.click(view.getByTitle('Ver original'))
+    expect(view.getByRole('dialog', { name: 'Vista previa de la imagen original' })).toBeTruthy()
     view.rerender(<ComposerAttachments {...props({ attachments: [], onRemoveAttachment })} />)
-    expect(view.queryByRole('dialog', { name: '原图预览' })).toBeNull()
+    expect(view.queryByRole('dialog', { name: 'Vista previa de la imagen original' })).toBeNull()
 
     view.rerender(<ComposerAttachments {...initial} />)
-    fireEvent.click(view.getByTitle('查看原图'))
+    fireEvent.click(view.getByTitle('Ver original'))
     fireEvent.keyDown(window, { key: 'Escape' })
-    expect(view.queryByRole('dialog', { name: '原图预览' })).toBeNull()
+    expect(view.queryByRole('dialog', { name: 'Vista previa de la imagen original' })).toBeNull()
   })
 
   it('keeps images and files in pick order inside one attachment rail', () => {
@@ -219,20 +219,20 @@ describe('ComposerAttachments', () => {
         },
       },
     })} />)
-    const rail = view.getByRole('group', { name: '待发送附件' })
+    const rail = view.getByRole('group', { name: 'Adjuntos pendientes' })
     expect([...rail.children].map((child) => {
       const image = child.querySelector('img')
       return image?.getAttribute('alt') ?? child.querySelector('[title]')?.getAttribute('title')
     })).toEqual(['first.png', 'middle.pdf', 'last.png'])
-    expect(view.queryByRole('group', { name: '待发送文件' })).toBeNull()
+    expect(view.queryByRole('group', { name: 'Archivos pendientes' })).toBeNull()
   })
 
   it('labels an unnamed attachment and its original-image preview', () => {
     const image = attachment('unnamed', '')
     const view = render(<ComposerAttachments {...props({ attachments: [image] })} />)
-    expect(view.getByAltText('待发送图片')).toBeTruthy()
-    fireEvent.click(view.getByTitle('查看原图'))
-    expect(view.getByAltText('原图')).toBeTruthy()
+    expect(view.getByAltText('Imágenes pendientes')).toBeTruthy()
+    fireEvent.click(view.getByTitle('Ver original'))
+    expect(view.getByAltText('Imagen original')).toBeTruthy()
   })
 })
 
@@ -253,15 +253,15 @@ describe('ComposerAttachments file drafts', () => {
       onRemoveAttachment,
       onRetryFile,
     })} />)
-    const group = view.getByRole('group', { name: '待发送附件' })
-    expect(group.textContent).toContain('上传中…')
+    const group = view.getByRole('group', { name: 'Adjuntos pendientes' })
+    expect(group.textContent).toContain('Subiendo…')
     expect(view.container.querySelector('[style="width: 25%;"]')).toBeTruthy()
     expect(group.textContent).toContain('ok.pdf')
     expect(group.textContent).toContain('PDF 3B')
-    expect(group.textContent).toContain('上传失败，点击重试')
-    fireEvent.click(view.getByRole('button', { name: '重试上传 bad.pdf' }))
+    expect(group.textContent).toContain('Falló la subida; haz clic para reintentar')
+    fireEvent.click(view.getByRole('button', { name: 'Reintentar la subida de bad.pdf' }))
     expect(onRetryFile).toHaveBeenCalledWith('bad')
-    fireEvent.click(view.getByRole('button', { name: '移除文件 ok.pdf' }))
+    fireEvent.click(view.getByRole('button', { name: 'Quitar el archivo ok.pdf' }))
     expect(onRemoveAttachment).toHaveBeenCalledWith('ok')
   })
 
@@ -273,12 +273,12 @@ describe('ComposerAttachments file drafts', () => {
         plain: { status: 'uploading', loaded: 0 },
         long: { status: 'uploading', loaded: 0 },
       },
-      pastedPreview: id => id === 'long' ? '第一行\n第二行' : undefined,
+      pastedPreview: id => id === 'long' ? 'Primera línea\nSegunda línea' : undefined,
       onReinsertPastedText,
     })} />)
     expect(view.container.querySelectorAll('pre')).toHaveLength(1)
-    expect(view.container.querySelector('pre')!.textContent).toBe('第一行\n第二行')
-    fireEvent.click(view.getByRole('button', { name: '将 pasted-text-1.md 作为文本插入输入框' }))
+    expect(view.container.querySelector('pre')!.textContent).toBe('Primera línea\nSegunda línea')
+    fireEvent.click(view.getByRole('button', { name: 'Insertar pasted-text-1.md en el borrador como texto' }))
     expect(onReinsertPastedText).toHaveBeenCalledWith('long')
   })
 
@@ -291,9 +291,9 @@ describe('ComposerAttachments file drafts', () => {
       onRetryFile,
       onRemoveAttachment,
     })} />)
-    expect(view.getByRole('group', { name: '待发送附件' }).textContent).toContain('上传中…')
-    const retry = view.getByRole('button', { name: '重试上传 bad.pdf' })
-    const remove = view.getByRole('button', { name: '移除文件 bad.pdf' })
+    expect(view.getByRole('group', { name: 'Adjuntos pendientes' }).textContent).toContain('Subiendo…')
+    const retry = view.getByRole('button', { name: 'Reintentar la subida de bad.pdf' })
+    const remove = view.getByRole('button', { name: 'Quitar el archivo bad.pdf' })
     expect(retry.contains(remove)).toBe(false)
     fireEvent.click(remove)
     expect(onRemoveAttachment).toHaveBeenCalledWith('bad')
@@ -312,8 +312,8 @@ describe('ComposerAttachments file drafts', () => {
         },
       },
     })} />)
-    const group = view.getByRole('group', { name: '待发送附件' })
-    expect(group.textContent).toContain('文件')
+    const group = view.getByRole('group', { name: 'Adjuntos pendientes' })
+    expect(group.textContent).toContain('Archivo')
     expect(group.textContent).toContain('3B')
   })
 

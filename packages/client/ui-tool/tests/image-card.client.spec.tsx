@@ -17,13 +17,13 @@ import { cleanup, fireEvent, render } from '@testing-library/react'
 import { Context } from '@deepseek-ai/cordis'
 import { bindSnapshotSelector, makeTranslate } from '@deepseek-ai/dsh-client-test-runtime'
 import { createSnapshotStore } from '@deepseek-ai/dsh-client-store'
-import { zh as commonZh } from '@deepseek-ai/dsh-client-locale/src/locales/zh.ts'
+import { es as commonEs } from '@deepseek-ai/dsh-client-locale/src/locales/es.ts'
 import type { StartedToolCall, ToolResultNode } from '@deepseek-ai/dsh-client-ui-chat/client'
 import type { SessionListState } from '@deepseek-ai/dsh-api-session-controller/client'
 import type { SessionId } from '@deepseek-ai/dsh-session/types'
 import type { PropsRenderSlots } from '@deepseek-ai/dsh-client-ui-slots'
 import type { MessageImageLoader } from '@deepseek-ai/dsh-client-ui-conversation/client'
-import { zh } from '@deepseek-ai/dsh-client-ui-conversation/src/client/locales.ts'
+import { es } from '@deepseek-ai/dsh-client-ui-conversation/src/client/locales.ts'
 import type { ToolImagesOwnerProps, ToolTreeProps } from '../src/client/contract/slots.ts'
 import { imageCardModel } from '../src/client/tool/models/image-card-model.ts'
 import { ReadImageRow, readImageToolview } from '../src/client/tool/toolviews/read-image-row.tsx'
@@ -31,7 +31,7 @@ import { ReadImageRow, readImageToolview } from '../src/client/tool/toolviews/re
 afterEach(cleanup)
 
 const SID = 's1' as SessionId
-const t: ToolTreeProps['t'] = makeTranslate(zh, commonZh)
+const t: ToolTreeProps['t'] = makeTranslate(es, commonEs)
 const ARGS = '{"file_path":"shots/card.png"}'
 
 /** The envelope read_image writes beside its image block. */

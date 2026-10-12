@@ -37,28 +37,8 @@ const PRODUCT_NAMES = {
   'app.konsole': 'Konsole',
 } as const
 
-/** Simplified Chinese dictionary (the key-set source of truth). */
-export const zh = {
-  'open.title': '用 {app} 打开',
-  'path.appDefault': '{app}（默认）',
-  'path.appsError': '无法获取应用列表',
-  'shortcut.busy': '正在打开工作区',
-  'shortcut.unavailable': '当前工作区或本地应用不可用',
-  'open.tooltip': '在本地打开',
-  'path.open': '打开',
-  'path.more': '更多打开方式',
-  'path.reveal': '显示文件位置',
-  'path.openError': '打开失败，请重试',
-  'path.revealError': '无法显示文件位置，请重试',
-  ...PRODUCT_NAMES,
-  'app.finder': '访达',
-  'app.explorer': '文件资源管理器',
-  'app.filemanager': '文件管理器',
-  'app.terminal': '终端',
-} as const
-
-/** English dictionary, key-identical to the Chinese source of truth. */
-export const en: Record<OpenInAppKey, string> = {
+/** English dictionary and key-set source of truth. */
+export const en = {
   'open.title': 'Open in {app}',
   'path.appDefault': '{app} (default)',
   'path.appsError': 'Could not load applications',
@@ -75,7 +55,27 @@ export const en: Record<OpenInAppKey, string> = {
   'app.explorer': 'File Explorer',
   'app.filemanager': 'Files',
   'app.terminal': 'Terminal',
-}
+} satisfies Record<string, string>
 
-/** Key domain of the `open-in-app` namespace (zh is the source of truth). */
-export type OpenInAppKey = keyof typeof zh
+/** Spanish dictionary, checked complete against the English key set. */
+export const es = {
+  'open.title': 'Abrir en {app}',
+  'path.appDefault': '{app} (predeterminada)',
+  'path.appsError': 'No se pudieron cargar las aplicaciones',
+  'shortcut.busy': 'Abriendo el espacio de trabajo',
+  'shortcut.unavailable': 'El espacio de trabajo actual o la aplicación local no están disponibles',
+  'open.tooltip': 'Abrir en local',
+  'path.open': 'Abrir',
+  'path.more': 'Más formas de abrir',
+  'path.reveal': 'Mostrar ubicación del archivo',
+  'path.openError': 'No se pudo abrir. Inténtalo de nuevo.',
+  'path.revealError': 'No se pudo mostrar la ubicación del archivo. Inténtalo de nuevo.',
+  ...PRODUCT_NAMES,
+  'app.finder': 'Finder',
+  'app.explorer': 'Explorador de archivos',
+  'app.filemanager': 'Archivos',
+  'app.terminal': 'Terminal',
+} satisfies Record<keyof typeof en, string>
+
+/** Key domain of the `open-in-app` namespace (English is the source of truth). */
+export type OpenInAppKey = keyof typeof en

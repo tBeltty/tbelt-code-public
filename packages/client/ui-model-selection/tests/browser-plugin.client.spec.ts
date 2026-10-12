@@ -19,7 +19,7 @@ import type { ModelSelection, ModelSelectionProjection } from '@deepseek-ai/dsh-
 import type { CommandContribution, PopupSelectSpec, SelectOption } from '@deepseek-ai/dsh-client-ui-commands/client'
 import type { ModelSelectInjected } from '../src/client/slots.ts'
 import { apply, inject } from '../src/client/index.ts'
-import { zh } from '../src/client/locales.ts'
+import { es } from '../src/client/locales.ts'
 
 const sid = (k: string): SessionId => k as SessionId
 
@@ -65,7 +65,7 @@ const GROUPS = [{
 }]
 
 /** Boot the plugin over fake faces + a stateful fake host (current moves on selectModel). */
-async function bench(locale: 'zh' | 'en' = 'zh') {
+async function bench(locale: 'es' | 'en' = 'es') {
   const ctx = new Context()
   let defaultSelection: ModelSelection = { provider: 'deepseek-official', model: 'deepseek-v4-flash' }
   let selected = defaultSelection
@@ -210,7 +210,7 @@ describe('ui-model-selection dual entry', () => {
     const input = projection('owned')
     const options = await b.popup().options(input, new AbortController().signal)
     b.rejectSelection()
-    await expect(b.popup().onSelect(options[0]!, input)).rejects.toThrow(zh['error.sessionInUse'])
+    await expect(b.popup().onSelect(options[0]!, input)).rejects.toThrow(es['error.sessionInUse'])
     expect(b.ctx.modelDirectories.directoryFor(sid('owned')).store.getSnapshot()).toMatchObject({
       status: 'error', pending: null, error: 'session/writer-held: writer held',
     })
@@ -225,7 +225,7 @@ describe('ui-model-selection dual entry', () => {
     expect(b.seat().locale).toBe('model')
   })
 
-  it.each(['zh', 'en'] as const)('shows names and providers without catalog descriptions (%s)', async (locale) => {
+  it.each(['es', 'en'] as const)('shows names and providers without catalog descriptions (%s)', async (locale) => {
     const b = await bench(locale)
     b.mint('s1')
     const options = await b.popup().options(projection('s1'), new AbortController().signal)
@@ -237,8 +237,8 @@ describe('ui-model-selection dual entry', () => {
     expect(b.popup().searchMode).toBe('fuzzy-label')
     expect(options[0]?.active).toBe(true)
     expect(options[1]?.active).toBeUndefined()
-    expect(b.popup().searchLabels?.()).toEqual(locale === 'zh'
-      ? { placeholder: '搜索模型…', empty: '没有可用的模型。', noResults: '没有匹配的模型。' }
+    expect(b.popup().searchLabels?.()).toEqual(locale === 'es'
+      ? { placeholder: 'Buscar modelos…', empty: 'No hay modelos disponibles.', noResults: 'Ningún modelo coincide.' }
       : { placeholder: 'Search models…', empty: 'No models available.', noResults: 'No matching models.' })
   })
 
@@ -298,14 +298,14 @@ describe('ui-model-selection dual entry', () => {
     })
   })
 
-  it.each(['en', 'zh'] as const)('localizes account provider headings in the %s model popup', async (locale) => {
+  it.each(['en', 'es'] as const)('localizes account provider headings in the %s model popup', async (locale) => {
     const b = await bench(locale)
     try {
       b.setGroups([{ ...GROUPS[0]!, id: 'deepseek-account', name: 'DeepSeek Account' }])
       b.remote.emit('llm/adapters-updated', [])
       b.mint('s1')
       const options = await b.popup().options(projection('s1'), new AbortController().signal)
-      expect(options[0]?.group?.label).toBe(locale === 'zh' ? 'DeepSeek 账号' : 'DeepSeek Account')
+      expect(options[0]?.group?.label).toBe(locale === 'es' ? 'Cuenta de DeepSeek' : 'DeepSeek Account')
     } finally {
       await b.ctx.fiber.dispose()
     }

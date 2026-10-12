@@ -275,12 +275,12 @@ describe('the chip introduce cue', () => {
     expect(delayedChars()).toHaveLength(0)
   })
 
-  it('keeps the per-tick cap for a short CJK name', () => {
+  it('keeps the per-tick cap for a short name', () => {
     vi.stubGlobal('matchMedia', vi.fn(() => ({ matches: false })))
     vi.useFakeTimers()
     renderSeat({
       current: 'creator',
-      options: [{ id: 'creator', name: '创造模式' }],
+      options: [{ id: 'creator', name: 'Foco' }],
       introduce: true,
     })
 

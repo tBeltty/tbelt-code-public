@@ -8,8 +8,8 @@ it('reports the local UTC offset as whole seconds east and keeps the raw UI lang
   const offset = vi.spyOn(Date.prototype, 'getTimezoneOffset')
   // Date reports minutes west of UTC; Platform receives seconds east.
   offset.mockReturnValue(480)
-  expect(accountClientMetadata('zh-CN', '1.2.3'))
-    .toEqual({ version: '1.2.3', locale: 'zh-CN', timezoneOffsetSeconds: -28_800 })
+  expect(accountClientMetadata('es', '1.2.3'))
+    .toEqual({ version: '1.2.3', locale: 'es', timezoneOffsetSeconds: -28_800 })
   offset.mockReturnValue(-300)
   expect(accountClientMetadata('en', '1.2.3'))
     .toEqual({ version: '1.2.3', locale: 'en', timezoneOffsetSeconds: 18_000 })

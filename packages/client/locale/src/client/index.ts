@@ -20,9 +20,9 @@ import {
   LOCALE_ID_PATTERN, LOCALE_IDS, LOCALE_PREFERENCE_FIELD, LOCALE_SETTINGS_NAMESPACE,
   type BuiltInLocaleId, type LocaleId, type LocaleSettings,
 } from '../locale-settings.ts'
-import { en, es, zh, type CommonKey } from '../locales/index.ts'
+import { en, es, type CommonKey } from '../locales/index.ts'
 import {
-  en as settingsEn, zh as settingsZh, type SettingsLocaleKey,
+  en as settingsEn, es as settingsEs, type SettingsLocaleKey,
 } from '../locales/settings.ts'
 import type { LanguageRowInjected } from './LanguageRow.tsx'
 import { LanguageRow } from './LanguageRow.tsx'
@@ -74,6 +74,8 @@ export interface LocaleDefinition {
 export interface LocaleSnapshot {
   /** Active locale id. */
   active: LocaleId
+  /** Explicit selection; absent while the operating-system or browser language decides. */
+  preference: LocaleId | undefined
   /** Selectable locales in display order. */
   locales: readonly LocaleDefinition[]
   /** Monotonic change counter (registry or active changes). */
@@ -100,11 +102,8 @@ declare module '@deepseek-ai/cordis' {
 /**
  * English is both the locale the UI opens in when the browser names no registered
  * language (and for non-browser runs), and the dictionary consulted after the
- * active locale misses a key. One constant serves both because the shipped
- * `zh`/`en` dictionaries carry identical key sets, so neither direction can
- * leave a key unresolved; the residual case points at English rather than
- * zh because a browser naming no registered language is the reader least
- * likely to read Chinese.
+ * active locale misses a key. One constant serves both because English
+ * defines every key, so a lookup that reaches it always resolves.
  */
 export const FALLBACK_LOCALE: BuiltInLocaleId = 'en'
 
@@ -114,17 +113,14 @@ export const COMMON_NS = 'common'
 /** Namespace owning this feature's settings-row copy. */
 export const SETTINGS_NS = 'settings.locale'
 
-/** The two locales and dictionaries shipped by this package. */
+/** The locales shipped by this package. */
 const BUILT_IN_LOCALE_METADATA = {
-  zh: { label: '中文', fallback: 'en' },
   en: { label: 'English' },
+  es: { label: 'Español', fallback: 'en' },
 } as const satisfies Record<BuiltInLocaleId, Omit<LocaleDefinition, 'id'>>
 const BUILT_IN_LOCALES: readonly LocaleDefinition[] = Object.freeze(
   LOCALE_IDS.map(id => Object.freeze({ id, ...BUILT_IN_LOCALE_METADATA[id] })),
 )
-
-/** Spanish ships with the locale package; its dictionaries fall back to English per key. */
-const SPANISH = Object.freeze({ id: 'es', label: 'Español', fallback: 'en' } satisfies LanguageRegistration)
 
 /** Case-insensitive key for BCP 47-style ids. */
 function localeKey(value: string): string {
@@ -151,8 +147,7 @@ function normalizeLanguage(input: LanguageRegistration): Readonly<LanguageRegist
 function syncDocumentLanguage(snapshot: LocaleSnapshot): void {
   // Non-browser runs (node boots of the client tree) have no document.
   if (typeof document === 'undefined') return
-  const language = snapshot.active === 'zh' ? 'zh-CN' : snapshot.active
-  if (document.documentElement.lang !== language) document.documentElement.lang = language
+  if (document.documentElement.lang !== snapshot.active) document.documentElement.lang = snapshot.active
 }
 
 /**
@@ -193,7 +188,7 @@ export class LocaleRuntime {
     const locales = this.localeList()
     this.provisional = resolveInitialLocale(locales, bootstrap?.languages)
     this.preference = bootstrap?.preference ?? undefined
-    this.snapshot = Object.freeze({ active: this.resolveActive(), locales, revision: 0 })
+    this.snapshot = Object.freeze({ active: this.resolveActive(), preference: this.preference, locales, revision: 0 })
     if (host !== undefined) {
       ctx.effect(() => host.subscribe(() => { this.adopt(host) }), 'locale: settings scope adoption')
       this.adopt(host)
@@ -259,8 +254,24 @@ export class LocaleRuntime {
     const match = this.catalog.get(localeKey(id))
     if (match === undefined) throw new Error(`locale "${id}" is not registered`)
     this.preference = match.id
-    if (this.snapshot.active !== match.id) this.publish(match.id, true)
+    if (this.snapshot.active !== match.id || this.snapshot.preference !== match.id) {
+      this.publish(match.id, this.snapshot.active !== match.id)
+    }
     void this.host?.set(LOCALE_PREFERENCE_FIELD, match.id)
+  }
+
+  /**
+   * Return to automatic selection: the operating-system language (or the
+   * browser's, outside the native shell) decides, and the stored preference is
+   * removed so a later page load detects again.
+   */
+  clearLocale(): void {
+    this.preference = undefined
+    const target = this.resolveActive()
+    if (this.snapshot.active !== target || this.snapshot.preference !== undefined) {
+      this.publish(target, this.snapshot.active !== target)
+    }
+    void this.host?.unset(LOCALE_PREFERENCE_FIELD)
   }
 
   /**
@@ -309,8 +320,8 @@ export class LocaleRuntime {
     if (section === undefined) return
     this.preference = section.preference
     const target = this.resolveActive()
-    if (this.snapshot.active === target) return
-    this.publish(target, true)
+    if (this.snapshot.active === target && this.snapshot.preference === this.preference) return
+    this.publish(target, this.snapshot.active !== target)
   }
 
   /** Recompute browser fallback and publish the current catalog. */
@@ -499,6 +510,7 @@ export class LocaleRuntime {
   ): void {
     this.snapshot = Object.freeze({
       active,
+      preference: this.preference,
       locales,
       revision: this.snapshot.revision + 1,
     })
@@ -579,13 +591,9 @@ export async function apply(ctx: ClientContext): Promise<void> {
   }
   const host = ctx.configForms.get<LocaleSettings>(LOCALE_SETTINGS_NAMESPACE)
   const locale = new LocaleRuntime(ctx, host, bootstrap)
-  locale.register(COMMON_NS, { zh, en })
-  locale.register(SETTINGS_NS, { zh: settingsZh, en: settingsEn })
+  locale.register(COMMON_NS, { en, es })
+  locale.register(SETTINGS_NS, { en: settingsEn, es: settingsEs })
   ctx.provide('locale', locale)
-  ctx.effect(() => locale.addLanguage(SPANISH), 'locale: Spanish language')
-  for (const [ns, dict] of Object.entries(es)) {
-    ctx.effect(() => locale.register(ns, SPANISH.id, dict), `locale: Spanish ${ns} dictionary`)
-  }
   if (bridge !== undefined) {
     ctx.on('locale/change', (snapshot) => { bridge.onChange(snapshot.active) })
     bridge.onChange(locale.getSnapshot().active)
@@ -601,6 +609,7 @@ export async function apply(ctx: ClientContext): Promise<void> {
     syncDocumentLanguage(snapshot)
     bound?.sync(
       snapshot.active,
+      snapshot.preference,
       snapshot.locales.map(l => ({ id: l.id, label: l.label })),
       snapshot.revision,
     )
@@ -617,6 +626,7 @@ export async function apply(ctx: ClientContext): Promise<void> {
     sync()
     return {
       setLocale: (id) => { locale.setLocale(id) },
+      clearLocale: () => { locale.clearLocale() },
     }
   }
   ctx.slots.inject('settings.general.item', () => ctx.slots.register({

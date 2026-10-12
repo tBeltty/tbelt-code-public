@@ -1,0 +1,16 @@
+[
+  {
+    "message": "El comando de escritorio está instalado.",
+    "buttons": [
+      "Cerrar",
+      "Reparar",
+      "Quitar"
+    ]
+  },
+  {
+    "message": "El comando de escritorio está instalado.",
+    "buttons": [
+      "Cerrar"
+    ]
+  }
+]

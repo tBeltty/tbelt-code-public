@@ -20,7 +20,7 @@ function setup() {
   const show = vi.fn<(options: MessageBoxOptions) => Promise<MessageBoxReturnValue>>(() => response.promise)
   const focus = vi.fn()
   const hide = vi.fn()
-  const options = { markerPath, locale: () => resolveDesktopLocale('zh'), show, focus }
+  const options = { markerPath, locale: () => resolveDesktopLocale('es'), show, focus }
   return { root, markerPath, response, show, focus, hide, options, notice: new DesktopBackgroundNotice(options) }
 }
 
@@ -32,7 +32,7 @@ it('keeps the window visible until confirmation and remembers acknowledgement ac
   expect(f.hide).not.toHaveBeenCalled()
   expect(existsSync(f.markerPath)).toBe(false)
   expect(f.show).toHaveBeenCalledExactlyOnceWith({ type: 'info', title: 'tBelt Code',
-    message: '正在运行的任务不会中断，可在系统托盘中重新打开窗口', buttons: ['确认'], defaultId: 0, cancelId: -1 })
+    message: 'Las tareas en curso continuarán. Puedes volver a abrir la ventana desde la bandeja del sistema.', buttons: ['Entendido'], defaultId: 0, cancelId: -1 })
   expect(f.focus).toHaveBeenCalledOnce()
   f.response.resolve({ response: 0, checkboxChecked: false })
   await vi.waitFor(() => { expect(f.hide).toHaveBeenCalledOnce() })

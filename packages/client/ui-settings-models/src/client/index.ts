@@ -24,7 +24,7 @@ import type { ProviderOnboardingInjected } from './ProviderOnboardingDialog.tsx'
 import { ModelsSettingsStore } from './store.ts'
 import { createModelsOperations } from './operations.ts'
 import { createSettingsSchemaOperations } from './schema-operations.ts'
-import { en, zh, type ModelsKey } from './locales.ts'
+import { en, es, type ModelsKey } from './locales.ts'
 import { SpendingSection } from './SpendingSection.tsx'
 import type { SpendingSectionInjected } from './SpendingSection.tsx'
 import { SPEND_BUDGET_NS, SpendingLimitController } from './spending-controller.ts'
@@ -77,7 +77,7 @@ export const inject = [
  * @param ctx - client root context.
  */
 export function apply(ctx: ClientContext): void {
-  ctx.effect(() => ctx.locale.register(NS, { zh, en }), 'ui-settings-models: copy dictionaries')
+  ctx.effect(() => ctx.locale.register(NS, { en, es }), 'ui-settings-models: copy dictionaries')
 
   const schema = createSettingsSchemaOperations(ctx.settingsSchema)
   // Bound once here, where the Remote namespaces are declared in this plugin's
@@ -147,7 +147,7 @@ export function apply(ctx: ClientContext): void {
           return undefined
         }
       },
-      t,
+      t: ctx.locale.bind(NS),
     })
     scope.effect(() => scope.configForms.whileServed([SPEND_BUDGET_NS], () => scope.slots.inject('settings.section', () => scope.slots.register({
       name: 'settings.section',

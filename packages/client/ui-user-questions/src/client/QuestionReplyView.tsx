@@ -3,7 +3,7 @@ import type {} from '@deepseek-ai/dsh-client-ui-chat/client'
 import type { PropsLocale, PropsRuntime } from '@deepseek-ai/dsh-client-ui-slots'
 import {
   IconCheckOutlineRegular, IconChevronDownOutlineRegular, IconChevronRightOutlineRegular,
-  IconCopyOutlineRegular, Tooltip, writeClipboard,
+  IconCopyOutlineRegular, localeTag, Tooltip, writeClipboard,
 } from '@deepseek-ai/dsh-client-ui-primitives'
 import type { QuestionReplyData } from './question-reply.ts'
 import { replyAnswerValues, replyClipboardText } from './question-reply.ts'
@@ -92,7 +92,7 @@ export function QuestionReplyBubble({ data, t }: { data: QuestionReplyData; t: P
       </div>
       <div className={css.actions}>
         <span className={css.time}>
-          {new Intl.DateTimeFormat(undefined, { hour: '2-digit', minute: '2-digit', hour12: false }).format(data.time)}
+          {new Intl.DateTimeFormat(localeTag(t('format.locale')), { hour: '2-digit', minute: '2-digit', hour12: false }).format(data.time)}
         </span>
         <Tooltip label={copied ? t('copied') : t('copy')} side="bottom">
           <button type="button" className={css.action} aria-label={copied ? t('copied') : t('copy')} onClick={onCopy}>

@@ -1,0 +1,10 @@
+tBelt Code no está disponible
+La aplicación no pudo iniciarse o se detuvo de forma inesperada.
+Desktop Host failed
+Plugin initialization failed
+Informe de diagnóstico: C:\Users\someone\AppData\Roaming\tBelt Code\logs\crash-2026-09-22T10-30-00-000Z-host.log
+
+Si faltan archivos de la aplicación o están dañados, ciérrala y reinstálala. Tus tareas se guardan por separado.
+Salir
+Reiniciar
+Desactivar los plugins de terceros, respaldar el parche del perfil y reiniciar

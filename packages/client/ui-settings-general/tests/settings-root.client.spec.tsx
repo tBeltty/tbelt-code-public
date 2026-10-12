@@ -10,7 +10,7 @@ import type { SessionListState } from '@deepseek-ai/dsh-api-session-controller/c
 import { SessionId } from '@deepseek-ai/dsh-session/types'
 import type { SettingsRootComponentProps } from '../src/client/shell-contract.ts'
 import { SettingsRoot } from '../src/client/SettingsRoot.tsx'
-import { en, zh } from '../src/client/locales.ts'
+import { en, es } from '../src/client/locales.ts'
 import type { DesktopUpdateView } from '../src/types.ts'
 import { Modal } from '@deepseek-ai/dsh-client-ui-primitives'
 
@@ -59,7 +59,7 @@ function mount({
 }: {
   shortcuts?: readonly ShortcutCatalogEntry[]
   wide?: boolean
-  dictionary?: typeof en | typeof zh
+  dictionary?: typeof en | typeof es
   connectionState?: ConnectionSnapshot
   desktopUpdate?: DesktopUpdateView
   onboardingActive?: boolean
@@ -171,20 +171,20 @@ function openPanel() {
 describe('SettingsRoot trigger', () => {
   it('shows installation instead of expected backend reconnection and restores connection feedback after failure', () => {
     const presentation = { phase: 'installing' as const, version: '1.0.1' }
-    const f = mount({ dictionary: zh, connectionState: 'connecting',
+    const f = mount({ dictionary: es, connectionState: 'connecting',
       desktopUpdate: { failed: false, opening: false, presentation } })
-    expect(screen.getByRole('button', { name: '正在准备重启…' })).toBeTruthy()
-    expect(screen.queryByText('重新连接中')).toBeNull()
+    expect(screen.getByRole('button', { name: 'Preparando el reinicio…' })).toBeTruthy()
+    expect(screen.queryByText('Reconectando')).toBeNull()
     f.setDesktopUpdate({ failed: false, opening: false,
       presentation: { phase: 'error', version: presentation.version, failure: 'install' } })
-    expect(screen.queryByRole('button', { name: '重试更新' })).toBeNull()
-    expect(screen.getByText('重新连接中')).toBeTruthy()
+    expect(screen.queryByRole('button', { name: 'Reintentar actualización' })).toBeNull()
+    expect(screen.getByText('Reconectando')).toBeTruthy()
   })
   it.each([
     { column: 'expanded English', wide: true, dictionary: en, name: 'Settings' },
     { column: 'collapsed English', wide: false, dictionary: en, name: 'Settings' },
-    { column: 'expanded Chinese', wide: true, dictionary: zh, name: '设置' },
-    { column: 'collapsed Chinese', wide: false, dictionary: zh, name: '设置' },
+    { column: 'expanded Chinese', wide: true, dictionary: es, name: 'Ajustes' },
+    { column: 'collapsed Chinese', wide: false, dictionary: es, name: 'Ajustes' },
   ])('uses the locale name and accepts keyboard-style activation for the $column trigger', ({
     wide, dictionary, name,
   }) => {
@@ -233,23 +233,23 @@ describe('SettingsRoot trigger', () => {
 
   it('keeps the attempt label steady through the hold and confirms for the full window', () => {
     vi.useFakeTimers()
-    const mounted = mount({ dictionary: zh })
+    const mounted = mount({ dictionary: es })
     mounted.setConnectionState('connecting')
-    const attempt = screen.getByRole('button', { name: '连接中断，正在重试，点击立即重连' })
-    expect(attempt.textContent).toContain('重新连接中')
+    const attempt = screen.getByRole('button', { name: 'Reconectando, reconectar ahora' })
+    expect(attempt.textContent).toContain('Reconectando')
     fireEvent.click(attempt)
     expect(mounted.reconnect).toHaveBeenCalledOnce()
-    expect(attempt.textContent).toContain('重新连接中')
+    expect(attempt.textContent).toContain('Reconectando')
     // An attempt that resolves mid-hold keeps its label until the hold ends.
     act(() => { vi.advanceTimersByTime(100) })
     mounted.setConnectionState('connected')
-    expect(screen.getByRole('button', { name: '连接中断，正在重试，点击立即重连' }).textContent)
-      .toContain('重新连接中')
+    expect(screen.getByRole('button', { name: 'Reconectando, reconectar ahora' }).textContent)
+      .toContain('Reconectando')
     act(() => { vi.advanceTimersByTime(700) })
-    expect(screen.getByRole('status', { name: '连接成功' })).toBeTruthy()
+    expect(screen.getByRole('status', { name: 'Conectado' })).toBeTruthy()
     // The full two-second confirmation follows the delayed appearance.
     act(() => { vi.advanceTimersByTime(1_999) })
-    expect(screen.getByRole('status', { name: '连接成功' })).toBeTruthy()
+    expect(screen.getByRole('status', { name: 'Conectado' })).toBeTruthy()
     act(() => { vi.advanceTimersByTime(1) })
     act(() => { vi.advanceTimersByTime(150) })
     expect(screen.queryByRole('status')).toBeNull()

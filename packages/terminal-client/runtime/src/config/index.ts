@@ -1,11 +1,12 @@
 /**
  * The configuration screens of the terminal: providers and keys, web search,
- * settings, plugins, agents, permissions and the default model. Each screen is
+ * settings, plugins, agents, permissions, language and the default model. Each screen is
  * a flow over the Remote namespaces the GUI settings pages use.
  * @module @deepseek-ai/dsh-terminal-client/config
  */
 import type { RemotePort, RemoteResultPort } from '../ports.ts'
 import { runAgents } from './agents.ts'
+import { runLanguage } from './language.ts'
 import { runDefaultModel } from './models.ts'
 import { runPermissions } from './permissions.ts'
 import { runPlugins } from './plugins.ts'
@@ -17,13 +18,15 @@ import { runWebSearch } from './web-search.ts'
 export type { FlowUi } from './ui.ts'
 
 /** A configuration screen the person can open. */
-export type ConfigScreen = 'providers' | 'web-search' | 'settings' | 'plugins' | 'agents' | 'permissions' | 'default-model'
+export type ConfigScreen = 'providers' | 'web-search' | 'settings' | 'plugins' | 'agents' | 'permissions' | 'language' | 'default-model'
 
 /** What a screen reads about the session it was opened in. */
 export interface ConfigSession {
   readonly sessionId: string
   /** Runs a slash command line in the session. */
   readonly command: (line: string) => Promise<RemoteResultPort<{ readonly matched: boolean }>>
+  /** Process environment that names the terminal's language. */
+  readonly languageEnvironment: Readonly<Record<string, string | undefined>>
 }
 
 /**
@@ -53,6 +56,9 @@ export async function runConfigScreen(screen: ConfigScreen, remote: RemotePort, 
       return
     case 'permissions':
       await runPermissions(remote, ui, session.command)
+      return
+    case 'language':
+      await runLanguage(remote, ui, session.languageEnvironment)
       return
     case 'default-model':
       await runDefaultModel(remote, ui)

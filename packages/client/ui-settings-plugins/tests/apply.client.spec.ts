@@ -11,13 +11,13 @@ import { apply as hostApply } from '../src/index.ts'
 
 // These specs assert the shipped Chinese copy. The lane has no jsdom `window`,
 // so browser-language detection never runs and a fresh LocaleRuntime opens on
-// FALLBACK_LOCALE (en); bench stages zh explicitly on the locale instead.
+// FALLBACK_LOCALE (en); bench stages es explicitly on the locale instead.
 
 async function bench() {
   const ctx = new Context()
   await ctx.plugin(SlotRegistry).await()
   const locale = new LocaleRuntime(ctx)
-  locale.setLocale('zh')
+  locale.setLocale('es')
   ctx.provide('locale', locale)
   return { ctx, slots: ctx.get('slots') as SlotRegistry }
 }
@@ -48,7 +48,7 @@ describe('ui-settings-plugins apply', () => {
     const section = slots.entries('settings.section')[0]!
     expect(section.options).toMatchObject({ id: 'plugins', order: 15 })
     // The nav label is a locale-following thunk; owners resolve it at read time.
-    expect(resolveSlotLabel(section.options.label)).toBe('内置插件')
+    expect(resolveSlotLabel(section.options.label)).toBe('Inspector del sistema')
     expect(slots.spec('settings.plugins.tab')).toMatchObject({ kind: 'list', scope: 'root' })
     expect(slots.entries('settings.plugins.tab')).toHaveLength(0)
   })

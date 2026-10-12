@@ -30,7 +30,7 @@ const presentations = []
 let screenshot = { captured: false, reason: 'not attempted' }
 let dialogScreenshots = []
 const { NsisUpdater } = updaterModule
-const messages = resolveDesktopLocale('zh-CN').messages
+const messages = resolveDesktopLocale('es').messages
 
 async function main() {
   await app.whenReady()
@@ -242,10 +242,10 @@ async function main() {
       let modal
       const policy = new DesktopMandatoryUpdatePolicy(config, { platform: 'win32', arch: 'x64', bundledDshVersion: '1.0.0' },
         () => { modal?.sync() }, undefined,
-        () => ({ version: '1.0.0', locale: 'zh-CN', timezoneOffsetSeconds: -new Date().getTimezoneOffset() * 60 }))
+        () => ({ version: '1.0.0', locale: 'es', timezoneOffsetSeconds: -new Date().getTimezoneOffset() * 60 }))
       modal = new DesktopMandatoryUpdateWindow({
         preload: fileURLToPath(new URL('../../lib/preload-mandatory.cjs', import.meta.url)),
-        locale: resolveDesktopLocale('zh-CN'), allowedPageOrigins: config.allowedPageOrigins,
+        locale: resolveDesktopLocale('es'), allowedPageOrigins: config.allowedPageOrigins,
         parent: () => parent, policy: () => policy.state, update: () => f.coordinator.state,
         refresh: async () => { await Promise.all([policy.check('manual', true), f.coordinator.check(true)]); modal.sync() },
         download: async version => { const pending = f.coordinator.download(version); await Promise.resolve(); modal.sync();
@@ -320,7 +320,7 @@ async function main() {
           status: document.getElementById('status').textContent, version: document.getElementById('version').textContent,
           buttons: [...document.querySelectorAll('button')].filter(button => button.getClientRects().length > 0).map(button => button.textContent),
         })`)
-        assert.deepEqual(snapshot, JSON.parse(await readFile(new URL('../expected/mandatory-update-zh.json', import.meta.url), 'utf8')))
+        assert.deepEqual(snapshot, JSON.parse(await readFile(new URL('../expected/mandatory-update-es.json', import.meta.url), 'utf8')))
         await contents.executeJavaScript("document.getElementById('later').click()")
         await until("document.getElementById('update').textContent === '继续安装更新' && !document.getElementById('update').disabled")
         assert.equal(f.installations.length, 0)
@@ -338,7 +338,7 @@ async function main() {
         await until("!document.getElementById('update').disabled")
         assert.equal(f.installations.length, 0)
         assert.equal(policy.state.blocking, true)
-        f.restart(async () => { throw new DesktopUpdatePreparationError('stop-failed', resolveDesktopLocale('zh-CN').messages.updateStopFailed,
+        f.restart(async () => { throw new DesktopUpdatePreparationError('stop-failed', resolveDesktopLocale('es').messages.updateStopFailed,
           'exit 0; shutdown acknowledged false') })
         await contents.executeJavaScript("document.getElementById('update').click()")
         await until("!document.getElementById('technical-details').hidden && !document.getElementById('update').disabled")

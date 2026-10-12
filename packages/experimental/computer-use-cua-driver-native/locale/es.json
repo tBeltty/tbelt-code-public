@@ -1,0 +1,6 @@
+{
+  "meta": {
+    "title": "Uso del equipo (Cua Driver)",
+    "description": "Permite al modelo manejar el escritorio con el runtime de Cua Driver incluido; necesita permisos de escritorio para la app que lanza dsh."
+  }
+}

@@ -183,7 +183,7 @@ function bracketOf(value: object | unknown[]): readonly [string, string] {
 }
 
 function previewPrimitive(value: unknown): ReactNode {
-  if (value === null) return <span className={css.keywordValue}>null</span>
+  if (value === null) return <span className={css.keywordValue}>null</span> // i18n-exempt: JavaScript value keyword, not product copy
   if (typeof value === 'string') {
     return <span className={css.stringValue}>{JSON.stringify(value)}</span>
   }
@@ -197,7 +197,7 @@ function previewPrimitive(value: unknown): ReactNode {
     return <span className={css.otherValue}>{value.toString()}</span>
   }
   if (typeof value === 'undefined') {
-    return <span className={css.otherValue}>undefined</span>
+    return <span className={css.otherValue}>undefined</span> // i18n-exempt: JavaScript value keyword, not product copy
   }
   if (typeof value === 'symbol') {
     return <span className={css.otherValue}>{value.description ?? 'Symbol'}</span>
@@ -243,7 +243,7 @@ function previewValue(value: unknown, depth: number): ReactNode {
 }
 
 function primitiveValue(value: unknown): ReactNode {
-  if (value === null) return <span className={css.keywordValue}>null</span>
+  if (value === null) return <span className={css.keywordValue}>null</span> // i18n-exempt: JavaScript value keyword, not product copy
   if (typeof value === 'string') {
     return <span className={css.stringValue}>{JSON.stringify(value)}</span>
   }
@@ -260,10 +260,10 @@ function primitiveValue(value: unknown): ReactNode {
     return <span className={css.otherValue}>{value.toISOString()}</span>
   }
   if (typeof value === 'function') {
-    return <span className={css.otherValue}>function() {'{ }'}</span>
+    return <span className={css.otherValue}>function() {'{ }'}</span> // i18n-exempt: JavaScript value keyword, not product copy
   }
   if (typeof value === 'undefined') {
-    return <span className={css.otherValue}>undefined</span>
+    return <span className={css.otherValue}>undefined</span> // i18n-exempt: JavaScript value keyword, not product copy
   }
   return <span className={css.otherValue}>{(value as symbol).toString()}</span>
 }

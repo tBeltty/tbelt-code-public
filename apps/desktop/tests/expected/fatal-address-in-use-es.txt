@@ -1,0 +1,5 @@
+tBelt Code no está disponible
+La aplicación no pudo iniciarse o se detuvo de forma inesperada.
+Hay otra instancia de DSH en ejecución (como dsh web o la app de escritorio). No pueden iniciarse a la vez. Cierra la otra instancia de DSH y reinicia.
+Salir
+Reiniciar

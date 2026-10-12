@@ -54,7 +54,7 @@ describe('approval', () => {
 
 describe('help, status and input', () => {
   it('lists keys and commands', () => {
-    expect(helpLines(style)).toHaveLength(39)
+    expect(helpLines(style)).toHaveLength(40)
   })
 
   it('draws the banner and farewell with short ids', () => {

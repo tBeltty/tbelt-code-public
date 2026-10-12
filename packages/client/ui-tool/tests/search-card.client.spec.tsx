@@ -6,10 +6,10 @@ import { cleanup, fireEvent, render } from '@testing-library/react'
 import type { StartedToolCall, ToolResultNode } from '@deepseek-ai/dsh-client-ui-chat/client'
 import type { SessionId } from '@deepseek-ai/dsh-session/types'
 import { makeTranslate } from '@deepseek-ai/dsh-client-test-runtime'
-import { zh as commonZh } from '@deepseek-ai/dsh-client-locale/src/locales/zh.ts'
+import { es as commonEs } from '@deepseek-ai/dsh-client-locale/src/locales/es.ts'
 import { searchCardModel } from '@deepseek-ai/dsh-presentation-tool-card'
 import { CHAT_SEARCH_MAX_LINES } from '../src/client/tool/models/chat-limits.ts'
-import { zh } from '@deepseek-ai/dsh-client-ui-conversation/src/client/locales.ts'
+import { es } from '@deepseek-ai/dsh-client-ui-conversation/src/client/locales.ts'
 import { GenericToolCard, type GenericToolCardProps } from '../src/client/tool/toolviews/GenericToolCard.tsx'
 import { SearchRow, searchToolview } from '../src/client/tool/toolviews/search-row.tsx'
 
@@ -17,7 +17,7 @@ type SearchRowProps = Parameters<typeof SearchRow>[0]
 
 afterEach(cleanup)
 
-const t: GenericToolCardProps['t'] = makeTranslate(zh, commonZh)
+const t: GenericToolCardProps['t'] = makeTranslate(es, commonEs)
 
 /** The rendered search card's kind attribute, so a render site cannot silently drop it. */
 function searchKindOf(container: HTMLElement): string | null {
@@ -238,7 +238,7 @@ describe('SearchRow keyed card', () => {
 
   it('collapses to the summary row; expanding reveals the grep card', () => {
     const view = render(<SearchRow {...rowProps(settledGrep(), 'grep')} />)
-    expect(view.getByText('搜索文件内容')).toBeTruthy()
+    expect(view.getByText('Grep')).toBeTruthy()
     expect(view.queryByText('Search')).toBeNull()
     // Collapsed: the card is not in the DOM until the row is expanded.
     expect(searchKindOf(view.container)).toBeNull()
@@ -247,12 +247,12 @@ describe('SearchRow keyed card', () => {
     expect(searchRows(view.container)).toContain('12: const foo = 1')
     expect(searchKindOf(view.container)).toBe('matches')
     // The card's copy control lives inside the expanded body.
-    expect(view.getByText('复制')).toBeTruthy()
+    expect(view.getByText('Copiar')).toBeTruthy()
   })
 
   it('expands to the glob path card', () => {
     const view = render(<SearchRow {...rowProps(settledGlob(), 'glob')} />)
-    expect(view.getByText('查找文件')).toBeTruthy()
+    expect(view.getByText('Glob')).toBeTruthy()
     expect(view.queryByText('Search')).toBeNull()
     expect(searchKindOf(view.container)).toBeNull()
     toggleRow(view)

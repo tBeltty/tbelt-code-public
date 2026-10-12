@@ -9,7 +9,7 @@ import type { SessionId } from '@deepseek-ai/dsh-session/types'
 import { DeliveryHistory, type DeliveryHistoryInjected } from '../src/client/DeliveryHistory.tsx'
 import { formatScheduleNextRun } from '../src/client/schedule-format.ts'
 import { zoneDifferingFrom, zoneOffsetMinutes } from './zone-fixture.ts'
-import { en, zh } from '../src/client/task-manager-locales.ts'
+import { en, es } from '../src/client/task-manager-locales.ts'
 import css from '../src/client/TaskManagerPage.module.css'
 
 type Result = Awaited<ReturnType<DeliveryHistoryInjected['loadHistory']>>
@@ -32,7 +32,7 @@ function failure(code: 'schedule_not_found' | 'delivery_cursor_not_found'): Resu
   return { ok: true, value: { id, code } }
 }
 const transportFailure: Result = { ok: false, error: new RemoteError('gateway/internal', 'Private transport detail', {}) }
-function mount(dictionary: typeof en | typeof zh = en) {
+function mount(dictionary: typeof en | typeof es = en) {
   const loadHistory = vi.fn<DeliveryHistoryInjected['loadHistory']>().mockResolvedValue(result())
   const props = { id, sessionId, latestMessageId: records[0]!.messageId, loadHistory, t: makeTranslate(dictionary) }
   const view = render(<DeliveryHistory {...props} />)
@@ -44,7 +44,7 @@ async function resolve(pending: ReturnType<typeof Promise.withResolvers<Result>>
 async function reject(pending: ReturnType<typeof Promise.withResolvers<Result>>): Promise<void> {
   await act(async () => { pending.reject(new Error('Private rejected detail')); await pending.promise.catch(() => {}) })
 }
-function occurrences(dictionary: typeof en | typeof zh = en): string[] {
+function occurrences(dictionary: typeof en | typeof es = en): string[] {
   return screen.queryAllByRole('region', { name: dictionary['delivery.label'] })
     .map(region => region.querySelector('time')?.dateTime ?? '')
 }
@@ -70,7 +70,7 @@ const RUNNER_ZONE = Intl.DateTimeFormat().resolvedOptions().timeZone
 const SAMPLED_INSTANT = records[0]!.scheduledAt
 const TASK_ZONE = zoneDifferingFrom(SAMPLED_INSTANT, RUNNER_ZONE)
 
-describe.each([en, zh])('saved delivery records', (dictionary) => {
+describe.each([en, es])('saved delivery records', (dictionary) => {
   it('renders multiple saved instructions and exact times with escaped HTML and no legacy notice', async () => {
     const h = mount(dictionary)
     expect(screen.queryByText(dictionary['delivery.empty'])).toBeNull()

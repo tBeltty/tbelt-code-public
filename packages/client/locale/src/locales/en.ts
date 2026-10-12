@@ -1,8 +1,8 @@
 import { PRODUCT_NAME } from '@deepseek-ai/dsh-client-ui-primitives'
-import type { CommonKey } from './zh.ts'
 
-/** en base dictionary for the common namespace, checked complete against the zh key set. */
+/** English base dictionary for the common namespace: cross-feature standard words and the key-set source of truth. */
 export const en = {
+  'format.locale': 'en-US',
   'ok': 'OK',
   'cancel': 'Cancel',
   'close': 'Close',
@@ -44,4 +44,7 @@ export const en = {
   'markdown.truncatedCharacters': '… truncated at {total} characters',
   'number.thousand': '{value}K',
   'number.million': '{value}M',
-} satisfies Record<CommonKey, string>
+} satisfies Record<string, string>
+
+/** The common vocabulary key union. */
+export type CommonKey = keyof typeof en

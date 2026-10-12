@@ -58,7 +58,7 @@ try {
   ]))
   const environment = Object.fromEntries(Object.entries(process.env).filter(([name]) =>
     /^(?:path|systemroot|windir|comspec|pathext)$/iu.test(name)))
-  const child = spawn(electron, [fileURLToPath(new URL('../tests/fixtures/workspace-updates.mjs', import.meta.url)), '--lang=zh-CN',
+  const child = spawn(electron, [fileURLToPath(new URL('../tests/fixtures/workspace-updates.mjs', import.meta.url)), '--lang=es',
     ...(interactive ? ['--interactive'] : [])], {
     cwd: root, env: { ...environment, DSH_HOME: join(root, 'home'), USERPROFILE: root, HOME: root,
       TEMP: root, TMP: root, TMPDIR: root, DSH_WORKSPACE_UPDATE_ROOT: root, DSH_WORKSPACE_UPDATE_TOKEN: randomUUID(),

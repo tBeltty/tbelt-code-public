@@ -1,5 +1,6 @@
 // Shared time-label helpers for user/assistant IconActions rows.
 
+import { formatNumber } from '@deepseek-ai/dsh-client-ui-primitives'
 import type { Translate } from '@deepseek-ai/dsh-client-ui-slots'
 
 /** The date-template share of the conversation dictionary the clock consumes. */
@@ -66,11 +67,12 @@ export function formatRunDuration(ms: number, t: RunDurationTranslate): RunDurat
 /**
  * Decode-throughput figure: whole tokens from ten up, one decimal below.
  * @param tps - Tokens per second.
+ * @param tag - language tag from `format.locale`.
  * @returns Display number without unit.
  */
-export function formatTokensPerSecond(tps: number): string {
+export function formatTokensPerSecond(tps: number, tag: string): string {
   const clamped = Math.max(0, tps)
-  return clamped >= 10 ? String(Math.round(clamped)) : String(Math.round(clamped * 10) / 10)
+  return formatNumber(tag, clamped >= 10 ? Math.round(clamped) : Math.round(clamped * 10) / 10, 0, 1)
 }
 
 /**

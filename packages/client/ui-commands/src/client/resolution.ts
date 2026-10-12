@@ -1,7 +1,7 @@
 /** Command identity and localized input spelling over the effective Host catalog. */
 import type { CommandDescriptor } from '@deepseek-ai/dsh-commands/types'
 import type { TranslateNS } from '@deepseek-ai/dsh-client-locale/client'
-import { en, zh } from './locales.ts'
+import { en, es } from './locales.ts'
 
 const BUILTINS = {
   goal: '@deepseek-ai/dsh-command-goal',
@@ -38,7 +38,7 @@ export function claimToken(descriptor: CommandDescriptor, t: TranslateNS<'comman
 
 const TOKEN_ALIASES = new Map(
   (Object.keys(BUILTINS) as BuiltinCommandName[]).flatMap(name =>
-    [zh[`token.${name}`], en[`token.${name}`]].map(token => [token, name] as const)),
+    [es[`token.${name}`], en[`token.${name}`]].map(token => [token, name] as const)),
 )
 
 /**

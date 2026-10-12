@@ -23,7 +23,7 @@ function setup(platform: string) {
     isDestroyed: () => false, flashFrame: vi.fn() })
   const modal = Object.assign(new EventEmitter(), { isFocused: () => false })
   const returned = vi.fn()
-  attention = new DesktopUpdateAttention(resolveDesktopLocale('zh'), platform)
+  attention = new DesktopUpdateAttention(resolveDesktopLocale('es'), platform)
   const ready = () => { attention!.ready('1.0.1-nightly.1', window as unknown as BrowserWindow, modal as unknown as BrowserWindow, returned) }
   return { window, modal, returned, ready }
 }
@@ -32,7 +32,7 @@ it.each(['win32', 'darwin'])('requests one silent reminder and returns to confir
   const f = setup(platform)
   f.ready(); f.ready()
   expect(native.notices).toHaveLength(1)
-  expect(native.notices[0]!.options).toEqual({ title: '更新已准备就绪', body: '返回应用确认安装并重启。', silent: true })
+  expect(native.notices[0]!.options).toEqual({ title: 'Actualización lista', body: 'Vuelve a la aplicación para confirmar la instalación y el reinicio.', silent: true })
   if (platform === 'win32') expect(f.window.flashFrame).toHaveBeenCalledWith(true)
   else expect(native.dock.bounce).toHaveBeenCalledWith('informational')
   native.notices[0]!.emit('click')

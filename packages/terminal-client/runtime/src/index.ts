@@ -101,6 +101,7 @@ export function apply(ctx: Context, config: Config): void {
       files,
       imageProtocol: detectImageProtocol(config.images, process.env),
       now: Date.now,
+      languageEnvironment: process.env,
       hostTitle: config.title === 'off'
         ? undefined
         : { marker: (process.env['ORCA_PANE_KEY'] ?? '') !== '', frameIntervalMs: config.titleFrameMs },

@@ -4,8 +4,6 @@ description: "Separate test binary uploads from operator-authorized fixed-feed p
 
 # Test update upload and publication
 
-English | [中文](README.zh.md)
-
 ## Summary
 
 Upload both verified versions without advertising version 2, then publish its fixed feed after the operator starts installed version 1. Default commands check local materials without credentials or network access. Actual COS writes require separate operator authorization and verification.

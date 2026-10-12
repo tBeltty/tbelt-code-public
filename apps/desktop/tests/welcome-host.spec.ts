@@ -47,20 +47,20 @@ describe('desktop welcome Web operations', () => {
   })
 
   it('reads the explicit language preference and recognizes another provider key', async () => {
-    const host = transport('zh')
+    const host = transport('es')
     host.keys.set('EXAMPLE_API_KEY', 'sk-other')
     const backend = await connectDesktopWelcome(url, host.send)
-    expect(await backend.read()).toMatchObject({ localePreference: 'zh', hasApiKey: true })
+    expect(await backend.read()).toMatchObject({ localePreference: 'es', hasApiKey: true })
     host.keys.clear()
     expect(await backend.read()).toMatchObject({ hasApiKey: false })
     expect(host.send.mock.calls.every(([, init]) => !(init?.body as string | undefined)?.includes('credentials/set'))).toBe(true)
   })
 
   it('reads language without querying account or model providers', async () => {
-    const host = transport('zh')
+    const host = transport('es')
     const backend = await connectDesktopWelcome(url, host.send)
     host.send.mockClear()
-    expect(await backend.readLocalePreference()).toBe('zh')
+    expect(await backend.readLocalePreference()).toBe('es')
     expect(host.send).toHaveBeenCalledOnce()
     expect(host.send.mock.calls[0]![0]).toContain('/api/settings/describe')
   })

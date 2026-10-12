@@ -1,0 +1,6 @@
+{
+  "meta": {
+    "title": "Uso del equipo (Cua Driver MCP)",
+    "description": "Permite al modelo manejar el escritorio mediante un ejecutable cua-driver instalado por separado."
+  }
+}

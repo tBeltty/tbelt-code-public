@@ -1,6 +1,6 @@
 /** Composer chip for unsent plan comments and the comment-aware review decision. */
 import { useId, useMemo, useState } from 'react'
-import { Button, IconEditOutlineRegular, IconListPenOutlineRegular, IconSendOutlineRegular, IconTrashOutlineRegular } from '@deepseek-ai/dsh-client-ui-primitives'
+import { Button, IconEditOutlineRegular, IconListPenOutlineRegular, IconSendOutlineRegular, IconTrashOutlineRegular, pluralSuffix } from '@deepseek-ai/dsh-client-ui-primitives'
 import type { HostObservable, InjectFace, PropsLocale, PropsRuntime } from '@deepseek-ai/dsh-client-ui-slots'
 import type {} from '@deepseek-ai/dsh-client-ui-conversation/client'
 import type {} from '@deepseek-ai/dsh-client-ui-user-questions/client'
@@ -82,7 +82,7 @@ export function PlanCommentChip({ sessionId, usePlanComments, removeComments, se
         <button type="button" className={css.chip} aria-expanded={expanded} aria-controls={listId}
           onClick={() => { setExpanded(!expanded) }}>
           <IconListPenOutlineRegular size={14} />
-          {t(count === 1 ? 'comments.count.one' : 'comments.count.other', { count })}
+          {t(`comments.count.${pluralSuffix(t('format.locale'), count)}`, { count })}
         </button>
         <button type="button" className={css.chip} disabled={sending} data-plan-comment-send onClick={send}>
           <IconSendOutlineRegular size={14} />
@@ -130,7 +130,7 @@ export function PlanReviewDecision({ review, requestKey, busy, approve, discuss,
         if (count === undefined) { void discuss(); return }
         void keepPlanning(formatPlanFeedback(comments)).then((sent) => { if (sent) resolveComments(address, ids) })
       }}>
-      {count === undefined ? t('review.requestChanges') : t(count === 1 ? 'review.send.one' : 'review.send.other', { count })}
+      {count === undefined ? t('review.requestChanges') : t(`review.send.${pluralSuffix(t('format.locale'), count)}`, { count })}
     </Button>
   )
   if (comments.length === 0) {

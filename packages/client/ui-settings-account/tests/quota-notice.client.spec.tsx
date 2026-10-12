@@ -9,7 +9,7 @@ import type { AccountSnapshot } from '../src/client/AccountSection.tsx'
 import type {} from '../src/client/index.ts'
 import { AccountQuotaNotice } from '../src/client/AccountQuotaNotice.tsx'
 import { createPlatformPages, type PlatformPages } from '../src/client/platform-pages.ts'
-import { en, zh, type AccountKey } from '../src/client/locales.ts'
+import { en, es, type AccountKey } from '../src/client/locales.ts'
 
 /** Subscriptions opened by one mounted entry, released with the entry. */
 const mountedSubscriptions: Array<() => void> = []
@@ -52,7 +52,7 @@ function callOrder(fn: { mock: { invocationCallOrder: readonly number[] } }, nth
  * Page changes re-render through the channel's own subscription, standing in
  * for the renderer's framework hook.
  */
-function mount(options: { account?: 'unloaded' | 'signed-out' | 'credential-stored'; pages?: PlatformPages; copy?: typeof en | typeof zh } = {}) {
+function mount(options: { account?: 'unloaded' | 'signed-out' | 'credential-stored'; pages?: PlatformPages; copy?: typeof en | typeof es } = {}) {
   const copy = options.copy ?? en
   const pages = options.pages
   const initial = options.account ?? 'credential-stored'
@@ -88,7 +88,7 @@ function mount(options: { account?: 'unloaded' | 'signed-out' | 'credential-stor
   }
 }
 
-it.each([en, zh])('requests the shared top-up page for the claimed account notice', async (copy) => {
+it.each([en, es])('requests the shared top-up page for the claimed account notice', async (copy) => {
   const spies = pageSpies()
   const { dismiss, keepOpen, releaseHold } = mount({ pages: spies.pages, copy })
   expect(screen.getByRole('dialog', { name: copy.quotaTitle }).textContent).toContain(copy.quotaDescription)
@@ -108,7 +108,7 @@ it.each([en, zh])('requests the shared top-up page for the claimed account notic
   expect(screen.queryByRole('alert')).toBeNull()
 })
 
-it.each([en, zh])('dismisses the account notice without requesting a page', (copy) => {
+it.each([en, es])('dismisses the account notice without requesting a page', (copy) => {
   const spies = pageSpies()
   const { dismiss } = mount({ pages: spies.pages, copy })
   fireEvent.click(screen.getByRole('button', { name: copy.cancel }))
@@ -118,7 +118,7 @@ it.each([en, zh])('dismisses the account notice without requesting a page', (cop
   expect(screen.queryByRole('dialog')).toBeNull()
 })
 
-it.each([en, zh])('dismisses the account notice through its close button', (copy) => {
+it.each([en, es])('dismisses the account notice through its close button', (copy) => {
   const spies = pageSpies()
   const { dismiss } = mount({ pages: spies.pages, copy })
   fireEvent.click(screen.getByRole('button', { name: copy.close }))
@@ -127,7 +127,7 @@ it.each([en, zh])('dismisses the account notice through its close button', (copy
   expect(screen.queryByRole('dialog')).toBeNull()
 })
 
-it.each([en, zh])('defers the balance Modal while any Platform page is showing', async (copy) => {
+it.each([en, es])('defers the balance Modal while any Platform page is showing', async (copy) => {
   const spies = pageSpies()
   const { dismiss } = mount({ pages: spies.pages, copy })
   expect(screen.getByRole('dialog', { name: copy.quotaTitle })).toBeTruthy()
@@ -187,7 +187,7 @@ it.each(['signed-out', 'unloaded'] as const)('uses a timed Toast without the sha
   expect(screen.queryByRole('alert')).toBeNull()
 })
 
-it.each([en, zh])('takes the balance Modal down when the account signs out', (copy) => {
+it.each([en, es])('takes the balance Modal down when the account signs out', (copy) => {
   const spies = pageSpies()
   const { dismiss, setStatus } = mount({ pages: spies.pages, copy })
   expect(screen.getByRole('dialog', { name: copy.quotaTitle })).toBeTruthy()

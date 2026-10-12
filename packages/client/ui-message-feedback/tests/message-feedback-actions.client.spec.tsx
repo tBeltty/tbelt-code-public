@@ -10,7 +10,7 @@ import { useSyncExternalStore } from 'react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { cleanup, fireEvent, render, waitFor } from '@testing-library/react'
 import { makeTranslate } from '@deepseek-ai/dsh-client-test-runtime'
-import { zh as commonZh } from '@deepseek-ai/dsh-client-locale/src/locales/zh.ts'
+import { es as commonEs } from '@deepseek-ai/dsh-client-locale/src/locales/es.ts'
 import type { MessageId } from '@deepseek-ai/dsh-api-remotes/client'
 import type {
   MessageFeedbackItem, MessageFeedbackRating, MessageFeedbackVersion,
@@ -19,12 +19,12 @@ import { MessageFeedbackActions } from '../src/client/MessageFeedbackActions.tsx
 import type {
   MessageFeedbackActionResult, MessageFeedbackView,
 } from '../src/client/controller.ts'
-import { zh } from '../src/client/locales.ts'
+import { es } from '../src/client/locales.ts'
 
 afterEach(cleanup)
 
 const MSG = 'm-1' as MessageId
-const t = makeTranslate(zh, commonZh)
+const t = makeTranslate(es, commonEs)
 
 function item(overrides: Partial<MessageFeedbackItem> = {}): MessageFeedbackItem {
   return {
@@ -67,27 +67,27 @@ describe('MessageFeedbackActions', () => {
   it('renders both rating buttons unpressed with no recorded feedback', () => {
     const ui = mount()
 
-    expect(ui.getByLabelText(zh['action.like']).getAttribute('aria-pressed')).toBe('false')
-    expect(ui.getByLabelText(zh['action.dislike']).getAttribute('aria-pressed')).toBe('false')
+    expect(ui.getByLabelText(es['action.like']).getAttribute('aria-pressed')).toBe('false')
+    expect(ui.getByLabelText(es['action.dislike']).getAttribute('aria-pressed')).toBe('false')
   })
 
   it('marks the recorded rating pressed, fills its glyph, and offers to retract it', () => {
     const ui = mount({ current: item({ rating: 'negative' }) })
 
-    const dislike = ui.getByLabelText(zh['action.dislikeActive'])
+    const dislike = ui.getByLabelText(es['action.dislikeActive'])
     expect(dislike.getAttribute('aria-pressed')).toBe('true')
     expect(dislike.hasAttribute('data-active')).toBe(true)
-    expect(ui.getByLabelText(zh['action.like']).getAttribute('aria-pressed')).toBe('false')
-    expect(ui.getByLabelText(zh['action.like']).hasAttribute('data-active')).toBe(false)
+    expect(ui.getByLabelText(es['action.like']).getAttribute('aria-pressed')).toBe('false')
+    expect(ui.getByLabelText(es['action.like']).hasAttribute('data-active')).toBe(false)
   })
 
   it('reads the Session feedback on first interaction, once', () => {
     const ui = mount()
-    const like = ui.getByLabelText(zh['action.like'])
+    const like = ui.getByLabelText(es['action.like'])
 
     fireEvent.pointerEnter(like)
     fireEvent.pointerEnter(like)
-    fireEvent.focus(ui.getByLabelText(zh['action.dislike']))
+    fireEvent.focus(ui.getByLabelText(es['action.dislike']))
 
     expect(ui.ensure).toHaveBeenCalledTimes(1)
   })
@@ -101,7 +101,7 @@ describe('MessageFeedbackActions', () => {
   it('opens the dialog for a Like instead of recording it', async () => {
     const ui = mount()
 
-    fireEvent.click(ui.getByLabelText(zh['action.like']))
+    fireEvent.click(ui.getByLabelText(es['action.like']))
 
     await waitFor(() => { expect(ui.openDialog).toHaveBeenCalledWith(MSG, 'positive') })
     expect(ui.retract).not.toHaveBeenCalled()
@@ -110,7 +110,7 @@ describe('MessageFeedbackActions', () => {
   it('opens the dialog for a Like that replaces a recorded Dislike', async () => {
     const ui = mount({ current: item({ rating: 'negative' }) })
 
-    fireEvent.click(ui.getByLabelText(zh['action.like']))
+    fireEvent.click(ui.getByLabelText(es['action.like']))
 
     await waitFor(() => { expect(ui.openDialog).toHaveBeenCalledWith(MSG, 'positive') })
     expect(ui.retract).not.toHaveBeenCalled()
@@ -119,17 +119,17 @@ describe('MessageFeedbackActions', () => {
   it('retracts a recorded Like on click without the dialog', async () => {
     const ui = mount({ current: item({ rating: 'positive' }) })
 
-    fireEvent.click(ui.getByLabelText(zh['action.likeActive']))
+    fireEvent.click(ui.getByLabelText(es['action.likeActive']))
 
     await waitFor(() => { expect(ui.retract).toHaveBeenCalledWith(MSG, 'positive') })
-    await waitFor(() => { expect(ui.getByLabelText(zh['action.likeActive']).hasAttribute('disabled')).toBe(false) })
+    await waitFor(() => { expect(ui.getByLabelText(es['action.likeActive']).hasAttribute('disabled')).toBe(false) })
     expect(ui.openDialog).not.toHaveBeenCalled()
   })
 
   it('opens the dialog for a Dislike instead of recording it', async () => {
     const ui = mount()
 
-    fireEvent.click(ui.getByLabelText(zh['action.dislike']))
+    fireEvent.click(ui.getByLabelText(es['action.dislike']))
 
     await waitFor(() => { expect(ui.openDialog).toHaveBeenCalledWith(MSG, 'negative') })
     expect(ui.retract).not.toHaveBeenCalled()
@@ -138,7 +138,7 @@ describe('MessageFeedbackActions', () => {
   it('opens the dialog for a Dislike that replaces a recorded Like', async () => {
     const ui = mount({ current: item({ rating: 'positive' }) })
 
-    fireEvent.click(ui.getByLabelText(zh['action.dislike']))
+    fireEvent.click(ui.getByLabelText(es['action.dislike']))
 
     await waitFor(() => { expect(ui.openDialog).toHaveBeenCalledWith(MSG, 'negative') })
     expect(ui.retract).not.toHaveBeenCalled()
@@ -147,7 +147,7 @@ describe('MessageFeedbackActions', () => {
   it('opens the dialog for a Dislike when the seeding read fails, leaving the put to decide', async () => {
     const ui = mount({ ensureResult: { ok: false, error: { code: 'session-not-found', message: 'gone' } } })
 
-    fireEvent.click(ui.getByLabelText(zh['action.dislike']))
+    fireEvent.click(ui.getByLabelText(es['action.dislike']))
 
     await waitFor(() => { expect(ui.openDialog).toHaveBeenCalledWith(MSG, 'negative') })
     expect(ui.retract).not.toHaveBeenCalled()
@@ -156,7 +156,7 @@ describe('MessageFeedbackActions', () => {
   it('decides a Dislike from the committed item, so a cold row retracts a stored Dislike', async () => {
     const ui = mount({ committed: item({ rating: 'negative' }) })
 
-    fireEvent.click(ui.getByLabelText(zh['action.dislike']))
+    fireEvent.click(ui.getByLabelText(es['action.dislike']))
 
     await waitFor(() => { expect(ui.retract).toHaveBeenCalledWith(MSG, 'negative') })
     expect(ui.openDialog).not.toHaveBeenCalled()
@@ -165,7 +165,7 @@ describe('MessageFeedbackActions', () => {
   it('retracts a recorded Dislike on click without the dialog', async () => {
     const ui = mount({ current: item({ rating: 'negative' }) })
 
-    fireEvent.click(ui.getByLabelText(zh['action.dislikeActive']))
+    fireEvent.click(ui.getByLabelText(es['action.dislikeActive']))
 
     await waitFor(() => { expect(ui.retract).toHaveBeenCalledWith(MSG, 'negative') })
     expect(ui.openDialog).not.toHaveBeenCalled()
@@ -177,9 +177,9 @@ describe('MessageFeedbackActions', () => {
       retractResult: { ok: false, error: { code: 'version-conflict', message: 'feedback changed elsewhere' } },
     })
 
-    fireEvent.click(ui.getByLabelText(zh['action.likeActive']))
+    fireEvent.click(ui.getByLabelText(es['action.likeActive']))
 
-    await waitFor(() => { expect(ui.getByText(zh['error.conflict'])).toBeTruthy() })
+    await waitFor(() => { expect(ui.getByText(es['error.conflict'])).toBeTruthy() })
   })
 
   it('reports any other retraction failure with the generic copy', async () => {
@@ -188,9 +188,9 @@ describe('MessageFeedbackActions', () => {
       retractResult: { ok: false, error: { code: 'target-not-found', message: 'no such message' } },
     })
 
-    fireEvent.click(ui.getByLabelText(zh['action.likeActive']))
+    fireEvent.click(ui.getByLabelText(es['action.likeActive']))
 
-    await waitFor(() => { expect(ui.getByText(zh['error.generic'])).toBeTruthy() })
+    await waitFor(() => { expect(ui.getByText(es['error.generic'])).toBeTruthy() })
   })
 
   it('reports a failed retraction of a recorded Dislike', async () => {
@@ -199,9 +199,9 @@ describe('MessageFeedbackActions', () => {
       retractResult: { ok: false, error: { code: 'version-conflict', message: 'feedback changed elsewhere' } },
     })
 
-    fireEvent.click(ui.getByLabelText(zh['action.dislikeActive']))
+    fireEvent.click(ui.getByLabelText(es['action.dislikeActive']))
 
-    await waitFor(() => { expect(ui.getByText(zh['error.conflict'])).toBeTruthy() })
+    await waitFor(() => { expect(ui.getByText(es['error.conflict'])).toBeTruthy() })
   })
 
   it('publishes no state after the row unmounts mid-flight', async () => {
@@ -227,7 +227,7 @@ describe('MessageFeedbackActions', () => {
     const onError = (event: ErrorEvent): void => { errors.push(event.error) }
     window.addEventListener('error', onError)
 
-    fireEvent.click(ui.getByLabelText(zh['action.likeActive']))
+    fireEvent.click(ui.getByLabelText(es['action.likeActive']))
     ui.unmount()
     release()
     await gate
@@ -257,7 +257,7 @@ describe('MessageFeedbackActions', () => {
     const onError = (event: ErrorEvent): void => { errors.push(event.error) }
     window.addEventListener('error', onError)
 
-    fireEvent.click(ui.getByLabelText(zh['action.dislike']))
+    fireEvent.click(ui.getByLabelText(es['action.dislike']))
     ui.unmount()
     release()
     await gate
@@ -291,7 +291,7 @@ describe('MessageFeedbackActions', () => {
     const onError = (event: ErrorEvent): void => { errors.push(event.error) }
     window.addEventListener('error', onError)
 
-    fireEvent.click(ui.getByLabelText(zh['action.dislikeActive']))
+    fireEvent.click(ui.getByLabelText(es['action.dislikeActive']))
     // The retraction starts only after the seeding read settles; unmount
     // while that retraction is in flight.
     await waitFor(() => { expect(props.retract).toHaveBeenCalledWith(MSG, 'negative') })
@@ -306,7 +306,7 @@ describe('MessageFeedbackActions', () => {
   it('surfaces a failed list load next to the controls', () => {
     const ui = mount({ status: 'error' })
 
-    expect(ui.getByText(zh['error.load'])).toBeTruthy()
+    expect(ui.getByText(es['error.load'])).toBeTruthy()
   })
 
   it('prefers the action failure over the load notice', async () => {
@@ -316,9 +316,9 @@ describe('MessageFeedbackActions', () => {
       retractResult: { ok: false, error: { code: 'target-not-found', message: 'gone' } },
     })
 
-    fireEvent.click(ui.getByLabelText(zh['action.likeActive']))
+    fireEvent.click(ui.getByLabelText(es['action.likeActive']))
 
-    await waitFor(() => { expect(ui.getByText(zh['error.generic'])).toBeTruthy() })
-    expect(ui.queryByText(zh['error.load'])).toBeNull()
+    await waitFor(() => { expect(ui.getByText(es['error.generic'])).toBeTruthy() })
+    expect(ui.queryByText(es['error.load'])).toBeNull()
   })
 })

@@ -8,7 +8,7 @@ const form = 'https://forms.example.test/feedback?hide_uid=1&hide_device_info=1&
 it('prefills the available support context and hides every context field', () => {
   const config = ContactConfig({ contactFormUrl: form, contactSource: 'app_harness' })
   const url = new URL(contactUrl(config, {
-    uid: 'account-user' as AccountUserId, version: '1.2.3', locale: 'zh-CN',
+    uid: 'account-user' as AccountUserId, version: '1.2.3', locale: 'es',
     deviceInfo: 'Mozilla/5.0 (Macintosh) Harness/1.2.3', width: 1512, height: 982, pixelRatio: 2,
   }))
   expect(url.origin).toBe('https://forms.example.test')
@@ -20,7 +20,7 @@ it('prefills the available support context and hides every context field', () =>
     hide_harness_version: '1', prefill_harness_version: '1.2.3',
     hide_os_version: '1', hide_device_brand: '1',
     hide_device_info: '1', prefill_device_info: 'Mozilla/5.0 (Macintosh) Harness/1.2.3',
-    hide_app_locale: '1', prefill_app_locale: 'zh-CN',
+    hide_app_locale: '1', prefill_app_locale: 'es',
     hide_screen_resolution: '1', prefill_screen_resolution: '3024x1964',
   })
 })

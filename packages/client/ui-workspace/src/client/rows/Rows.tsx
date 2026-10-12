@@ -19,6 +19,7 @@ import {
   IconEllipsisOutlineRegular, IconFolderCloseRegular, IconFolderOpenRegular,
   IconNewChatOutlineRegular, IconPinFillRegular, IconTrashOutlineRegular,
   IconTriangleRightFillRegular, IconUnarchiveOutlineRegular, Menu, relativeTime, StateDot, Tooltip,
+  pluralSuffix,
 } from '@deepseek-ai/dsh-client-ui-primitives'
 import type { ShortcutCatalogEntry } from '@deepseek-ai/dsh-client-shortcuts/client'
 import type { StateDotState } from '@deepseek-ai/dsh-client-ui-primitives'
@@ -366,9 +367,7 @@ function sessionStatuses(
     : {
       state: 'ongoing',
       label: t(
-        node.runningSubagentCount === 1
-          ? 'status.subagentsRunning.one'
-          : 'status.subagentsRunning.other',
+        `status.subagentsRunning.${pluralSuffix(t('format.locale'), node.runningSubagentCount)}`,
         { n: node.runningSubagentCount },
       ),
     }

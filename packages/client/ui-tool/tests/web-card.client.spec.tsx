@@ -10,13 +10,13 @@ import { webCardModel, webFetchHref } from '../src/client/tool/models/web-card-m
 import { GenericToolCard } from '../src/client/tool/toolviews/GenericToolCard.tsx'
 import { WebRow, webToolview } from '../src/client/tool/toolviews/web-row.tsx'
 import { makeTranslate } from '@deepseek-ai/dsh-client-test-runtime'
-import { zh as commonZh } from '@deepseek-ai/dsh-client-locale/src/locales/zh.ts'
-import { zh } from '@deepseek-ai/dsh-client-ui-conversation/src/client/locales.ts'
+import { es as commonEs } from '@deepseek-ai/dsh-client-locale/src/locales/es.ts'
+import { es } from '@deepseek-ai/dsh-client-ui-conversation/src/client/locales.ts'
 
 afterEach(cleanup)
 
 
-const t = makeTranslate(zh, commonZh)
+const t = makeTranslate(es, commonEs)
 
 const SEARCH_ARGS = '{"queries":["tbelt code"]}'
 const FETCH_ARGS = '{"url":"https://example.com/page"}'
@@ -156,7 +156,7 @@ describe('chat row web body', () => {
     const globe = render(<IconGlobeOutlineRegular />).container.querySelector('svg')!.outerHTML
     const view = render(<WebRow {...rowProps(settledSearch(), 'web_search')} />)
     // Collapsed: the summary row alone, no card in the DOM.
-    expect(view.getByText('网页搜索')).toBeTruthy()
+    expect(view.getByText('Buscar')).toBeTruthy()
     expect(view.container.querySelector('svg')?.outerHTML).toBe(globe)
     expect(view.queryByText('Titled')).toBeNull()
     expect(view.container.querySelector('[data-web]')).toBeNull()
@@ -170,7 +170,7 @@ describe('chat row web body', () => {
 
   it('the WebRow expands to the fetch card, titled Fetch', () => {
     const view = render(<WebRow {...rowProps(settledFetch(), 'web_fetch')} />)
-    expect(view.getByText('网页获取')).toBeTruthy()
+    expect(view.getByText('Obtener')).toBeTruthy()
     expect(view.container.querySelector('[data-web]')).toBeNull()
     toggleRow(view)
     // The url shows as the card's link; scope to the card.
@@ -199,7 +199,7 @@ describe('chat row web body', () => {
 
   it('a running web call is the summary row alone, with nothing to expand', () => {
     const view = render(<WebRow {...rowProps(runningSearch(), 'web_search')} />)
-    expect(view.getByText('网页搜索')).toBeTruthy()
+    expect(view.getByText('Buscar')).toBeTruthy()
     expect(view.queryByText('Titled')).toBeNull()
     // No card material and no expandable body: clicking the row reveals nothing.
     expect(view.container.querySelector('[data-expandable]')).toBeNull()
@@ -210,7 +210,7 @@ describe('chat row web body', () => {
     const view = render(<WebRow {...rowProps(settledSearch({
       isError: true,
     }), 'web_search')} />)
-    expect(view.getByText('网页搜索')).toBeTruthy()
+    expect(view.getByText('Buscar')).toBeTruthy()
     expect(view.container.querySelector('[data-web]')).toBeNull()
     // The row reflects the error state so the summary line still reads as failed.
     expect(view.container.querySelector('[data-state="error"]')).not.toBeNull()

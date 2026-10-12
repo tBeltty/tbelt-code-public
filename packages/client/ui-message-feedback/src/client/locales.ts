@@ -1,31 +1,7 @@
 /** `feedback` namespace dictionaries. */
 
-/** Simplified Chinese dictionary (the key-set source of truth). */
-export const zh = {
-  'action.like': '好的回答',
-  'action.likeActive': '取消标记',
-  'action.dislike': '有问题的回答',
-  'action.dislikeActive': '取消标记',
-  'dialog.title': '提交反馈',
-  'dialog.categories': '反馈分类',
-  'dialog.detail': '反馈详情',
-  'dialog.hint': '填写详情以帮助我们改进体验，提交内容会包括当前对话的日志',
-  'category.task-result': '任务结果',
-  'category.instruction-following': '指令理解与遵循',
-  'category.product-interaction': '产品功能与交互',
-  'category.service-stability': '稳定性和速度',
-  'category.resource-cost': '资源使用与费用',
-  'category.security-privacy-permission': '安全隐私与权限',
-  'category.other': '其他',
-  'toast.recorded': '感谢你的反馈',
-  'error.conflict': '这条反馈已在别处改动，已显示最新状态',
-  'error.load': '反馈状态加载失败',
-  'error.generic': '反馈保存失败',
-  'error.noteTooLarge': '描述太长，请缩短后再提交',
-} satisfies Record<string, string>
-
 /** The feedback namespace key union. */
-export type MessageFeedbackKey = keyof typeof zh
+export type MessageFeedbackKey = keyof typeof en
 
 declare module '@deepseek-ai/dsh-client-ui-slots' {
   interface LocaleNamespaceMap {
@@ -34,7 +10,7 @@ declare module '@deepseek-ai/dsh-client-ui-slots' {
   }
 }
 
-/** English dictionary, checked complete against the zh key set. */
+/** English dictionary and key-set source of truth. */
 export const en = {
   'action.like': 'Good response',
   'action.likeActive': 'Remove rating',
@@ -56,4 +32,28 @@ export const en = {
   'error.load': 'Could not load feedback',
   'error.generic': 'Could not save feedback',
   'error.noteTooLarge': 'The description is too long; shorten it and submit again',
-} satisfies Record<MessageFeedbackKey, string>
+} satisfies Record<string, string>
+
+/** Spanish dictionary, checked complete against the English key set. */
+export const es = {
+  'action.like': 'Buena respuesta',
+  'action.likeActive': 'Quitar valoración',
+  'action.dislike': 'Mala respuesta',
+  'action.dislikeActive': 'Quitar valoración',
+  'dialog.title': 'Enviar comentarios',
+  'dialog.categories': 'Categoría del comentario',
+  'dialog.detail': 'Detalles del comentario',
+  'dialog.hint': 'Añade detalles para ayudarnos a mejorar. El envío incluirá el registro de la conversación actual.',
+  'category.task-result': 'Resultado de la tarea',
+  'category.instruction-following': 'Comprensión y seguimiento de instrucciones',
+  'category.product-interaction': 'Funciones del producto e interacción',
+  'category.service-stability': 'Estabilidad y velocidad',
+  'category.resource-cost': 'Uso de recursos y coste',
+  'category.security-privacy-permission': 'Seguridad, privacidad y permisos',
+  'category.other': 'Otro',
+  'toast.recorded': 'Gracias por tus comentarios',
+  'error.conflict': 'Este comentario cambió en otro lugar; se muestra el estado más reciente',
+  'error.load': 'No se pudieron cargar los comentarios',
+  'error.generic': 'No se pudieron guardar los comentarios',
+  'error.noteTooLarge': 'La descripción es demasiado larga; acórtala y envía de nuevo',
+} satisfies Record<keyof typeof en, string>

@@ -3,9 +3,9 @@
 import { describe, expect, it } from 'vitest'
 import type { ToolResultNode } from '@deepseek-ai/dsh-client-ui-chat/client'
 import { makeTranslate } from '@deepseek-ai/dsh-client-test-runtime'
-import { en, zh } from '@deepseek-ai/dsh-client-ui-conversation/src/client/locales.ts'
+import { en, es } from '@deepseek-ai/dsh-client-ui-conversation/src/client/locales.ts'
 import { en as commonEn } from '@deepseek-ai/dsh-client-locale/src/locales/en.ts'
-import { zh as commonZh } from '@deepseek-ai/dsh-client-locale/src/locales/zh.ts'
+import { es as commonEs } from '@deepseek-ai/dsh-client-locale/src/locales/es.ts'
 import { statusLine } from '@deepseek-ai/dsh-tool-jobs/src/render.ts'
 import { presentation } from '@deepseek-ai/dsh-tool-session-query/src/presentation.ts'
 import { renderList, renderRead, renderSpawn } from '@deepseek-ai/dsh-tool-terminal/src/render.ts'
@@ -53,13 +53,13 @@ describe('shared detail values', () => {
 
 describe('control detail adapters', () => {
   it.each([
-    [{ timedOut: false }, '子智能体状态 · 检测到变化'],
-    [{ timedOut: true }, '子智能体状态 · 等待超时'],
-    [{ timedOut: false, noProgress: { message: 'No pending work' } }, '没有正在运行的子智能体'],
+    [{ timedOut: false }, 'Actividad de los subagentes · Cambio detectado'],
+    [{ timedOut: true }, 'Actividad de los subagentes · Se agotó el tiempo de espera'],
+    [{ timedOut: false, noProgress: { message: 'No pending work' } }, 'No hay subagentes activos'],
   ] as const)('names subagents in Chinese wait results (%j)', (value, summary) => {
-    const translate = makeTranslate(zh, commonZh)
-    expect(translate('tool.title.waitAgent')).toBe('等待子智能体')
-    expect(detailsCardModel(output('wait_agent', JSON.stringify(value)), translate, 'zh-CN')?.summary).toBe(summary)
+    const translate = makeTranslate(es, commonEs)
+    expect(translate('tool.title.waitAgent')).toBe('Esperar al subagente')
+    expect(detailsCardModel(output('wait_agent', JSON.stringify(value)), translate, 'es')?.summary).toBe(summary)
   })
 
   it('uses producer wording for agent, job, terminal, and LSP lists', () => {

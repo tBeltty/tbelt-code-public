@@ -21,7 +21,7 @@ import { ChangesSummaryStore } from '../src/client/changes-summary.ts'
 import { PresentedOpenController } from '../src/client/present-open.ts'
 import { artifactTurn, sessionArtifacts, type ArtifactTurn } from '../src/client/session-artifacts.ts'
 import type { DeliverablesTurnData } from '../src/client/turn-deliverables.ts'
-import { en, zh } from '../src/client/locales.ts'
+import { en, es } from '../src/client/locales.ts'
 import { changesSummaryUrl } from '../src/changes.ts'
 import { renderFileActions } from './file-actions.tsx'
 
@@ -147,7 +147,7 @@ function renderTab(
 }
 
 describe('Artifacts page', () => {
-  it.each([en, zh])('says what will appear while no loaded Turn has artifacts', (locale) => {
+  it.each([en, es])('says what will appear while no loaded Turn has artifacts', (locale) => {
     const { view } = renderTab([], locale)
     expect(view.container.querySelector('[data-artifacts-empty]')).not.toBeNull()
     expect(view.getByText(locale['artifacts.emptyTitle'])).toBeTruthy()

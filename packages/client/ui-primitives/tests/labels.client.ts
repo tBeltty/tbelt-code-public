@@ -9,47 +9,47 @@ import type {
 } from '../src/index.ts'
 
 export const markdownLabels: MarkdownLabels = {
-  code: { copyLabel: '复制', copiedLabel: '复制成功' },
+  code: { copyLabel: 'Copy', copiedLabel: 'Copied' },
   footnotes: 'Footnotes',
 }
 
 export const diffBlockLabels: DiffBlockLabels = {
-  codeLabel: '代码块', wrapLabel: '自动换行', unwrapLabel: '取消自动换行',
-  copy: '复制', copied: '复制成功', collapseAria: '收起差异',
-  expandAria: hidden => `展开其余 ${hidden} 行差异`,
-  collapse: '收起', expand: hidden => `… 其余 ${hidden} 行`,
+  codeLabel: 'Code block', wrapLabel: 'Wrap lines', unwrapLabel: 'Unwrap lines',
+  copy: 'Copy', copied: 'Copied', collapseAria: 'Collapse diff',
+  expandAria: hidden => `Expand ${hidden} more diff lines`,
+  collapse: 'Collapse', expand: hidden => `… ${hidden} more lines`,
 }
 
 export const readBlockLabels: ReadBlockLabels = {
-  codeLabel: '代码块', wrapLabel: '自动换行', unwrapLabel: '取消自动换行',
-  window: (shown, total) => `显示 ${shown} / ${total} 行`,
-  copy: '复制', copied: '复制成功', collapseAria: '收起内容',
-  expandAria: hidden => `展开其余 ${hidden} 行`,
-  collapse: '收起', expand: hidden => `… 其余 ${hidden} 行`,
+  codeLabel: 'Code block', wrapLabel: 'Wrap lines', unwrapLabel: 'Unwrap lines',
+  window: (shown, total) => `Showing ${shown} of ${total} lines`,
+  copy: 'Copy', copied: 'Copied', collapseAria: 'Collapse content',
+  expandAria: hidden => `Expand ${hidden} more lines`,
+  collapse: 'Collapse', expand: hidden => `… ${hidden} more lines`,
 }
 
 export const searchBlockLabels: SearchBlockLabels = {
   pathsSummary: (shown, total, truncated) => truncated
-    ? `显示 ${shown} / 共 ${total} 个路径`
-    : `${shown} 个路径`,
+    ? `Showing ${shown} of ${total} paths`
+    : `${shown} paths`,
   matchesSummary: (shown, total, files, truncated) => truncated
-    ? `显示 ${shown} / 共 ${total} 处匹配 · ${files} 个文件`
-    : `${shown} 处匹配 · ${files} 个文件`,
-  copy: '复制', copied: '复制成功', noResults: '无结果',
-  collapseAria: '收起结果',
-  expandAria: hidden => `展开其余 ${hidden} 行结果`,
-  collapse: '收起', expand: hidden => `… 其余 ${hidden} 行`,
+    ? `Showing ${shown} of ${total} matches · ${files} files`
+    : `${shown} matches · ${files} files`,
+  copy: 'Copy', copied: 'Copied', noResults: 'No results',
+  collapseAria: 'Collapse results',
+  expandAria: hidden => `Expand ${hidden} more result lines`,
+  collapse: 'Collapse', expand: hidden => `… ${hidden} more lines`,
 }
 
 export const terminalBlockLabels: TerminalBlockLabels = {
-  signal: signal => `信号 ${signal}`,
-  exitCode: code => `退出码 ${code}`,
-  noExitCode: '未正常退出',
-  running: '运行中', failed: '失败', done: '已完成',
-  copy: '复制', copied: '复制成功', noOutput: '无输出',
-  collapseAria: '收起输出', collapse: '收起',
-  expandAria: hidden => `展开其余 ${hidden} 行输出`,
-  expand: hidden => `… 其余 ${hidden} 行`,
+  signal: signal => `Signal ${signal}`,
+  exitCode: code => `Exit code ${code}`,
+  noExitCode: 'no exit code',
+  running: 'Running', failed: 'Failed', done: 'Done',
+  copy: 'Copy', copied: 'Copied', noOutput: 'No output',
+  collapseAria: 'Collapse output', collapse: 'Collapse',
+  expandAria: hidden => `Expand ${hidden} more output lines`,
+  expand: hidden => `… ${hidden} more lines`,
 }
 
 export const jsonTreeLabels: JsonTreeLabels = {
@@ -61,6 +61,6 @@ export const jsonTreeLabels: JsonTreeLabels = {
 }
 
 export const webBlockLabels: WebBlockLabels = {
-  noResults: '未找到结果', sourcesTruncated: '来源列表已截断',
-  http: 'HTTP', contentTruncated: '内容已截断', markdown: markdownLabels,
+  noResults: 'No results found', sourcesTruncated: 'Source list truncated',
+  http: 'HTTP', contentTruncated: 'Content truncated', markdown: markdownLabels,
 }

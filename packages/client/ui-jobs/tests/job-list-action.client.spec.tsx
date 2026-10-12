@@ -5,7 +5,7 @@ import { makeTranslate } from '@deepseek-ai/dsh-client-test-runtime'
 import type { JobsSnapshot, JobView, ObservedJob } from '@deepseek-ai/dsh-api-job-controller/client'
 import type { SessionId } from '@deepseek-ai/dsh-session/types'
 import { JobListAction, type JobListActionProps } from '../src/client/JobListAction.tsx'
-import { zh } from '../src/client/locales.ts'
+import { es } from '../src/client/locales.ts'
 
 afterEach(() => {
   cleanup()
@@ -14,7 +14,7 @@ afterEach(() => {
 })
 
 const SESSION = 'session' as SessionId
-const t: JobListActionProps['t'] = makeTranslate(zh)
+const t: JobListActionProps['t'] = makeTranslate(es)
 
 /** A running job with nothing retained yet. */
 function job(over: Partial<JobView> = {}): JobView {
@@ -73,14 +73,14 @@ describe('JobListAction visibility', () => {
       outputJob(),
       job({ id: 'subagent-1' as JobView['id'], kind: 'subagent', label: 'explore' }),
     ])} />)
-    expect(screen.getByRole('button', { name: '2 个后台任务运行中' })).toBeDefined()
+    expect(screen.getByRole('button', { name: '2 tareas en segundo plano en curso' })).toBeDefined()
   })
 
   it('falls back to the total when nothing is live', () => {
     render(<JobListAction {...props([
       job({ status: 'completed', finishedAt: 1_700_000_003_000 }),
     ])} />)
-    expect(screen.getByRole('button', { name: '1 个后台任务' })).toBeDefined()
+    expect(screen.getByRole('button', { name: '1 tarea en segundo plano' })).toBeDefined()
   })
 })
 
@@ -89,22 +89,22 @@ describe('JobListAction rows', () => {
     render(<JobListAction {...props([
       job({ id: 'subagent-1' as JobView['id'], kind: 'subagent', label: 'explore the repo', status: 'completed', finishedAt: 1_700_000_003_000 }),
     ])} />)
-    expect(screen.getByRole('button', { name: '1 个后台任务' })).toBeDefined()
+    expect(screen.getByRole('button', { name: '1 tarea en segundo plano' })).toBeDefined()
     openList()
     expect(screen.getByText('explore the repo')).toBeDefined()
-    expect(screen.queryByRole('button', { name: zh['row.expandAria'].replace('{label}', 'explore the repo') })).toBeNull()
+    expect(screen.queryByRole('button', { name: es['row.expandAria'].replace('{label}', 'explore the repo') })).toBeNull()
   })
 
   it('offers a panel on a live row before any output arrived', () => {
     render(<JobListAction {...props([job({ label: 'warming up' })])} />)
     openList()
-    expect(screen.getByRole('button', { name: zh['row.expandAria'].replace('{label}', 'warming up') })).toBeDefined()
+    expect(screen.getByRole('button', { name: es['row.expandAria'].replace('{label}', 'warming up') })).toBeDefined()
   })
 
   it('shows the live progress line in place of the status word', () => {
     render(<JobListAction {...props([job({ status: 'stopping', progress: 'winding down' })])} />)
     openList()
-    const list = screen.getByRole('list', { name: zh['list.aria'] })
+    const list = screen.getByRole('list', { name: es['list.aria'] })
     expect(within(list).getByText('pnpm run build')).toBeDefined()
     expect(within(list).getByText('winding down')).toBeDefined()
   })
@@ -113,17 +113,17 @@ describe('JobListAction rows', () => {
     const settled = [job({ id: 'bash-2' as JobView['id'], label: 'settled work', status: 'completed', finishedAt: 1_700_000_012_000 })]
     render(<JobListAction {...props([job(), ...settled])} />)
     openList()
-    expect(screen.getByText(zh['section.live'])).toBeDefined()
-    const toggle = screen.getByRole('button', { name: zh['section.settledCount'].replace('{count}', '1') })
+    expect(screen.getByText(es['section.live'])).toBeDefined()
+    const toggle = screen.getByRole('button', { name: es['section.settledCount'].replace('{count}', '1') })
     // Folded by default while something runs; the toggle expands it.
     expect(toggle.getAttribute('aria-expanded')).toBe('false')
     expect(screen.queryByText('settled work')).toBeNull()
     fireEvent.click(toggle)
     expect(screen.getByText('settled work')).toBeDefined()
     // Clearing hides the tail client-side and drops the whole section line.
-    fireEvent.click(screen.getByRole('button', { name: zh['section.clear'] }))
+    fireEvent.click(screen.getByRole('button', { name: es['section.clear'] }))
     expect(screen.queryByText('settled work')).toBeNull()
-    expect(screen.queryByRole('button', { name: zh['section.clear'] })).toBeNull()
+    expect(screen.queryByRole('button', { name: es['section.clear'] })).toBeNull()
   })
 
   it('opens the settled tail by default when nothing is live', () => {
@@ -132,7 +132,7 @@ describe('JobListAction rows', () => {
     ])} />)
     openList()
     expect(screen.getByText('pnpm run build')).toBeDefined()
-    expect(screen.getByRole('button', { name: zh['section.settledCount'].replace('{count}', '1') }).getAttribute('aria-expanded')).toBe('true')
+    expect(screen.getByRole('button', { name: es['section.settledCount'].replace('{count}', '1') }).getAttribute('aria-expanded')).toBe('true')
   })
 
   it('clearing drops an expanded settled panel with its rows', () => {
@@ -143,11 +143,11 @@ describe('JobListAction rows', () => {
     )} />)
     openList()
     // Nothing live: the tail is open; expand the settled row's output panel.
-    fireEvent.click(screen.getByRole('button', { name: zh['row.expandAria'].replace('{label}', 'settled work') }))
+    fireEvent.click(screen.getByRole('button', { name: es['row.expandAria'].replace('{label}', 'settled work') }))
     expect(observe).toHaveBeenCalledWith(SESSION, 'bash-2')
-    fireEvent.click(screen.getByRole('button', { name: zh['section.clear'] }))
+    fireEvent.click(screen.getByRole('button', { name: es['section.clear'] }))
     expect(screen.queryByText('settled work')).toBeNull()
-    expect(screen.queryByRole('button', { name: zh['row.collapseAria'].replace('{label}', 'settled work') })).toBeNull()
+    expect(screen.queryByRole('button', { name: es['row.collapseAria'].replace('{label}', 'settled work') })).toBeNull()
   })
 
   it('shows a settled duration and ticks a live one', () => {
@@ -159,13 +159,13 @@ describe('JobListAction rows', () => {
       job({ id: 'bash-4' as JobView['id'], status: 'completed', startedAt: 1_699_999_900_000, finishedAt: 1_699_999_972_000 }),
     ])} />)
     openList()
-    fireEvent.click(screen.getByRole('button', { name: zh['section.settledCount'].replace('{count}', '3') }))
-    expect(screen.getByText('5秒')).toBeDefined()
-    expect(screen.getByText('12秒')).toBeDefined()
-    expect(screen.getByText('1小时3分')).toBeDefined()
-    expect(screen.getByText('1分12秒')).toBeDefined()
+    fireEvent.click(screen.getByRole('button', { name: es['section.settledCount'].replace('{count}', '3') }))
+    expect(screen.getByText('5 s')).toBeDefined()
+    expect(screen.getByText('12 s')).toBeDefined()
+    expect(screen.getByText('1 h 3 min')).toBeDefined()
+    expect(screen.getByText('1 min 12 s')).toBeDefined()
     act(() => { vi.advanceTimersByTime(1_000) })
-    expect(screen.getByText('6秒')).toBeDefined()
+    expect(screen.getByText('6 s')).toBeDefined()
   })
 
   it('lists rows with kind, label, and detail-or-status', () => {
@@ -174,15 +174,15 @@ describe('JobListAction rows', () => {
       outputJob({ id: 'bash-2' as JobView['id'], status: 'failed', detail: 'exit code: 3', finishedAt: 1_700_000_002_000 }),
     ])} />)
     openList()
-    fireEvent.click(screen.getByRole('button', { name: zh['section.settledCount'].replace('{count}', '1') }))
-    const list = screen.getByRole('list', { name: zh['list.aria'] })
+    fireEvent.click(screen.getByRole('button', { name: es['section.settledCount'].replace('{count}', '1') }))
+    const list = screen.getByRole('list', { name: es['list.aria'] })
     const items = within(list).getAllByRole('listitem')
     // The section line is a listitem too now: live row, section, settled row.
     expect(items).toHaveLength(3)
     expect(items[0]?.textContent).toContain('pnpm run build')
     // A live row's second line is kind · duration; the status word only
     // appears through a detail (none while running).
-    expect(items[0]?.textContent).toMatch(/小时|分|秒/)
+    expect(items[0]?.textContent).toMatch(/ h | min | s/)
     expect(items[2]?.textContent).toContain('exit code: 3')
   })
 
@@ -205,15 +205,15 @@ describe('JobListAction rows', () => {
       job({ id: 'bash-l2' as JobView['id'], label: 'live-2', startedAt: 3 }),
     ])} />)
     openList()
-    fireEvent.click(screen.getByRole('button', { name: zh['section.settledCount'].replace('{count}', '5') }))
-    const labels = within(screen.getByRole('list', { name: zh['list.aria'] }))
+    fireEvent.click(screen.getByRole('button', { name: es['section.settledCount'].replace('{count}', '5') }))
+    const labels = within(screen.getByRole('list', { name: es['list.aria'] }))
       .getAllByRole('listitem')
       .map(item => item.querySelector('[title]')?.getAttribute('title'))
-      .filter((title): title is string => title != null && !title.startsWith('已运行') && !title.startsWith('耗时'))
+      .filter((title): title is string => title != null && !title.startsWith('En curso desde') && !title.startsWith('Tardó'))
     expect(labels).toEqual([
       'live-2', 'live-1', 'settled-d', 'settled-a', 'settled-c', 'settled-b', 'settled-e',
     ])
-    expect(screen.getAllByText(zh['status.completed']).length).toBeGreaterThan(0)
+    expect(screen.getAllByText(es['status.completed']).length).toBeGreaterThan(0)
   })
 
   it('breaks a settled tie on start order so map iteration never decides it', () => {
@@ -243,8 +243,8 @@ describe('JobListAction rows', () => {
       job({ id: 'bash-5' as JobView['id'], label: 'e', status: 'failed', finishedAt: 1_700_000_000_000 }),
     ])} />)
     openList()
-    fireEvent.click(screen.getByRole('button', { name: zh['section.settledCount'].replace('{count}', '3') }))
-    for (const word of ['已完成', '已取消', '已失败']) {
+    fireEvent.click(screen.getByRole('button', { name: es['section.settledCount'].replace('{count}', '3') }))
+    for (const word of ['completada', 'cancelada', 'fallida']) {
       expect(within(screen.getByRole('list')).getByText(word)).toBeDefined()
     }
     expect([...screen.getByRole('list').querySelectorAll('li [data-state]')].map(node => node.getAttribute('data-state')))
@@ -269,16 +269,16 @@ describe('JobListAction observation', () => {
       { 'bash-1': view },
     )} />)
     openList()
-    expect(screen.getByText(zh['status.killed'])).toBeDefined()
-    fireEvent.click(screen.getByRole('button', { name: zh['row.expandAria'].replace('{label}', 'pnpm run build') }))
+    expect(screen.getByText(es['status.killed'])).toBeDefined()
+    fireEvent.click(screen.getByRole('button', { name: es['row.expandAria'].replace('{label}', 'pnpm run build') }))
     // The panel scrolls instead of folding: every line renders, no fold control.
     expect(screen.getByText('line 1')).toBeDefined()
     expect(screen.getByText('line 24')).toBeDefined()
-    expect(screen.queryByRole('button', { name: zh['terminal.expandAria'].replace('{n}', '8') })).toBeNull()
+    expect(screen.queryByRole('button', { name: es['terminal.expandAria'].replace('{n}', '8') })).toBeNull()
     // The panel draws no state dot or label of its own — the row carries it.
-    expect(screen.queryByText(zh['terminal.done'])).toBeNull()
+    expect(screen.queryByText(es['terminal.done'])).toBeNull()
     // The copy control carries the command, not the output.
-    await act(async () => { fireEvent.click(screen.getByRole('button', { name: zh['terminal.copy'] })) })
+    await act(async () => { fireEvent.click(screen.getByRole('button', { name: es['terminal.copy'] })) })
     expect(writeText).toHaveBeenCalledWith('pnpm run build')
   })
 
@@ -290,7 +290,7 @@ describe('JobListAction observation', () => {
     try {
       render(<JobListAction {...props([outputJob()])} />)
       openList()
-      const menu = screen.getByRole('list', { name: zh['list.aria'] })
+      const menu = screen.getByRole('list', { name: es['list.aria'] })
       // 700 - 12 - 440 - 344 = -96: the popover moves left to keep the margin.
       expect(menu.style.left).toBe('-96px')
 
@@ -311,7 +311,7 @@ describe('JobListAction observation', () => {
     try {
       render(<JobListAction {...props([outputJob()])} />)
       openList()
-      const menu = screen.getByRole('list', { name: zh['list.aria'] })
+      const menu = screen.getByRole('list', { name: es['list.aria'] })
       // max(12 - 4, min(0, 700 - 12 - 800 - 4)) = 8: clamped at the left margin.
       expect(menu.style.left).toBe('8px')
     } finally {
@@ -325,11 +325,11 @@ describe('JobListAction observation', () => {
       outputJob({ id: 'bash-2' as JobView['id'], status: 'completed', finishedAt: 3 }),
     ]
     const { rerender } = render(<JobListAction {...props(settledPair)} />)
-    expect(screen.getByRole('button', { name: '2 个后台任务' })).toBeDefined()
+    expect(screen.getByRole('button', { name: '2 tareas en segundo plano' })).toBeDefined()
     openList()
-    const list = screen.getByRole('list', { name: zh['list.aria'] })
+    const list = screen.getByRole('list', { name: es['list.aria'] })
     fireEvent.keyDown(list, { key: 'a' })
-    expect(screen.getByRole('list', { name: zh['list.aria'] })).toBeDefined()
+    expect(screen.getByRole('list', { name: es['list.aria'] })).toBeDefined()
     // The roster emptying unmounts the control entirely; the open flag resets first.
     rerender(<JobListAction {...props([])} />)
     expect(screen.queryByRole('button')).toBeNull()
@@ -346,11 +346,11 @@ describe('JobListAction observation', () => {
     }
     render(<JobListAction {...props([outputJob()], observe, { 'bash-1': view })} />)
     openList()
-    fireEvent.click(screen.getByRole('button', { name: zh['row.expandAria'].replace('{label}', 'pnpm run build') }))
+    fireEvent.click(screen.getByRole('button', { name: es['row.expandAria'].replace('{label}', 'pnpm run build') }))
     expect(observe).toHaveBeenCalledWith(SESSION, 'bash-1')
     expect(screen.getByText('compiling…')).toBeDefined()
 
-    fireEvent.click(screen.getByRole('button', { name: zh['row.collapseAria'].replace('{label}', 'pnpm run build') }))
+    fireEvent.click(screen.getByRole('button', { name: es['row.collapseAria'].replace('{label}', 'pnpm run build') }))
     expect(stop).toHaveBeenCalledTimes(1)
   })
 
@@ -363,9 +363,9 @@ describe('JobListAction observation', () => {
     }
     const { container } = render(<JobListAction {...props([job()], undefined, { 'bash-1': view })} />)
     openList()
-    fireEvent.click(screen.getByRole('button', { name: zh['row.expandAria'].replace('{label}', 'pnpm run build') }))
+    fireEvent.click(screen.getByRole('button', { name: es['row.expandAria'].replace('{label}', 'pnpm run build') }))
     expect(container.querySelector('[data-running]')).not.toBeNull()
-    expect(screen.queryByText(zh['terminal.noOutput'])).toBeNull()
+    expect(screen.queryByText(es['terminal.noOutput'])).toBeNull()
   })
 
   it('surfaces retention gaps and stream failures above the panel', () => {
@@ -378,19 +378,19 @@ describe('JobListAction observation', () => {
     }
     render(<JobListAction {...props([outputJob()], undefined, { 'bash-1': view })} />)
     openList()
-    fireEvent.click(screen.getByRole('button', { name: zh['row.expandAria'].replace('{label}', 'pnpm run build') }))
-    expect(screen.getByText(zh['output.gap'])).toBeDefined()
-    expect(screen.getByText('实时输出流中断：connection lost')).toBeDefined()
+    fireEvent.click(screen.getByRole('button', { name: es['row.expandAria'].replace('{label}', 'pnpm run build') }))
+    expect(screen.getByText(es['output.gap'])).toBeDefined()
+    expect(screen.getByText('se interrumpió la salida en vivo: connection lost')).toBeDefined()
   })
 
   it('stops observation when the popover closes via Escape', () => {
     const stop = vi.fn()
     render(<JobListAction {...props([outputJob()], () => stop)} />)
     openList()
-    fireEvent.click(screen.getByRole('button', { name: zh['row.expandAria'].replace('{label}', 'pnpm run build') }))
-    fireEvent.keyDown(screen.getByRole('list', { name: zh['list.aria'] }), { key: 'Escape' })
+    fireEvent.click(screen.getByRole('button', { name: es['row.expandAria'].replace('{label}', 'pnpm run build') }))
+    fireEvent.keyDown(screen.getByRole('list', { name: es['list.aria'] }), { key: 'Escape' })
     expect(stop).toHaveBeenCalledTimes(1)
-    expect(screen.queryByRole('list', { name: zh['list.aria'] })).toBeNull()
+    expect(screen.queryByRole('list', { name: es['list.aria'] })).toBeNull()
   })
 
   it('folds an expanded panel whose row left the roster', () => {
@@ -399,15 +399,15 @@ describe('JobListAction observation', () => {
     const observe = () => stop
     const { rerender } = render(<JobListAction {...props([outputJob()], observe)} />)
     openList()
-    fireEvent.click(screen.getByRole('button', { name: zh['row.expandAria'].replace('{label}', 'pnpm run build') }))
+    fireEvent.click(screen.getByRole('button', { name: es['row.expandAria'].replace('{label}', 'pnpm run build') }))
     rerender(<JobListAction {...props([outputJob({ id: 'bash-2' as JobView['id'], label: 'other' })], observe)} />)
     expect(stop).toHaveBeenCalledTimes(1)
-    expect(screen.queryByRole('button', { name: zh['row.collapseAria'].replace('{label}', 'other') })).toBeNull()
+    expect(screen.queryByRole('button', { name: es['row.collapseAria'].replace('{label}', 'other') })).toBeNull()
   })
 })
 
 describe('JobListAction human kill', () => {
-  const stopTitle = (label: string): string => zh['kill.stop'].replace('{label}', label)
+  const stopTitle = (label: string): string => es['kill.stop'].replace('{label}', label)
 
   it('offers the stop control only on running rows', () => {
     render(<JobListAction {...props([
@@ -427,9 +427,9 @@ describe('JobListAction human kill', () => {
     fireEvent.click(stop)
     expect(killJob).not.toHaveBeenCalled()
     expect(stop.getAttribute('data-kill-state')).toBe('armed')
-    expect(screen.getByTitle(zh['kill.confirm'])).toBe(stop)
+    expect(screen.getByTitle(es['kill.confirm'])).toBe(stop)
     // The armed step is legible without hover: the button carries the label.
-    expect(stop.textContent).toBe(zh['kill.confirmAction'])
+    expect(stop.textContent).toBe(es['kill.confirmAction'])
     await act(async () => { fireEvent.click(stop) })
     expect(killJob).toHaveBeenCalledWith(SESSION, 'bash-1')
     // An admitted kill stays pending: the unary response and the jobs frames
@@ -462,7 +462,7 @@ describe('JobListAction human kill', () => {
     fireEvent.click(stop)
     await act(async () => { fireEvent.click(stop) })
     expect(stop.getAttribute('data-kill-state')).toBe('failed')
-    expect(screen.getByTitle(zh['kill.failed'])).toBe(stop)
+    expect(screen.getByTitle(es['kill.failed'])).toBe(stop)
     act(() => { vi.advanceTimersByTime(4_000) })
     expect(stop.getAttribute('data-kill-state')).toBe('idle')
   })

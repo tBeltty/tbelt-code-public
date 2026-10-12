@@ -104,8 +104,8 @@ export function DesktopOnboarding({
   return <>
     <OnboardingSurface exiting={exiting}>
       <section key={step} ref={page} className={`${css.page} ${dialog !== null ? css.blurred : ''}`} data-desktop-onboarding={step} lang={locale} aria-labelledby="desktop-onboarding-title" aria-busy={busy}>
-        {step === 'welcome' && <OnboardingWelcomeStep t={t} locale={locale} heading={heading} busy={busy} onStart={() => { click('next'); go('credit') }} />}
-        {step === 'credit' && <OnboardingCreditStep t={t} locale={locale} heading={heading} busy={busy}
+        {step === 'welcome' && <OnboardingWelcomeStep t={t} heading={heading} busy={busy} onStart={() => { click('next'); go('credit') }} />}
+        {step === 'credit' && <OnboardingCreditStep t={t} heading={heading} busy={busy}
           funded={state.creditFunded} canRecharge={canRecharge} onContinue={() => { click('continue'); go('purpose') }} onRecharge={() => { click('charge'); recharge() }} onLater={() => { click('later'); later() }} />}
         {step === 'purpose' && <OnboardingPurposeStep t={t} heading={heading} busy={busy} purpose={progress.purpose}
           onSelect={(purpose) => { void update({ purpose }) }} onContinue={() => { click('next'); purposeNext() }} />}

@@ -19,7 +19,7 @@ import { TerminalTitle } from './TerminalTitle.tsx'
 // import { TerminalRecovery, type TerminalRecoveryInjected } from './TerminalRecovery.tsx'
 // import { TerminalCleanup, type TerminalCleanupInjected } from './TerminalCleanup.tsx'
 import type { TerminalBodyInjected, TerminalInjected } from './face.ts'
-import { en, zh } from './locales.ts'
+import { en, es } from './locales.ts'
 import { createCommandRunner, type CommandRunnerDeps } from './command-runner.tsx'
 
 /** Services needed by the terminal's sidebar seats and the conversation's command runner. */
@@ -70,7 +70,7 @@ export function apply(ctx: Context): void {
       return { status: 'handled', run: () => { ctx.sidebarRight.openTabFromTarget('terminal', target) } }
     },
   }), 'ui-sidebar-terminal: shortcut')
-  ctx.effect(() => ctx.locale.register(namespace, { zh, en }), 'ui-sidebar-terminal.copy')
+  ctx.effect(() => ctx.locale.register(namespace, { en, es }), 'ui-sidebar-terminal.copy')
   provideCommandRunner(ctx, t)
   ctx.effect(() => ctx.sidebarRightTabs.register({
     id, kind: 'terminal', multiple: true, priority: 'builtin', title: () => t('title'),

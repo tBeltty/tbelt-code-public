@@ -126,7 +126,7 @@ it('shares account actions across seats, publishes dialog ownership, and opens c
   const entry = c.ctx.slots.entries('settings.section').find(entry => entry.options.id === 'account')!
   expect(entry.inject!()).toBe(actions)
   expect(resolveSlotLabel(entry.options.label)).toBe('Account')
-  vi.spyOn(c.ctx.locale, 'getSnapshot').mockReturnValue({ ...c.ctx.locale.getSnapshot(), active: 'zh' })
+  vi.spyOn(c.ctx.locale, 'getSnapshot').mockReturnValue({ ...c.ctx.locale.getSnapshot(), active: 'es' })
   actions.contactUs!()
   const support = new URL(String(open.mock.calls.at(-1)![0]))
   expect(support.searchParams.get('prefill_uid')).toBe('account-user')
@@ -137,7 +137,7 @@ it('shares account actions across seats, publishes dialog ownership, and opens c
   expect(support.searchParams.get('prefill_device_info')).toBe(navigator.userAgent)
   expect(support.searchParams.has('prefill_device_model')).toBe(false)
   expect(support.searchParams.has('hide_device_model')).toBe(false)
-  expect(support.searchParams.get('prefill_app_locale')).toBe('zh-CN')
+  expect(support.searchParams.get('prefill_app_locale')).toBe('es')
   expect(support.searchParams.has('prefill_app_version')).toBe(false)
   c.mock.streams.push('account/watch', view)
   await vi.waitFor(() => { expect(actions.hooks.account.getSnapshot().view).toEqual(view) })

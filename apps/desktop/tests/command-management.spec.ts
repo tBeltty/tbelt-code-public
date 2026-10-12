@@ -1,10 +1,10 @@
 /** Locale-owned native command-management states. */
 
 import { expect, it } from 'vitest'
-import { en, zh } from '../src/locale.ts'
+import { en, es } from '../src/locale.ts'
 import { presentCommandManagement } from '../src/command-management.ts'
 
-it.each([en, zh])('shows installation, repair/removal and shadowed command locations', (messages) => {
+it.each([en, es])('shows installation, repair/removal and shadowed command locations', (messages) => {
   const destination = '/usr/local/bin/dsh'
   const missing = presentCommandManagement({ managed: false, available: false, destination }, messages, 'darwin')
   expect(missing.buttons).toEqual([messages.cliCommandInstall, messages.cancel])
@@ -21,8 +21,8 @@ it.each([en, zh])('shows installation, repair/removal and shadowed command locat
 })
 
 it.each([
-  ['darwin', 'en-US', en], ['darwin', 'zh-CN', zh],
-  ['win32', 'en-US', en], ['win32', 'zh-CN', zh],
+  ['darwin', 'en-US', en], ['darwin', 'es', es],
+  ['win32', 'en-US', en], ['win32', 'es', es],
 ] as const)('records command status on %s in %s', async (platform, language, messages) => {
   const destination = platform === 'darwin' ? '/usr/local/bin/dsh' : 'C:\\Users\\user\\AppData\\Local\\Programs\\tBelt Code\\resources\\runtime\\cli\\bin\\dsh.cmd'
   const other = platform === 'darwin' ? '/opt/homebrew/bin/dsh' : 'C:\\Program Files\\nodejs\\dsh.cmd'

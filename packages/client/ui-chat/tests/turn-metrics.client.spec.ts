@@ -6,7 +6,7 @@ import type {
 } from '@deepseek-ai/dsh-client-ui-chat/client'
 import { assistantStepReading } from '../src/client/contract/turn-metrics.ts'
 import { formatTokensPerSecond } from '../src/client/chat/message-chrome.ts'
-import { formatCacheHitPercent } from '../src/client/chat/token-format.ts'
+import { formatCacheHitPercent, formatTokens } from '../src/client/chat/token-format.ts'
 
 interface StepSpec {
   seq: number
@@ -67,10 +67,27 @@ describe('footer figure formatters', () => {
     expect(formatCacheHitPercent(1, 2, 1)).toBe('50')
   })
 
+  it('writes the decimal mark of the displayed language', () => {
+    expect(formatCacheHitPercent(494, 1_000, 1)).toBe('49.4')
+    expect(formatCacheHitPercent(494, 1_000, 1, ',')).toBe('49,4')
+    expect(formatCacheHitPercent(999_999, 1_000_000, 0, ',')).toBe('99,9999')
+  })
+
+  it('scales token counts with the decimal mark of the language tag the translator reports', () => {
+    const english = ((key: string, params?: Record<string, unknown>) =>
+      key === 'format.locale' ? 'en-US' : `${String(params?.['value'])}K`) as Parameters<typeof formatTokens>[1]
+    const spanish = ((key: string, params?: Record<string, unknown>) =>
+      key === 'format.locale' ? 'es-ES' : `${String(params?.['value'])} K`) as Parameters<typeof formatTokens>[1]
+    expect(formatTokens(12_200, english)).toBe('12.2K')
+    expect(formatTokens(12_200, spanish)).toBe('12,2 K')
+    expect(formatTokens(517_000, spanish)).toBe('517 K')
+  })
+
   it('formats throughput with whole tokens from ten up and one decimal below', () => {
-    expect(formatTokensPerSecond(34.4)).toBe('34')
-    expect(formatTokensPerSecond(9.96)).toBe('10')
-    expect(formatTokensPerSecond(3.14)).toBe('3.1')
-    expect(formatTokensPerSecond(-1)).toBe('0')
+    expect(formatTokensPerSecond(34.4, 'en-US')).toBe('34')
+    expect(formatTokensPerSecond(9.96, 'en-US')).toBe('10')
+    expect(formatTokensPerSecond(3.14, 'en-US')).toBe('3.1')
+    expect(formatTokensPerSecond(-1, 'en-US')).toBe('0')
+    expect(formatTokensPerSecond(3.14, 'es-ES')).toBe('3,1')
   })
 })

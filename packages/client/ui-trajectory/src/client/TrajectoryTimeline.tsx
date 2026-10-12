@@ -4,7 +4,7 @@ import {
   memo, useEffect, useMemo, useRef, useState, type CSSProperties, type KeyboardEvent,
   type PointerEvent,
 } from 'react'
-import { Tooltip } from '@deepseek-ai/dsh-client-ui-primitives'
+import { localeTag, Tooltip } from '@deepseek-ai/dsh-client-ui-primitives'
 import type { TrajectoryTurnModel } from './layout.ts'
 import type { TrajectoryTranslate } from './locales.ts'
 import type { AssistantMetricDetail, TrajectoryCellKind, TrajectoryCellProps } from './trajectory-record.ts'
@@ -94,8 +94,8 @@ function timelineKindLabel(kind: TrajectoryCellKind, t: TrajectoryTranslate): st
   }
 }
 
-function formatRecordedTime(timestamp: number): string {
-  return new Date(timestamp).toLocaleTimeString(undefined, {
+function formatRecordedTime(timestamp: number, tag: string): string {
+  return new Date(timestamp).toLocaleTimeString(localeTag(tag), {
     hour: '2-digit',
     minute: '2-digit',
     second: '2-digit',
@@ -116,9 +116,10 @@ function timelineTooltipLabel(
   const range = detail.startedAt === undefined
     ? null
     : detail.durationMs === undefined
-      ? t('timeline.started', { time: formatRecordedTime(detail.startedAt) })
-      : `${formatRecordedTime(detail.startedAt)} → ${formatRecordedTime(
+      ? t('timeline.started', { time: formatRecordedTime(detail.startedAt, t('format.locale')) })
+      : `${formatRecordedTime(detail.startedAt, t('format.locale'))} → ${formatRecordedTime(
         detail.startedAt + detail.durationMs,
+        t('format.locale'),
       )}`
   const segments = detail.ttftMs === undefined || detail.decodingMs === undefined
     ? null

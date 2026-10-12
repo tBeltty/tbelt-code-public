@@ -53,7 +53,7 @@ The panel renders outside the conversation container and stays within the viewpo
 |---|---|
 | [`src/client/mount.ts`](src/client/mount.ts) | Locale, navigation, and slot registrations |
 | [`src/client/TeamAction.tsx`](src/client/TeamAction.tsx) | Projection-derived roster and task board with panel interaction state |
-| [`src/client/locales.ts`](src/client/locales.ts) | English and Chinese panel copy |
+| [`src/client/locales.ts`](src/client/locales.ts) | English and Spanish panel copy |
 | [`src/index.ts`](src/index.ts) | Inert Host entry |
 
 </details>

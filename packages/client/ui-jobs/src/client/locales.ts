@@ -3,51 +3,8 @@
 /** Dictionary namespace owned by this plugin. */
 export const NS = 'job'
 
-/** Simplified Chinese dictionary (the key-set source of truth). */
-export const zh = {
-  'count.live.one': '{count} 个后台任务运行中',
-  'count.live.other': '{count} 个后台任务运行中',
-  'count.idle.one': '{count} 个后台任务',
-  'count.idle.other': '{count} 个后台任务',
-  'list.aria': '后台任务',
-  'section.live': '进行中',
-  'section.settledCount': '已结束 {count}',
-  'section.clear': '清空',
-  'row.expandAria': '展开 {label} 的实时输出',
-  'row.collapseAria': '收起 {label} 的实时输出',
-  'kill.stop': '停止任务 {label}',
-  'kill.confirm': '再次点击确认停止',
-  'kill.confirmAction': '确认停止',
-  'kill.failed': '停止失败',
-  'status.running': '运行中',
-  'status.stopping': '正在停止',
-  'status.completed': '已完成',
-  'status.killed': '已取消',
-  'status.failed': '已失败',
-  'duration.seconds': '{seconds}秒',
-  'duration.minutes': '{minutes}分{seconds}秒',
-  'duration.hours': '{hours}小时{minutes}分',
-  'duration.title.live': '已运行 {duration}',
-  'duration.title.done': '耗时 {duration}',
-  'output.gap': '……较早的输出已丢弃……',
-  'output.error': '实时输出流中断：{error}',
-  'terminal.signal': '信号 {signal}',
-  'terminal.exitCode': '退出码 {code}',
-  'terminal.noExitCode': '未正常退出',
-  'terminal.running': '运行中',
-  'terminal.failed': '已失败',
-  'terminal.done': '已完成',
-  'terminal.copy': '复制',
-  'terminal.copied': '已复制',
-  'terminal.noOutput': '（无输出）',
-  'terminal.collapse': '收起',
-  'terminal.collapseAria': '收起输出',
-  'terminal.expand': '展开其余 {n} 行',
-  'terminal.expandAria': '展开被折叠的 {n} 行输出',
-} as const
-
-/** English dictionary, key-identical to the Chinese source of truth. */
-export const en: Record<JobKey, string> = {
+/** English dictionary and key-set source of truth. */
+export const en = {
   'count.live.one': '{count} background job running',
   'count.live.other': '{count} background jobs running',
   'count.idle.one': '{count} background job',
@@ -87,7 +44,50 @@ export const en: Record<JobKey, string> = {
   'terminal.collapseAria': 'Collapse output',
   'terminal.expand': 'Show {n} more lines',
   'terminal.expandAria': 'Expand {n} collapsed output lines',
-}
+} satisfies Record<string, string>
 
-/** Key domain of the `job` namespace (zh is the source of truth). */
-export type JobKey = keyof typeof zh
+/** Spanish dictionary, checked complete against the English key set. */
+export const es = {
+  'count.live.one': '{count} tarea en segundo plano en curso',
+  'count.live.other': '{count} tareas en segundo plano en curso',
+  'count.idle.one': '{count} tarea en segundo plano',
+  'count.idle.other': '{count} tareas en segundo plano',
+  'list.aria': 'Tareas en segundo plano',
+  'section.live': 'En curso',
+  'section.settledCount': 'Terminadas {count}',
+  'section.clear': 'Borrar',
+  'row.expandAria': 'Mostrar la salida en vivo de {label}',
+  'row.collapseAria': 'Ocultar la salida en vivo de {label}',
+  'kill.stop': 'Detener la tarea {label}',
+  'kill.confirm': 'Haz clic de nuevo para confirmar',
+  'kill.confirmAction': 'Confirmar detención',
+  'kill.failed': 'No se pudo detener',
+  'status.running': 'en curso',
+  'status.stopping': 'deteniendo',
+  'status.completed': 'completada',
+  'status.killed': 'cancelada',
+  'status.failed': 'fallida',
+  'duration.seconds': '{seconds} s',
+  'duration.minutes': '{minutes} min {seconds} s',
+  'duration.hours': '{hours} h {minutes} min',
+  'duration.title.live': 'En curso desde hace {duration}',
+  'duration.title.done': 'Tardó {duration}',
+  'output.gap': '… salida anterior descartada …',
+  'output.error': 'se interrumpió la salida en vivo: {error}',
+  'terminal.signal': 'señal {signal}',
+  'terminal.exitCode': 'salida {code}',
+  'terminal.noExitCode': 'sin código de salida',
+  'terminal.running': 'en curso',
+  'terminal.failed': 'fallida',
+  'terminal.done': 'terminada',
+  'terminal.copy': 'Copiar',
+  'terminal.copied': 'Copiado',
+  'terminal.noOutput': '(sin salida)',
+  'terminal.collapse': 'Contraer',
+  'terminal.collapseAria': 'Contraer salida',
+  'terminal.expand': 'Mostrar {n} líneas más',
+  'terminal.expandAria': 'Expandir {n} líneas de salida contraídas',
+} satisfies Record<keyof typeof en, string>
+
+/** Key domain of the `job` namespace (English is the source of truth). */
+export type JobKey = keyof typeof en

@@ -144,6 +144,11 @@ export const SERVICE_API: readonly ServiceApiEntry[] = [
         parameters: [{ name: 'id', description: 'a registered locale id; unknown ids throw.' }],
       },
       {
+        signature: 'clearLocale(): void',
+        description: 'Return to automatic selection: the operating-system language (the browser language outside the native shell) decides, and the stored preference is removed.',
+        parameters: [],
+      },
+      {
         signature: 'addLanguage(input: LanguageRegistration): () => void',
         description: 'Add one selectable language to the shared catalog. Its fallback must already be registered, and following fallback definitions must terminate at English. Dictionaries may register before or after this definition. Registration rechecks an unresolved Host preference and the browser\'s ordered language list. The caller owns the returned disposer; removing an active language falls back without clearing the stored id.',
         parameters: [{ name: 'input', description: 'stable id, self-described label, and fallback language id.' }],

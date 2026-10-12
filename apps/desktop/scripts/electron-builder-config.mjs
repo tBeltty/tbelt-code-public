@@ -164,7 +164,7 @@ export function createElectronBuilderConfig(
       category: 'public.app-category.developer-tools',
       extendInfo: {
         // macOS matches the application locale against this bundle, not Electron Framework resources.
-        CFBundleLocalizations: ['en', 'zh_CN'],
+        CFBundleLocalizations: ['en', 'es'],
         NSMicrophoneUsageDescription: `${PRODUCT_NAME} uses your microphone to transcribe speech into message drafts.`,
       },
       // `-` ad-hoc signs an unsigned release so Apple Silicon will launch it.
@@ -266,7 +266,7 @@ export function createElectronBuilderConfig(
       perMachine: false,
       allowElevation: false,
       allowToChangeInstallationDirectory: false,
-      installerLanguages: ['en_US', 'zh_CN'],
+      installerLanguages: ['en_US', 'es_ES'],
       differentialPackage: true,
     },
     // The update dialog shows the changelog section named here; the release workflow writes both from CHANGELOG.md.

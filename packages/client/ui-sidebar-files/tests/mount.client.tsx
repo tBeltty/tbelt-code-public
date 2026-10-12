@@ -18,7 +18,7 @@ import { filesFace } from '../src/client/face.ts'
 import type { FilesInjected } from '../src/client/face.ts'
 import { FilesBody } from '../src/client/FilesBody.tsx'
 import type { FilesBodyProps } from '../src/client/FilesBody.tsx'
-import { zh } from '../src/client/locales.ts'
+import { es } from '../src/client/locales.ts'
 import { createFilesStore } from '../src/client/store.ts'
 import { scriptedList } from './scripted-list.client.ts'
 import type { ScriptedList } from './scripted-list.client.ts'
@@ -81,7 +81,7 @@ function harness(cwd: string | null, refreshShortcut?: ReturnType<FilesBodyProps
       sidebar: { expanded: true, fullscreen: false },
       panel: { id: 'pane-1' },
       tab: {
-        id: TAB, kind: 'files', contentId: 'files', title: zh['type.label'], visible: true,
+        id: TAB, kind: 'files', contentId: 'files', title: es['type.label'], visible: true,
         navigation: { address: 'files', params: undefined, revision: 1 },
         signal: controller.signal,
         actions: tabActions, refreshShortcut,
@@ -93,7 +93,7 @@ function harness(cwd: string | null, refreshShortcut?: ReturnType<FilesBodyProps
     useStore: hookOf(instance),
     actions: instance.actions,
     ...face,
-    t: makeTranslate(zh),
+    t: makeTranslate(es),
   }
   return { instance, script, face, controller, tabActions, shared }
 }

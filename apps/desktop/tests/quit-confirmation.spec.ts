@@ -6,7 +6,7 @@ import { DesktopQuitConfirmation, resolveDesktopQuitPrompt } from '../src/quit-c
 
 afterEach(() => { vi.restoreAllMocks() })
 
-function setup(platform: NodeJS.Platform, inspect: () => Promise<DesktopQuitInspection> | undefined, locale = 'zh') {
+function setup(platform: NodeJS.Platform, inspect: () => Promise<DesktopQuitInspection> | undefined, locale = 'es') {
   const shown: MessageBoxOptions[] = []
   let answer: MessageBoxReturnValue = { response: 0, checkboxChecked: false }
   const focus = vi.fn()
@@ -39,13 +39,13 @@ describe('DesktopQuitConfirmation', () => {
     expect([...idle.shown, ...starting.shown]).toEqual([])
   })
 
-  it('shows the macOS alert with the warning icon, Chinese copy, and Quit as the default right-hand button', async () => {
+  it('shows the macOS alert with the warning icon, Spanish copy, and Quit as the default right-hand button', async () => {
     const f = setup('darwin', async () => ({ activeTasks: true, scheduledTasks: true }))
     expect(await f.confirmation.confirm()).toBe(true)
     expect(f.shown).toEqual([{
-      type: 'warning', title: 'tBelt Code', message: '退出 tBelt Code？',
-      detail: '当前正在运行的任务将会中断，且应用关闭期间，定时任务不会运行',
-      buttons: ['退出', '取消'], defaultId: 0, cancelId: 1, noLink: true,
+      type: 'warning', title: 'tBelt Code', message: '¿Salir de tBelt Code?',
+      detail: 'Las tareas en curso se interrumpirán y las programadas no se ejecutarán mientras la app esté cerrada.',
+      buttons: ['Salir', 'Cancelar'], defaultId: 0, cancelId: 1, noLink: true,
     }])
   })
 
@@ -65,7 +65,7 @@ describe('DesktopQuitConfirmation', () => {
     const f = setup('darwin', async () => { throw new Error('desktop quit: inspection timed out') })
     f.answer(1)
     expect(await f.confirmation.confirm()).toBe(false)
-    expect(f.shown.map(options => options.detail)).toEqual(['当前正在运行的任务将会中断'])
+    expect(f.shown.map(options => options.detail)).toEqual(['Las tareas en curso se interrumpirán.'])
     expect(console.warn).toHaveBeenCalledWith('desktop quit: task inspection unavailable', expect.any(Error))
   })
 

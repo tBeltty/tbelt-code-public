@@ -15,6 +15,7 @@ import type {} from '@deepseek-ai/dsh-schedule/client'
 import type {} from '@deepseek-ai/dsh-subagent/client'
 import {
   Button, IconArchiveOutlineRegular, IconUnarchiveOutlineRegular, MenuItemButton, Modal, Tooltip,
+  pluralSuffix,
 } from '@deepseek-ai/dsh-client-ui-primitives'
 import type {
   ArchiveSessionInjected, SessionArchiveConfirmInjected, SessionArchiveConfirmProps, SessionArchiveConfirmRequest,
@@ -160,7 +161,7 @@ function activityLine(entry: SessionActivity, t: SessionArchiveConfirmProps['t']
   const items = entry.items ?? []
   const n = items.length
   const names = items.map(item => item.label ?? item.id).join(t('archive.confirm.listSeparator'))
-  const plural = n === 1 ? 'one' : 'other'
+  const plural = pluralSuffix(t('format.locale'), n)
   switch (entry.kind) {
     case 'turn': return t('archive.confirm.turn')
     case 'subagent': return t(`archive.confirm.subagents.${plural}`, { n, names })

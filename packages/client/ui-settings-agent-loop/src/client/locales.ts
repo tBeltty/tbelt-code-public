@@ -9,7 +9,7 @@ export type AgentLoopSettingsLocaleKey =
   | 'save' | 'saving' | 'saveFailed' | 'invalidNumber'
 
 /** English copy. */
-export const en: Record<AgentLoopSettingsLocaleKey, string> = {
+export const en = {
   title: 'Agent loop',
   description: 'Control how the Agent dispatches tool calls.',
   maxParallel: 'Parallel tool calls',
@@ -22,23 +22,23 @@ export const en: Record<AgentLoopSettingsLocaleKey, string> = {
   saving: 'Saving…',
   saveFailed: 'The deployment did not accept these values; they were left for you to correct.',
   invalidNumber: 'Enter a number, or leave blank to use the default.',
-}
+} satisfies Record<string, string>
 
-/** Simplified Chinese copy. */
-export const zh: Record<AgentLoopSettingsLocaleKey, string> = {
-  title: 'Agent 循环',
-  description: '控制 Agent 派发工具调用的方式。',
-  maxParallel: '并行工具调用数',
-  maxParallelHint: '同一步内最多同时运行多少个可并行的调用。',
-  overridden: '已覆盖',
-  reset: '恢复默认',
-  readOnly: '本部署的设置为只读。',
-  unavailable: '该插件当前未加载，暂时无法配置。',
-  save: '保存',
-  saving: '保存中…',
-  saveFailed: '本部署没有接受这些值，已保留供你修改。',
-  invalidNumber: '请填数字；留空表示使用默认值。',
-}
+/** Spanish dictionary, checked complete against the English key set. */
+export const es = {
+  title: 'Bucle del agente',
+  description: 'Controla cómo el agente despacha las llamadas a herramientas.',
+  maxParallel: 'Llamadas a herramientas en paralelo',
+  maxParallelHint: 'Límite superior de llamadas seguras en paralelo que se ejecutan a la vez en un mismo paso.',
+  overridden: 'Modificado',
+  reset: 'Restablecer el valor predeterminado',
+  readOnly: 'Esta instalación guarda los ajustes en modo de solo lectura.',
+  unavailable: 'Este plugin no está cargado, así que ahora no se puede configurar.',
+  save: 'Guardar',
+  saving: 'Guardando…',
+  saveFailed: 'La instalación no aceptó estos valores; se dejaron para que los corrijas.',
+  invalidNumber: 'Introduce un número, o déjalo en blanco para usar el valor predeterminado.',
+} satisfies Record<keyof typeof en, string>
 
 /**
  * The form frame's copy, read from this page's dictionary.

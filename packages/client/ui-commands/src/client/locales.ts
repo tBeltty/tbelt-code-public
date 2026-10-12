@@ -5,42 +5,10 @@
  * popupSelect shell's copy.
  */
 
-/** Simplified Chinese dictionary (the key-set source of truth). */
-export const zh = {
-  'section.add': '添加',
-  'section.commands': '指令',
-  'label.goal': '目标',
-  'label.plan': '计划',
-  'label.feedback': '反馈',
-  'label.compact': '压缩',
-  'label.permission': '权限',
-  'label.export': '下载日志',
-  'description.goal': '设置或查看长期任务目标',
-  'description.plan': '进入或退出计划模式',
-  'description.feedback': '发送关于当前会话的反馈',
-  'description.compact': '压缩以上对话内容',
-  'description.permission': '切换权限预设（沙箱模式与审批策略）',
-  'description.export': '将当前会话内容导出为 ZIP',
-  'token.goal': '目标',
-  'token.plan': '计划',
-  'token.feedback': '反馈',
-  'token.compact': '压缩',
-  'token.permission': '权限',
-  'token.export': '导出',
-  'search.placeholder': '搜索…',
-  'search.aria': '筛选选项',
-  'status.loading': '正在加载选项…',
-  'status.applying': '正在应用…',
-  'status.empty': '无选项',
-  'overlay.aria': '/{command} 选项',
-  'listbox.aria': '/{command} 匹配项',
-  'notice.attachmentsUnsupported': '/{command} 不接受附件，请先移除附件',
-} satisfies Record<string, string>
-
 /** The command namespace key union. */
-export type CommandKey = keyof typeof zh
+export type CommandKey = keyof typeof en
 
-/** English dictionary, checked complete against the zh key set. */
+/** English dictionary and key-set source of truth. */
 export const en = {
   'section.add': 'Add',
   'section.commands': 'Commands',
@@ -70,4 +38,36 @@ export const en = {
   'overlay.aria': '/{command} options',
   'listbox.aria': '/{command} matches',
   'notice.attachmentsUnsupported': '/{command} does not accept attachments; remove them first',
-} satisfies Record<CommandKey, string>
+} satisfies Record<string, string>
+
+/** Spanish dictionary, checked complete against the English key set. */
+export const es = {
+  'section.add': 'Añadir',
+  'section.commands': 'Comandos',
+  'label.goal': 'Objetivo',
+  'label.plan': 'Plan',
+  'label.feedback': 'Comentarios',
+  'label.compact': 'Compactar',
+  'label.permission': 'Permisos',
+  'label.export': 'Exportar',
+  'description.goal': 'Define o consulta el objetivo de una tarea larga',
+  'description.plan': 'Entra o sal del modo plan',
+  'description.feedback': 'Registra comentarios sobre esta sesión',
+  'description.compact': 'Compacta el historial más antiguo de la conversación',
+  'description.permission': 'Cambia el preajuste de permisos (modo sandbox y política de aprobación)',
+  'description.export': 'Descarga el registro de esta sesión como archivo ZIP',
+  'token.goal': 'objetivo',
+  'token.plan': 'plan',
+  'token.feedback': 'comentarios',
+  'token.compact': 'compactar',
+  'token.permission': 'permisos',
+  'token.export': 'exportar',
+  'search.placeholder': 'Buscar…',
+  'search.aria': 'Filtrar opciones',
+  'status.loading': 'Cargando opciones…',
+  'status.applying': 'Aplicando…',
+  'status.empty': 'Sin opciones',
+  'overlay.aria': 'Opciones de /{command}',
+  'listbox.aria': 'Coincidencias de /{command}',
+  'notice.attachmentsUnsupported': '/{command} no admite adjuntos; quítalos primero',
+} satisfies Record<keyof typeof en, string>

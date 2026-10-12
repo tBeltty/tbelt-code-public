@@ -11,15 +11,15 @@ import { useSyncExternalStore } from 'react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { act, cleanup, fireEvent, render } from '@testing-library/react'
 import { makeTranslate } from '@deepseek-ai/dsh-client-test-runtime'
-import { zh as commonZh } from '@deepseek-ai/dsh-client-locale/src/locales/zh.ts'
+import { es as commonEs } from '@deepseek-ai/dsh-client-locale/src/locales/es.ts'
 import { FEEDBACK_CATEGORIES } from '@deepseek-ai/dsh-command-feedback'
 import { FeedbackDialog } from '../src/client/FeedbackDialog.tsx'
 import type { FeedbackDialogState } from '../src/client/dialog.ts'
-import { en, zh } from '../src/client/locales.ts'
+import { en, es } from '../src/client/locales.ts'
 
 afterEach(cleanup)
 
-const t = makeTranslate(zh, commonZh)
+const t = makeTranslate(es, commonEs)
 
 /** Render the entry over a fixed state and recording verbs. */
 function mount(overrides: Partial<FeedbackDialogState> = {}) {
@@ -42,9 +42,9 @@ function mount(overrides: Partial<FeedbackDialogState> = {}) {
 
 describe('FeedbackDialog', () => {
   it('owns the conversation-log disclosure and stability category in both supported locales', () => {
-    expect(zh['dialog.hint']).toBe('填写详情以帮助我们改进体验，提交内容会包括当前对话的日志')
+    expect(es['dialog.hint']).toBe('Añade detalles para ayudarnos a mejorar. El envío incluirá el registro de la conversación actual.')
     expect(en['dialog.hint']).toBe('Add details to help us improve. Your submission will include the current conversation log.')
-    expect(zh['category.service-stability']).toBe('稳定性和速度')
+    expect(es['category.service-stability']).toBe('Estabilidad y velocidad')
     expect(en['category.service-stability']).toBe('Stability and speed')
   })
 
@@ -58,20 +58,20 @@ describe('FeedbackDialog', () => {
   it('shows every category, the detail box with the hint, and an enabled Submit for an empty draft', () => {
     const ui = mount()
 
-    const dialog = ui.getByRole('dialog', { name: zh['dialog.title'] })
+    const dialog = ui.getByRole('dialog', { name: es['dialog.title'] })
     expect(dialog).toBeTruthy()
-    const chips = ui.getByRole('group', { name: zh['dialog.categories'] }).querySelectorAll('button')
+    const chips = ui.getByRole('group', { name: es['dialog.categories'] }).querySelectorAll('button')
     expect([...chips].map(chip => chip.textContent)).toEqual(
-      FEEDBACK_CATEGORIES.map(category => zh[`category.${category}`]),
+      FEEDBACK_CATEGORIES.map(category => es[`category.${category}`]),
     )
-    expect(ui.getByLabelText(zh['dialog.detail']).getAttribute('placeholder')).toBe(zh['dialog.hint'])
-    expect(ui.getByRole('button', { name: commonZh.submit }).hasAttribute('disabled')).toBe(false)
+    expect(ui.getByLabelText(es['dialog.detail']).getAttribute('placeholder')).toBe(es['dialog.hint'])
+    expect(ui.getByRole('button', { name: commonEs.submit }).hasAttribute('disabled')).toBe(false)
   })
 
   it('selects a chip, and clears it when the selected chip is clicked again', () => {
     const ui = mount({ category: 'task-result' })
 
-    const chips = ui.getByRole('group', { name: zh['dialog.categories'] }).querySelectorAll('button')
+    const chips = ui.getByRole('group', { name: es['dialog.categories'] }).querySelectorAll('button')
     expect(chips[0]?.getAttribute('aria-pressed')).toBe('true')
     expect(chips[1]?.getAttribute('aria-pressed')).toBe('false')
 
@@ -84,37 +84,37 @@ describe('FeedbackDialog', () => {
   it('forwards typing, submits, and closes through the injected verbs', () => {
     const ui = mount({ text: 'draft' })
 
-    fireEvent.change(ui.getByLabelText(zh['dialog.detail']), { target: { value: 'draft more' } })
+    fireEvent.change(ui.getByLabelText(es['dialog.detail']), { target: { value: 'draft more' } })
     expect(ui.edit).toHaveBeenCalledWith({ text: 'draft more' })
 
-    fireEvent.click(ui.getByRole('button', { name: commonZh.submit }))
+    fireEvent.click(ui.getByRole('button', { name: commonEs.submit }))
     expect(ui.submit).toHaveBeenCalledTimes(1)
 
-    fireEvent.click(ui.getByRole('button', { name: commonZh.close }))
+    fireEvent.click(ui.getByRole('button', { name: commonEs.close }))
     expect(ui.dismiss).toHaveBeenCalledTimes(1)
   })
 
   it('disables Submit and the chips while a submission is in flight', () => {
     const ui = mount({ submitting: true })
 
-    expect(ui.getByRole('button', { name: commonZh.submitting }).hasAttribute('disabled')).toBe(true)
-    const chips = ui.getByRole('group', { name: zh['dialog.categories'] }).querySelectorAll('button')
+    expect(ui.getByRole('button', { name: commonEs.submitting }).hasAttribute('disabled')).toBe(true)
+    const chips = ui.getByRole('group', { name: es['dialog.categories'] }).querySelectorAll('button')
     expect([...chips].every(chip => chip.hasAttribute('disabled'))).toBe(true)
   })
 
   it('renders submission failures as toasts outside the dialog', () => {
     const conflict = mount({ failure: 'version-conflict' })
     const conflictToast = conflict.getByRole('alert')
-    expect(conflictToast.textContent).toBe(zh['error.conflict'])
+    expect(conflictToast.textContent).toBe(es['error.conflict'])
     expect(conflict.getByRole('dialog').contains(conflictToast)).toBe(false)
     cleanup()
 
     const oversized = mount({ failure: 'note-too-large' })
-    expect(oversized.getByRole('alert').textContent).toBe(zh['error.noteTooLarge'])
+    expect(oversized.getByRole('alert').textContent).toBe(es['error.noteTooLarge'])
     cleanup()
 
     const other = mount({ failure: 'session-not-found' })
-    expect(other.getByRole('alert').textContent).toBe(zh['error.generic'])
+    expect(other.getByRole('alert').textContent).toBe(es['error.generic'])
   })
 
   it('retires a submission-failure toast after its extended hold', () => {
@@ -143,7 +143,7 @@ describe('FeedbackDialog', () => {
     try {
       const ui = mount({ target: null, toast: 3 })
 
-      expect(ui.getByRole('alert').textContent).toBe(zh['toast.recorded'])
+      expect(ui.getByRole('alert').textContent).toBe(es['toast.recorded'])
       act(() => { vi.advanceTimersByTime(4000) })
       expect(ui.dismissToast).toHaveBeenCalledWith(3)
     } finally {

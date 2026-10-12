@@ -4,9 +4,9 @@
  */
 
 /** The configuration screens a slash command opens. */
-export type ConfigScreenName = 'providers' | 'web-search' | 'settings' | 'plugins' | 'agents' | 'permissions'
+export type ConfigScreenName = 'providers' | 'web-search' | 'settings' | 'plugins' | 'agents' | 'permissions' | 'language'
 
-const CONFIG_SCREENS: ReadonlySet<string> = new Set<ConfigScreenName>(['providers', 'web-search', 'settings', 'plugins', 'agents', 'permissions'])
+const CONFIG_SCREENS: ReadonlySet<string> = new Set<ConfigScreenName>(['providers', 'web-search', 'settings', 'plugins', 'agents', 'permissions', 'language'])
 
 /** The panels a slash command opens: views and actions over the session's queue, files, work in progress and workspace. */
 export type PanelName =

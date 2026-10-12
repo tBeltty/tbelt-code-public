@@ -22,6 +22,7 @@ import {
   IconFlatListOutlineRegular, IconFolderCloseRegular, IconProjectAddOutlineRegular,
   IconQueueOutlineRegular, IconSearchOutlineRegular, IconSlidersTwoOutlineRegular,
   IconWarningOutlineRegular, IconWorkspaceTreeOutlineRegular, Menu, Modal, Toast, Tooltip,
+  pluralSuffix,
 } from '@deepseek-ai/dsh-client-ui-primitives'
 import type {
   SessionListState, SessionSearchResultItem,
@@ -111,7 +112,7 @@ function AttentionToggle({ count, active, onToggle, t }: {
 }) {
   const label = active
     ? t('attention.hide')
-    : count === 0 ? t('attention.show') : t(count === 1 ? 'attention.count.one' : 'attention.count.other', { n: count })
+    : count === 0 ? t('attention.show') : t(`attention.count.${pluralSuffix(t('format.locale'), count)}`, { n: count })
   return (
     <Tooltip label={label} side="bottom" delayMs={500}>
       <button

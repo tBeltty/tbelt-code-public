@@ -15,7 +15,12 @@ import css from './LanguageRow.module.css'
 export interface LanguageRowInjected {
   /** Switch the active locale (a registered locale id). */
   setLocale: (id: string) => void
+  /** Return to the system language and drop the stored selection. */
+  clearLocale: () => void
 }
+
+/** Menu id of the automatic entry; locale ids cannot contain `@`. */
+const AUTOMATIC = '@auto'
 
 /** Full component props: runtime share + store share + locale seat + injected face. */
 export type LanguageRowComponentProps =
@@ -27,11 +32,13 @@ export type LanguageRowComponentProps =
  * @param props - composed slot props.
  * @returns the row element tree.
  */
-export function LanguageRow({ t, setLocale, useStore }: LanguageRowComponentProps) {
-  const active = useStore(s => s.active)
+export function LanguageRow({ t, setLocale, clearLocale, useStore }: LanguageRowComponentProps) {
+  const preference = useStore(s => s.preference)
   const options = useStore(s => s.options)
   const [open, setOpen] = useState(false)
-  const activeLabel = options.find(o => o.id === active)?.label ?? active
+  const items = [{ id: AUTOMATIC, label: t('language.auto') }, ...options.map(o => ({ id: o.id, label: o.label }))]
+  const selectedId = preference === undefined ? AUTOMATIC : preference
+  const activeLabel = items.find(o => o.id === selectedId)?.label ?? selectedId
 
   return (
     <div className={css.row}>
@@ -41,10 +48,11 @@ export function LanguageRow({ t, setLocale, useStore }: LanguageRowComponentProp
       <Menu
         open={open}
         onClose={() => { setOpen(false) }}
-        items={options.map(o => ({ id: o.id, label: o.label }))}
-        selectedId={active}
+        items={items}
+        selectedId={selectedId}
         onSelect={(id) => {
-          setLocale(id)
+          if (id === AUTOMATIC) clearLocale()
+          else setLocale(id)
           setOpen(false)
         }}
         align="end"

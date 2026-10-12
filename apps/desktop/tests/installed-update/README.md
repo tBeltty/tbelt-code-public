@@ -4,8 +4,6 @@ description: "Operator checklist for a Windows installed update with a failed do
 
 # Windows installed-update walkthrough
 
-English | [中文](README.zh.md)
-
 ## Summary
 
 Prepare a private test application and fresh test distribution namespace, then let the operator install, inject a fault, retry, and confirm restart. A local manifest or complete journal sequence does not certify an installer or preserved data. The installed-app steps below remain unverified until the operator performs them with verified packages.

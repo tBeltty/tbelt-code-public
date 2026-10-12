@@ -66,6 +66,8 @@ export interface TerminalDeps {
   readonly imageProtocol: ImageProtocol
   /** Clock reading in epoch milliseconds. */
   readonly now: () => number
+  /** Process environment that names the terminal's language. */
+  readonly languageEnvironment: Readonly<Record<string, string | undefined>>
 }
 
 /** Inputs of one {@link TerminalSession}. */
@@ -603,7 +605,11 @@ export class TerminalSession {
   /** Run a configuration screen in place of the composer; one screen at a time. */
   #openConfig(screen: ConfigScreen): void {
     const { binding, deps } = this.#options
-    const session = { sessionId: binding.sessionId, command: (line: string) => this.#session.command(line) }
+    const session = {
+      sessionId: binding.sessionId,
+      command: (line: string) => this.#session.command(line),
+      languageEnvironment: deps.languageEnvironment,
+    }
     this.#runFlow(ui => runConfigScreen(screen, deps.client, ui, session))
   }
 

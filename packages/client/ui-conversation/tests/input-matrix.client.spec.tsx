@@ -19,12 +19,12 @@ import type { SessionStatusSnapshot } from '@deepseek-ai/dsh-client-ui-session/c
 import type { SessionId } from '@deepseek-ai/dsh-session/types'
 import type { SubmitAttachment, SubmitOutcome } from '../src/client/contract/input.ts'
 import { makeTranslate } from '@deepseek-ai/dsh-client-test-runtime'
-import { zh as commonZh } from '@deepseek-ai/dsh-client-locale/src/locales/zh.ts'
+import { es as commonEs } from '@deepseek-ai/dsh-client-locale/src/locales/es.ts'
 import type { DraftAttachmentId } from '../src/client/contract/input.ts'
 import { SessionInputShell } from '../src/client/input/facade.ts'
 import { InputBar } from '../src/client/skeleton/InputBar.tsx'
 import type { InputBarProps } from '../src/client/skeleton/InputBar.tsx'
-import { zh } from '../src/client/locales.ts'
+import { es } from '../src/client/locales.ts'
 
 // Every fixture carries the resource hook the resources plugin merges into GlobalStandardProps.
 const useResource = (() => ({ status: 'none' as const, value: undefined, failure: undefined })) as GlobalStandardProps['useResource']
@@ -90,7 +90,7 @@ function mountBar(shell: SessionInputShell, over?: { running?: boolean; disabled
     useMenuLauncher: bindSnapshotSelector(createSnapshotStore<string | null>(null)),
     renderSlot: (() => null) as InputBarProps['renderSlot'],
     stop: vi.fn(),
-    t: makeTranslate(zh, commonZh),
+    t: makeTranslate(es, commonEs),
     variant: 'composer',
   }
   return render(<InputBar {...props} />)
@@ -165,8 +165,8 @@ describe('matrix row: claimed', () => {
     act(() => { shell.editor.update(() => {}, { discrete: true }) }) // flush the queued decoration refresh
     expect(shell.snapshot.claim).toEqual({ name: 'goal', token: '/goal ', hint: '目标' })
     expect(view.container.querySelector('[data-lexical-text][style*="business-primary"]')?.textContent).toBe('/goal ')
-    // The zh dictionary owns a hint.goal entry, which overrides the raw claim hint (production behavior).
-    expect(textarea.style.getPropertyValue('--dsh-composer-hint')).toBe(JSON.stringify('输入目标，智能体将持续执行'))
+    // The es dictionary owns a hint.goal entry, which overrides the raw claim hint (production behavior).
+    expect(textarea.style.getPropertyValue('--dsh-composer-hint')).toBe(JSON.stringify('describe el objetivo de una tarea larga'))
     expect(textarea.getAttribute('contenteditable')).toBe('true')
     // Free editing beyond the token: hint drops, claim holds.
     act(() => { shell.setDraft('/goal 发布版本') })
@@ -175,7 +175,7 @@ describe('matrix row: claimed', () => {
   })
 
   it('enter routes to claim.submit (command lane, never the queue sink)', async () => {
-    const submit = vi.fn(() => Promise.resolve({ kind: 'success' as const, text: '完成', source: 'command', name: 'goal' }))
+    const submit = vi.fn(() => Promise.resolve({ kind: 'success' as const, text: 'Listo', source: 'command', name: 'goal' }))
     const { view, textarea, shell, sink, claim } = bench({ submit })
     claim()
     act(() => { shell.setDraft('/goal 发布') })
@@ -184,7 +184,7 @@ describe('matrix row: claimed', () => {
     await vi.waitFor(() => { expect(submit).toHaveBeenCalledWith('发布', SCTX, []) })
     // Commit: draft cleared, notice surfaced, back to plain.
     await vi.waitFor(() => { expect(shell.snapshot.draft).toBe('') })
-    expect(view.getByText('完成')).toBeTruthy()
+    expect(view.getByText('Listo')).toBeTruthy()
   })
 
   it('backspacing the token auto-releases to plain and the visuals vanish (scenario H)', () => {
@@ -235,13 +235,13 @@ describe('matrix row: claimed with attachments', () => {
   })
 
   it('a handler error keeps a serialized file unreleased beside the notice and draft', async () => {
-    const submit = vi.fn(() => Promise.resolve({ kind: 'error' as const, text: '处理失败' }))
+    const submit = vi.fn(() => Promise.resolve({ kind: 'error' as const, text: 'Falló' }))
     const file: SubmitAttachment = { type: 'file', receiptId: 'receipt-x' }
     const { view, textarea, shell, claim, release } = bench({ submit, serialize: () => Promise.resolve([file]) })
     claim('/goal ', '目标', true)
     act(() => { shell.addAttachments([img]) })
     fireEvent.keyDown(textarea, { key: 'Enter' })
-    await vi.waitFor(() => { expect(view.getByText('处理失败')).toBeTruthy() })
+    await vi.waitFor(() => { expect(view.getByText('Falló')).toBeTruthy() })
     expect(shell.snapshot.phase).toBe('claimed')
     expect(shell.snapshot.attachmentIds).toEqual([img])
     expect(release).not.toHaveBeenCalled()
@@ -345,7 +345,7 @@ describe('matrix row: locked (session disabled)', () => {
   it('disables the textarea and chrome; the machine currency is untouched', () => {
     const { view, textarea, shell } = bench({ disabled: true })
     expect(textarea.getAttribute('aria-disabled')).toBe('true')
-    expect((view.getByLabelText('添加文件或调用指令') as HTMLButtonElement).disabled).toBe(true)
+    expect((view.getByLabelText('Añadir archivos o ejecutar comandos') as HTMLButtonElement).disabled).toBe(true)
     expect(shell.snapshot.phase).toBe('plain')
   })
 

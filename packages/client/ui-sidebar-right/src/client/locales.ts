@@ -6,48 +6,10 @@
  * vocabulary is this package's to own and translate.
  */
 
-/** Simplified Chinese dictionary and key-set source of truth. */
-export const zh = {
-  'command.close': '关闭当前页面／窗口',
-  'command.refresh': '刷新当前页面',
-  'command.noRefresh': '当前页面不支持刷新',
-  'command.toggle': '展开／收起右侧栏',
-  'command.fullscreen': '面板全屏／退出全屏',
-  'command.noSession': '请先选择会话',
-  'command.noFocus': '请先聚焦右侧面板',
-  'command.stale': '页面已切换，请重新聚焦',
-  'command.collapsed': '请先展开右侧栏',
-  'command.float': '浮动面板不支持此操作',
-  'command.empty': '请先打开页面',
-  'command.budget': '已达两格上限',
-  'command.width': '栏宽不足，拖宽侧边栏后再分栏',
-  'chrome.expand': '打开侧边栏',
-  'chrome.expandAria': '打开右侧边栏',
-  'chrome.collapse': '收起侧边栏',
-  'chrome.collapseAria': '收起右侧边栏',
-  'chrome.toFullscreen': '全屏',
-  'chrome.exitFullscreen': '退出全屏',
-  'dock.emptyPane': '空面板',
-  'dock.splitPane': '分栏',
-  'dock.splitPaneDisabled': '已达两格上限',
-  'dock.splitPaneNarrow': '栏宽不足，拖宽侧边栏后再分栏',
-  'dock.closeTab': '关闭',
-  'dock.addTab': '新标签页',
-  'dock.dockFloat': '收回到侧边栏',
-  'dock.closeFloat': '关闭',
-  'dock.drop.center': '移到这里',
-  'dock.drop.left': '左分栏',
-  'dock.drop.right': '右分栏',
-  'dock.drop.top': '上分栏',
-  'dock.drop.bottom': '下分栏',
-  'tab.guide.title': '开始',
-  'tab.unavailable': '这类内容还没有可用的查看方式。',
-} satisfies Record<string, string>
-
 /** Right-Sidebar dictionary key union. */
-export type SidebarRightKey = keyof typeof zh
+export type SidebarRightKey = keyof typeof en
 
-/** English dictionary, checked against the Chinese key set. */
+/** English dictionary and key-set source of truth. */
 export const en = {
   'command.close': 'Close current page or window',
   'command.refresh': 'Refresh current page',
@@ -83,4 +45,42 @@ export const en = {
   'dock.drop.bottom': 'Add bottom split',
   'tab.guide.title': 'Start',
   'tab.unavailable': 'Nothing here can view this kind of content yet.',
-} satisfies Record<SidebarRightKey, string>
+} satisfies Record<string, string>
+
+/** Spanish dictionary, checked complete against the English key set. */
+export const es = {
+  'command.close': 'Cerrar la página o ventana actual',
+  'command.refresh': 'Actualizar la página actual',
+  'command.noRefresh': 'Esta página no se puede actualizar',
+  'command.toggle': 'Mostrar u ocultar la barra lateral derecha',
+  'command.fullscreen': 'Alternar panel en pantalla completa',
+  'command.noSession': 'Selecciona primero una sesión',
+  'command.noFocus': 'Enfoca primero un panel de la barra lateral derecha',
+  'command.stale': 'La página cambió; vuelve a enfocarla',
+  'command.collapsed': 'Expande primero la barra lateral derecha',
+  'command.float': 'Esta acción no está disponible en un panel flotante',
+  'command.empty': 'Abre primero una página',
+  'command.budget': 'El límite es de dos paneles',
+  'command.width': 'No hay ancho suficiente para dividir; ensancha la barra lateral',
+  'chrome.expand': 'Abrir barra lateral',
+  'chrome.expandAria': 'Abrir barra lateral derecha',
+  'chrome.collapse': 'Contraer barra lateral',
+  'chrome.collapseAria': 'Contraer barra lateral derecha',
+  'chrome.toFullscreen': 'Pantalla completa',
+  'chrome.exitFullscreen': 'Salir de pantalla completa',
+  'dock.emptyPane': 'Panel vacío',
+  'dock.splitPane': 'Dividir',
+  'dock.splitPaneDisabled': 'El límite es de dos paneles',
+  'dock.splitPaneNarrow': 'No hay ancho suficiente para dividir; ensancha la barra lateral',
+  'dock.closeTab': 'Cerrar',
+  'dock.addTab': 'Nueva pestaña',
+  'dock.dockFloat': 'Devolver a la barra lateral',
+  'dock.closeFloat': 'Cerrar',
+  'dock.drop.center': 'Mover aquí',
+  'dock.drop.left': 'Añadir división a la izquierda',
+  'dock.drop.right': 'Añadir división a la derecha',
+  'dock.drop.top': 'Añadir división arriba',
+  'dock.drop.bottom': 'Añadir división abajo',
+  'tab.guide.title': 'Inicio',
+  'tab.unavailable': 'Aquí todavía no se puede ver este tipo de contenido.',
+} satisfies Record<keyof typeof en, string>

@@ -1,4 +1,5 @@
 /** Browser-safe formatting shared by Session and Host reminder catalogs. */
+import { pluralSuffix } from '@deepseek-ai/dsh-client-ui-primitives'
 import type { Translate } from '@deepseek-ai/dsh-client-ui-slots'
 import type { ScheduleRecord } from '@deepseek-ai/dsh-schedule/client'
 import { assertNever } from '@deepseek-ai/dsh-util-values'
@@ -46,7 +47,7 @@ export interface FrequencyZone {
 }
 
 /** Dictionary keys required to display relative reminder targets. */
-export type RelativeTimeKey = UnitKey | 'relative.now' | 'relative.future' | 'relative.overdue'
+export type RelativeTimeKey = UnitKey | 'time.locale' | 'relative.now' | 'relative.future' | 'relative.overdue'
 
 const SECOND_MS = 1_000
 const SECOND_UNIT = { unit: 'second', seconds: 1 } as const
@@ -62,8 +63,8 @@ const WEEKDAY_KEYS = [
 ] as const satisfies readonly WeekdayKey[]
 
 /** Localized unit word for one integral magnitude. */
-function unitLabel(unit: TimeUnit, value: number, t: Translate<UnitKey>): string {
-  return t(`unit.${unit}.${value === 1 ? 'one' : 'other'}`, { count: value })
+function unitLabel(unit: TimeUnit, value: number, t: Translate<UnitKey | 'time.locale'>): string {
+  return t(`unit.${unit}.${pluralSuffix(t('time.locale'), value)}`, { count: value })
 }
 
 /**
@@ -303,7 +304,7 @@ export function formatScheduleFrequency(
  * cards use.
  *
  * The month is a locale-owned name, not a zero-padded number: `en` renders
- * `Dec 31, 9:00 AM` and `zh-CN` renders `12月31日 09:00`, so neither locale can
+ * `Dec 31, 9:00 AM` and `es` renders `31 dic, 9:00`, so neither locale can
  * produce a `12-31` string. The year appears only when the instant falls outside
  * the current year in the displayed zone, so a same-year target or delivery
  * stays compact while an older record still dates itself.
@@ -334,42 +335,16 @@ export function formatScheduleNextRun(scheduledAt: string, locale: string, timeZ
 }
 
 /**
- * Languages whose absolute date reads the year. The design pins English and
- * Chinese (`en` states it, `zh` reads month and day only), and every other
- * language joins English: silently dropping the year would hide the year of a
- * target that can sit months or a year away.
- */
-const YEAR_LANGUAGES: readonly string[] = ['en']
-const NO_YEAR_LANGUAGES: readonly string[] = ['zh']
-
-/**
- * Whether one locale's absolute date states the year.
- * @param locale - BCP-47 locale tag.
- * @returns whether the year is stated; an unlisted language states it.
- */
-function statesYear(locale: string): boolean {
-  const language = locale.toLowerCase().replace(/-.*$/, '')
-  if (YEAR_LANGUAGES.includes(language)) return true
-  if (NO_YEAR_LANGUAGES.includes(language)) return false
-  // Unlisted languages take the stated default, so no language silently loses
-  // the year for a target that can sit months or a year away.
-  return true
-}
-
-/**
  * Format one target as an absolute time in this device's zone.
  *
  * A task whose stored rule names its own zone still shows its next run in the
  * reader's zone: the instant is the same one, and the reader compares it with
  * their own clock. The locale owns the month name, the field order, and the
  * separators, so the stamp reads `Sep 19, 2026, 15:51` in English and
- * `9月19日 15:51` in Chinese.
+ * `19 sept 2026, 15:51` in Spanish.
  *
- * Whether a bare date reads the year is a per-language typographic choice, and
- * the languages the design pins are stated in {@link YEAR_LANGUAGES} and
- * {@link NO_YEAR_LANGUAGES}. Every language not listed there states the year:
- * dropping it silently would hide the year of a target that can sit months or a
- * year away, which is worse than one field more than the reader needs.
+ * The year is always stated: dropping it would hide the year of a target that
+ * can sit months or a year away.
  * @param scheduledAt - durable UTC target.
  * @param locale - BCP-47 locale owning the month name, field order, and clock.
  * @returns the localized absolute next run in the device zone, or the raw instant when it cannot be parsed.
@@ -378,7 +353,7 @@ export function formatScheduleAbsolute(scheduledAt: string, locale: string): str
   const at = Date.parse(scheduledAt)
   if (Number.isNaN(at)) return scheduledAt
   return new Intl.DateTimeFormat(locale, {
-    ...(statesYear(locale) ? { year: 'numeric' as const } : {}),
+    year: 'numeric',
     month: 'short',
     day: 'numeric',
     hour: '2-digit',

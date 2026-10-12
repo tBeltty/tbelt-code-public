@@ -26,13 +26,13 @@ import {
 } from '@deepseek-ai/dsh-client-test-runtime'
 import type { SessionStatusSnapshot } from '@deepseek-ai/dsh-client-ui-session/client'
 import type { SessionId } from '@deepseek-ai/dsh-session/types'
-import { zh as commonZh } from '@deepseek-ai/dsh-client-locale/src/locales/zh.ts'
+import { es as commonEs } from '@deepseek-ai/dsh-client-locale/src/locales/es.ts'
 import type { DraftAttachmentId } from '../src/client/contract/input.ts'
 import { SessionInputShell } from '../src/client/input/facade.ts'
 import { $replaceDetectSpanWithText } from '../src/client/input/editor/span-map.ts'
 import { InputBar } from '../src/client/skeleton/InputBar.tsx'
 import type { InputBarProps } from '../src/client/skeleton/InputBar.tsx'
-import { zh } from '../src/client/locales.ts'
+import { es } from '../src/client/locales.ts'
 
 // Every fixture carries the resource hook the resources plugin merges into GlobalStandardProps.
 const useResource = (() => ({ status: 'none' as const, value: undefined, failure: undefined })) as GlobalStandardProps['useResource']
@@ -110,7 +110,7 @@ function commandSource(
 }
 
 const COMMANDS: FakeCommand[] = [
-  { name: 'goal', description: '设定目标', input: { hint: '目标内容' } },
+  { name: 'goal', description: '设定目标', input: { hint: 'Meta del objetivo' } },
   { name: 'compact', description: '压缩上下文' },
   { name: 'vision', description: '识别图片', input: { hint: '想问什么', attachments: true } },
 ]
@@ -193,7 +193,7 @@ async function scopedBench(register?: (inputTriggers: InputTriggerService) => vo
     renderSlot: (() => null) as InputBarProps['renderSlot'],
     stop: vi.fn(),
     useStopShortcut: bindSnapshotSelector(createSnapshotStore<readonly string[]>([])),
-    t: makeTranslate(zh, commonZh),
+    t: makeTranslate(es, commonEs),
     variant: 'composer',
   }
   const view = render(<InputBar {...barProps} />)
@@ -228,8 +228,8 @@ describe('scenario A: menu-pick /goal, type args, enter submits', () => {
     expect(b.shell.snapshot.draft).toBe('/goal ')
     act(() => { b.shell.editor.update(() => {}, { discrete: true }) }) // flush the queued decoration refresh
     expect(b.view.container.querySelector('[data-lexical-text][style*="business-primary"]')?.textContent).toBe('/goal ')
-    // The zh dictionary owns a hint.goal entry, which overrides the machine's raw hint (production behavior).
-    expect(b.textarea.style.getPropertyValue('--dsh-composer-hint')).toBe(JSON.stringify('输入目标，智能体将持续执行'))
+    // The es dictionary owns a hint.goal entry, which overrides the machine's raw hint (production behavior).
+    expect(b.textarea.style.getPropertyValue('--dsh-composer-hint')).toBe(JSON.stringify('describe el objetivo de una tarea larga'))
     // Continue typing args; hint drops; claim holds.
     b.type('/goal 发布 v1')
     expect(b.shell.snapshot.phase).toBe('claimed')
@@ -314,7 +314,7 @@ describe('scenario: images ride an accepting command through the real pipeline',
 
 describe('scenario H: backspace breaks the token', () => {
   it.each(['goal', '目标', 'plan', '计划', 'feedback', '反馈'])('keeps /%s claimed when its arguments and separator are deleted', async (name) => {
-    const { source } = commandSource([{ name, description: name, input: { hint: '目标内容' } }],
+    const { source } = commandSource([{ name, description: name, input: { hint: 'Meta del objetivo' } }],
       () => Promise.resolve({ kind: 'success' }))
     const b = await scopedBench((triggers) => { triggers.registerSource(source) })
     b.type(`/${name}`)

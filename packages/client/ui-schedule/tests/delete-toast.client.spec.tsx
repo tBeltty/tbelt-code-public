@@ -7,11 +7,11 @@ import {
   createDeleteToastSource, ScheduleDeleteToast,
   type DeleteToastState, type ScheduleDeleteToastProps,
 } from '../src/client/DeleteToast.tsx'
-import { en, zh } from '../src/client/task-manager-locales.ts'
+import { en, es } from '../src/client/task-manager-locales.ts'
 
 afterEach(() => { cleanup(); vi.useRealTimers() })
 
-function mount(state: DeleteToastState | null, dictionary: typeof en | typeof zh = en) {
+function mount(state: DeleteToastState | null, dictionary: typeof en | typeof es = en) {
   const dismiss = vi.fn()
   const props = {
     useToast: <T,>(select: (value: DeleteToastState | null) => T): T => select(state),
@@ -65,7 +65,7 @@ describe('ScheduleDeleteToast', () => {
   })
 
   it('shows the warning banner for a deletion that could not be confirmed', () => {
-    mount({ kind: 'deleteFailed', seq: 2 }, zh)
-    expect(screen.getByRole('alert').textContent).toBe(zh['toast.deleteFailed'])
+    mount({ kind: 'deleteFailed', seq: 2 }, es)
+    expect(screen.getByRole('alert').textContent).toBe(es['toast.deleteFailed'])
   })
 })

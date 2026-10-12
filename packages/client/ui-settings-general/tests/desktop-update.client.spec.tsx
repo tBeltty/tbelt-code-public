@@ -6,13 +6,13 @@ import type { PropsLocale } from '@deepseek-ai/dsh-client-ui-slots'
 import { DesktopUpdateIndicator } from '../src/client/DesktopUpdateIndicator.tsx'
 import type { DesktopUpdateBridge, DesktopUpdatePresentation } from '../src/types.ts'
 import { DesktopUpdateSource } from '../src/client/desktop-update-source.ts'
-import { en, zh } from '../src/client/locales.ts'
+import { en, es } from '../src/client/locales.ts'
 
 afterEach(() => { cleanup(); vi.unstubAllGlobals() })
 
 type SettingsTranslate = PropsLocale<'settings'>['t']
 
-function translate(dictionary: typeof zh | typeof en): SettingsTranslate {
+function translate(dictionary: typeof es | typeof en): SettingsTranslate {
   const messages: Readonly<Record<string, string>> = dictionary
   return (key, params) => Object.entries(params ?? {})
     .reduce((message, [name, value]) => message.replaceAll(`{${name}}`, String(value)),
@@ -32,10 +32,10 @@ function fixture() {
   const source = new DesktopUpdateSource(bridge)
   const subscribe = (notify: () => void) => source.store.subscribe(notify)
   const snapshot = () => source.store.getSnapshot()
-  function Indicator({ wide = true, hidden = false, dictionary = zh }: {
+  function Indicator({ wide = true, hidden = false, dictionary = es }: {
     wide?: boolean
     hidden?: boolean
-    dictionary?: typeof zh | typeof en
+    dictionary?: typeof es | typeof en
   }) {
     const state = useSyncExternalStore(subscribe, snapshot)
     return <DesktopUpdateIndicator wide={wide} hidden={hidden} t={translate(dictionary)} view={state} onOpen={() => { source.open() }} />
@@ -52,7 +52,7 @@ const available = { phase: 'available', version: '1.0.1' } as const
 
 it('renders nothing outside the Desktop carrier', () => {
   const source = new DesktopUpdateSource(undefined)
-  const view = render(<DesktopUpdateIndicator wide hidden={false} t={translate(zh)}
+  const view = render(<DesktopUpdateIndicator wide hidden={false} t={translate(es)}
     view={source.store.getSnapshot()} onOpen={() => { source.open() }} />)
   source.open()
   source.dispose()
@@ -64,7 +64,7 @@ it('keeps the newest event, hides for connection priority, and invokes only the 
   try {
     await f.emit(available)
     await act(async () => { f.status.resolve({ phase: 'idle' }) })
-    fireEvent.click(screen.getByRole('button', { name: '新版本' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Actualizar' }))
     await act(async () => {})
     expect(f.open).toHaveBeenCalledOnce()
     f.view.rerender(<f.Indicator hidden />)
@@ -74,9 +74,9 @@ it('keeps the newest event, hides for connection priority, and invokes only the 
     fireEvent.click(screen.getByRole('button', { name: '58%' }))
     expect(f.open).toHaveBeenCalledOnce()
     await f.emit({ phase: 'error', version: available.version, failure: 'download' })
-    const retry = screen.getByRole('button', { name: '重试更新' })
+    const retry = screen.getByRole('button', { name: 'Reintentar actualización' })
     fireEvent.focus(retry)
-    expect((await screen.findByRole('tooltip')).textContent).toBe('下载更新失败，请重试。')
+    expect((await screen.findByRole('tooltip')).textContent).toBe('No se pudo descargar la actualización. Inténtalo de nuevo.')
     f.view.rerender(<f.Indicator wide={false} />)
     expect(screen.queryByRole('button')).toBeNull()
   } finally { f.view.unmount(); f.status.resolve(available) }
@@ -87,7 +87,7 @@ it('keeps bridge failures actionable and ignores status completion after unmount
   const f = fixture()
   await act(async () => { f.status.reject(new Error('IPC unavailable')) })
   f.open.mockRejectedValueOnce(new Error('IPC unavailable'))
-  fireEvent.click(screen.getByRole('button', { name: '重试更新' }))
+  fireEvent.click(screen.getByRole('button', { name: 'Reintentar actualización' }))
   await act(async () => {})
   f.view.unmount()
   const late = fixture()
@@ -101,7 +101,7 @@ it('accepts initial status, coalesces actions, and ignores late events and actio
   const pending = Promise.withResolvers<undefined>()
   try {
     await act(async () => { f.status.resolve(available) })
-    expect(screen.getByRole('button', { name: '新版本' })).toBeTruthy()
+    expect(screen.getByRole('button', { name: 'Actualizar' })).toBeTruthy()
     await f.emit({ phase: 'verifying', version: available.version })
     f.source.open()
     expect(f.open).not.toHaveBeenCalled()
@@ -131,7 +131,7 @@ it('renders the same semantic update in the active Web locale', async () => {
   const f = fixture()
   try {
     await f.emit(available)
-    expect(screen.getByRole('button', { name: '新版本' })).toBeTruthy()
+    expect(screen.getByRole('button', { name: 'Actualizar' })).toBeTruthy()
     f.view.rerender(<f.Indicator dictionary={en} />)
     expect(screen.getByRole('button', { name: 'Update' })).toBeTruthy()
   } finally { f.view.unmount(); f.status.resolve(available) }
@@ -148,8 +148,8 @@ it('shows fallback progress and error details when the shell omits optional fiel
     fireEvent.focus(screen.getByRole('button', { name: '0%' }))
     expect((await screen.findByRole('tooltip')).textContent).toContain('1.0.1')
     await f.emit({ phase: 'error' })
-    fireEvent.focus(screen.getByRole('button', { name: '重试更新' }))
-    expect((await screen.findByRole('tooltip')).textContent).toBe('安装更新失败，请稍后重试。')
+    fireEvent.focus(screen.getByRole('button', { name: 'Reintentar actualización' }))
+    expect((await screen.findByRole('tooltip')).textContent).toBe('No se pudo instalar la actualización. Inténtalo más tarde.')
   } finally { f.view.unmount(); f.status.resolve({ phase: 'idle' }) }
 })
 
@@ -166,9 +166,9 @@ it.each(['checking', 'verifying', 'installing'] as const)('shows only the versio
 })
 
 it.each([
-  ['checking', '正在检查更新…'],
-  ['verifying', '正在校验更新文件…'],
-  ['installing', '正在准备重启…'],
+  ['checking', 'Buscando actualizaciones…'],
+  ['verifying', 'Verificando los archivos de la actualización…'],
+  ['installing', 'Preparando el reinicio…'],
 ] as const)('retains the state label when %s has no version', async (phase, label) => {
   const f = fixture()
   try {

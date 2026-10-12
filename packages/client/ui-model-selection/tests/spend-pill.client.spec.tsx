@@ -51,9 +51,10 @@ afterEach(() => { cleanup() })
 
 describe('composer spend reading', () => {
   it('formats amounts to the cent and keeps sub-cent spend visible', () => {
-    expect(formatSpend(0)).toBe('$0.00')
-    expect(formatSpend(0.004)).toBe('<$0.01')
-    expect(formatSpend(1234.5)).toBe('$1,234.50')
+    expect(formatSpend(0, 'en-US')).toBe('$0.00')
+    expect(formatSpend(0.004, 'en-US')).toBe('<$0.01')
+    expect(formatSpend(1234.5, 'en-US')).toBe('$1,234.50')
+    expect(formatSpend(1234.5, 'es-ES')).toBe('$1234,50')
   })
 
   it('stays hidden until the chat has something to show, then follows refreshes', async () => {

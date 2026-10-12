@@ -1,44 +1,9 @@
 /** `question` namespace dictionaries. */
 
-/** Simplified Chinese dictionary (the key-set source of truth). */
-export const zh = {
-  'error.incomplete': '请先完成这道问题。',
-  'error.unanswered': '请选择一个选项或填写自定义答案。',
-  'error.unavailable': '当前无法提交，请稍候再试。',
-  'error.resubmit': '回答未送达，工作已继续，请再提交一次。',
-  'status.sent': '回答已发送；面板未能关闭。',
-  'wait.takeTime': '慢慢回答',
-  'wait.countdown': '{seconds} 秒后继续工作',
-  'wait.paused': '已暂停 · 剩余 {seconds} 秒',
-  'wait.held': '会一直等你回答',
-  'wait.continued': '已继续工作，仍可回答',
-  'review.status': '已回答',
-  'review.skipped': '这道问题当时被跳过。',
-  'reply.label': '回答先前等待中的问题',
-  'reply.open': '展开问题详情',
-  'reply.close': '收起问题详情',
-  'reply.answerLabel': '回答：',
-  'reply.skipped': '已跳过',
-  'nav.prev': '上一题',
-  'nav.next': '下一题',
-  'nav.minimize': '收起问题卡片',
-  'nav.maximize': '展开问题卡片',
-  'nav.cancel': '放弃整组问题',
-  'nav.close': '收起问题面板，可从工具调用重新打开',
-  'option.recommended': '推荐',
-  'custom.placeholder': '输入你的答案',
-  'action.skip': '跳过',
-  'action.next': '下一题',
-  'plan.header': '计划待审',
-  'plan.approve': '同意执行',
-  'plan.decline': '拒绝',
-  'plan.discuss': '要求修改',
-} satisfies Record<string, string>
-
 /** The question namespace key union. */
-export type QuestionKey = keyof typeof zh
+export type QuestionKey = keyof typeof en
 
-/** English dictionary, checked complete against the zh key set. */
+/** English dictionary and key-set source of truth. */
 export const en = {
   'error.incomplete': 'Please complete this question first.',
   'error.unanswered': 'Please select an option or enter a custom answer.',
@@ -71,4 +36,39 @@ export const en = {
   'plan.approve': 'Approve',
   'plan.decline': 'Refuse',
   'plan.discuss': 'Request changes',
-} satisfies Record<QuestionKey, string>
+} satisfies Record<string, string>
+
+/** Spanish dictionary, checked complete against the English key set. */
+export const es = {
+  'error.incomplete': 'Completa primero esta pregunta.',
+  'error.unanswered': 'Elige una opción o escribe una respuesta personalizada.',
+  'error.unavailable': 'No se puede enviar ahora; inténtalo de nuevo en un momento.',
+  'error.resubmit': 'La respuesta no llegó antes de que el trabajo continuara; envíala de nuevo.',
+  'status.sent': 'Respuesta enviada; no se pudo cerrar el panel.',
+  'wait.takeTime': 'Tómate tu tiempo',
+  'wait.countdown': 'Continúa en {seconds}s',
+  'wait.paused': 'En pausa · quedan {seconds}s',
+  'wait.held': 'Esperando hasta que respondas',
+  'wait.continued': 'El trabajo continuó; aún puedes responder',
+  'review.status': 'Respondida',
+  'review.skipped': 'Esta pregunta se omitió.',
+  'reply.label': 'Responder a preguntas pendientes anteriores',
+  'reply.open': 'Abrir detalles de la pregunta',
+  'reply.close': 'Cerrar detalles de la pregunta',
+  'reply.answerLabel': 'Respuesta: ',
+  'reply.skipped': 'Omitida',
+  'nav.prev': 'Pregunta anterior',
+  'nav.next': 'Pregunta siguiente',
+  'nav.minimize': 'Contraer la tarjeta de la pregunta',
+  'nav.maximize': 'Expandir la tarjeta de la pregunta',
+  'nav.cancel': 'Descartar todas las preguntas',
+  'nav.close': 'Cerrar el panel: se vuelve a abrir desde la llamada a la herramienta',
+  'option.recommended': 'Recomendada',
+  'custom.placeholder': 'Escribe tu respuesta',
+  'action.skip': 'Omitir',
+  'action.next': 'Siguiente',
+  'plan.header': 'Revisión del plan',
+  'plan.approve': 'Aprobar',
+  'plan.decline': 'Rechazar',
+  'plan.discuss': 'Pedir cambios',
+} satisfies Record<keyof typeof en, string>

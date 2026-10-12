@@ -12,7 +12,7 @@ import type { CatalogSnapshot } from '../src/client/catalog-source.ts'
 import { ScheduleTaskTab, type ScheduleTaskTabProps } from '../src/client/ScheduleTaskTab.tsx'
 import { ScheduleTaskTabTitle, type ScheduleTaskTabTitleProps } from '../src/client/ScheduleTaskTabTitle.tsx'
 import { TaskTabBindings, type TaskTabPage } from '../src/client/task-tab-bindings.ts'
-import { en, zh } from '../src/client/task-manager-locales.ts'
+import { en, es } from '../src/client/task-manager-locales.ts'
 import css from '../src/client/TaskManagerPage.module.css'
 
 const SESSION = 'session-alpha' as SessionId
@@ -78,7 +78,7 @@ function tabInfo(params: unknown, revision = 1): SidebarRightTabInfo {
 function mount(
   initial: Partial<CatalogSnapshot<ScheduleCatalogEntry>> = {},
   params: unknown = { sessionId: SESSION, id: at.id },
-  dictionary: typeof en | typeof zh = en,
+  dictionary: typeof en | typeof es = en,
   sessionState: SessionListState = sessions,
   overrides: Partial<ScheduleTaskTabProps> = {},
 ) {
@@ -161,7 +161,7 @@ function boundTo(id: ScheduleId): TaskTabBindings {
   return bindings
 }
 
-describe.each([['English', en], ['Chinese', zh]] as const)('task tab body in %s', (_name, dictionary) => {
+describe.each([['English', en], ['Chinese', es]] as const)('task tab body in %s', (_name, dictionary) => {
   it('renders the named task rule and its actions without a close control or the hosting Session link', () => {
     const h = mount({}, { sessionId: SESSION, id: at.id }, dictionary)
     const detail = screen.getByRole('complementary', { name: dictionary['detail.label'] })

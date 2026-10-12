@@ -24,7 +24,7 @@ import { DesktopOnboardingEntry, type DesktopOnboardingInjected } from '../src/c
 import type { DesktopOnboardingState } from '../src/client/onboarding-contract.ts'
 import { createPlatformPages, type PlatformPages } from '../src/client/platform-pages.ts'
 import type { PlatformBridge } from '../src/client/PlatformOverlay.tsx'
-import { en, zh } from '../src/client/locales.ts'
+import { en, es } from '../src/client/locales.ts'
 
 usePinnedBrowserLanguages('en')
 
@@ -107,7 +107,7 @@ async function bench() {
   const locale = new LocaleRuntime(runtime.ctx)
   runtime.ctx.provide('locale', locale)
   runtime.slots.installLocale(locale)
-  runtime.ctx.effect(() => locale.register('settings.account', { en, zh }), 'spec: account dictionaries')
+  runtime.ctx.effect(() => locale.register('settings.account', { en, es }), 'spec: account dictionaries')
   await runtime.declare({
     'shell.overlay': { kind: 'list', scope: 'root' },
     'settings.section': { kind: 'list', scope: 'root' },

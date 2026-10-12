@@ -44,9 +44,9 @@ it('synchronizes live language and palette changes and stops observing a closed 
   window.dispatchEvent(new Event('DOMContentLoaded'))
   expect(document.documentElement.style.getPropertyValue('--dsh-windows-titlebar-height')).toBe('40px')
   expect(send).toHaveBeenLastCalledWith(DESKTOP_IPC.windowsAppearance, 'en', 'rgba(255, 255, 255, 1)', 'rgba(0, 0, 0, 1)')
-  document.documentElement.lang = 'zh-CN'
+  document.documentElement.lang = 'es'
   document.body.setAttribute('data-ds-dark-theme', '')
-  await vi.waitFor(() => { expect(send).toHaveBeenLastCalledWith(DESKTOP_IPC.windowsAppearance, 'zh-CN', 'rgba(27, 27, 28, 1)', 'rgba(0, 0, 0, 1)') })
+  await vi.waitFor(() => { expect(send).toHaveBeenLastCalledWith(DESKTOP_IPC.windowsAppearance, 'es', 'rgba(27, 27, 28, 1)', 'rgba(0, 0, 0, 1)') })
   window.dispatchEvent(new Event('pagehide'))
   send.mockClear()
   document.documentElement.lang = 'en'

@@ -9,12 +9,12 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 import { bindSnapshotSelector, makeTranslate } from '@deepseek-ai/dsh-client-test-runtime'
 import { createSnapshotStore } from '@deepseek-ai/dsh-client-store'
 import type { TodoItem } from '@deepseek-ai/dsh-tool-todo/client'
-import { zh as commonZh } from '@deepseek-ai/dsh-client-locale/src/locales/zh.ts'
+import { es as commonEs } from '@deepseek-ai/dsh-client-locale/src/locales/es.ts'
 import type { TodoDockProps } from '../src/client/skeleton/TodoPanel.tsx'
 import { TodoDock, TodoPanel, todoDockEntry } from '../src/client/skeleton/TodoPanel.tsx'
-import { NS, zh } from '../src/client/locales.ts'
+import { NS, es } from '../src/client/locales.ts'
 
-const t: TodoDockProps['t'] = makeTranslate(zh, commonZh)
+const t: TodoDockProps['t'] = makeTranslate(es, commonEs)
 
 afterEach(cleanup)
 
@@ -42,8 +42,8 @@ describe('TodoPanel', () => {
   it('starts collapsed with the per-status count summary visible', () => {
     render(<TodoPanel todos={LIST} t={t} />)
     expect(screen.getByTestId('todo-panel')).toBeTruthy()
-    expect(screen.getByText('任务')).toBeTruthy()
-    expect(screen.getByText('1 已完成 · 1 进行中 · 1 待处理')).toBeTruthy()
+    expect(screen.getByText('Tareas pendientes')).toBeTruthy()
+    expect(screen.getByText('1 completadas · 1 en curso · 1 pendientes')).toBeTruthy()
     expect(screen.getByRole('button', { expanded: false })).toBeTruthy()
     expect(screen.queryByRole('list')).toBeNull()
   })
@@ -53,8 +53,8 @@ describe('TodoPanel', () => {
       { content: '写组件', status: 'in_progress' },
       { content: '补测试', status: 'pending' },
     ]} t={t} />)
-    expect(screen.getByText('1 进行中 · 1 待处理')).toBeTruthy()
-    expect(screen.queryByText(/已完成/)).toBeNull()
+    expect(screen.getByText('1 en curso · 1 pendientes')).toBeTruthy()
+    expect(screen.queryByText(/completadas/)).toBeNull()
   })
 
   it('expands to show one row per item with its status glyph', () => {
@@ -67,7 +67,7 @@ describe('TodoPanel', () => {
     expect(items.map(li => li.querySelector('[data-state]')?.getAttribute('data-state')))
       .toEqual(['done', 'ongoing', 'idle'])
     expect(screen.getAllByRole('img').map(node => node.getAttribute('aria-label')))
-      .toEqual(['已完成', '进行中', '待处理'])
+      .toEqual(['Completada', 'En curso', 'Pendiente'])
   })
 
   it('collapse hides an expanded list; expand restores; header keeps the count summary', () => {
@@ -77,7 +77,7 @@ describe('TodoPanel', () => {
     fireEvent.click(header)
     expect(screen.queryByRole('list')).toBeNull()
     // Collapsed header is title + progress only (no in-progress content hint).
-    expect(screen.getByText('1 已完成 · 1 进行中 · 1 待处理')).toBeTruthy()
+    expect(screen.getByText('1 completadas · 1 en curso · 1 pendientes')).toBeTruthy()
     expect(screen.queryByText('写组件')).toBeNull()
     fireEvent.click(screen.getByRole('button', { expanded: false }))
     expect(screen.getAllByRole('listitem')).toHaveLength(3)
@@ -92,15 +92,15 @@ describe('TodoPanel', () => {
     expect(statuses.filter(s => s === 'in_progress')).toHaveLength(3)
     expect(screen.getByText('跑后台构建')).toBeTruthy()
     expect(screen.getByText('读源码')).toBeTruthy()
-    expect(screen.getByText('1 已完成 · 3 进行中 · 1 待处理')).toBeTruthy()
+    expect(screen.getByText('1 completadas · 3 en curso · 1 pendientes')).toBeTruthy()
   })
 
   it('an all-completed list collapses the summary to the done count alone', () => {
     render(<TodoPanel todos={[{ content: '都完了', status: 'completed' }]} t={t} />)
     expect(screen.getByRole('button', { expanded: false })).toBeTruthy()
     expect(screen.queryByText('都完了')).toBeNull()
-    expect(screen.getByText('1 已完成')).toBeTruthy()
-    expect(screen.queryByText(/进行中|待处理/)).toBeNull()
+    expect(screen.getByText('1 completadas')).toBeTruthy()
+    expect(screen.queryByText(/\d+ (en curso|pendientes)/)).toBeNull()
   })
 })
 
@@ -118,7 +118,7 @@ describe('TodoDock', () => {
     // Capability absent (no baseline/frame yet) renders nothing.
     expect(screen.queryByTestId('todo-panel')).toBeNull()
     act(() => { store.set({ value: LIST }) })
-    expect(screen.getByText('1 已完成 · 1 进行中 · 1 待处理')).toBeTruthy()
+    expect(screen.getByText('1 completadas · 1 en curso · 1 pendientes')).toBeTruthy()
     // The pre-first-write whole value (null) retires the strip (the panel owns no data).
     act(() => { store.set({ value: null }) })
     expect(screen.queryByTestId('todo-panel')).toBeNull()

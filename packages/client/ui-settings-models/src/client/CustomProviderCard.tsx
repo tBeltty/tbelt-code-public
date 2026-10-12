@@ -216,6 +216,7 @@ export function CustomProviderCard(props: CustomProviderCardProps): ReactNode {
           className={styles['input']}
           type="text"
           value={route}
+          // i18n-exempt: sample route name, identical in every language
           placeholder="acme-gateway"
           aria-label={t('customRoute')}
           disabled={profileDisabled}

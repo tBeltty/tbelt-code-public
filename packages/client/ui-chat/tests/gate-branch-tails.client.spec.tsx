@@ -3,15 +3,15 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { cleanup, render } from '@testing-library/react'
 import { bindSnapshotSelector, makeTranslate } from '@deepseek-ai/dsh-client-test-runtime'
-import { zh as commonZh } from '@deepseek-ai/dsh-client-locale/src/locales/zh.ts'
+import { es as commonEs } from '@deepseek-ai/dsh-client-locale/src/locales/es.ts'
 import { AssistantMarkdown, type AssistantMarkdownProps } from '../src/client/chat/AssistantMarkdown.tsx'
 import { useDetailedPresentation } from './presentation-fixture.client.ts'
 import { useDisclosure } from '../src/client/chat/use-disclosure.ts'
 import { StatsPills } from '../src/client/chat/StatsPills.tsx'
-import { zh } from '../src/client/locale.ts'
+import { es } from '../src/client/locale.ts'
 import { chatSnapshotFixture } from './chat-snapshot-fixture.client.ts'
 
-const t: AssistantMarkdownProps['t'] = makeTranslate(zh, commonZh)
+const t: AssistantMarkdownProps['t'] = makeTranslate(es, commonEs)
 const renderMessageImages: AssistantMarkdownProps['renderMessageImages'] = () => null
 
 afterEach(() => {
@@ -55,7 +55,7 @@ describe('render branch tails', () => {
         useProjection={() => undefined}
       />,
     )
-    expect(view.container.textContent).toBe('2 轮 3 步')
+    expect(view.container.textContent).toBe('2 turnos 3 pasos')
     // Window-fold counts carry no timed figure, so the pill is a static reading.
     expect(view.queryAllByRole('button')).toHaveLength(0)
   })

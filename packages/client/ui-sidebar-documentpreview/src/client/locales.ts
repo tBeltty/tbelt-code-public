@@ -6,36 +6,10 @@
  * suggests a different next step for the reader.
  */
 
-/** Simplified Chinese dictionary and key-set source of truth. */
-export const zh = {
-  loading: '文档渲染中...',
-  loadMore: '加载更多',
-  changed: '文件已更新，当前显示为旧内容',
-  reloadNow: '重新载入',
-  reload: '重新读取文件',
-  autoRefresh: '自动刷新',
-  'autoRefresh.enable': '开启自动刷新',
-  'autoRefresh.disable': '关闭自动刷新',
-  'wrap.enable': '自动换行',
-  'wrap.disable': '取消换行',
-  'wrap.aria': '自动换行',
-  openWith: '打开方式',
-  'viewer.text': '纯文本',
-  resourceUnavailable: '文件资源服务不可用',
-  rendererUnavailable: '预览器 {name} 不可用',
-  unsupportedFile: '该格式文件暂时无法预览',
-  'error.notFound': '文件不存在，可能已被移动或删除',
-  'error.tooLarge': '单页内容超过 {limit} 上限，无法读取',
-  'error.notText': '该格式文件暂时无法预览',
-  'error.notRegularFile': '该路径不是普通文件，没有可显示的内容',
-  'error.unavailable': '读取失败：{message}',
-  retry: '重试',
-} satisfies Record<string, string>
-
 /** Text-preview dictionary key union. */
-export type SidebarDocumentPreviewKey = keyof typeof zh
+export type SidebarDocumentPreviewKey = keyof typeof en
 
-/** English dictionary, checked against the Chinese key set. */
+/** English dictionary and key-set source of truth. */
 export const en = {
   loading: 'Rendering document...',
   loadMore: 'Load more',
@@ -59,4 +33,30 @@ export const en = {
   'error.notRegularFile': 'Not a regular file, nothing to display.',
   'error.unavailable': 'Read failed: {message}',
   retry: 'Retry',
-} satisfies Record<SidebarDocumentPreviewKey, string>
+} satisfies Record<string, string>
+
+/** Spanish dictionary, checked complete against the English key set. */
+export const es = {
+  loading: 'Renderizando documento...',
+  loadMore: 'Cargar más',
+  changed: 'El archivo ha cambiado; se muestra el contenido anterior.',
+  reloadNow: 'Recargar',
+  reload: 'Volver a leer el archivo',
+  autoRefresh: 'Actualización automática',
+  'autoRefresh.enable': 'Activar actualización automática',
+  'autoRefresh.disable': 'Desactivar actualización automática',
+  'wrap.enable': 'Activar ajuste de línea',
+  'wrap.disable': 'Desactivar ajuste de línea',
+  'wrap.aria': 'Ajuste de línea',
+  openWith: 'Abrir con',
+  'viewer.text': 'Texto sin formato',
+  resourceUnavailable: 'El servicio de recursos de archivos no está disponible.',
+  rendererUnavailable: 'La vista previa de {name} no está disponible.',
+  unsupportedFile: 'Aún no hay vista previa para este tipo de archivo.',
+  'error.notFound': 'Archivo no encontrado. Puede que se haya movido o eliminado.',
+  'error.tooLarge': 'Esta página supera el límite de {limit} y no se puede leer.',
+  'error.notText': 'Aún no hay vista previa para este tipo de archivo.',
+  'error.notRegularFile': 'No es un archivo normal; no hay nada que mostrar.',
+  'error.unavailable': 'Error de lectura: {message}',
+  retry: 'Reintentar',
+} satisfies Record<keyof typeof en, string>

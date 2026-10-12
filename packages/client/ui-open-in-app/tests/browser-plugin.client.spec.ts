@@ -22,7 +22,7 @@ import { apply as nodeApply } from '../src/index.ts'
 import { OpenInAppAction } from '../src/client/OpenInAppAction.tsx'
 import { OpenPathAction } from '../src/client/OpenPathAction.tsx'
 import { OpenPathEmptyAction } from '../src/client/OpenPathEmptyAction.tsx'
-import { en, NS, zh } from '../src/client/locales.ts'
+import { en, NS, es } from '../src/client/locales.ts'
 
 afterEach(() => {
   vi.unstubAllGlobals()
@@ -282,9 +282,9 @@ describe('open-in-app browser half', () => {
   it('registers both dictionaries under its own namespace and releases them with the fiber', async () => {
     vi.stubGlobal('fetch', vi.fn(async () => new Response(JSON.stringify({ apps: [] }), { status: 200 })))
     const { ctx, fiber } = await bench()
-    ctx.locale.setLocale('zh')
+    ctx.locale.setLocale('es')
     const translate = ctx.locale.bind(NS)
-    expect(translate('path.more')).toBe(zh['path.more'])
+    expect(translate('path.more')).toBe(es['path.more'])
     ctx.locale.setLocale('en')
     expect(translate('path.more')).toBe(en['path.more'])
     await fiber.dispose()
@@ -292,7 +292,7 @@ describe('open-in-app browser half', () => {
   })
 
   it('keeps the English dictionary key-identical to the Chinese source of truth', () => {
-    expect(Object.keys(en).sort()).toEqual(Object.keys(zh).sort())
+    expect(Object.keys(en).sort()).toEqual(Object.keys(es).sort())
   })
 })
 

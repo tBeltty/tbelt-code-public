@@ -11,7 +11,7 @@ import type { WelcomeSaveResult, WelcomeNotice } from '../src/welcome-api.ts'
 const html = readFileSync(join(import.meta.dirname, '../renderer/welcome.html'), 'utf8')
 afterEach(cleanup)
 
-function mount(language = 'zh-CN') {
+function mount(language = 'es') {
   cleanup()
   const signedOut: AccountView = { links: { usageUrl: 'http://localhost/usage', topUpUrl: 'http://localhost/top_up' }, status: 'signed-out', attempt: null }
   const api = {
@@ -39,7 +39,7 @@ function mount(language = 'zh-CN') {
 }
 
 describe('desktop welcome presentation', () => {
-  it.each(['zh-CN', 'en'])('renders the %s entry without a provider account or key form', async (language) => {
+  it.each(['es', 'en'])('renders the %s entry without a provider account or key form', async (language) => {
     const view = mount(language)
     expect(view.document.documentElement.lang).toBe(language)
     expect(view.document.querySelector('img')!.getAttribute('src')).toBe('assets/welcome-brand.svg')

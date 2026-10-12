@@ -17,7 +17,7 @@ import type { DesktopBrowserBridge } from '../types.ts'
 import { browserWorkspace } from './electron/workspace.ts'
 import type { BrowserPageFactory } from './browser/BrowserPage.ts'
 import { BROWSER_ID, browserDefinition } from './definition.tsx'
-import { en, zh } from './locales.ts'
+import { en, es } from './locales.ts'
 import { createBrowserStore } from './browser/store.ts'
 import { PickDock, type PickDockInjected } from './grab/PickDock.tsx'
 import { formatPicks } from './grab/payload.ts'
@@ -95,7 +95,7 @@ export function apply(ctx: Context): void {
     dshDesktop?: { readonly protocolVersion: number; readonly browser?: DesktopBrowserBridge }
   }).dshDesktop
   const desktop = carrier?.protocolVersion === 1 ? carrier.browser : undefined
-  ctx.effect(() => ctx.locale.register(namespace, { zh, en }), 'ui-sidebar-browser.copy')
+  ctx.effect(() => ctx.locale.register(namespace, { en, es }), 'ui-sidebar-browser.copy')
   ctx.effect(() => ctx.sidebarRightTabs.register({ ...browserDefinition(t), keepMounted: desktop !== undefined }), 'ui-sidebar-browser.type')
   const installFrames = (scope: Context, factory: (sessionId: BrowserBodyProps['sessionId']) => BrowserPageFactory): void => {
     const controllers = new Map<BrowserBodyProps['sessionId'], BrowserInjected>()

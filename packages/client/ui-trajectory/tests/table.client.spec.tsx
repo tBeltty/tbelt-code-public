@@ -9,7 +9,7 @@ import type { RenderMessageImages } from '@deepseek-ai/dsh-client-ui-conversatio
 import { TrajectoryTable as LocalizedTrajectoryTable } from '../src/client/TrajectoryTable.tsx'
 import { deriveTrajectoryLayout, type TrajectoryTurnModel } from '../src/client/layout.ts'
 import { trajectoryRecordId } from '../src/client/trajectory-record.ts'
-import { t, tZh } from './locale.client.ts'
+import { t, tEs } from './locale.client.ts'
 
 const renderImagesStub: RenderMessageImages = ({ images }) => (
   <div data-testid="record-images" data-count={images.length}>
@@ -165,7 +165,7 @@ describe('TrajectoryTable', () => {
     const assistant = TURNS[0]!.groups[0]!.cells[0]!
     render(
       <LocalizedTrajectoryTable
-        t={tZh}
+        t={tEs}
         renderImages={renderImagesStub}
         turns={TURNS}
         collapsedTurns={new Set<number>()}
@@ -175,7 +175,7 @@ describe('TrajectoryTable', () => {
       />,
     )
 
-    expect(screen.getByText('2 个工具调用 · bash')).toBeTruthy()
+    expect(screen.getByText('2 llamadas a herramientas · bash')).toBeTruthy()
   })
 
   it('shows assistant timing facts after keyboard selection', () => {
@@ -1042,7 +1042,7 @@ describe('TrajectoryTable', () => {
   })
 
   it.each([['English', t, 'Attachments', 'Image 1', 'Summary', 'Preview', 'Raw'],
-    ['Chinese', tZh, '附件', '图片 1', '概述', '预览', '原始内容']] as const)(
+    ['Chinese', tEs, 'Adjuntos', 'Imagen 1', 'Resumen', 'Vista previa', 'Sin procesar']] as const)(
     'keeps mixed attachments ordered and raw fields complete in %s',
     (_locale, translate, listLabel, imageLabel, summaryTab, previewTab, rawTab) => {
       const attachment = {

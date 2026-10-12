@@ -5,7 +5,7 @@ import { afterEach, beforeEach, expect, it, vi } from 'vitest'
 import type { AccountSnapshot } from '../src/client/AccountSection.tsx'
 import { DesktopOnboardingEntry } from '../src/client/DesktopOnboardingEntry.tsx'
 import type { DesktopOnboardingState } from '../src/client/onboarding-contract.ts'
-import { zh, type AccountKey } from '../src/client/locales.ts'
+import { es, type AccountKey } from '../src/client/locales.ts'
 
 let appRoot: HTMLDivElement
 
@@ -55,7 +55,7 @@ function mount(initiallyDone = false, initiallyLoading = false) {
   const element = () => <DesktopOnboardingEntry {...globals}
     useOnboarding={select => select(state)} useAccount={select => select(account)}
     update={async () => true} complete={async () => true} retry={async () => true}
-    t={key => key in zh ? zh[key as AccountKey] : key} />
+    t={key => key in es ? es[key as AccountKey] : key} />
   const view = render(element())
   act(() => { vi.runOnlyPendingTimers() })
   return {
@@ -84,7 +84,7 @@ it('retains the last page while successful completion reveals the workspace', ()
   const view = mount()
   expect(appRoot.style.opacity).toBe('0')
   view.finish()
-  expect(screen.getByRole('heading', { name: `${zh.onboardingWelcome} ${zh.onboardingBrand}` })).toBeTruthy()
+  expect(screen.getByRole('heading', { name: `${es.onboardingWelcome} ${es.onboardingBrand}` })).toBeTruthy()
   expect(document.querySelector('[data-exiting]')).not.toBeNull()
   expect(appRoot.style.opacity).toBe('')
   expect(appRoot.inert).toBe(true)
@@ -99,7 +99,7 @@ it('keeps a failed completion visible and the workspace hidden', () => {
   const view = mount()
   view.fail()
   act(() => { vi.advanceTimersByTime(200) })
-  expect(screen.getByRole('heading', { name: `${zh.onboardingWelcome} ${zh.onboardingBrand}` })).toBeTruthy()
+  expect(screen.getByRole('heading', { name: `${es.onboardingWelcome} ${es.onboardingBrand}` })).toBeTruthy()
   expect(document.querySelector('[data-exiting]')).toBeNull()
   expect(appRoot.inert).toBe(true)
   expect(appRoot.style.opacity).toBe('0')
@@ -109,7 +109,7 @@ it('waits for completion confirmation after the settings stream first reports do
   const view = mount()
   view.finish('saving')
   expect(screen.getByRole('heading')).toBeTruthy()
-  expect(screen.getByRole('button', { name: zh.onboardingStart }).hasAttribute('disabled')).toBe(true)
+  expect(screen.getByRole('button', { name: es.onboardingStart }).hasAttribute('disabled')).toBe(true)
   expect(document.querySelector('[data-exiting]')).toBeNull()
   expect(appRoot.style.opacity).toBe('0')
   act(() => { vi.advanceTimersByTime(200) })
@@ -161,9 +161,9 @@ it.each([false, true])('covers the workspace until initial onboarding eligibilit
   const view = mount(done, true)
   expect(appRoot.inert).toBe(true)
   expect(appRoot.style.opacity).toBe('0')
-  expect(screen.getByRole('status').textContent).toBe(zh.onboardingLoading)
+  expect(screen.getByRole('status').textContent).toBe(es.onboardingLoading)
   view.resolve()
   expect(screen.queryByRole('status')).toBeNull()
   expect(appRoot.inert).toBe(!done)
-  if (!done) expect(screen.getByRole('button', { name: zh.onboardingStart })).toBeTruthy()
+  if (!done) expect(screen.getByRole('button', { name: es.onboardingStart })).toBeTruthy()
 })

@@ -61,9 +61,9 @@ it('opens the window on a single click and routes menu entries to the open and q
 
 it('relabels the menu in the current locale and ignores relabel after disposal', () => {
   const f = setup()
-  f.setLocale('zh')
+  f.setLocale('es')
   f.tray.relabel()
-  expect(labels(native.menus[1]!)).toEqual(['打开 tBelt Code', 'separator', '退出 tBelt Code'])
+  expect(labels(native.menus[1]!)).toEqual(['Abrir tBelt Code', 'separator', 'Salir de tBelt Code'])
   f.tray.dispose()
   f.tray.dispose()
   expect(f.native.destroy).toHaveBeenCalledOnce()

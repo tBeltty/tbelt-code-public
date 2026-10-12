@@ -94,7 +94,7 @@ describe('terminal-client plugin', () => {
     expect(services).toBe(started.services)
     expect(env).toMatchObject({
       stdin: process.stdin, stdout: process.stdout, cwd: process.cwd(), color: false, exit: expect.any(Function), imageProtocol: 'none',
-      files: { readAttachment: expect.any(Function), isDirectory: expect.any(Function) }, now: Date.now,
+      files: { readAttachment: expect.any(Function), isDirectory: expect.any(Function) }, now: Date.now, languageEnvironment: process.env,
     })
     expect(request).toEqual({ resume: '3f9a', continueLatest: false })
     await fake.disposers[0]!()

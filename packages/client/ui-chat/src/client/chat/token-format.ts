@@ -1,3 +1,4 @@
+import { formatNumber } from '@deepseek-ai/dsh-client-ui-primitives'
 import type { ChatViewSlotProps } from '../contract/slots.ts'
 
 /**
@@ -8,7 +9,7 @@ import type { ChatViewSlotProps } from '../contract/slots.ts'
  */
 export function formatTokens(value: number, t: ChatViewSlotProps['t']): string {
   const scaled = (candidate: number): string =>
-    candidate >= 100 ? String(Math.round(candidate)) : String(Math.round(candidate * 10) / 10)
+    formatNumber(t('format.locale'), candidate >= 100 ? Math.round(candidate) : Math.round(candidate * 10) / 10, 0, 1)
   if (value < 1_000) return String(value)
   if (value < 1_000_000) return t('number.thousand', { value: scaled(value / 1_000) })
   return t('number.million', { value: scaled(value / 1_000_000) })
@@ -62,13 +63,20 @@ function displayPercentUnits(units: number, decimalPlaces: 0 | 1): string {
  * @param promptTokens - exact aggregate prompt tokens.
  * @param decimalPlaces - ordinary-ratio precision; partial hits that would
  * round to 100 automatically use enough additional precision to stay honest.
+ * @param mark - decimal mark of the displayed language; defaults to a full stop.
  * @returns percentage text, or null when there was no prompt input.
  */
 export function formatCacheHitPercent(
   cacheReadTokens: number,
   promptTokens: number,
   decimalPlaces: 0 | 1 = 0,
+  mark = '.',
 ): string | null {
+  const text = cacheHitPercentText(cacheReadTokens, promptTokens, decimalPlaces)
+  return text === null ? null : text.replace('.', mark)
+}
+
+function cacheHitPercentText(cacheReadTokens: number, promptTokens: number, decimalPlaces: 0 | 1): string | null {
   if (promptTokens === 0) return null
   const missedInputTokens = promptTokens - cacheReadTokens
   if (missedInputTokens === 0) return '100'

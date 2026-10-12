@@ -8,31 +8,7 @@ declare module '@deepseek-ai/dsh-client-ui-slots' {
 }
 
 /** Keys of the sidebar terminal copy. */
-export type SidebarTerminalKey = keyof typeof zh
-
-/** Simplified Chinese terminal copy. */
-export const zh = {
-  'shortcut.noSession': '请先选择会话',
-  recoveryFailed: '恢复终端失败：{message}', retryRecovery: '重试恢复终端',
-  shell: '选择 Shell', shellLoading: '正在读取 Shell…', shellEmpty: '没有可用的 Shell', description: '在会话工作区运行命令',
-  title: '终端', new: '新建终端', loading: '正在读取终端环境…', creating: '正在启动…',
-  connecting: '正在连接…', disconnected: '连接已断开。', reconnect: '重新连接',
-  readonly: '此页面当前只读。', control: '接管输入',
-  closed: '终端已关闭。', exited: '进程已退出（{code}）', failed: '终端错误：{message}',
-  rename: '终端名称', unavailable: '不可用', retry: '重试',
-  cleanupFailed: '终端「{title}」未能结束：{message}',
-  missingTerminal: '此终端已不存在，请新建终端。',
-  inputFull: '输入缓冲区已满，请重新连接后重试。',
-  attachmentEnded: '终端连接已结束，请重新连接。',
-  invalidOutput: '终端画面传输异常，请重新连接。',
-  terminalLimit: '终端数量已达上限，请关闭不用的终端后重试。已退出的终端也计入数量。',
-  'run.action': '在终端中运行', 'run.again': '再次运行', 'run.show': '查看终端',
-  'run.running': '正在终端中运行…', 'run.stopped': '进程已停止', 'run.reported': '输出已发送到对话',
-  'run.failed': '无法运行：{message}',
-  'run.report.intro': '我在终端中运行了这个命令：', 'run.report.exit': '退出码：{code}',
-  'run.report.stopped': '命令在结束前被停止。', 'run.report.failed': '终端出错：{message}',
-  'run.report.empty': '没有输出。', 'run.report.truncated': '（较早的输出已省略）',
-} satisfies Record<string, string>
+export type SidebarTerminalKey = keyof typeof en
 
 /** English terminal copy. */
 export const en = {
@@ -56,4 +32,49 @@ export const en = {
   'run.report.intro': 'I ran this command in the terminal:', 'run.report.exit': 'Exit code: {code}',
   'run.report.stopped': 'The command was stopped before it finished.', 'run.report.failed': 'The terminal failed: {message}',
   'run.report.empty': 'No output.', 'run.report.truncated': '(Earlier output omitted)',
-} satisfies Record<keyof typeof zh, string>
+} satisfies Record<string, string>
+
+/** Spanish dictionary, checked complete against the English key set. */
+export const es = {
+  'shortcut.noSession': 'Selecciona primero una sesión',
+  recoveryFailed: 'Error al recuperar el terminal: {message}',
+  retryRecovery: 'Reintentar recuperación del terminal',
+  shell: 'Elegir shell',
+  shellLoading: 'Cargando shells…',
+  shellEmpty: 'No hay shells disponibles',
+  description: 'Ejecuta comandos en el espacio de trabajo de la sesión',
+  title: 'Terminal',
+  new: 'Nuevo terminal',
+  loading: 'Leyendo el entorno del terminal…',
+  creating: 'Iniciando…',
+  connecting: 'Conectando…',
+  disconnected: 'Desconectado.',
+  reconnect: 'Reconectar',
+  readonly: 'Esta vista es de solo lectura.',
+  control: 'Tomar el control',
+  closed: 'Terminal cerrado.',
+  exited: 'El proceso terminó ({code})',
+  failed: 'Error del terminal: {message}',
+  rename: 'Nombre del terminal',
+  unavailable: 'No disponible',
+  retry: 'Reintentar',
+  cleanupFailed: 'No se pudo terminar el terminal “{title}”: {message}',
+  missingTerminal: 'Este terminal ya no existe. Abre uno nuevo.',
+  inputFull: 'El búfer de entrada está lleno. Reconecta e inténtalo de nuevo.',
+  attachmentEnded: 'Terminó la conexión con el terminal. Reconecta para continuar.',
+  invalidOutput: 'No se pudo recibir la pantalla del terminal. Reconecta para recuperarla.',
+  terminalLimit: 'Se alcanzó el límite de terminales. Cierra los que no uses e inténtalo de nuevo. Los terminales ya terminados también cuentan para el límite.',
+  'run.action': 'Ejecutar en el terminal',
+  'run.again': 'Ejecutar de nuevo',
+  'run.show': 'Mostrar terminal',
+  'run.running': 'Ejecutándose en el terminal…',
+  'run.stopped': 'Proceso detenido',
+  'run.reported': 'Salida enviada al chat',
+  'run.failed': 'No se pudo ejecutar: {message}',
+  'run.report.intro': 'Ejecuté este comando en el terminal:',
+  'run.report.exit': 'Código de salida: {code}',
+  'run.report.stopped': 'El comando se detuvo antes de terminar.',
+  'run.report.failed': 'El terminal falló: {message}',
+  'run.report.empty': 'Sin salida.',
+  'run.report.truncated': '(Salida anterior omitida)',
+} satisfies Record<keyof typeof en, string>

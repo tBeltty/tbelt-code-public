@@ -12,7 +12,7 @@ export type WebSearchSettingsLocaleKey =
   | 'readOnly' | 'unavailable' | 'save' | 'saving' | 'saveFailed'
 
 /** English copy. */
-export const en: Record<WebSearchSettingsLocaleKey, string> = {
+export const en = {
   title: 'Web search',
   description: 'Choose the search provider the agent uses for current information.',
   provider: 'Search provider',
@@ -39,37 +39,37 @@ export const en: Record<WebSearchSettingsLocaleKey, string> = {
   save: 'Save',
   saving: 'Saving…',
   saveFailed: 'The deployment did not accept these values; they were left for you to correct.',
-}
+} satisfies Record<string, string>
 
-/** Simplified Chinese copy. */
-export const zh: Record<WebSearchSettingsLocaleKey, string> = {
-  title: '网页搜索',
-  description: '选择智能体获取最新信息时使用的搜索提供方。',
-  provider: '搜索提供方',
-  providerHint: '智能体只通过这里选择的提供方搜索。你的密钥只会发送给该提供方。',
-  noProviders: '未安装任何搜索提供方。',
+/** Spanish dictionary, checked complete against the English key set. */
+export const es = {
+  title: 'Búsqueda web',
+  description: 'Elige el proveedor de búsqueda que usa el agente para obtener información actual.',
+  provider: 'Proveedor de búsqueda',
+  providerHint: 'El agente busca solo a través del proveedor elegido aquí. Tu clave se envía a ese proveedor y a nadie más.',
+  noProviders: 'No hay ningún proveedor de búsqueda instalado.',
   providerExa: 'Exa',
   providerPerplexity: 'Perplexity',
   providerBrave: 'Brave',
   providerTavily: 'Tavily',
-  apiKey: 'API Key',
-  apiKeyHint: '不写入设置文件，保存前会先向提供方验证。留空表示保持当前密钥。',
-  apiKeySet: 'API 密钥已配置',
-  apiKeyUnset: '未配置密钥。',
-  apiKeyPlaceholder: '输入 API 密钥',
-  apiKeyReplace: '替换 API',
-  apiKeyKeep: '保留当前密钥',
-  checking: '正在向提供方验证密钥…',
-  keyMissing: '保存前请先填写该提供方的 API Key。',
-  keyRejected: '提供方拒绝了该密钥，未保存任何内容。',
-  keyQuota: '密钥有效，但提供方表示额度或余额已用完。已保存；额度恢复前搜索会失败。',
-  keyError: '无法验证该密钥，未保存任何内容。',
-  readOnly: '本部署的设置为只读。',
-  unavailable: '网页搜索当前未加载，暂时无法配置。',
-  save: '保存',
-  saving: '保存中…',
-  saveFailed: '本部署没有接受这些值，已保留供你修改。',
-}
+  apiKey: 'Clave de API',
+  apiKeyHint: 'Se guarda fuera del archivo de ajustes y se comprueba con el proveedor antes de guardar. Déjala en blanco para conservar la clave actual.',
+  apiKeySet: 'Clave de API configurada',
+  apiKeyUnset: 'No hay ninguna clave configurada.',
+  apiKeyPlaceholder: 'Introduce tu clave de API',
+  apiKeyReplace: 'Reemplazar clave',
+  apiKeyKeep: 'Conservar la clave actual',
+  checking: 'Comprobando la clave con el proveedor…',
+  keyMissing: 'Añade la clave de API de este proveedor antes de guardar.',
+  keyRejected: 'El proveedor rechazó esta clave. No se guardó nada.',
+  keyQuota: 'La clave funciona, pero el proveedor indica que no queda cuota ni saldo. Se guardó; las búsquedas fallarán hasta que se renueve la cuota.',
+  keyError: 'No se pudo comprobar la clave. No se guardó nada.',
+  readOnly: 'Esta instalación guarda los ajustes en modo de solo lectura.',
+  unavailable: 'La búsqueda web no está cargada, así que ahora no se puede configurar.',
+  save: 'Guardar',
+  saving: 'Guardando…',
+  saveFailed: 'La instalación no aceptó estos valores; se dejaron para que los corrijas.',
+} satisfies Record<keyof typeof en, string>
 
 /** Locale key naming each shipped provider; another id renders as itself. */
 export const PROVIDER_NAMES: Readonly<Record<string, WebSearchSettingsLocaleKey>> = {

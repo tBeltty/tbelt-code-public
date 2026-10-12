@@ -27,7 +27,7 @@
  * pane ends with an Add model entry, also offered under an empty catalog,
  * that closes the menu and opens Settings at the Models section.
  */
-import { MenuGroup, MenuSurface, observeStickyMenuGroups } from '@deepseek-ai/dsh-client-ui-primitives'
+import { formatNumber, MenuGroup, MenuSurface, observeStickyMenuGroups } from '@deepseek-ai/dsh-client-ui-primitives'
 import {
   useEffect, useId, useLayoutEffect, useMemo, useRef, useState, useSyncExternalStore,
   type CSSProperties, type KeyboardEvent, type FocusEvent,
@@ -61,10 +61,11 @@ const MEASURE_STYLE: CSSProperties = { visibility: 'hidden', left: 0, top: 0 }
  * Format one per-million-token rate as US dollars, keeping enough digits for
  * sub-cent rates.
  * @param rate - US dollars per million tokens.
+ * @param tag - language tag from `format.locale`.
  * @returns the rate with a leading `$`.
  */
-function usd(rate: number): string {
-  return `$${rate.toLocaleString('en-US', { minimumFractionDigits: rate < 1 ? 2 : 0, maximumFractionDigits: rate < 1 ? 3 : 2 })}`
+function usd(rate: number, tag: string): string {
+  return `$${formatNumber(tag, rate, rate < 1 ? 2 : 0, rate < 1 ? 3 : 2)}`
 }
 
 /**
@@ -74,10 +75,11 @@ function usd(rate: number): string {
  * @returns localized rate description.
  */
 function priceTitle(pricing: ModelPricing, t: PropsLocale<'model'>['t']): string {
-  const rates = { input: usd(pricing.input), output: usd(pricing.output) }
+  const tag = t('format.locale')
+  const rates = { input: usd(pricing.input, tag), output: usd(pricing.output, tag) }
   return pricing.cacheRead === undefined
     ? t('price.title', rates)
-    : t('price.titleCache', { ...rates, cacheRead: usd(pricing.cacheRead) })
+    : t('price.titleCache', { ...rates, cacheRead: usd(pricing.cacheRead, tag) })
 }
 
 /**
@@ -635,7 +637,7 @@ export function ModelSelect(
                             </span>
                             {model.pricing !== undefined && (
                               <span className={css.price}>
-                                {t('price.short', { input: usd(model.pricing.input), output: usd(model.pricing.output) })}
+                                {t('price.short', { input: usd(model.pricing.input, t('format.locale')), output: usd(model.pricing.output, t('format.locale')) })}
                               </span>
                             )}
                             <span className={css.check}>

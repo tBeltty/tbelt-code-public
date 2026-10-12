@@ -137,9 +137,9 @@ describe('physical key registry', () => {
     const first = registry.catalog.getSnapshot()
     expect(registry.catalog.getSnapshot()).toBe(first)
     expect(first[0]?.keys).toEqual(['Ctrl', '+', 'Alt', '+', 'B'])
-    label = '设置'
+    label = 'Ajustes'
     registry.refreshLabels()
-    expect(registry.catalog.getSnapshot()[0]?.label).toBe('设置')
+    expect(registry.catalog.getSnapshot()[0]?.label).toBe('Ajustes')
     expect(registry.dispatch({ ...gesture, control: true, meta: false }, context, vi.fn()).status).toBe('pass')
   })
 })

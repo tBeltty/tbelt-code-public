@@ -1,7 +1,7 @@
 /** Completed-Turn token usage action and its accounting details dialog. */
 
 import { createPortal } from 'react-dom'
-import { IconDatabaseOutlineRegular } from '@deepseek-ai/dsh-client-ui-primitives'
+import { decimalMark, IconDatabaseOutlineRegular } from '@deepseek-ai/dsh-client-ui-primitives'
 import type { TurnTokenUsage } from '../contract/chat-nodes.ts'
 import type { ChatViewSlotProps } from '../contract/slots.ts'
 import { formatCacheHitPercent, formatExactTokens, formatTokens } from './token-format.ts'
@@ -33,7 +33,7 @@ export function TurnUsagePanel({ usage, t }: TurnUsagePanelProps) {
 
   const cacheHit = usage.cacheReadTokens === undefined
     ? null
-    : formatCacheHitPercent(usage.cacheReadTokens, usage.totalTokens - usage.outputTokens, 1)
+    : formatCacheHitPercent(usage.cacheReadTokens, usage.totalTokens - usage.outputTokens, 1, decimalMark(t('format.locale')))
   const total = formatCompactCount(usage.totalTokens, t)
   const routes = usage.routes?.map(route => `${route.provider}/${route.model}`).join(', ') ?? ''
 

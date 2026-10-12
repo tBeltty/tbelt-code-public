@@ -35,7 +35,7 @@ beforeEach(() => {
   vi.clearAllMocks()
   browserSession = makeSession(); window = makeWindow()
   native.partition.mockReturnValue(browserSession); native.create.mockReturnValue(window)
-  auth = new DesktopPolicyTestAuth('https://policy.example.com', ['https://login.example.com'], resolveDesktopLocale('zh'), () => undefined, record)
+  auth = new DesktopPolicyTestAuth('https://policy.example.com', ['https://login.example.com'], resolveDesktopLocale('es'), () => undefined, record)
 })
 afterEach(async () => { await auth.dispose() })
 
@@ -55,11 +55,11 @@ it('opens a sandboxed window on explicit action and coalesces logins without aut
   const pending = auth.login()
   expect(auth.login()).toBe(pending)
   expect(native.create).toHaveBeenCalledTimes(1)
-  expect(native.create.mock.calls[0]![0]).toMatchObject({ title: '登录测试环境', webPreferences: {
+  expect(native.create.mock.calls[0]![0]).toMatchObject({ title: 'Inicia sesión en el entorno de pruebas', webPreferences: {
     session: browserSession, nodeIntegration: false, contextIsolation: true, sandbox: true, webSecurity: true,
     webviewTag: false, devTools: true } })
   expect(native.create.mock.calls[0]![0].webPreferences?.preload).toBeUndefined()
-  expect(window.loadFile).toHaveBeenCalledWith('renderer/policy-login-loading.html', { query: { label: '正在加载登录页面…' } })
+  expect(window.loadFile).toHaveBeenCalledWith('renderer/policy-login-loading.html', { query: { label: 'Cargando la página de inicio de sesión…' } })
   // The placeholder is the first document: the remote page waits for it.
   expect(window.loadURL).not.toHaveBeenCalled()
   await vi.waitFor(() => { expect(window.loadURL).toHaveBeenCalledWith('https://policy.example.com/') })

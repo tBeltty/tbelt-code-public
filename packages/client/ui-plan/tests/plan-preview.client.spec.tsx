@@ -10,7 +10,7 @@ import type { SessionId } from '@deepseek-ai/dsh-session/types'
 import { makeTranslate } from '@deepseek-ai/dsh-client-test-runtime'
 import { createSnapshotStore } from '@deepseek-ai/dsh-client-store'
 import { en as commonEn } from '@deepseek-ai/dsh-client-locale/src/locales/en.ts'
-import { en, zh } from '../src/client/locales.ts'
+import { en, es } from '../src/client/locales.ts'
 import { PlanCards, PlanReviewOpen } from '../src/client/PlanCard.tsx'
 import { PlanPreview, PlanTitle } from '../src/client/PlanPreview.tsx'
 import { planAddress, parsePlanAddress, submittedPlan } from '../src/client/plan.ts'
@@ -23,7 +23,7 @@ afterEach(cleanup)
 const markdown = '# Keep this plan\n\n## Goal\n\n- Review\n- Implement'
 const call = { type: 'tool/call', seq: 12, data: { turn: 1, name: 'exit_plan_mode', callId: 'call:1', arguments: JSON.stringify({ plan: markdown }) } }
 const plan = submittedPlan(call)!
-const target = { session: { kind: 'session' as const, sessionId: 'session / 中文' as SessionId }, callId: plan.callId }
+const target = { session: { kind: 'session' as const, sessionId: 'session de prueba' as SessionId }, callId: plan.callId }
 const t = makeTranslate(en, commonEn)
 
 function planHook(plans: readonly typeof plan[]): Parameters<typeof PlanCards>[0]['usePlans'] {
@@ -70,7 +70,7 @@ describe('submitted plan identity', () => {
   it('round-trips opaque identifiers and refuses malformed addresses', () => {
     expect(parsePlanAddress(planAddress(target))).toEqual(target)
     for (const mode of ['one-shot', 'continuable'] as const) {
-      const child = { session: { kind: 'subagent' as const, parentSessionId: target.session.sessionId, childSessionId: 'child / 中文' as SessionId, mode }, callId: plan.callId }
+      const child = { session: { kind: 'subagent' as const, parentSessionId: target.session.sessionId, childSessionId: 'child de prueba' as SessionId, mode }, callId: plan.callId }
       expect(parsePlanAddress(planAddress(child))).toEqual(child)
     }
     for (const address of ['file:///plan.md', 'dsh-resource://plan/s/c/extra', 'dsh-resource://plan/s/%XX', 'dsh-resource://plan/s/c?text=x',
@@ -210,7 +210,7 @@ it('updates plan cards only for their Turn’s plan data and preserves invocatio
 
 describe('plan entry points and document', () => {
   it('opens the exact persistent card in either locale', () => {
-    for (const dictionary of [en, zh]) {
+    for (const dictionary of [en, es]) {
       const openPlan = vi.fn()
       const props = { turn: { turn: 1 }, usePlans: planHook([plan]), seq: 30,
         t: makeTranslate(dictionary, commonEn), openPlan,
@@ -349,7 +349,7 @@ describe('plan entry points and document', () => {
     render(<PlanTitle {...props as unknown as Parameters<typeof PlanTitle>[0]} />)
     expect(screen.getByText('Plan')).toBeTruthy()
   })
-  it.each([en, zh])('localizes plan failures and unavailable providers', (dictionary) => {
+  it.each([en, es])('localizes plan failures and unavailable providers', (dictionary) => {
     const props = { t: makeTranslate(dictionary, commonEn), ...noComments,
       useTabInfo: () => ({ tab: { title: 'Plan', navigation: { address: planAddress(target) } } }),
     }

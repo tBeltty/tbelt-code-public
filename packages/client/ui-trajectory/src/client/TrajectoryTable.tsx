@@ -8,6 +8,8 @@ import {
   FileTypeIcon,
   fileExtension,
   fileSizeText,
+  formatNumber,
+  pluralSuffix,
   IconCheckOutlineRegular,
   IconChevronRightOutlineRegular,
   IconCodeOutlineRegular,
@@ -295,7 +297,7 @@ function defaultToolRequestWidth(splitWidth: number): number {
 function formatDurationMs(milliseconds: number, t: TrajectoryTranslate): string {
   if (milliseconds < 1_000) return t('unit.milliseconds', { value: Math.round(milliseconds) })
   return t('unit.seconds', {
-    value: (milliseconds / 1_000).toFixed(milliseconds < 10_000 ? 2 : 1),
+    value: formatNumber(t('format.locale'), milliseconds / 1_000, milliseconds < 10_000 ? 2 : 1),
   })
 }
 
@@ -366,7 +368,7 @@ function throughput(metrics: AssistantMetricDetail, t: TrajectoryTranslate): str
   const generationSeconds = (metrics.completedTime - metrics.firstTokenTime) / 1_000
   if (generationSeconds <= 0) return t('timing.durationTooShort')
   return t('unit.tokensPerSecond', {
-    value: (metrics.outputTokens / generationSeconds).toFixed(1),
+    value: formatNumber(t('format.locale'), metrics.outputTokens / generationSeconds, 1),
   })
 }
 
@@ -612,8 +614,8 @@ function summarizeTurn(
     record.cell.kind === 'tool' || record.cell.kind === 'subtool',
   ).length
   return [
-    t(steps === 1 ? 'summary.steps.one' : 'summary.steps.other', { count: steps }),
-    t(toolCalls === 1 ? 'summary.toolCalls.one' : 'summary.toolCalls.other', {
+    t(`summary.steps.${pluralSuffix(t('format.locale'), steps)}`, { count: steps }),
+    t(`summary.toolCalls.${pluralSuffix(t('format.locale'), toolCalls)}`, {
       count: toolCalls,
     }),
   ].join(' · ')
@@ -679,7 +681,7 @@ function summarizeAssistantTools(
     return separator === -1 ? record.cell.text : record.cell.text.slice(0, separator)
   }).filter(name => name !== ''))]
   const count = records.length
-  const summary = t(count === 1 ? 'summary.toolCalls.one' : 'summary.toolCalls.other', { count })
+  const summary = t(`summary.toolCalls.${pluralSuffix(t('format.locale'), count)}`, { count })
   return names.length > 0 ? `${summary} · ${names.join(', ')}` : summary
 }
 

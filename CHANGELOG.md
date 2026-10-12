@@ -4,6 +4,19 @@ Notable changes to tBelt Code, newest first. The format follows [Keep a Changelo
 
 ## [Unreleased]
 
+## [0.2.0-rc.2.20261012.3] - 2026-10-12
+
+### Added
+
+- Settings > General > Language has an Automatic option that follows the system language.
+- The desktop menus, dialogs and Windows installer are available in Spanish.
+- `dsh terminal` is available in Spanish. It follows the terminal language, and `/language` saves a choice that the app shares.
+- Spanish uses its own decimal and thousands separators, clock times and plural forms.
+
+### Removed
+
+- Chinese as an app language. A saved Chinese choice falls back to Automatic.
+
 ## [0.2.0-rc.2.20261012.2] - 2026-10-12
 
 ### Added
@@ -243,7 +256,8 @@ Notable changes to tBelt Code, newest first. The format follows [Keep a Changelo
 - Downloads no longer return an older installer.
 - A key that ran out of credit or hit its spending limit is reported as a quota problem instead of an invalid API key.
 
-[Unreleased]: https://github.com/tBeltty/tbelt-code-public/compare/v0.2.0-rc.2.20261012.2...HEAD
+[Unreleased]: https://github.com/tBeltty/tbelt-code-public/compare/v0.2.0-rc.2.20261012.3...HEAD
+[0.2.0-rc.2.20261012.3]: https://github.com/tBeltty/tbelt-code-public/releases/tag/v0.2.0-rc.2.20261012.3
 [0.2.0-rc.2.20261012.2]: https://github.com/tBeltty/tbelt-code-public/releases/tag/v0.2.0-rc.2.20261012.2
 [0.2.0-rc.2.20261012]: https://github.com/tBeltty/tbelt-code-public/releases/tag/v0.2.0-rc.2.20261012
 [0.2.0-rc.2.20261011]: https://github.com/tBeltty/tbelt-code-public/releases/tag/v0.2.0-rc.2.20261011

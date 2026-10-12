@@ -10,7 +10,7 @@ import type { TerminalViewState } from '@deepseek-ai/dsh-api-terminal-controller
 import type { WebTerminalId } from '@deepseek-ai/dsh-api-terminal-controller/types'
 import { TerminalBody, type TerminalBodyProps } from '../src/client/terminal.tsx'
 import { TerminalTitle } from '../src/client/TerminalTitle.tsx'
-import { en, zh } from '../src/client/locales.ts'
+import { en, es } from '../src/client/locales.ts'
 
 const fake = vi.hoisted(() => ({
   terminals: [] as FakeTerminal[],
@@ -148,9 +148,9 @@ it('keeps one emulator across rename and locale updates, applies snapshots and o
   h.update({ ...snapshot, render: { revision: 2, frame: { type: 'output', sequence: 1, data: 'duplicate' } } })
   expect(terminal.write).toHaveBeenCalledTimes(2)
   h.update({ ...snapshot, info: { ...info, title: 'Development' } })
-  h.view.rerender(<TerminalBody {...h.props} t={makeTranslate(zh)} />)
+  h.view.rerender(<TerminalBody {...h.props} t={makeTranslate(es)} />)
   expect(fake.terminals).toHaveLength(1)
-  expect(terminal.textarea?.getAttribute('aria-label')).toBe(zh.title)
+  expect(terminal.textarea?.getAttribute('aria-label')).toBe(es.title)
   h.view.unmount()
   expect(terminal.dispose).toHaveBeenCalledOnce()
   expect(terminal.disposeInput).toHaveBeenCalledOnce()
@@ -366,7 +366,7 @@ it('starts a recovered screen with no local history when environment discovery i
 })
 
 
-it.each([en, zh])('translates known terminal failures while retaining unknown Host diagnostics', (dictionary) => {
+it.each([en, es])('translates known terminal failures while retaining unknown Host diagnostics', (dictionary) => {
   const h = mount(idle, dictionary)
   for (const issue of ['missingTerminal', 'inputFull', 'attachmentEnded', 'invalidOutput', 'terminalLimit'] as const) {
     h.update({ ...idle, phase: 'failed', issue, error: 'raw diagnostic' })
@@ -377,7 +377,7 @@ it.each([en, zh])('translates known terminal failures while retaining unknown Ho
   expect(h.view.getByRole('alert').textContent).toContain('Host permission denied')
 })
 
-it.each([en, zh])('offers an explicit new terminal for missing instances without retrying the lost process', (dictionary) => {
+it.each([en, es])('offers an explicit new terminal for missing instances without retrying the lost process', (dictionary) => {
   const h = mount({ ...idle, phase: 'failed', issue: 'missingTerminal', error: 'raw Host diagnostic' }, dictionary)
   expect(h.view.getByRole('alert').textContent).toBe(dictionary.missingTerminal)
   expect(h.view.queryByRole('button', { name: dictionary.reconnect })).toBeNull()

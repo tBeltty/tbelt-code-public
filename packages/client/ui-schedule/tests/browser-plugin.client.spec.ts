@@ -24,7 +24,7 @@ import { ScheduleCatalogAction } from '../src/client/ScheduleCatalogAction.tsx'
 import { SessionScheduleHover } from '../src/client/SessionScheduleHover.tsx'
 import { SessionScheduleMark } from '../src/client/SessionScheduleMark.tsx'
 import { ScheduleTurnCard, type ScheduleTurnCardInjected } from '../src/client/ScheduleTurnCard.tsx'
-import { en, NS, zh } from '../src/client/locales.ts'
+import { en, NS, es } from '../src/client/locales.ts'
 
 const Empty = () => null
 
@@ -424,8 +424,8 @@ describe('ui-schedule browser half', () => {
     expect(panel.options.id).toBe('schedules')
     ctx.locale.setLocale('en')
     expect(resolveSlotLabel(panel.options.label)).toBe('Automation tasks')
-    ctx.locale.setLocale('zh')
-    expect(resolveSlotLabel(panel.options.label)).toBe('自动化任务')
+    ctx.locale.setLocale('es')
+    expect(resolveSlotLabel(panel.options.label)).toBe('Tareas de automatización')
     const face = injectedFace(entry, undefined as never) as TaskManagerInjected
     const dispose = face.hooks.catalog.subscribe(vi.fn())
     try {
@@ -518,14 +518,14 @@ describe('ui-schedule browser half', () => {
   it('registers both dictionaries and releases them with its fiber', async () => {
     const ctx = await baseContext()
     declareHeader(ctx)
-    ctx.locale.setLocale('zh')
+    ctx.locale.setLocale('es')
     const fiber = ctx.plugin({ inject: [...inject], apply })
     await fiber.await()
     const translate = ctx.locale.bind(NS)
-    expect(translate('list.aria')).toBe(zh['list.aria'])
+    expect(translate('list.aria')).toBe(es['list.aria'])
     ctx.locale.setLocale('en')
     expect(translate('list.aria')).toBe(en['list.aria'])
-    expect(Object.keys(en).sort()).toEqual(Object.keys(zh).sort())
+    expect(Object.keys(en).sort()).toEqual(Object.keys(es).sort())
 
     await fiber.dispose()
     expect(translate('list.aria')).not.toBe(en['list.aria'])

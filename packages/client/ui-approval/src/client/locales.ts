@@ -1,28 +1,9 @@
 /** `approval` namespace dictionaries. */
 
-/** Simplified Chinese dictionary and key-set source of truth. */
-export const zh = {
-  waiting: '等待审批',
-  'detail.aria': '审批详情',
-  'need.shell': '我需要权限来运行一条命令',
-  'need.edit': '我需要权限来修改你项目中的文件',
-  'need.read': '我需要权限来读取你的文件或网页',
-  'need.search': '我需要权限来搜索你的项目或网络',
-  'need.code': '我需要权限来运行一段程序',
-  'need.generic': '我需要权限来执行一项操作',
-  because: '原因：{reason}',
-  technical: '技术详情',
-  'technical.tool': '工具：{toolName}',
-  reject: '拒绝',
-  allowOnce: '允许一次',
-  allowSession: '本次会话中允许',
-  allowMenu: '更多允许选项',
-} satisfies Record<string, string>
-
 /** Approval dictionary key union. */
-export type ApprovalKey = keyof typeof zh
+export type ApprovalKey = keyof typeof en
 
-/** English dictionary, checked against the Chinese key set. */
+/** English dictionary and key-set source of truth. */
 export const en = {
   waiting: 'Waiting for approval',
   'detail.aria': 'Approval details',
@@ -39,4 +20,23 @@ export const en = {
   allowOnce: 'Allow once',
   allowSession: 'Allow for this session',
   allowMenu: 'More ways to allow',
-} satisfies Record<ApprovalKey, string>
+} satisfies Record<string, string>
+
+/** Spanish dictionary, checked complete against the English key set. */
+export const es = {
+  waiting: 'Esperando aprobación',
+  'detail.aria': 'Detalles de la aprobación',
+  'need.shell': 'Necesito permiso para ejecutar un comando',
+  'need.edit': 'Necesito permiso para modificar archivos de tu proyecto',
+  'need.read': 'Necesito permiso para leer tus archivos o una página web',
+  'need.search': 'Necesito permiso para buscar en tu proyecto o en la web',
+  'need.code': 'Necesito permiso para ejecutar un programa',
+  'need.generic': 'Necesito permiso para realizar una acción',
+  because: 'Motivo: {reason}',
+  technical: 'Detalles técnicos',
+  'technical.tool': 'Herramienta: {toolName}',
+  reject: 'Rechazar',
+  allowOnce: 'Permitir una vez',
+  allowSession: 'Permitir durante esta sesión',
+  allowMenu: 'Más formas de permitir',
+} satisfies Record<keyof typeof en, string>

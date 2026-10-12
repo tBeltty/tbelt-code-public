@@ -59,12 +59,15 @@ features_failure() {
   exit 1
 }
 
+# The pipelines below read their whole input: an early-exiting `grep -q` closes
+# the pipe, and with `pipefail` the writer's SIGPIPE on a commit with a long
+# file list (macOS pipes hold 16 KiB) makes the check fail.
 # App code paths that can change what a user sees; tests and Markdown are excluded.
 touches_app() {
   git diff-tree --no-commit-id --name-only -r "$1" |
     grep -E '^(apps|packages|python|native)/' |
     grep -v -E '(\.(spec|test|e2e)\.[cm]?[jt]sx?$|/tests?/|/__tests__/|\.md$)' |
-    grep -q .
+    awk 'END { exit NR == 0 }'
 }
 
 has_entries() {
@@ -123,7 +126,7 @@ case "${1:-}" in
     covered=$(git log --format=%B "$range" | sed -n 's/^Changelog-for: *\([0-9a-fA-F]\{7,40\}\).*/\1/p')
     found=0
     for sha in $(git rev-list --no-merges "$range"); do
-      git diff-tree --no-commit-id --name-only -r "$sha" | grep -q -x 'CHANGELOG.md' && continue
+      git diff-tree --no-commit-id --name-only -r "$sha" | awk '$0 == "CHANGELOG.md" { found = 1 } END { exit !found }' && continue
       git log -1 --format=%B "$sha" | grep -q -x 'Changelog: none' && continue
       touches_app "$sha" || continue
       skip=false

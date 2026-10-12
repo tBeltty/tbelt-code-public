@@ -17,7 +17,7 @@ import {
   formatScheduleRelative, zoneLabel,
 } from '../src/client/schedule-format.ts'
 import { timingSnapshot } from '../src/client/task-timing.ts'
-import { en, zh } from '../src/client/task-manager-locales.ts'
+import { en, es } from '../src/client/task-manager-locales.ts'
 import { zoneDifferingFrom, zoneOffsetMinutes } from './zone-fixture.ts'
 import css from '../src/client/TaskManagerPage.module.css'
 import taskMenuCss from '../src/client/TaskMenu.module.css'
@@ -157,7 +157,7 @@ const taskZone = (instant: string): string => zoneDifferingFrom(instant)
 
 function mount(
   initial: Partial<CatalogSnapshot<ScheduleCatalogEntry>> = {},
-  dictionary: typeof en | typeof zh = en,
+  dictionary: typeof en | typeof es = en,
   overrides: Partial<TaskManagerPageProps> = {},
 ) {
   let snapshot: CatalogSnapshot<ScheduleCatalogEntry> = {
@@ -206,23 +206,23 @@ function taskNames(): string[] {
 }
 
 /** The empty state's mock action, which starts a new Session like the heading's. */
-function emptyNewTaskButton(dictionary: typeof en | typeof zh = en): HTMLElement {
+function emptyNewTaskButton(dictionary: typeof en | typeof es = en): HTMLElement {
   return within(screen.getByRole('status')).getByRole('button', { name: dictionary['empty.action'] })
 }
 
-function detailViewLabels(dictionary: typeof en | typeof zh) {
+function detailViewLabels(dictionary: typeof en | typeof es) {
   return dictionary === en
     ? {
       tablist: 'Task detail views', rules: 'Rules', records: 'Delivery records',
       empty: 'No delivery record available',
     }
     : {
-      tablist: '任务详情视图', rules: '规则', records: '任务运行记录',
-      empty: '暂无任务运行记录',
+      tablist: 'Vistas de detalle de la tarea', rules: 'Reglas', records: 'Registros de entrega',
+      empty: 'No hay registros de entrega',
     }
 }
 
-function expectDetailView(dictionary: typeof en | typeof zh, active: 'rules' | 'records'): HTMLElement {
+function expectDetailView(dictionary: typeof en | typeof es, active: 'rules' | 'records'): HTMLElement {
   const labels = detailViewLabels(dictionary)
   const detail = screen.getByRole('complementary', { name: dictionary['detail.label'] })
   const tabs = within(detail).getByRole('tablist', { name: labels.tablist })
@@ -261,12 +261,12 @@ function nextRunTime(root: HTMLElement): HTMLTimeElement | null {
  * The absolute next-run text the row and detail state for one instant, in the
  * device zone the cases pin.
  */
-function absoluteNextRun(scheduledAt: string, dictionary: typeof en | typeof zh): string {
+function absoluteNextRun(scheduledAt: string, dictionary: typeof en | typeof es): string {
   return formatScheduleAbsolute(scheduledAt, dictionary['time.locale'])
 }
 
 /** The parenthesized distance the row and detail keep beside that absolute time. */
-function relativeNextRun(scheduledAt: string, dictionary: typeof en | typeof zh): string {
+function relativeNextRun(scheduledAt: string, dictionary: typeof en | typeof es): string {
   return `(${remainingUntil(scheduledAt, dictionary)})`
 }
 
@@ -285,7 +285,7 @@ function relativeText(root: HTMLElement): string | null {
  * @param dictionary - active locale dictionary.
  * @returns the localized time remaining, or overdue text.
  */
-function remainingUntil(scheduledAt: string, dictionary: typeof en | typeof zh): string {
+function remainingUntil(scheduledAt: string, dictionary: typeof en | typeof es): string {
   return formatScheduleRelative(scheduledAt, Date.now(), makeTranslate(dictionary))
 }
 
@@ -295,12 +295,12 @@ function follows(earlier: Element, later: Element): boolean {
 }
 
 /** The detail's editable task name control. */
-function nameField(dictionary: typeof en | typeof zh = en): HTMLInputElement {
+function nameField(dictionary: typeof en | typeof es = en): HTMLInputElement {
   return screen.getByRole<HTMLInputElement>('textbox', { name: dictionary['detail.name'] })
 }
 
 /** The detail's editable instruction control. */
-function instructionField(dictionary: typeof en | typeof zh = en): HTMLTextAreaElement {
+function instructionField(dictionary: typeof en | typeof es = en): HTMLTextAreaElement {
   return screen.getByRole<HTMLTextAreaElement>('textbox', { name: dictionary['detail.instruction'] })
 }
 
@@ -313,7 +313,7 @@ function instructionField(dictionary: typeof en | typeof zh = en): HTMLTextAreaE
  * @param dictionary - locale whose accessible names the region carries.
  * @param name - the task name the name control must show.
  */
-function expectDetailOrder(detail: HTMLElement, dictionary: typeof en | typeof zh, name: string): void {
+function expectDetailOrder(detail: HTMLElement, dictionary: typeof en | typeof es, name: string): void {
   const tabs = within(detail).getByRole('tablist', { name: detailViewLabels(dictionary).tablist })
   const nameControl = within(detail).getByRole<HTMLInputElement>('textbox', { name: dictionary['detail.name'] })
   const body = detail.querySelector<HTMLElement>(`.${css.detailScroll}`)!
@@ -332,49 +332,49 @@ function expectDetailOrder(detail: HTMLElement, dictionary: typeof en | typeof z
 }
 
 /** Open the detail's overflow menu and return it. */
-function openMore(dictionary: typeof en | typeof zh = en): HTMLElement {
+function openMore(dictionary: typeof en | typeof es = en): HTMLElement {
   fireEvent.click(screen.getByRole('button', { name: dictionary['detail.more'] }))
   return screen.getByRole('menu')
 }
 
 /** Open the shown rule's Repeat menu and choose one recurrence option. */
-function chooseRepeat(label: string, dictionary: typeof en | typeof zh = en): void {
+function chooseRepeat(label: string, dictionary: typeof en | typeof es = en): void {
   fireEvent.click(within(screen.getByRole('region', { name: dictionary['rule.title'] }))
     .getByRole('button', { name: new RegExp(`^${dictionary['rule.repeat']}`) }))
   fireEvent.click(screen.getByRole('menuitem', { name: label }))
 }
 
 /** The Frequency selector of the cron builder's rows. */
-function cronFrequencyButton(dictionary: typeof en | typeof zh = en): HTMLElement {
+function cronFrequencyButton(dictionary: typeof en | typeof es = en): HTMLElement {
   return within(screen.getByRole('region', { name: dictionary['rule.title'] }))
     .getByRole('button', { name: new RegExp(`^${dictionary['cronForm.frequency']}`) })
 }
 
 /** Open the cron builder's Frequency menu and choose one shape. */
-function chooseCronShape(label: string, dictionary: typeof en | typeof zh = en): void {
+function chooseCronShape(label: string, dictionary: typeof en | typeof es = en): void {
   fireEvent.click(cronFrequencyButton(dictionary))
   fireEvent.click(screen.getByRole('menuitem', { name: label }))
 }
 
 /** The Repeat selector of the shown rule's Run time card. */
-function repeatButton(dictionary: typeof en | typeof zh = en): HTMLElement {
+function repeatButton(dictionary: typeof en | typeof es = en): HTMLElement {
   return within(screen.getByRole('region', { name: dictionary['rule.title'] }))
     .getByRole('button', { name: new RegExp(`^${dictionary['rule.repeat']}`) })
 }
 
 /** The Time zone selector of the shown rule's Run time card. */
-function zoneButton(dictionary: typeof en | typeof zh = en): HTMLElement {
+function zoneButton(dictionary: typeof en | typeof es = en): HTMLElement {
   return within(screen.getByRole('region', { name: dictionary['rule.title'] }))
     .getByRole('button', { name: new RegExp(`^${dictionary['timing.zone']}`) })
 }
 
 /** Localized offset/name pair produced by the same ICU-backed formatter as the UI. */
-function displayedZone(zone: string, dictionary: typeof en | typeof zh = en): string {
+function displayedZone(zone: string, dictionary: typeof en | typeof es = en): string {
   return zoneLabel(zone, makeTranslate(dictionary))
 }
 
 /** Open the Time zone menu, filter by canonical IANA id, and choose the result. */
-function chooseZone(zone: string, dictionary: typeof en | typeof zh = en): void {
+function chooseZone(zone: string, dictionary: typeof en | typeof es = en): void {
   fireEvent.click(zoneButton(dictionary))
   fireEvent.change(screen.getByRole('searchbox', { name: dictionary['timing.zoneSearch'] }), {
     target: { value: zone },
@@ -383,7 +383,7 @@ function chooseZone(zone: string, dictionary: typeof en | typeof zh = en): void 
 }
 
 /** The Weekday toggle group of the shown rule's Run time card. */
-function weekdayGroup(dictionary: typeof en | typeof zh = en): HTMLElement {
+function weekdayGroup(dictionary: typeof en | typeof es = en): HTMLElement {
   return within(screen.getByRole('region', { name: dictionary['rule.title'] }))
     .getByRole('group', { name: dictionary['rule.weekday'] })
 }
@@ -394,20 +394,20 @@ function weekdayGroup(dictionary: typeof en | typeof zh = en): HTMLElement {
  * Scoped to the card: the open panel carries the row's own label and is portaled
  * outside it, so an unscoped lookup would match both while the panel shows.
  */
-function dateButton(dictionary: typeof en | typeof zh = en): HTMLButtonElement {
+function dateButton(dictionary: typeof en | typeof es = en): HTMLButtonElement {
   return within(screen.getByRole('region', { name: dictionary['rule.title'] }))
     .getByLabelText<HTMLButtonElement>(dictionary['timing.date'])
 }
 
 /** The Time row's picker trigger of the shown rule's Run time card, scoped like `dateButton`. */
-function timeButton(dictionary: typeof en | typeof zh = en): HTMLButtonElement {
+function timeButton(dictionary: typeof en | typeof es = en): HTMLButtonElement {
   return within(screen.getByRole('region', { name: dictionary['rule.title'] }))
     .getByLabelText<HTMLButtonElement>(dictionary['timing.time'])
 }
 
 /** One column of the open clock panel, by the row copy that names it. */
 function clockColumn(
-  key: 'timing.hour' | 'timing.minute' | 'timing.second', dictionary: typeof en | typeof zh = en,
+  key: 'timing.hour' | 'timing.minute' | 'timing.second', dictionary: typeof en | typeof es = en,
 ): HTMLElement {
   return screen.getByRole('listbox', { name: dictionary[key] })
 }
@@ -421,7 +421,7 @@ function clockColumn(
  * @returns the trigger's text once the picks are staged.
  */
 function chooseClock(
-  hour: string, minute: string, second: string | undefined, dictionary: typeof en | typeof zh = en,
+  hour: string, minute: string, second: string | undefined, dictionary: typeof en | typeof es = en,
 ): string {
   const picks: readonly (readonly ['timing.hour' | 'timing.minute' | 'timing.second', string])[] = [
     ['timing.hour', hour], ['timing.minute', minute],
@@ -442,7 +442,7 @@ function chooseClock(
  * @returns the trigger's text once the picks are staged.
  */
 function chooseTime(
-  hour: string, minute: string, second: string | undefined, dictionary: typeof en | typeof zh = en,
+  hour: string, minute: string, second: string | undefined, dictionary: typeof en | typeof es = en,
 ): string {
   if (screen.queryByRole('listbox', { name: dictionary['timing.hour'] }) === null) fireEvent.click(timeButton(dictionary))
   return chooseClock(hour, minute, second, dictionary)
@@ -456,7 +456,7 @@ function chooseTime(
  * @param dictionary - active locale.
  * @returns the trigger's text once the day is staged.
  */
-function chooseDay(day: number, monthsAhead = 0, dictionary: typeof en | typeof zh = en): string {
+function chooseDay(day: number, monthsAhead = 0, dictionary: typeof en | typeof es = en): string {
   if (screen.queryByRole('grid', { name: /.+/ }) === null) fireEvent.click(dateButton(dictionary))
   for (let step = 0; step < monthsAhead; step += 1) {
     fireEvent.click(screen.getByRole('button', { name: dictionary['timing.nextMonth'] }))
@@ -471,13 +471,13 @@ function dayCell(day: number): HTMLElement {
 }
 
 /** The monthly date toggle group of the shown rule's Run time card. */
-function dateGroup(dictionary: typeof en | typeof zh = en): HTMLElement {
+function dateGroup(dictionary: typeof en | typeof es = en): HTMLElement {
   return within(screen.getByRole('region', { name: dictionary['rule.title'] }))
     .getByRole('group', { name: dictionary['cronForm.dates'] })
 }
 
 /** Accessible name of one date toggle. */
-function dateName(day: number, dictionary: typeof en | typeof zh = en): string {
+function dateName(day: number, dictionary: typeof en | typeof es = en): string {
   return dictionary['cronForm.dateOption'].replace('{day}', String(day))
 }
 
@@ -509,22 +509,22 @@ function saveNotice(): HTMLElement | null {
 }
 
 /** Click the staged-edit bar's Save changes action. */
-function clickSave(dictionary: typeof en | typeof zh = en): void {
+function clickSave(dictionary: typeof en | typeof es = en): void {
   fireEvent.click(within(saveFooter()!).getByRole('button', { name: dictionary['rule.save'] }))
 }
 
 /** Click the staged-edit bar's Cancel action. */
-function clickCancel(dictionary: typeof en | typeof zh = en): void {
+function clickCancel(dictionary: typeof en | typeof es = en): void {
   fireEvent.click(within(saveFooter()!).getByRole('button', { name: dictionary['rule.cancel'] }))
 }
 
 /** Choose the overflow menu's delete row, opening the menu first. */
-function chooseDelete(dictionary: typeof en | typeof zh = en): void {
+function chooseDelete(dictionary: typeof en | typeof es = en): void {
   fireEvent.click(screen.getByRole('button', { name: dictionary['detail.more'] }))
   fireEvent.click(screen.getByRole('menuitem', { name: dictionary['delete.action'] }))
 }
 
-function openDelete(dictionary: typeof en | typeof zh = en): HTMLElement {
+function openDelete(dictionary: typeof en | typeof es = en): HTMLElement {
   fireEvent.click(screen.getByRole('button', { name: 'Review release' }))
   chooseDelete(dictionary)
   return screen.getByRole('dialog', { name: dictionary['delete.title'] })
@@ -547,13 +547,13 @@ function remoteCatalog() {
   return { ...mounted, list, remove, onDelete }
 }
 
-describe.each([['English', en], ['Chinese', zh]] as const)('original Session availability in %s', (_name, dictionary) => {
+describe.each([['English', en], ['Chinese', es]] as const)('original Session availability in %s', (_name, dictionary) => {
   it.each([
-    ['Session list pending', { ...sessions, phase: 'pending' as const }, workspaces, 'Loading original session information.', '正在加载原会话信息'],
-    ['Workspace list pending', sessions, { ...workspaces, phase: 'pending' as const }, 'Loading original session information.', '正在加载原会话信息'],
-    ['archived', sessions, { ...workspaces, archivedSessionIds: [at.sessionId] }, 'The original session is archived.', '原会话已归档'],
-    ['missing', { ...sessions, ids: [], byId: {} }, workspaces, 'The original session is unavailable.', '原会话当前不可用'],
-    ['archive read failed', sessions, { ...workspaces, state: 'error' as const, error: new RemoteError('gateway/internal', 'Archive unavailable', {}) }, 'The original session is unavailable.', '原会话当前不可用'],
+    ['Session list pending', { ...sessions, phase: 'pending' as const }, workspaces, 'Loading original session information.', 'Cargando la información de la sesión original.'],
+    ['Workspace list pending', sessions, { ...workspaces, phase: 'pending' as const }, 'Loading original session information.', 'Cargando la información de la sesión original.'],
+    ['archived', sessions, { ...workspaces, archivedSessionIds: [at.sessionId] }, 'The original session is archived.', 'La sesión original está archivada.'],
+    ['missing', { ...sessions, ids: [], byId: {} }, workspaces, 'The original session is unavailable.', 'La sesión original no está disponible.'],
+    ['archive read failed', sessions, { ...workspaces, state: 'error' as const, error: new RemoteError('gateway/internal', 'Archive unavailable', {}) }, 'The original session is unavailable.', 'La sesión original no está disponible.'],
   ] satisfies [string, SessionListState, WorkspaceSnapshot, string, string][])('disables navigation while %s without hiding the task', (_reason, sessionState, workspaceState, english, chinese) => {
     const { props } = mount({ records: [ended] }, dictionary, {
       useSessions: select => select(sessionState), useWorkspaces: select => select(workspaceState),
@@ -570,7 +570,7 @@ describe.each([['English', en], ['Chinese', zh]] as const)('original Session ava
   })
 })
 
-describe.each([['English', en], ['Chinese', zh]] as const)('linked-Session control naming in %s', (_name, dictionary) => {
+describe.each([['English', en], ['Chinese', es]] as const)('linked-Session control naming in %s', (_name, dictionary) => {
   it('contains the visible Linked session label when a catalog title names the Session', () => {
     mount({ records: [ended] }, dictionary, {
       useSessions: select => select(sessionsWithTitles({ [ended.sessionId]: 'Planning chat' })),
@@ -693,8 +693,8 @@ describe('Task manager catalog', () => {
     expect(screen.getByText('Every 1 hour')).toBeDefined()
     fireEvent.click(screen.getByRole('button', { name: 'Check metrics' }))
     expect(within(screen.getByRole('complementary')).getByText(en['rule.everyHours'])).toBeDefined()
-    h.view.rerender(<TaskManagerPage {...h.props} t={makeTranslate(zh)} />)
-    expect(within(screen.getByRole('complementary')).getByText(zh['rule.everyHours'])).toBeDefined()
+    h.view.rerender(<TaskManagerPage {...h.props} t={makeTranslate(es)} />)
+    expect(within(screen.getByRole('complementary')).getByText(es['rule.everyHours'])).toBeDefined()
   })
 
   it('describes row frequency and next time without exposing its Session', () => {
@@ -718,14 +718,14 @@ describe('Task manager catalog', () => {
     expect(metadata.textContent).not.toContain(en['status.active'])
     row.focus()
     expect(document.activeElement).toBe(row)
-    h.view.rerender(<TaskManagerPage {...h.props} t={makeTranslate(zh)} />)
+    h.view.rerender(<TaskManagerPage {...h.props} t={makeTranslate(es)} />)
     expect(screen.getByRole('button', {
-      name: 'Check metrics', description: /^每 301 秒.*下次计划时间：/,
+      name: 'Check metrics', description: /^Cada 301 s.*Próxima hora programada: /,
     })).toBe(row)
-    expect(time.textContent).toBe(absoluteNextRun(every.scheduledAt, zh))
-    expect(relativeText(metadata)).toBe(relativeNextRun(every.scheduledAt, zh))
+    expect(time.textContent).toBe(absoluteNextRun(every.scheduledAt, es))
+    expect(relativeText(metadata)).toBe(relativeNextRun(every.scheduledAt, es))
     expect(time.parentElement?.textContent)
-      .toBe(`${zh['list.nextPrefix']}${time.textContent} ${relativeNextRun(every.scheduledAt, zh)}`)
+      .toBe(`${es['list.nextPrefix']}${time.textContent} ${relativeNextRun(every.scheduledAt, es)}`)
   })
 
   it('shortens the stated time remaining as the clock advances', () => {
@@ -758,7 +758,7 @@ describe('Task manager catalog', () => {
   })
 
   it('states the time remaining until the next run in each locale', () => {
-    // The row and the detail state a duration, not a date: zh reads `2小时后`
+    // The row and the detail state a duration, not a date: es reads `2小时后`
     // and en reads `in 2 hours`, and neither renders a clock time for it. The
     // fixture is two hours out, where a few milliseconds of clock drift cannot
     // change the rendered unit.
@@ -766,9 +766,9 @@ describe('Task manager catalog', () => {
       ...at, title: 'Two hours out', prompt: 'Two hours out',
       scheduledAt: new Date(Date.now() + 2 * 3_600_000).toISOString(),
     }
-    for (const dictionary of [en, zh]) {
+    for (const dictionary of [en, es]) {
       const h = mount({ records: [soon] }, dictionary)
-      const expected = dictionary === en ? 'in 2 hours' : '2小时后'
+      const expected = dictionary === en ? 'in 2 hours' : 'en 2 horas'
       const row = screen.getByRole('button', { name: 'Two hours out' })
       const summary = row.querySelector<HTMLElement>(`.${css.rowSummary!}`)?.textContent ?? ''
       expect(summary).toContain(expected)
@@ -835,7 +835,7 @@ describe('Task manager catalog', () => {
     expect(taskNames()).toEqual(['Send summary', 'Review release', 'Check metrics'])
   })
 
-  it.each([en, zh])('combines all, active, and inactive status filters with search', (dictionary) => {
+  it.each([en, es])('combines all, active, and inactive status filters with search', (dictionary) => {
     mount({ records: [ended, every, after] }, dictionary)
     const list = screen.getByRole('list', { name: dictionary['list.label'] })
     const names = () => within(list).queryAllByRole('button')
@@ -868,7 +868,7 @@ describe('Task manager catalog', () => {
 
   it.each([
     { dictionary: en, frequency: 'Daily at 23:00' },
-    { dictionary: zh, frequency: '每天 23:00' },
+    { dictionary: es, frequency: 'Cada día a las 23:00' },
   ])('classifies daily wall-clock rules as repeating and omits the host zone: $frequency', ({ dictionary, frequency }) => {
     mount({ records: [...records, daily] }, dictionary)
     const list = screen.getByRole('list', { name: dictionary['list.label'] })
@@ -924,7 +924,7 @@ describe('Task manager catalog', () => {
   })
 })
 
-describe.each([['English', en], ['Chinese', zh]] as const)('task detail views in %s', (_name, dictionary) => {
+describe.each([['English', en], ['Chinese', es]] as const)('task detail views in %s', (_name, dictionary) => {
   it('opens Rules under the selected task and separates rule fields from saved deliveries', async () => {
     const labels = detailViewLabels(dictionary)
     const h = mount({ records: [{ ...at, lastDelivery: delivery }] }, dictionary)
@@ -1175,7 +1175,7 @@ describe.each([['English', en], ['Chinese', zh]] as const)('task detail views in
 })
 
 describe('saved-history task binding', () => {
-  it.each([en, zh])('renders saved prompts rather than the current instruction', async (dictionary) => {
+  it.each([en, es])('renders saved prompts rather than the current instruction', async (dictionary) => {
     const savedPrompt = 'Original saved instruction\n<img src=x onerror=alert(1)>'
     const loadHistory = vi.fn<TaskManagerPageProps['loadHistory']>().mockResolvedValue({ ok: true, value: {
       id: at.id, records: [{ ...delivery, prompt: savedPrompt }], earlierRecordsUnavailable: false,
@@ -1192,7 +1192,7 @@ describe('saved-history task binding', () => {
     expect(record.querySelector<HTMLElement>(`.${css.savedPrompt}`)?.textContent).toBe(savedPrompt)
   })
 
-  it.each([en, zh])('never substitutes the current instruction for a record without a saved prompt', async (dictionary) => {
+  it.each([en, es])('never substitutes the current instruction for a record without a saved prompt', async (dictionary) => {
     const loadHistory = vi.fn<TaskManagerPageProps['loadHistory']>().mockResolvedValue({ ok: true, value: {
       id: at.id, records: [delivery], earlierRecordsUnavailable: false, earlierRecordsPruned: false, retention: { days: 30, records: 200 },
     } })
@@ -1258,7 +1258,7 @@ describe('saved-history task binding', () => {
 })
 
 describe('Task manager details', () => {
-  it.each([en, zh])('retains the selected row and detail after an authoritative inactive update with a delivery receipt', async (dictionary) => {
+  it.each([en, es])('retains the selected row and detail after an authoritative inactive update with a delivery receipt', async (dictionary) => {
     const h = mount({ records: [at] }, dictionary)
     const row = screen.getByRole('button', { name: 'Review release' })
     fireEvent.click(row)
@@ -1325,7 +1325,7 @@ describe('Task manager details', () => {
     expect(panel.querySelector('time')).toBeNull()
   })
 
-  it.each([en, zh])('preserves Delivery records on same-task refresh and replaces the actual latest receipt separately from the next target', async (dictionary) => {
+  it.each([en, es])('preserves Delivery records on same-task refresh and replaces the actual latest receipt separately from the next target', async (dictionary) => {
     const labels = detailViewLabels(dictionary)
     const h = mount({ records: [{ ...every, lastDelivery: delivery }] }, dictionary)
     fireEvent.click(screen.getByRole('button', { name: 'Check metrics' }))
@@ -1363,7 +1363,7 @@ describe('Task manager details', () => {
     expect(nextRunTime(detail)?.dateTime).toBe('2026-10-01T09:35:01.000Z')
   })
 
-  it.each([en, zh])('keeps the linked Session entry separate from scrolling details and destructive actions', (dictionary) => {
+  it.each([en, es])('keeps the linked Session entry separate from scrolling details and destructive actions', (dictionary) => {
     const h = mount({ records: [at] }, dictionary)
     fireEvent.click(screen.getByRole('button', { name: 'Review release' }))
     const detail = screen.getByRole('complementary', { name: dictionary['detail.label'] })
@@ -1529,22 +1529,22 @@ describe('Task manager details', () => {
   })
 
   it('renders Chinese labels and local time without translating stored user data', () => {
-    mount({}, zh)
-    expect(screen.getByRole('heading', { level: 1, name: '自动化任务' })).toBeDefined()
-    expect(screen.getByRole('searchbox', { name: '搜索任务' })).toBeDefined()
-    const statuses = screen.getByRole('group', { name: '任务状态' })
-    expect(within(statuses).getAllByRole('button')[0]?.textContent).toBe('全部')
+    mount({}, es)
+    expect(screen.getByRole('heading', { level: 1, name: 'Tareas de automatización' })).toBeDefined()
+    expect(screen.getByRole('searchbox', { name: 'Buscar tareas' })).toBeDefined()
+    const statuses = screen.getByRole('group', { name: 'Estado de la tarea' })
+    expect(within(statuses).getAllByRole('button')[0]?.textContent).toBe('Todas')
     fireEvent.click(screen.getByRole('button', { name: 'Check metrics' }))
-    const detail = screen.getByRole('complementary', { name: '任务详情' })
-    expect(within(detail).getByText(zh['rule.everySeconds'])).toBeDefined()
-    expect(nextRunTime(detail)?.textContent).toBe(absoluteNextRun(every.scheduledAt, zh))
-    expect(relativeText(detail)).toBe(relativeNextRun(every.scheduledAt, zh))
-    chooseDelete(zh)
-    expect(screen.getByRole('dialog', { name: '删除此任务？' })).toBeDefined()
-    expect(screen.getByRole('button', { name: '确认删除' })).toBeDefined()
-    fireEvent.click(screen.getByRole('button', { name: '关闭删除确认' }))
+    const detail = screen.getByRole('complementary', { name: 'Detalles de la tarea' })
+    expect(within(detail).getByText(es['rule.everySeconds'])).toBeDefined()
+    expect(nextRunTime(detail)?.textContent).toBe(absoluteNextRun(every.scheduledAt, es))
+    expect(relativeText(detail)).toBe(relativeNextRun(every.scheduledAt, es))
+    chooseDelete(es)
+    expect(screen.getByRole('dialog', { name: '¿Eliminar esta tarea?' })).toBeDefined()
+    expect(screen.getByRole('button', { name: 'Confirmar eliminación' })).toBeDefined()
+    fireEvent.click(screen.getByRole('button', { name: 'Cerrar la confirmación de eliminación' }))
     expect(screen.queryByRole('dialog')).toBeNull()
-    expect(screen.getByRole('button', { name: zh['detail.openSession'] })).toBeDefined()
+    expect(screen.getByRole('button', { name: es['detail.openSession'] })).toBeDefined()
   })
 
   it('republishes the next-run line in the language of the injected locale', () => {
@@ -1553,13 +1553,13 @@ describe('Task manager details', () => {
     const row = screen.getByRole('list')
     expect(time?.textContent).toBe(absoluteNextRun(at.scheduledAt, en))
     expect(relativeText(row)).toBe(relativeNextRun(at.scheduledAt, en))
-    // English names the year; the Chinese date form reads month and day only.
+    // Both languages name the year.
     expect(absoluteNextRun(at.scheduledAt, en)).toMatch(/\d{4}/)
-    expect(absoluteNextRun(at.scheduledAt, zh)).not.toMatch(/\d{4}/)
-    h.view.rerender(<TaskManagerPage {...h.props} t={makeTranslate(zh)} />)
-    expect(time?.textContent).toBe(absoluteNextRun(at.scheduledAt, zh))
-    expect(relativeText(row)).toBe(relativeNextRun(at.scheduledAt, zh))
-    expect(screen.getByRole('heading', { level: 1, name: '自动化任务' })).toBeDefined()
+    expect(absoluteNextRun(at.scheduledAt, es)).toMatch(/\d{4}/)
+    h.view.rerender(<TaskManagerPage {...h.props} t={makeTranslate(es)} />)
+    expect(time?.textContent).toBe(absoluteNextRun(at.scheduledAt, es))
+    expect(relativeText(row)).toBe(relativeNextRun(at.scheduledAt, es))
+    expect(screen.getByRole('heading', { level: 1, name: 'Tareas de automatización' })).toBeDefined()
   })
 
   it('states the next run in the device zone even when the rule stores another one', () => {
@@ -1621,7 +1621,7 @@ describe('Task manager details', () => {
 })
 
 describe('Task detail rule header and run-time card', () => {
-  it.each([en, zh])('shows the heading, one compact next-run line, and an overflow menu with only deletion', (dictionary) => {
+  it.each([en, es])('shows the heading, one compact next-run line, and an overflow menu with only deletion', (dictionary) => {
     mount({ records: [at] }, dictionary)
     fireEvent.click(screen.getByRole('button', { name: 'Review release' }))
     const detail = screen.getByRole('complementary', { name: dictionary['detail.label'] })
@@ -2038,7 +2038,7 @@ describe('Task detail rule header and run-time card', () => {
     expect(zoneButton().textContent).toContain(displayedZone(DEVICE_ZONE))
   })
 
-  it.each([en, zh])('offers IANA zones by offset with the system zone first and marked', (dictionary) => {
+  it.each([en, es])('offers IANA zones by offset with the system zone first and marked', (dictionary) => {
     mount({ records: [daily] }, dictionary)
     fireEvent.click(screen.getByRole('button', { name: 'Daily weather' }))
     const selector = zoneButton(dictionary)
@@ -2120,7 +2120,7 @@ describe('Task detail rule header and run-time card', () => {
     expect(screen.getAllByRole('menuitem').length).toBeGreaterThan(1)
   })
 
-  it.each([en, zh])('filters zones by hidden IANA id, localized ICU name, and UTC offset', (dictionary) => {
+  it.each([en, es])('filters zones by hidden IANA id, localized ICU name, and UTC offset', (dictionary) => {
     mount({ records: [daily] }, dictionary)
     fireEvent.click(screen.getByRole('button', { name: 'Daily weather' }))
     fireEvent.click(zoneButton(dictionary))
@@ -2143,14 +2143,14 @@ describe('Task detail rule header and run-time card', () => {
       'America/Anchorage', 'America/Juneau', 'Asia/Shanghai',
     ])
     const stored: ScheduleCatalogEntry = { ...daily, timeZone: 'America/Juneau' }
-    mount({ records: [stored] }, zh)
+    mount({ records: [stored] }, es)
     fireEvent.click(screen.getByRole('button', { name: 'Daily weather' }))
-    fireEvent.click(zoneButton(zh))
-    const alaska = displayedZone('America/Anchorage', zh)
-    expect(displayedZone('America/Juneau', zh)).toBe(alaska)
+    fireEvent.click(zoneButton(es))
+    const alaska = displayedZone('America/Anchorage', es)
+    expect(displayedZone('America/Juneau', es)).toBe(alaska)
     expect(screen.getAllByRole('menuitem').filter(item => item.textContent === alaska)).toHaveLength(1)
 
-    fireEvent.change(screen.getByRole('searchbox', { name: zh['timing.zoneSearch'] }), {
+    fireEvent.change(screen.getByRole('searchbox', { name: es['timing.zoneSearch'] }), {
       target: { value: 'America/Juneau' },
     })
     const result = screen.getByRole('menuitem')
@@ -2171,17 +2171,17 @@ describe('Task detail rule header and run-time card', () => {
 
   it('marks only the resolved system zone with the localized suffix', () => {
     pinSystemZone('Asia/Tokyo')
-    mount({ records: [weekly] }, zh)
+    mount({ records: [weekly] }, es)
     fireEvent.click(screen.getByRole('button', { name: 'Weekly review' }))
     // The stored zone is Shanghai, not the system zone, so the trigger stays unmarked.
-    expect(zoneButton(zh).textContent).toContain(displayedZone('Asia/Shanghai', zh))
-    expect(zoneButton(zh).textContent).not.toContain(zh['rule.zone.system'])
-    fireEvent.click(zoneButton(zh))
+    expect(zoneButton(es).textContent).toContain(displayedZone('Asia/Shanghai', es))
+    expect(zoneButton(es).textContent).not.toContain(es['rule.zone.system'])
+    fireEvent.click(zoneButton(es))
     const items = within(screen.getByRole('menu')).getAllByRole('menuitem')
     expect(items[0]?.textContent)
-      .toBe(`${displayedZone('Asia/Tokyo', zh)}${zh['rule.zone.system']}`)
+      .toBe(`${displayedZone('Asia/Tokyo', es)}${es['rule.zone.system']}`)
     // No later inventory entry picks the suffix up.
-    expect(items.filter(item => item.textContent?.includes(zh['rule.zone.system']))).toHaveLength(1)
+    expect(items.filter(item => item.textContent?.includes(es['rule.zone.system']))).toHaveLength(1)
   })
 
   it('leads the menu with any system zone', () => {
@@ -2194,7 +2194,7 @@ describe('Task detail rule header and run-time card', () => {
     expect(items.filter(item => item.textContent?.includes(en['rule.zone.system']))).toHaveLength(1)
   })
 
-  it.each([en, zh])('localizes a stored zone outside the minimal fallback', (dictionary) => {
+  it.each([en, es])('localizes a stored zone outside the minimal fallback', (dictionary) => {
     const stored: ScheduleCatalogEntry = { ...daily, timeZone: 'Europe/Paris' }
     mount({ records: [stored] }, dictionary)
     fireEvent.click(screen.getByRole('button', { name: 'Daily weather' }))
@@ -2261,7 +2261,7 @@ describe('Task detail rule header and run-time card', () => {
     expect(zoneButton().textContent).toContain(`${displayedZone('Europe/Paris')}${en['rule.zone.system']}`)
   })
 
-  it.each([en, zh])('keeps the shown zone when the Time zone menu selects it again', (dictionary) => {
+  it.each([en, es])('keeps the shown zone when the Time zone menu selects it again', (dictionary) => {
     const h = mount({ records: [daily] }, dictionary)
     fireEvent.click(screen.getByRole('button', { name: 'Daily weather' }))
     chooseZone('Asia/Shanghai', dictionary)
@@ -2270,7 +2270,7 @@ describe('Task detail rule header and run-time card', () => {
     expect(zoneButton(dictionary).textContent).toContain(displayedZone('Asia/Shanghai', dictionary))
   })
 
-  it.each([en, zh])('shows the staged-edit bar only while the draft differs and clears it on Cancel', (dictionary) => {
+  it.each([en, es])('shows the staged-edit bar only while the draft differs and clears it on Cancel', (dictionary) => {
     const h = mount({ records: [daily] }, dictionary)
     fireEvent.click(screen.getByRole('button', { name: 'Daily weather' }))
     // A clean draft has no save controls at all.
@@ -2564,7 +2564,7 @@ describe('Task detail rule header and run-time card', () => {
     })
   })
 
-  it.each([en, zh])('offers the mock recurrence choices in the Repeat menu, in order', (dictionary) => {
+  it.each([en, es])('offers the mock recurrence choices in the Repeat menu, in order', (dictionary) => {
     mount({ records: [daily] }, dictionary)
     fireEvent.click(screen.getByRole('button', { name: 'Daily weather' }))
     fireEvent.click(repeatButton(dictionary))
@@ -2758,7 +2758,7 @@ describe('Task detail rule header and run-time card', () => {
     expect(weekdayPressed(weekdayGroup())).toEqual(['false', 'true', 'false', 'false', 'false', 'false', 'false'])
   })
 
-  it.each([en, zh])('renders a catalog weekly rule with its stored weekdays and time, omitting the host zone', (dictionary) => {
+  it.each([en, es])('renders a catalog weekly rule with its stored weekdays and time, omitting the host zone', (dictionary) => {
     mount({ records: [weekly] }, dictionary)
     fireEvent.click(screen.getByRole('button', { name: weekly.prompt }))
     const card = screen.getByRole('region', { name: dictionary['rule.title'] })
@@ -2772,7 +2772,7 @@ describe('Task detail rule header and run-time card', () => {
     expect(zoneButton(dictionary).textContent).toContain(displayedZone('Asia/Shanghai', dictionary))
   })
 
-  it.each([en, zh])('shows an ended weekly rule as read-only', (dictionary) => {
+  it.each([en, es])('shows an ended weekly rule as read-only', (dictionary) => {
     mount({ records: [{ ...weekly, status: 'inactive' }] }, dictionary)
     fireEvent.click(screen.getByRole('button', { name: weekly.prompt }))
     const card = screen.getByRole('region', { name: dictionary['rule.title'] })
@@ -2788,7 +2788,7 @@ describe('Task detail rule header and run-time card', () => {
     expect(saveFooter()).toBeNull()
   })
 
-  it.each([en, zh])('offers a cron Repeat choice that reveals structured rows without a request', (dictionary) => {
+  it.each([en, es])('offers a cron Repeat choice that reveals structured rows without a request', (dictionary) => {
     const h = mount({ records: [daily] }, dictionary)
     fireEvent.click(screen.getByRole('button', { name: 'Daily weather' }))
     chooseRepeat(dictionary['rule.cron'], dictionary)
@@ -2803,11 +2803,11 @@ describe('Task detail rule header and run-time card', () => {
     expect(timeButton(dictionary).textContent).toBe('23:00')
     // The described hint carries the sentence the staged expression parses to.
     expect(document.getElementById(frequency.getAttribute('aria-describedby')!)?.textContent)
-      .toBe(dictionary === en ? 'Every day at 23:00' : '每天 23:00')
+      .toBe(dictionary === en ? 'Every day at 23:00' : 'Todos los días a las 23:00')
     expect(saveFooter()).not.toBeNull()
   })
 
-  it.each([en, zh])('renders an unrecognized cron expression as a raw row like its neighbours with its sentence in the card hints', (dictionary) => {
+  it.each([en, es])('renders an unrecognized cron expression as a raw row like its neighbours with its sentence in the card hints', (dictionary) => {
     // The two-hour list matches no builder shape, so the raw expression row
     // shows without any raw choice being made.
     mount({ records: [{ ...cron, expression: '30 9,15 * * *' }] }, dictionary)
@@ -2830,7 +2830,7 @@ describe('Task detail rule header and run-time card', () => {
     expect(hint.className).toBe(css.ruleHint)
     expect(row.contains(hint)).toBe(false)
     expect(hint.parentElement).toBe(rows.parentElement)
-    expect(hint.textContent).toBe(dictionary === en ? 'Every day at 09:30, 15:30' : '每天 09:30、15:30')
+    expect(hint.textContent).toBe(dictionary === en ? 'Every day at 09:30, 15:30' : 'Todos los días a las 09:30, 15:30')
     // The zone row keeps no hint of its own: its picker names the zone it states,
     // so the row points at nothing.
     expect(zoneButton(dictionary).getAttribute('aria-describedby')).toBeNull()
@@ -2933,7 +2933,7 @@ describe('Task detail rule header and run-time card', () => {
     expect(screen.getByRole('alert').textContent).toBe(en['rule.error.conflict'])
   })
 
-  it.each([en, zh])('renders a catalog cron rule with its shape rows, preview, zone, and next run', (dictionary) => {
+  it.each([en, es])('renders a catalog cron rule with its shape rows, preview, zone, and next run', (dictionary) => {
     mount({ records: [cron] }, dictionary)
     fireEvent.click(screen.getByRole('button', { name: cron.prompt }))
     const card = screen.getByRole('region', { name: dictionary['rule.title'] })
@@ -2947,14 +2947,14 @@ describe('Task detail rule header and run-time card', () => {
     expect(cronFrequencyButton(dictionary).textContent).toContain(dictionary['cronForm.weekly'])
     expect(weekdayPressed(weekdayGroup(dictionary))).toEqual(['true', 'true', 'true', 'true', 'true', 'false', 'false'])
     expect(timeButton(dictionary).textContent).toBe('09:00')
-    expect(within(card).getByText(dictionary === en ? 'Mon–Fri at 09:00' : '周一至周五 09:00')).toBeDefined()
+    expect(within(card).getByText(dictionary === en ? 'Mon–Fri at 09:00' : 'lun–vie a las 09:00')).toBeDefined()
     expect(zoneButton(dictionary).textContent).toContain(displayedZone('Asia/Shanghai', dictionary))
     const detail = screen.getByRole('complementary', { name: dictionary['detail.label'] })
     expect(nextRunTime(detail)?.textContent).toBe(absoluteNextRun(cron.scheduledAt, dictionary))
     expect(relativeText(detail)).toBe(relativeNextRun(cron.scheduledAt, dictionary))
   })
 
-  it.each([en, zh])('shows an ended cron rule as read-only', (dictionary) => {
+  it.each([en, es])('shows an ended cron rule as read-only', (dictionary) => {
     mount({ records: [{ ...cron, status: 'inactive' }] }, dictionary)
     fireEvent.click(screen.getByRole('button', { name: cron.prompt }))
     const card = screen.getByRole('region', { name: dictionary['rule.title'] })
@@ -3049,7 +3049,7 @@ describe('Task detail rule header and run-time card', () => {
     })
   })
 
-  it.each([en, zh])('renders a monthly cron rule as a date grid with its time and preview', (dictionary) => {
+  it.each([en, es])('renders a monthly cron rule as a date grid with its time and preview', (dictionary) => {
     mount({ records: [{ ...cron, expression: '30 8 1,15 * *' }] }, dictionary)
     fireEvent.click(screen.getByRole('button', { name: cron.prompt }))
     const card = screen.getByRole('region', { name: dictionary['rule.title'] })
@@ -3060,7 +3060,7 @@ describe('Task detail rule header and run-time card', () => {
     expect(datesPressed(group)).toEqual([1, 15])
     expect(within(group).getByRole('button', { name: dateName(15, dictionary) }).getAttribute('aria-pressed')).toBe('true')
     expect(timeButton(dictionary).textContent).toBe('08:30')
-    expect(within(card).getByText(dictionary === en ? 'Day 1, 15 of every month at 08:30' : '每月 1、15 日 08:30')).toBeDefined()
+    expect(within(card).getByText(dictionary === en ? 'Day 1, 15 of every month at 08:30' : 'Día 1, 15 de cada mes a las 08:30')).toBeDefined()
   })
 
   it('regenerates the monthly cron expression from date toggles and submits it', () => {
@@ -3224,7 +3224,7 @@ describe('Task detail rule header and run-time card', () => {
     expect(zoneButton().hasAttribute('disabled')).toBe(false)
   })
 
-  it.each([en, zh])('keeps both rows and surfaces the localized conflict', async (dictionary) => {
+  it.each([en, es])('keeps both rows and surfaces the localized conflict', async (dictionary) => {
     const h = mount({ records: [daily] }, dictionary)
     fireEvent.click(screen.getByRole('button', { name: 'Daily weather' }))
     h.updateTiming.mockResolvedValue({ ok: true, value: { id: daily.id, updated: false, code: 'schedule_conflict' } })
@@ -3313,7 +3313,7 @@ describe('Task detail rule header and run-time card', () => {
     expect(screen.queryByRole('complementary')).toBeNull()
   })
 
-  it.each([en, zh])('shows an ended rule as its ended state with read-only rows', (dictionary) => {
+  it.each([en, es])('shows an ended rule as its ended state with read-only rows', (dictionary) => {
     mount({ records: [{ ...daily, status: 'inactive' }] }, dictionary)
     fireEvent.click(screen.getByRole('button', { name: 'Daily weather' }))
     const detail = screen.getByRole('complementary', { name: dictionary['detail.label'] })
@@ -3362,7 +3362,7 @@ describe('Task detail rule header and run-time card', () => {
 
   it.each([
     [en, 'Daily at 23:00'],
-    [zh, '每天 23:00'],
+    [es, 'Cada día a las 23:00'],
   ] as const)('omits a stored zone equal to the host zone from the frequency line', (dictionary, expected) => {
     mount({ records: [daily] }, dictionary)
     fireEvent.click(screen.getByRole('button', { name: 'Daily weather' }))
@@ -3370,12 +3370,12 @@ describe('Task detail rule header and run-time card', () => {
     expect(repeatButton(dictionary).textContent).not.toContain('Asia/Shanghai')
   })
 
-  it.each([en, zh])('names a non-host stored zone with its ICU label in the frequency line', (dictionary) => {
+  it.each([en, es])('names a non-host stored zone with its ICU label in the frequency line', (dictionary) => {
     mount({ records: [{ ...daily, timeZone: 'America/New_York' }] }, dictionary)
     fireEvent.click(screen.getByRole('button', { name: 'Daily weather' }))
     const expected = dictionary === en
       ? `Daily at 23:00 (${displayedZone('America/New_York', dictionary)})`
-      : `每天 23:00（${displayedZone('America/New_York', dictionary)}）`
+      : `Cada día a las 23:00 (${displayedZone('America/New_York', dictionary)})`
     expect(repeatButton(dictionary).textContent).toContain(expected)
     expect(repeatButton(dictionary).textContent).not.toContain('America/New_York')
   })
@@ -3402,7 +3402,7 @@ describe('Task detail rule header and run-time card', () => {
 })
 
 describe('Task detail name and instruction edits', () => {
-  it.each([en, zh])('names both controls through the dictionary and seeds them from the task', (dictionary) => {
+  it.each([en, es])('names both controls through the dictionary and seeds them from the task', (dictionary) => {
     mount({ records: [at] }, dictionary)
     fireEvent.click(screen.getByRole('button', { name: 'Review release' }))
     const detail = screen.getByRole('complementary', { name: dictionary['detail.label'] })
@@ -3495,7 +3495,7 @@ describe('Task detail name and instruction edits', () => {
     expect(instructionField().value).toBe('\n \n')
   })
 
-  it.each([en, zh])('restores the stored name and instruction on Cancel', (dictionary) => {
+  it.each([en, es])('restores the stored name and instruction on Cancel', (dictionary) => {
     mount({ records: [at] }, dictionary)
     fireEvent.click(screen.getByRole('button', { name: 'Review release' }))
     fireEvent.change(nameField(dictionary), { target: { value: 'Draft name' } })
@@ -3535,7 +3535,7 @@ describe('Task detail name and instruction edits', () => {
     })
   })
 
-  it.each([en, zh])('renders an ended task name and instruction as plain text with no save bar', (dictionary) => {
+  it.each([en, es])('renders an ended task name and instruction as plain text with no save bar', (dictionary) => {
     mount({ records: [ended] }, dictionary)
     fireEvent.click(screen.getByRole('button', { name: 'Review release' }))
     const detail = screen.getByRole('complementary', { name: dictionary['detail.label'] })
@@ -4228,7 +4228,7 @@ describe('timing pickers', () => {
     expect(document.activeElement).toBe(dateButton())
   })
 
-  it.each([en, zh])('names every picker part in %s', (dictionary) => {
+  it.each([en, es])('names every picker part in %s', (dictionary) => {
     mount({ records: [at] }, dictionary)
     fireEvent.click(screen.getByRole('button', { name: 'Review release' }))
     fireEvent.click(timeButton(dictionary))

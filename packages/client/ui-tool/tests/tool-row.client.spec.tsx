@@ -5,19 +5,19 @@ import { cleanup, fireEvent, render } from '@testing-library/react'
 
 import type { StartedToolCall, ToolResultNode } from '@deepseek-ai/dsh-client-ui-chat/client'
 import { makeTranslate } from '@deepseek-ai/dsh-client-test-runtime'
-import { zh as commonZh } from '@deepseek-ai/dsh-client-locale/src/locales/zh.ts'
+import { es as commonEs } from '@deepseek-ai/dsh-client-locale/src/locales/es.ts'
 import { localizeAutoReviewDenial, normalizeAutoReviewReason } from '../src/client/tool/models/auto-review-denial.ts'
 import { classifyTool, toolRowModel } from '@deepseek-ai/dsh-presentation-tool-call'
 import { ToolRow } from '../src/client/tool/components/ToolRow.tsx'
 import { GenericToolCard, type GenericToolCardProps } from '../src/client/tool/toolviews/GenericToolCard.tsx'
-import { zh } from '@deepseek-ai/dsh-client-ui-conversation/src/client/locales.ts'
+import { es } from '@deepseek-ai/dsh-client-ui-conversation/src/client/locales.ts'
 
 afterEach(() => {
   cleanup()
   vi.restoreAllMocks()
 })
 
-const t: GenericToolCardProps['t'] = makeTranslate(zh, commonZh)
+const t: GenericToolCardProps['t'] = makeTranslate(es, commonEs)
 
 const running = (over?: Partial<StartedToolCall>): StartedToolCall => ({
   phase: 'start' as const, callId: 'c1', name: 'bash', argsRaw: '{"command":"ls -la","description":"List files"}',
@@ -36,9 +36,9 @@ describe('tool-call-model titles', () => {
     // Every define/run pair the model makes puts a row in the flow, so the
     // generic "Tool call · cordis_run · dyn-1" fallback is user-visible slop.
     const titleOf = (name: string) => toolRowModel(name, running({ name, argsRaw: '{"id":"dyn-1"}' }))
-    expect(t(titleOf('cordis_run').titleKey)).toBe('运行 Cordis 插件')
-    expect(t(titleOf('cordis_stop').titleKey)).toBe('停止 Cordis 插件')
-    expect(t(titleOf('cordis_undefine').titleKey)).toBe('移除 Cordis 插件')
+    expect(t(titleOf('cordis_run').titleKey)).toBe('Ejecutar plugin de Cordis')
+    expect(t(titleOf('cordis_stop').titleKey)).toBe('Detener plugin de Cordis')
+    expect(t(titleOf('cordis_undefine').titleKey)).toBe('Eliminar plugin de Cordis')
     // An owned title takes the tool name out of the summary slot, leaving the
     // package id as the only mutable text.
     expect(titleOf('cordis_run').summary).toBe('dyn-1')
@@ -51,26 +51,26 @@ describe('tool-call-model titles', () => {
     // title here would be a second answer to what the card already renders.
     const model = toolRowModel('cordis_define', running({ name: 'cordis_define', argsRaw: '{"name":"clock"}' }))
     expect(model.variant).toBe('others')
-    expect(t(model.titleKey)).toBe('工具调用')
+    expect(t(model.titleKey)).toBe('Llamada a herramienta')
   })
 
   it('renders cordis mount verbs no shipped tool implements as generic calls', () => {
     // No shipped tool implements these cordis mount verbs, so a mapping would
     // be unreachable.
     expect(classifyTool('cordis_mount')).toBe('others')
-    expect(t(toolRowModel('cordis_mount', running({ name: 'cordis_mount', argsRaw: '{}' })).titleKey)).toBe('工具调用')
-    expect(t(toolRowModel('cordis_unmount', running({ name: 'cordis_unmount', argsRaw: '{}' })).titleKey)).toBe('工具调用')
+    expect(t(toolRowModel('cordis_mount', running({ name: 'cordis_mount', argsRaw: '{}' })).titleKey)).toBe('Llamada a herramienta')
+    expect(t(toolRowModel('cordis_unmount', running({ name: 'cordis_unmount', argsRaw: '{}' })).titleKey)).toBe('Llamada a herramienta')
   })
 
   it('gives the pwsh shell row the bash family treatment and localized command title', () => {
     const m = toolRowModel('pwsh', running())
     expect(m.variant).toBe('bash')
-    expect(t(m.titleKey)).toBe('运行命令')
+    expect(t(m.titleKey)).toBe('Pwsh')
   })
 
   it('derives the bash summary from description over command', () => {
     const m = toolRowModel('bash', running())
-    expect(t(m.titleKey)).toBe('运行命令')
+    expect(t(m.titleKey)).toBe('Bash')
     expect(m.summary).toBe('List files')
     expect(toolRowModel('bash', running({ argsRaw: '{"command":"pwd"}' })).summary).toBe('pwd')
   })
@@ -80,8 +80,8 @@ describe('tool-call-model titles', () => {
     expect(normalizeAutoReviewReason(' \r\n\u2028 ')).toBeNull()
     expect(normalizeAutoReviewReason(null)).toBeNull()
     expect(localizeAutoReviewDenial({ reason: null }, t)).toEqual({
-      summary: 'Auto review 已拒绝',
-      output: '工具未执行。原因：Auto review 未授权此次操作',
+      summary: 'Rechazado por la revisión automática',
+      output: 'La herramienta no se ejecutó. Motivo: La revisión automática no autorizó esta acción',
     })
   })
 })
@@ -132,7 +132,7 @@ describe('ToolRow', () => {
     expect(view.getAllByText('end')).toHaveLength(1)
     expect(view.getByText('old', { exact: true })).toBeTruthy()
     expect(view.getByText('new', { exact: true })).toBeTruthy()
-    expect(view.queryByRole('button', { name: /展开其余/ })).toBeNull()
+    expect(view.queryByRole('button', { name: /Expandir/ })).toBeNull()
   })
 
   it('formats the argument body only while expanding it', () => {
@@ -273,9 +273,9 @@ describe('ToolRow', () => {
     const inspect = vi.fn()
     const view = render(<ToolRow {...rowProps} inspect={inspect} />)
     // Collapsed: no pill.
-    expect(view.queryByText('查看')).toBeNull()
+    expect(view.queryByText('Inspeccionar')).toBeNull()
     fireEvent.click(view.getByRole('button', { name: /Bash/ }))
-    const pill = view.getByText('查看')
+    const pill = view.getByText('Inspeccionar')
     fireEvent.click(pill)
     expect(inspect).toHaveBeenCalledTimes(1)
     // The pill click must not collapse the row (body is a .row sibling).
@@ -285,25 +285,25 @@ describe('ToolRow', () => {
   it('no inspect callback, no pill', () => {
     const view = render(<ToolRow {...rowProps} />)
     fireEvent.click(view.getByRole('button'))
-    expect(view.queryByText('查看')).toBeNull()
+    expect(view.queryByText('Inspeccionar')).toBeNull()
   })
 
   it('the expanded card gutter-labels each section it carries (IN / OUT)', () => {
     const both = render(<ToolRow {...rowProps} output="result text" />)
     fireEvent.click(both.getByRole('button'))
-    expect(both.getByText('输入')).toBeTruthy()
-    expect(both.getByText('输出')).toBeTruthy()
+    expect(both.getByText('ENT')).toBeTruthy()
+    expect(both.getByText('SAL')).toBeTruthy()
     expect(both.getByText('result text')).toBeTruthy()
     cleanup()
     const inputOnly = render(<ToolRow {...rowProps} />)
     fireEvent.click(inputOnly.getByRole('button'))
-    expect(inputOnly.getByText('输入')).toBeTruthy()
-    expect(inputOnly.queryByText('输出')).toBeNull()
+    expect(inputOnly.getByText('ENT')).toBeTruthy()
+    expect(inputOnly.queryByText('SAL')).toBeNull()
     cleanup()
     const outputOnly = render(<ToolRow {...rowProps} bodyRaw={null} output="only out" />)
     fireEvent.click(outputOnly.getByRole('button'))
-    expect(outputOnly.queryByText('输入')).toBeNull()
-    expect(outputOnly.getByText('输出')).toBeTruthy()
+    expect(outputOnly.queryByText('ENT')).toBeNull()
+    expect(outputOnly.getByText('SAL')).toBeTruthy()
     expect(outputOnly.getByText('only out')).toBeTruthy()
   })
 })
@@ -316,7 +316,7 @@ describe('GenericToolCard', () => {
 
   it('renders the classified variant row from the frozen slice', () => {
     const view = render(<GenericToolCard {...props('bash', result())} />)
-    expect(view.getByText('运行命令')).toBeTruthy()
+    expect(view.getByText('Bash')).toBeTruthy()
     expect(view.getByText('List files')).toBeTruthy()
     expect(view.container.querySelector('[data-variant="bash"]')).not.toBeNull()
   })
@@ -339,7 +339,7 @@ describe('GenericToolCard', () => {
     const view = render(
       <GenericToolCard {...props('custom_tool', running({ name: 'custom_tool', argsRaw: '{"note":"x"}' }))} />,
     )
-    expect(view.getByText('工具调用')).toBeTruthy()
+    expect(view.getByText('Llamada a herramienta')).toBeTruthy()
     expect(view.container.querySelector('[data-variant="others"]')).not.toBeNull()
     expect(view.container.querySelector('[data-state="running"]')).not.toBeNull()
   })
@@ -351,7 +351,7 @@ describe('GenericToolCard', () => {
         argsRaw: '{"file_path":"src/x.ts","old_string":"before","new_string":"after"}',
       }))} />,
     )
-    expect(view.getByText('编辑')).toBeTruthy()
+    expect(view.getByText('Editar')).toBeTruthy()
     expect(view.getByText('src/x.ts')).toBeTruthy()
     expect(view.container.querySelector('[data-variant="edit"]')).not.toBeNull()
     expect(view.container.querySelector('svg')).not.toBeNull()
@@ -364,7 +364,7 @@ describe('GenericToolCard', () => {
         argsRaw: '{"file_path":"src/x.ts","content":"hello"}',
       }))} />,
     )
-    expect(view.getByText('写入')).toBeTruthy()
+    expect(view.getByText('Escribir')).toBeTruthy()
     expect(view.getByText('src/x.ts')).toBeTruthy()
     expect(view.container.querySelector('[data-variant="write"]')).not.toBeNull()
     expect(view.container.querySelector('svg')).not.toBeNull()
@@ -373,8 +373,8 @@ describe('GenericToolCard', () => {
   it('passes the owner inspect callback through to the expanded row pill', () => {
     const inspect = vi.fn()
     const view = render(<GenericToolCard {...props('bash', result())} inspect={inspect} />)
-    fireEvent.click(view.getByRole('button', { name: /运行命令/ }))
-    fireEvent.click(view.getByText('查看'))
+    fireEvent.click(view.getByRole('button', { name: /Bash/ }))
+    fireEvent.click(view.getByText('Inspeccionar'))
     expect(inspect).toHaveBeenCalledTimes(1)
   })
 
@@ -400,11 +400,11 @@ describe('GenericToolCard', () => {
       error: { name: 'AutoReviewDeniedError', code: 'AUTO_REVIEW_DENIED', reason: '  scope\r\nwas not authorized  ' },
     })
     const view = render(<GenericToolCard {...props('mystery', denied)} />)
-    expect(view.getByText('Auto review 已拒绝')).toBeTruthy()
+    expect(view.getByText('Rechazado por la revisión automática')).toBeTruthy()
     fireEvent.click(view.getByRole('button'))
-    expect(view.getByText('工具未执行。原因：scope was not authorized')).toBeTruthy()
-    expect(view.queryByText('输入')).toBeNull()
-    expect(view.getAllByText('输出')).toHaveLength(1)
+    expect(view.getByText('La herramienta no se ejecutó. Motivo: scope was not authorized')).toBeTruthy()
+    expect(view.queryByText('ENT')).toBeNull()
+    expect(view.getAllByText('SAL')).toHaveLength(1)
     expect(stringify.mock.calls.some(([value]) => (
       typeof value === 'object' && value !== null && 'path' in value
     ))).toBe(false)

@@ -1,10 +1,11 @@
 /**
- * Terminal client copy: one English dictionary keyed by the same locale keys
- * the shared presenters return, plus the terminal's own prompts and messages.
+ * Terminal client copy: English and Spanish dictionaries keyed by the same
+ * locale keys the shared presenters return, plus the terminal's own prompts and messages.
  * @module @deepseek-ai/dsh-terminal-views/copy
  */
 import type { ApprovalChoiceKey, ApprovalNeedKey } from '@deepseek-ai/dsh-presentation-approval'
 import type { ToolTitleKey } from '@deepseek-ai/dsh-presentation-tool-call'
+import { COPY_ES } from './copy-es.ts'
 import { PANEL_COPY } from './copy-panels.ts'
 
 /** Title of every tool row, one entry per {@link ToolTitleKey}. */
@@ -188,6 +189,7 @@ const CONFIG = {
   'help.plugins': '/plugins             install, turn on or off and remove plugins',
   'help.agents': '/agents              see agent presets, including your Markdown agents',
   'help.permissions': '/permissions         choose how freely the agent may act',
+  'help.language': '/language            choose English or Spanish, or follow the terminal',
   'help.modelDefault': '/model default       choose the model new sessions start with',
   'screen.busy': 'Another screen is open. Finish it first.',
   'screen.failed': 'The screen stopped: {message}',
@@ -333,26 +335,58 @@ const CONFIG = {
   'permissions.default': 'New sessions will start in {name} mode.',
   'permissions.noCommand': 'This installation has no /permission command, so the mode was not changed.',
   'permissions.failed': 'Could not change the permission mode: {message}',
+  'language.title': 'Choose a language',
+  'language.automatic': 'Automatic',
+  'language.automaticDetail': 'follow the language of the terminal',
+  'language.english': 'English',
+  'language.spanish': 'Español',
+  'language.saved': 'The language is now {name}.',
+  'language.automaticSaved': 'The language now follows the terminal.',
+  'language.unavailable': 'This installation cannot save a language.',
   'model.none': 'No model is available yet. Type /providers to add one.',
   'model.defaultSet': 'New sessions will start with {model} ({provider}).',
 } as const
 
-const COPY = { ...TOOL_TITLES, ...NEEDS, ...CHOICES, ...APPROVAL, ...TERMINAL, ...CONFIG, ...PANEL_COPY } as const
+const COPY_EN = { ...TOOL_TITLES, ...NEEDS, ...CHOICES, ...APPROVAL, ...TERMINAL, ...CONFIG, ...PANEL_COPY } as const
 
 /** Key of any message the terminal client shows. */
-export type CopyKey = keyof typeof COPY
+export type CopyKey = keyof typeof COPY_EN
+
+/** Languages the terminal client is written in. */
+export type CopyLocale = 'en' | 'es'
 
 /** Values substituted for `{name}` placeholders. */
 export type CopyParams = Readonly<Record<string, string | number>>
+
+/** Dictionaries by language; English is also the fallback of every other one. */
+const DICTIONARIES: Readonly<Record<CopyLocale, Readonly<Record<CopyKey, string>>>> = { en: COPY_EN, es: COPY_ES }
+
+let active: CopyLocale = 'en'
+
+/**
+ * Choose the language {@link t} answers in until the next call.
+ * @param locale - language of every message produced afterwards.
+ */
+export function setCopyLocale(locale: CopyLocale): void {
+  active = locale
+}
+
+/**
+ * Report the language {@link t} currently answers in.
+ * @returns the language chosen by {@link setCopyLocale}; `en` before any call.
+ */
+export function getCopyLocale(): CopyLocale {
+  return active
+}
 
 /**
  * Look up a message and fill its placeholders.
  * @param key - message key; shared presenter keys are accepted through {@link copyKey}.
  * @param params - values for the `{name}` placeholders in the message.
- * @returns the English text; a placeholder without a value stays visible so the gap is noticed.
+ * @returns the text in the active language; a placeholder without a value stays visible so the gap is noticed.
  */
 export function t(key: CopyKey, params: CopyParams = {}): string {
-  return COPY[key].replace(/\{(\w+)\}/gu, (placeholder, name: string) => {
+  return DICTIONARIES[active][key].replace(/\{(\w+)\}/gu, (placeholder, name: string) => {
     const value = params[name]
     return value === undefined ? placeholder : String(value)
   })
@@ -365,6 +399,6 @@ export function t(key: CopyKey, params: CopyParams = {}): string {
  * @throws when the presenters grew a key this dictionary lacks, which the type check catches first.
  */
 export function copyKey(key: ToolTitleKey | ApprovalNeedKey | ApprovalChoiceKey): CopyKey {
-  if (!(key in COPY)) throw new Error(`terminal copy lacks the key "${key}"`)
+  if (!(key in COPY_EN)) throw new Error(`terminal copy lacks the key "${key}"`)
   return key
 }

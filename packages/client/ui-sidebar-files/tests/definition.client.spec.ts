@@ -14,9 +14,9 @@ import { sessionFileAddress } from '@deepseek-ai/dsh-util-workspace-path'
 import {
   FILES_ID, FILES_KIND, filesDefinition,
 } from '../src/client/definition.tsx'
-import { zh } from '../src/client/locales.ts'
+import { es } from '../src/client/locales.ts'
 
-const t = makeTranslate(zh)
+const t = makeTranslate(es)
 
 afterEach(cleanup)
 
@@ -35,8 +35,8 @@ describe('filesDefinition', () => {
     expect(rest).toEqual([])
     expect(entry?.order).toBe(10)
     expect(entry?.kind).toBe(FILES_KIND)
-    expect(entry?.title()).toBe(zh['guide.title'])
-    expect(entry?.description?.()).toBe(zh['guide.description'])
+    expect(entry?.title()).toBe(es['guide.title'])
+    expect(entry?.description?.()).toBe(es['guide.description'])
     if (entry?.icon === undefined) throw new Error('expected the guide icon')
     const icon = render(createElement(entry.icon, { size: 26 }))
     expect(icon.container.querySelector('svg')?.getAttribute('width')).toBe('26')
@@ -46,6 +46,6 @@ describe('filesDefinition', () => {
     const definition = filesDefinition(t)
     expect(definition.priority).toBe('builtin')
     expect(definition.patterns).toBeUndefined()
-    expect(definition.title('')).toBe(zh['type.label'])
+    expect(definition.title('')).toBe(es['type.label'])
   })
 })

@@ -1,5 +1,6 @@
 import { EventEmitter } from 'node:events'
-import { describe, expect, it, vi } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
+import { getCopyLocale, setCopyLocale } from '@deepseek-ai/dsh-terminal-views'
 import { runTerminal } from '../src/runner.ts'
 import type { RunnerEnvironment, RunnerInput, RunnerOutput } from '../src/runner.ts'
 import type { ClientServicesPort, SessionBindingPort, SessionListPort } from '../src/ports.ts'
@@ -34,7 +35,24 @@ function rig(overrides: Partial<RunnerEnvironment> = {}): Rig {
   const stdin = new FakeInput()
   const stdout = new FakeOutput()
   const exits: number[] = []
-  return { stdin, stdout, exits, env: { stdin, stdout, cwd: '/work/app', home: '/home/me', color: false, exit: code => exits.push(code), files: fakeFiles(), imageProtocol: 'none', now: () => 10_000_000, ...overrides } }
+  return {
+    stdin,
+    stdout,
+    exits,
+    env: {
+      stdin,
+      stdout,
+      cwd: '/work/app',
+      home: '/home/me',
+      color: false,
+      exit: code => exits.push(code),
+      files: fakeFiles(),
+      imageProtocol: 'none',
+      now: () => 10_000_000,
+      languageEnvironment: {},
+      ...overrides,
+    },
+  }
 }
 
 const row = (id: string, extra: Partial<SessionListPort['byId'][string]> = {}) => ({ id, cwd: '/work/app', blank: false, updatedAt: 1, ...extra })
@@ -64,7 +82,31 @@ function services(list: SessionListPort | Cell<SessionListPort>, binding: Sessio
   return { ports, released, retained, create, remote, jobs: ports.jobs as unknown as ReturnType<typeof fakeServices>['jobs'] }
 }
 
+afterEach(() => { setCopyLocale('en') })
+
 describe('runTerminal', () => {
+  it('words its refusal in the language of the environment', async () => {
+    const { binding } = fakeBinding()
+    const r = rig({ languageEnvironment: { LANG: 'es_ES.UTF-8' } })
+    r.stdin.isTTY = false
+    await expect(runTerminal(services(listOf(), binding).ports, r.env, { continueLatest: false })).rejects.toThrow('necesita una terminal interactiva')
+  })
+
+  it('lets the saved language win over the environment, and falls back to the environment without one', async () => {
+    const { binding } = fakeBinding()
+    for (const [saved, expected] of [['en', 'en'], ['es', 'es'], [undefined, 'es']] as const) {
+      const s = services(listOf(row('s1')), binding)
+      const namespaces = saved === undefined ? [] : [{ ns: 'locale', schema: {}, value: { preference: saved }, secrets: [], revision: 1 }]
+      vi.mocked(s.remote.remote.settings.describe).mockResolvedValue({
+        ok: true, value: { writable: true, namespaces: namespaces as never },
+      })
+      const r = rig({ languageEnvironment: { LANG: 'es_ES.UTF-8' } })
+      const run = await runTerminal(s.ports, r.env, { continueLatest: false, resume: 's1' })
+      expect(getCopyLocale()).toBe(expected)
+      run.stop()
+    }
+  })
+
   it('refuses to start without an interactive terminal and writes nothing', async () => {
     const { binding } = fakeBinding()
     for (const change of [

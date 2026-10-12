@@ -9,7 +9,7 @@ import { defineStore, type EngineStoreHandle } from '@deepseek-ai/dsh-client-sto
 export interface LanguageOptionRow {
   /** Locale id (the setLocale argument). */
   id: string
-  /** Display name in its own language (中文 / English). */
+  /** Display name in its own language (English / Español). */
   label: string
 }
 
@@ -17,6 +17,8 @@ export interface LanguageOptionRow {
 export interface LanguageRowState {
   /** Active locale id. */
   active: string
+  /** Explicit selection; absent while the system language decides. */
+  preference: string | undefined
   /** Selectable locales in display order. */
   options: LanguageOptionRow[]
   /** Service revision; -1 until first sync so revision 0 lands as a change. */
@@ -25,7 +27,9 @@ export interface LanguageRowState {
 
 /** Declared action shape giving the exported factory a stable return type. */
 type LanguageRowActions = {
-  sync: (draft: LanguageRowState, active: string, options: LanguageOptionRow[], revision: number) => void
+  sync: (
+    draft: LanguageRowState, active: string, preference: string | undefined, options: LanguageOptionRow[], revision: number,
+  ) => void
 }
 
 /**
@@ -34,11 +38,12 @@ type LanguageRowActions = {
  */
 export function createLanguageRowStore(): EngineStoreHandle<LanguageRowState, LanguageRowActions> {
   return defineStore({
-    init: (): LanguageRowState => ({ active: '', options: [], revision: -1 }),
+    init: (): LanguageRowState => ({ active: '', preference: undefined, options: [], revision: -1 }),
     actions: {
-      sync: (d, active: string, options: LanguageOptionRow[], revision: number) => {
+      sync: (d, active: string, preference: string | undefined, options: LanguageOptionRow[], revision: number) => {
         if (revision <= d.revision) return
         d.active = active
+        d.preference = preference
         d.options = options
         d.revision = revision
       },

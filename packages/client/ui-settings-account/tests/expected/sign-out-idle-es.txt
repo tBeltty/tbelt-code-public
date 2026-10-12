@@ -1,0 +1,1 @@
+Cerrar sesiónCerrar sesión no borra ningún dato. Puedes volver a iniciar sesión con esta cuenta.CancelarCerrar sesión

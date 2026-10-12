@@ -14,11 +14,12 @@ describe('runConfigScreen', () => {
       ['plugins', remote.pluginManager.listBundles as ReturnType<typeof vi.fn>],
       ['agents', remote.agentPresets.list as ReturnType<typeof vi.fn>],
       ['permissions', remote.permissionPresets.catalog as ReturnType<typeof vi.fn>],
+      ['language', remote.settings.describe as ReturnType<typeof vi.fn>],
       ['default-model', remote.session.modelCatalog as ReturnType<typeof vi.fn>],
     ]
     for (const [screen, read] of reads) {
       read.mockClear()
-      await runConfigScreen(screen, remote, scriptedUi([]).ui, { sessionId: 's1', command })
+      await runConfigScreen(screen, remote, scriptedUi([]).ui, { sessionId: 's1', command, languageEnvironment: {} })
       expect(read).toHaveBeenCalledOnce()
     }
   })
@@ -30,9 +31,9 @@ describe('runConfigScreen', () => {
       ok: true, value: { options: [{ value: 'default', name: 'Default' }], defaultOptions: [], defaultPreset: 'default' },
     })
     const command = vi.fn(() => Promise.resolve({ ok: true as const, value: { matched: true } }))
-    await runConfigScreen('agents', remote, scriptedUi(['build', 'session']).ui, { sessionId: 's1', command })
+    await runConfigScreen('agents', remote, scriptedUi(['build', 'session']).ui, { sessionId: 's1', command, languageEnvironment: {} })
     expect(remote.agentPresets.select).toHaveBeenCalledWith('s1', 'build')
-    await runConfigScreen('permissions', remote, scriptedUi(['default']).ui, { sessionId: 's1', command })
+    await runConfigScreen('permissions', remote, scriptedUi(['default']).ui, { sessionId: 's1', command, languageEnvironment: {} })
     expect(command).toHaveBeenCalledWith('/permission default')
   })
 })

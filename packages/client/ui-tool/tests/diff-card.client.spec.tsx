@@ -9,12 +9,12 @@ import type { StartedToolCall, ToolResultNode } from '@deepseek-ai/dsh-client-ui
 import type { SessionListState } from '@deepseek-ai/dsh-api-session-controller/client'
 import type { SessionId } from '@deepseek-ai/dsh-session/types'
 import { makeTranslate } from '@deepseek-ai/dsh-client-test-runtime'
-import { zh as commonZh } from '@deepseek-ai/dsh-client-locale/src/locales/zh.ts'
+import { es as commonEs } from '@deepseek-ai/dsh-client-locale/src/locales/es.ts'
 import { diffCardModel } from '@deepseek-ai/dsh-presentation-tool-card'
 import { CHAT_DIFF_MAX_LINES } from '../src/client/tool/models/chat-limits.ts'
 import { GenericToolCard, type GenericToolCardProps } from '../src/client/tool/toolviews/GenericToolCard.tsx'
 import { FileMutationRow, fileMutationToolview } from '../src/client/tool/toolviews/file-mutation-row.tsx'
-import { zh } from '@deepseek-ai/dsh-client-ui-conversation/src/client/locales.ts'
+import { es } from '@deepseek-ai/dsh-client-ui-conversation/src/client/locales.ts'
 
 afterEach(cleanup)
 
@@ -22,7 +22,7 @@ type FileMutationRowProps = Parameters<typeof FileMutationRow>[0]
 
 const SID = 's1' as SessionId
 
-const t = makeTranslate(zh, commonZh)
+const t = makeTranslate(es, commonEs)
 
 const ARGS = '{"file_path":"notes/demo.txt","old_string":"hello","new_string":"hello fixture"}'
 
@@ -227,7 +227,7 @@ describe('FileMutationRow diff card', () => {
     toggleRow(view)
     expect(view.container.querySelector('[data-diff]')).not.toBeNull()
     expect(view.getByText('hello fixture')).toBeTruthy()
-    expect(view.getByRole('button', { name: '复制' })).toBeTruthy()
+    expect(view.getByRole('button', { name: 'Copiar' })).toBeTruthy()
   })
 
   it('the summary is a path link that opens the tool path through the host', () => {
@@ -305,7 +305,7 @@ describe('FileMutationRow diff card', () => {
     }))} />)
     expect(view.container.querySelector('[data-state="stopped"]')).not.toBeNull()
     expect(view.container.querySelector('[data-state="stopped"] svg')).not.toBeNull()
-    expect(view.getByText('已停止').className).toContain('visuallyHidden')
+    expect(view.getByText('Detenido').className).toContain('visuallyHidden')
     expect(view.container.querySelector('[class*="_stoppedSummary_"]')?.textContent).toBe('notes/demo.txt')
   })
 

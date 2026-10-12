@@ -8,47 +8,10 @@
  * model".
  */
 
-/** Simplified Chinese dictionary (the key-set source of truth). */
-export const zh = {
-  'provider.account': 'DeepSeek 账号',
-  'command.label': '模型',
-  'command.description': '选择本会话使用的模型',
-  'option.loadError': '目录加载失败：{message}',
-  'trigger.fallback': '请选择模型',
-  'trigger.loading': '正在加载模型…',
-  'trigger.selectAria': '请选择模型',
-  'trigger.aria': '选择模型，当前 {model}',
-  'trigger.ariaEffort': '选择模型，当前 {model}，推理等级 {effort}',
-  'menu.aria': '模型与推理等级',
-  'menu.model': '模型',
-  'menu.effort': '推理等级',
-  'effort.providerDefault': 'Default',
-  'status.loading': '正在刷新模型列表…',
-  'error.action': '模型操作失败：{message}',
-  'error.sessionInUse': '当前会话已被占用，可能是其他正在运行的 tBelt Code 导致的（如终端、桌面端），请退出其他正在运行的 tBelt Code 后重试。',
-  'action.reload': '重新加载',
-  'action.addModel': '添加模型…',
-  'spend.ofLimit': '{spent} / {limit}',
-  'spend.session': '本会话 {reading}',
-  'spend.month': '本月 {reading}',
-  'spend.unpriced': '{count} 次调用的模型没有价格，未计入',
-  'spend.nearSession': '本会话已接近支出上限',
-  'spend.nearMonth': '本月已接近支出上限',
-  'warning.groupLoad': '{name} 加载失败：{message}',
-  'search.placeholder': '搜索模型…',
-  'search.clear': '清除搜索',
-  'search.empty': '没有匹配的模型。',
-  'empty.models': '没有可用的模型。',
-  'empty.efforts': '当前模型未提供推理等级。',
-  'price.short': '{input} / {output}',
-  'price.title': '每百万 token：输入 {input}，输出 {output}',
-  'price.titleCache': '每百万 token：输入 {input}，输出 {output}，缓存读取 {cacheRead}',
-} satisfies Record<string, string>
-
 /** The model namespace key union. */
-export type ModelKey = keyof typeof zh
+export type ModelKey = keyof typeof en
 
-/** English dictionary, checked complete against the zh key set. */
+/** English dictionary and key-set source of truth. */
 export const en = {
   'provider.account': 'DeepSeek Account',
   'command.label': 'Model',
@@ -83,4 +46,41 @@ export const en = {
   'price.short': '{input} / {output}',
   'price.title': 'Per million tokens: input {input}, output {output}',
   'price.titleCache': 'Per million tokens: input {input}, output {output}, cache read {cacheRead}',
-} satisfies Record<ModelKey, string>
+} satisfies Record<string, string>
+
+/** Spanish dictionary, checked complete against the English key set. */
+export const es = {
+  'provider.account': 'Cuenta de DeepSeek',
+  'command.label': 'Modelo',
+  'command.description': 'Elige el modelo de esta conversación',
+  'option.loadError': 'No se pudo cargar el catálogo: {message}',
+  'trigger.fallback': 'Elegir modelo',
+  'trigger.loading': 'Cargando modelos…',
+  'trigger.selectAria': 'Elegir modelo',
+  'trigger.aria': 'Elegir modelo, actual: {model}',
+  'trigger.ariaEffort': 'Elegir modelo, actual: {model}, esfuerzo de razonamiento {effort}',
+  'menu.aria': 'Modelo y esfuerzo de razonamiento',
+  'menu.model': 'Modelo',
+  'menu.effort': 'Esfuerzo',
+  'effort.providerDefault': 'Predeterminado',
+  'status.loading': 'Actualizando la lista de modelos…',
+  'error.action': 'Falló la operación del modelo: {message}',
+  'error.sessionInUse': 'Esta sesión ya está en uso, quizá por otra instancia de tBelt Code en ejecución (como el terminal o la aplicación de escritorio). Cierra las demás instancias de tBelt Code e inténtalo de nuevo.',
+  'action.reload': 'Recargar',
+  'action.addModel': 'Añadir modelo…',
+  'spend.ofLimit': '{spent} de {limit}',
+  'spend.session': 'Esta sesión {reading}',
+  'spend.month': 'Este mes {reading}',
+  'spend.unpriced': '{count} llamadas usaron un modelo sin precio y no se cuentan',
+  'spend.nearSession': 'Esta sesión está cerca de su límite de gasto',
+  'spend.nearMonth': 'Este mes está cerca del límite de gasto',
+  'warning.groupLoad': 'No se pudo cargar {name}: {message}',
+  'search.placeholder': 'Buscar modelos…',
+  'search.clear': 'Borrar búsqueda',
+  'search.empty': 'Ningún modelo coincide.',
+  'empty.models': 'No hay modelos disponibles.',
+  'empty.efforts': 'Este modelo no ofrece niveles de esfuerzo de razonamiento.',
+  'price.short': '{input} / {output}',
+  'price.title': 'Por millón de tokens: entrada {input}, salida {output}',
+  'price.titleCache': 'Por millón de tokens: entrada {input}, salida {output}, lectura de caché {cacheRead}',
+} satisfies Record<keyof typeof en, string>

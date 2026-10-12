@@ -1,0 +1,24 @@
+[
+  {
+    "label": "Buscar actualizaciones…"
+  },
+  {
+    "label": "Administrar el comando dsh…"
+  },
+  {
+    "role": "hide",
+    "label": "Ocultar tBelt Code"
+  },
+  {
+    "role": "hideOthers",
+    "label": "Ocultar los demás"
+  },
+  {
+    "role": "unhide",
+    "label": "Mostrar todo"
+  },
+  {
+    "role": "quit",
+    "label": "Salir de tBelt Code"
+  }
+]

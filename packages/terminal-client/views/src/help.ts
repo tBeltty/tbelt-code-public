@@ -31,6 +31,7 @@ export function helpLines(style: Style): string[] {
     t('help.plugins'),
     t('help.agents'),
     t('help.permissions'),
+    t('help.language'),
     t('help.queue'),
     t('help.reference'),
     t('help.deliverables'),

@@ -1,1 +1,1 @@
-欢迎使用 tBelt CodetBelt Code 会以本地文件夹作为工作区，通过调用各种工具，读写本机文件，完成搜索整理资料、制作文档表格、编写代码、排查问题等各种任务。开始设置
+Te damos la bienvenida a tBelt CodetBelt Code trabaja en una carpeta local y usa herramientas para leer y escribir archivos en tu equipo. Puede ayudarte a investigar y organizar información, crear documentos y hojas de cálculo, escribir código, diagnosticar problemas y más.Empezar

@@ -22,7 +22,7 @@ export type SubagentSettingsLocaleKey =
   | 'subagentModelSelectionRequired' | 'subagentModelSelectionConflict' | 'subagentModelSelectionOff'
 
 /** English copy. */
-export const en: Record<SubagentSettingsLocaleKey, string> = {
+export const en = {
   overridden: 'Overridden',
   reset: 'Reset to default',
   readOnly: 'This deployment stores settings read-only.',
@@ -58,46 +58,46 @@ export const en: Record<SubagentSettingsLocaleKey, string> = {
   subagentModelSelectionRequired: 'Select at least one model before saving.',
   subagentModelSelectionConflict: 'Settings changed elsewhere. Discard your draft and try again.',
   subagentModelSelectionOff: 'Subagents use configured defaults or inherit the parent agent\'s model. Saved model choices are retained.',
-}
+} satisfies Record<string, string>
 
-/** Simplified Chinese copy. */
-export const zh: Record<SubagentSettingsLocaleKey, string> = {
-  overridden: '已覆盖',
-  reset: '恢复默认',
-  readOnly: '本部署的设置为只读。',
-  unavailable: '该插件当前未加载，暂时无法配置。',
-  save: '保存',
-  saving: '保存中…',
-  saveFailed: '本部署没有接受这些值，已保留供你修改。',
-  subagentTitle: '子智能体',
-  subagentDescription: '设置子智能体的递归层级、数量和模型。',
-  subagentLimitsTitle: '运行限制',
-  subagentMaxDepth: '最大递归深度',
-  subagentDepthHelpLabel: '最大递归深度说明',
-  subagentDepthHelp: '限制 Agent 创建子智能体的递归层级。',
-  subagentDepthZero: '禁用子智能体',
-  subagentDepthOne: '仅允许主 Agent 创建子智能体',
-  subagentDepthOverride: '如果某个工具单独设置了最大递归深度，以该工具的设置为准。',
-  subagentMaxActive: '子智能体并行数量上限',
-  subagentCapacityHelpLabel: '子智能体并行数量上限说明',
-  subagentCapacityHelp: '同一主 Agent 下，所有递归层级同时存活的子智能体总数，主 Agent 不计入。达到上限时，新的启动请求会被拒绝。',
-  subagentDepthInvalid: '请输入不小于 0 的整数。',
-  subagentCapacityInvalid: '请输入不小于 1 的整数。',
-  subagentModelSelectionTitle: '模型选择',
-  subagentModelSelectionToggle: '允许 Agent 为子智能体选择模型',
-  subagentModelSelectionChoose: '开启后，Agent 可以从下方授权模型中，为每个子智能体选择提供方、模型和推理强度。仅影响新会话。',
-  subagentModelSelectionAllowed: 'Agent 可选择的模型',
-  subagentModelSelectionLoading: '正在加载模型…',
-  subagentModelSelectionLoadFailed: '无法加载模型。',
-  subagentModelSelectionRetry: '重试',
-  subagentModelSelectionPartial: '部分模型提供方暂时无法加载；已保存的选择仍可移除。',
-  subagentModelSelectionUnavailable: '当前不可用',
-  subagentModelSelectionUnavailableGroup: '已保存但当前不可用',
-  subagentModelSelectionEmpty: '当前没有模型提供方公布模型。',
-  subagentModelSelectionRequired: '保存前请至少选择一个模型。',
-  subagentModelSelectionConflict: '设置已在其他位置更新。请放弃修改后重试。',
-  subagentModelSelectionOff: '关闭后，子智能体使用配置的默认模型或继承父 Agent 的模型；已选模型会保留。',
-}
+/** Spanish dictionary, checked complete against the English key set. */
+export const es = {
+  overridden: 'Modificado',
+  reset: 'Restablecer el valor predeterminado',
+  readOnly: 'Esta instalación guarda los ajustes en modo de solo lectura.',
+  unavailable: 'Este plugin no está cargado, así que ahora no se puede configurar.',
+  save: 'Guardar',
+  saving: 'Guardando…',
+  saveFailed: 'La instalación no aceptó estos valores; se dejaron para que los corrijas.',
+  subagentTitle: 'Subagentes',
+  subagentDescription: 'Define la profundidad de recursión, el número y los modelos de los subagentes.',
+  subagentLimitsTitle: 'Límites',
+  subagentMaxDepth: 'Profundidad máxima de recursión',
+  subagentDepthHelpLabel: 'Acerca de la profundidad máxima de recursión',
+  subagentDepthHelp: 'Limita cuántos niveles de subagentes puede crear un agente.',
+  subagentDepthZero: 'Desactivar subagentes',
+  subagentDepthOne: 'Solo el agente principal puede crear subagentes',
+  subagentDepthOverride: 'Si una herramienta define su propia profundidad máxima de recursión, esa configuración tiene prioridad.',
+  subagentMaxActive: 'Límite de paralelismo de subagentes',
+  subagentCapacityHelpLabel: 'Acerca del límite de paralelismo de subagentes',
+  subagentCapacityHelp: 'Total de subagentes activos bajo un mismo agente principal, en todos los niveles de recursión. El agente principal no cuenta. Las solicitudes de inicio nuevas se rechazan cuando se alcanza el límite.',
+  subagentDepthInvalid: 'Introduce un número entero igual o mayor que 0.',
+  subagentCapacityInvalid: 'Introduce un número entero igual o mayor que 1.',
+  subagentModelSelectionTitle: 'Selección de modelo',
+  subagentModelSelectionToggle: 'Permitir que los agentes elijan modelos para los subagentes',
+  subagentModelSelectionChoose: 'Al activarlo, los agentes pueden elegir proveedor, modelo y esfuerzo de razonamiento para cada subagente entre los modelos autorizados de abajo. Solo se aplica a las sesiones nuevas.',
+  subagentModelSelectionAllowed: 'Modelos que los agentes pueden elegir',
+  subagentModelSelectionLoading: 'Cargando modelos…',
+  subagentModelSelectionLoadFailed: 'No se pudieron cargar los modelos.',
+  subagentModelSelectionRetry: 'Reintentar',
+  subagentModelSelectionPartial: 'Algunos proveedores de modelos no se pudieron cargar; las opciones guardadas se pueden quitar igualmente.',
+  subagentModelSelectionUnavailable: 'No disponible por ahora',
+  subagentModelSelectionUnavailableGroup: 'Guardados pero no disponibles por ahora',
+  subagentModelSelectionEmpty: 'Ningún proveedor de modelos ofrece un modelo por ahora.',
+  subagentModelSelectionRequired: 'Selecciona al menos un modelo antes de guardar.',
+  subagentModelSelectionConflict: 'Los ajustes cambiaron en otro lugar. Descarta tu borrador e inténtalo de nuevo.',
+  subagentModelSelectionOff: 'Los subagentes usan los valores predeterminados configurados o heredan el modelo del agente principal. Las opciones de modelo guardadas se conservan.',
+} satisfies Record<keyof typeof en, string>
 
 /**
  * The form frame's copy, read from this page's dictionary.

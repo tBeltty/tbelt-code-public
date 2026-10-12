@@ -73,80 +73,28 @@ export const guideEn = {
   ].join('\n\n'),
 }
 
+/** Spanish counterpart of {@link guideEn}. */
+export const guideEs = {
+  modeExplanation: 'Detalles del modo',
+  howToUse: 'Cómo se usa',
+  guideSections: 'Secciones de la guía',
+  guideExampleTask: 'Tarea de ejemplo',
+  guideCopy: 'Copiar',
+  guideCopied: 'Copiado',
+  guideFootnotes: 'Notas al pie',
+  guideStandardIntro: 'Elige el modo estándar al empezar una tarea nueva. Describe lo que quieres lograr, señala los archivos relevantes y explica cómo comprobar el resultado.',
+  guideStandardExplanation: '### Cómo funciona\\n\\nEl agente llama a las herramientas directamente para leer y editar archivos, buscar y ejecutar comandos en la terminal. Incluye skills, planificación, objetivos, subagentes, workflows y compactación de contexto.\\n\\n### Cuándo elegirlo\\n\\nEmpieza aquí para el código, los archivos y la investigación del día a día. El modo estándar también puede escribir scripts y procesar archivos por lotes. PTC cambia cómo se organizan las llamadas a herramientas; no es necesario para las tareas por lotes.',
+  guideStandardUsage: '### Corregir un error\\n\\n> Averigua por qué, al enviar dos veces el formulario de búsqueda, desaparecen los resultados. Corrígelo y ejecuta las pruebas relevantes. Explica la causa y qué cambiaste.\\n\\nResultado esperado: un cambio de código, los resultados de las pruebas relevantes y una explicación de la causa.\\n\\n### Organizar las notas de un proyecto\\n\\n> Lee las notas en Markdown de este proyecto. Resume las decisiones acordadas y las preguntas abiertas, con enlaces a los archivos de origen.\\n\\nResultado esperado: un resumen con referencias que puedes contrastar con las notas originales.',
+  guidePtcIntro: 'Elige el modo PTC al empezar una tarea nueva. Indica los archivos de entrada, las reglas de procesamiento y el formato de salida. El agente escribe el código.',
+  guidePtcExplanation: '### Cómo se llaman las herramientas\\n\\nPTC significa Programmatic Tool Calling (llamada programática a herramientas). En este preajuste integrado, el agente usa run_code para escribir un programa en TypeScript que llama a las herramientas mediante un SDK generado. El programa puede usar bucles, condiciones, manejo de errores y llamadas concurrentes cuando convenga.\\n\\n### Qué llega al modelo\\n\\nLos resultados de las herramientas llegan primero al programa, que puede filtrarlos y combinarlos. El modelo recibe lo que el programa imprime o devuelve; los resultados de imagen se adjuntan aparte. Las llamadas anidadas a herramientas se siguen registrando y siguen sujetas a los permisos de las herramientas.\\n\\n### Comparado con el modo estándar\\n\\nAmbos modos pueden encargarse de tareas de código y por lotes. El modo estándar expone las herramientas una por una; PTC organiza las llamadas en código. El preajuste PTC actual deja desactivada la herramienta de workflows. La velocidad y el uso de tokens dependen de la tarea y de cómo el programa trata sus resultados.',
+  guidePtcUsage: '### Revisar un conjunto de archivos de configuración\\n\\n> Revisa todos los archivos JSON de configs/. Lista los campos obligatorios que faltan y los valores no válidos según schema.json. Guarda un CSV con una fila por problema. Incluye en el informe los archivos ilegibles y sigue revisando el resto. Deja intactos los archivos originales.\\n\\nResultado esperado: un resumen de problemas y un informe en CSV. El programa puede repetir las mismas comprobaciones, tratar los fallos individuales y reunir los resultados.\\n\\n### Resumir registros de errores\\n\\n> Analiza los archivos de registro de logs/. Agrupa los errores por servicio y tipo de error. Muestra los diez grupos más frecuentes y un ejemplo de cada uno. Guarda los recuentos completos en un CSV.\\n\\nResultado esperado: los grupos de errores principales y una tabla de recuentos completa. Los datos intermedios se pueden agregar en el programa antes de que el resumen llegue al modelo.',
+  guideMinimalIntro: 'Elige el modo mínimo para una tarea nueva. Para comparar, mantén constantes el modelo, los permisos, la entrada y el estado inicial del espacio de trabajo en todas las ejecuciones.',
+  guideMinimalExplanation: '### Qué incluye\\n\\nUna herramienta de shell persistente y un prompt del sistema fijo. El preajuste integrado no carga skills, planificación, compactación de contexto ni el contexto de ejecución estándar.\\n\\n### Cuándo elegirlo\\n\\nÚsalo como referencia para experimentos y comparaciones. Aún puede leer archivos y ejecutar scripts mediante comandos de shell, pero ofrece menos formas integradas de gestionar una tarea larga. Tener menos herramientas no lo hace necesariamente más fácil para quien empieza.',
+  guideMinimalUsage: '### Comparar el rendimiento en una corrección pequeña\\n\\n> Ejecuta las pruebas de este proyecto, encuentra la causa del fallo y haz la corrección más pequeña posible. Vuelve a ejecutar las pruebas relevantes e informa del resultado.\\n\\nEjecuta la misma tarea por separado en los modos estándar y mínimo desde el mismo estado inicial. Compara la finalización de la tarea, las llamadas a herramientas y los cambios resultantes. El modo mínimo hace el trabajo mediante comandos de terminal.',
+  guideCordisIntro: 'Elige el modo creador para una tarea nueva. Describe la capacidad que quieres, dónde debe aparecer y cómo la vas a verificar.',
+  guideCordisExplanation: '### Qué puedes crear\\n\\nEl modo creador incluye las herramientas de tarea estándar, además de inspección del runtime, gestión persistente de plugins y guías para crear plugins de Cordis y preajustes de agente. Puede crear un plugin que añada una capacidad o una interfaz, o un preajuste que combine herramientas y prompts para un trabajo concreto.\\n\\n### Plugins y modos\\n\\nUn plugin añade capacidades a tBelt Code, como una herramienta, una conexión a un servicio o una entrada en la interfaz. Un modo es un preajuste de agente que selecciona herramientas y define cómo trabaja el agente en una tarea. Un plugin puede incluirse en un preajuste propio.\\n\\n### Cómo entra en vigor el resultado\\n\\nPide al agente que instale y verifique el resultado, no solo que genere el código fuente. Un plugin puede cargarse al instante o requerir un reinicio, según lo que cambie. Un preajuste recién creado se elige al empezar una tarea nueva.',
+  guideCordisUsage: '### Añadir una interfaz\\n\\n> Crea un plugin de tBelt Code que añada a la barra lateral una entrada de notas del proyecto. Quiero explorar los archivos Markdown de este espacio de trabajo y previsualizar una nota seleccionada. Instálalo y comprueba que la página se abre.\\n\\nResultado esperado: un plugin instalado con una entrada y una página de vista previa que funcionan, más los pasos de activación que falten.\\n\\n### Añadir una herramienta\\n\\n> Crea un plugin con una herramienta que lea el informe de pruebas de este proyecto y resuma las pruebas fallidas. Regístralo y verifícalo con un informe de ejemplo.\\n\\nResultado esperado: un plugin con una herramienta invocable y una llamada de ejemplo verificada.\\n\\n### Crear mi propio modo\\n\\n> Crea un modo “Revisión de código” basado en el modo estándar. Que dé prioridad a posibles errores y a huecos en las pruebas, cite rutas y líneas de archivos y pregunte antes de modificar archivos. Guárdalo como un preajuste seleccionable.\\n\\nResultado esperado: un preajuste propio para tareas nuevas. Estas instrucciones de revisión guían al agente; los ajustes de permisos determinan qué acciones puede ejecutar.',
+} satisfies Record<keyof typeof guideEn, string>
+
 /** Keys merged into the feature’s ordinary locale seat. */
 export type PresetGuideKey = keyof typeof guideEn
-
-/** Simplified Chinese help. Examples describe suggested tasks, not recorded runs. */
-export const guideZh: Record<PresetGuideKey, string> = {
-  modeExplanation: '模式说明',
-  howToUse: '如何使用',
-  guideSections: '帮助内容',
-  guideExampleTask: '示例任务',
-  guideCopy: '复制',
-  guideCopied: '已复制',
-  guideFootnotes: '脚注',
-  guideStandardIntro: '新建任务时选择「标准模式」，说明要完成什么、相关文件在哪里，以及怎样判断任务完成。',
-  guideStandardExplanation: [
-    '### 工作方式',
-    'Agent 直接调用工具来读写文件、检索资料和执行终端命令。包含 Skills、计划、目标、子 Agent、工作流和上下文压缩等能力。',
-    '### 什么时候选',
-    '日常编程、文件处理和资料整理可以从这里开始。标准模式也能编写脚本、批量处理文件；PTC 改变的是工具调用方式，批量任务并不必须使用 PTC。',
-  ].join('\n\n'),
-  guideStandardUsage: [
-    '### 修复一个问题',
-    '> 搜索表单连续提交两次后，结果会消失。请定位原因、修复问题并运行相关测试，最后说明原因和修改内容。',
-    '预期产出：代码修改、相关测试结果，以及问题原因说明。',
-    '### 整理项目资料',
-    '> 阅读项目中的 Markdown 记录，整理已经达成的结论和仍待确认的问题，并附上对应文件链接。',
-    '预期产出：一份带来源引用的总结，方便回到原文核对。',
-  ].join('\n\n'),
-  guidePtcIntro: '新建任务时选择「PTC 模式」，说明输入文件、处理规则和输出格式。代码由 Agent 编写。',
-  guidePtcExplanation: [
-    '### 怎样调用工具',
-    'PTC 是 Programmatic Tool Calling，即通过程序调用工具。当前内置预设让 Agent 通过 run_code 编写 TypeScript 程序，使用生成的工具 SDK 发起调用。程序可以组织循环、条件判断、错误处理，以及适合并发执行的调用。',
-    '### 哪些结果交给模型',
-    '工具返回的数据先交给程序，经过筛选、计算或合并，再通过输出或返回值交给模型；图片结果会另行附加。程序中的工具调用仍会被记录，也仍受工具权限约束。',
-    '### 与标准模式的区别',
-    '两种模式都能编程、批量处理文件。标准模式直接向模型提供各个工具；PTC 让模型用代码组织工具调用。当前 PTC 预设未启用 workflow 工具。速度和 token 用量取决于具体任务与结果处理方式。',
-  ].join('\n\n'),
-  guidePtcUsage: [
-    '### 批量检查配置文件',
-    '> 检查 configs/ 下所有 JSON 文件，按照 schema.json 找出缺失字段和不合法的值。每个问题写成 CSV 中的一行；读取失败的文件也记入报告，继续检查其余文件。保留原文件。',
-    '预期产出：问题汇总和一份 CSV 报告。程序可以对多份文件执行相同检查，处理单个文件的失败，再汇总结果。',
-    '### 汇总错误日志',
-    '> 分析 logs/ 下的日志，按服务和错误类型统计次数，列出出现最多的十类错误，每类保留一条示例。完整统计另存为 CSV。',
-    '预期产出：高频错误摘要和完整统计表。中间数据可以先在程序中聚合，再把汇总交给模型。',
-  ].join('\n\n'),
-  guideMinimalIntro: '新建任务时选择「极简模式」。做对照测试时，保持模型、权限、任务输入和工作区起始状态一致。',
-  guideMinimalExplanation: [
-    '### 保留哪些能力',
-    '仅提供一个持久 Shell 工具，并使用固定系统提示词。内置预设不加载 Skills、计划、上下文压缩，也不注入标准运行时上下文。',
-    '### 什么时候选',
-    '适合作为实验和对照测试的基线。Agent 仍能通过终端命令读写文件、运行脚本，但缺少管理长任务的内置辅助能力。工具少，不代表对新手更容易。',
-  ].join('\n\n'),
-  guideMinimalUsage: [
-    '### 对比基础修复表现',
-    '> 运行这个项目的测试，找出失败原因，做最小修复，再运行相关测试并报告结果。',
-    '分别用标准模式和极简模式，从相同的工作区状态执行这条任务，对比完成情况、工具调用和最终修改。极简模式会通过终端命令完成这些操作。',
-  ].join('\n\n'),
-  guideCordisIntro: '新建任务时选择「创造模式」，说明希望增加什么能力、从哪里使用，以及怎样验证效果。',
-  guideCordisExplanation: [
-    '### 可以创造什么',
-    '创造模式具备标准任务工具，并增加运行时检查、持久化插件管理，以及 Cordis 插件和 Agent 预设的开发指引。可以编写插件来添加功能或界面，也可以组合工具和提示词，创建适合特定任务的模式。',
-    '### 插件与模式的关系',
-    '插件为 tBelt Code 增加能力，例如工具、服务连接或界面入口。模式是一份 Agent 预设，用来选择任务可用的工具，并约定 Agent 的工作方式。自定义模式中也可以使用自己开发的插件。',
-    '### 怎样让成果生效',
-    '可以要求 Agent 完成安装并验证实际效果。插件可能即时加载，也可能需要重启，取决于修改内容；新建的模式在创建新任务时选择。',
-  ].join('\n\n'),
-  guideCordisUsage: [
-    '### 添加一个界面',
-    '> 帮我写一个 tBelt Code 插件，在侧栏增加「项目笔记」入口，列出当前工作区的 Markdown 文件，点击后能预览内容。完成安装并验证页面能打开。',
-    '预期产出：带侧栏入口和预览页的插件，以及仍需完成的生效步骤。',
-    '### 添加一个工具',
-    '> 写一个插件，提供读取项目测试报告、汇总失败用例的工具。注册工具，并用一份示例报告验证调用结果。',
-    '预期产出：可调用的新工具，以及一次示例调用的验证结果。',
-    '### 创建自己的模式',
-    '> 基于标准模式创建「代码审查」模式，优先检查潜在错误和测试缺口，指出文件与行号，修改文件前先询问我。保存成可选择的预设。',
-    '预期产出：可在新任务中选择的自定义模式。审查要求用于指导 Agent，实际可执行的操作仍由权限设置决定。',
-  ].join('\n\n'),
-}

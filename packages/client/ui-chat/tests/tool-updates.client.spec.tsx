@@ -4,15 +4,15 @@ import { afterEach, describe, expect, it } from 'vitest'
 import { cleanup, fireEvent, render, screen } from '@testing-library/react'
 import { makeTranslate } from '@deepseek-ai/dsh-client-test-runtime'
 import { en as commonEn } from '@deepseek-ai/dsh-client-locale/src/locales/en.ts'
-import { zh as commonZh } from '@deepseek-ai/dsh-client-locale/src/locales/zh.ts'
+import { es as commonEs } from '@deepseek-ai/dsh-client-locale/src/locales/es.ts'
 import { ContextInjectionRow } from '../src/client/chat/ContextInjectionRow.tsx'
-import { en, zh } from '../src/client/locale.ts'
+import { en, es } from '../src/client/locale.ts'
 
 afterEach(cleanup)
 
 describe.each([
   { locale: 'en', t: makeTranslate(en, commonEn), title: 'Tools updated', summary: '2 added, 1 removed', added: 'Added: search, read_file', removed: 'Removed: old_search' },
-  { locale: 'zh', t: makeTranslate(zh, commonZh), title: '工具已更新', summary: '新增 2 个，移除 1 个', added: '新增：search, read_file', removed: '移除：old_search' },
+  { locale: 'es', t: makeTranslate(es, commonEs), title: 'Herramientas actualizadas', summary: '2 añadidas, 1 eliminadas', added: 'Añadidas: search, read_file', removed: 'Eliminadas: old_search' },
 ])('tool update disclosure ($locale)', ({ t, title, summary, added, removed }) => {
   it('shows counts collapsed and compact name lists when expanded', () => {
     render(<ContextInjectionRow

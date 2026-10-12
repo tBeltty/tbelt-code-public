@@ -6,15 +6,15 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 import type { TodoItem } from '@deepseek-ai/dsh-client-ui-conversation/client'
 import type { ToolResultNode } from '@deepseek-ai/dsh-client-ui-chat/client'
 import { makeTranslate } from '@deepseek-ai/dsh-client-test-runtime'
-import { zh as commonZh } from '@deepseek-ai/dsh-client-locale/src/locales/zh.ts'
+import { es as commonEs } from '@deepseek-ai/dsh-client-locale/src/locales/es.ts'
 import { TodoRow, todoToolview } from '../src/client/tool/toolviews/todo-row.tsx'
 import { todoProgress } from '@deepseek-ai/dsh-presentation-plan'
 import { CONVERSATION_NS as NS } from '../src/client/locale.ts'
-import { zh } from '@deepseek-ai/dsh-client-ui-conversation/src/client/locales.ts'
+import { es } from '@deepseek-ai/dsh-client-ui-conversation/src/client/locales.ts'
 
 type TodoRowProps = Parameters<typeof TodoRow>[0]
 
-const t: TodoRowProps['t'] = makeTranslate(zh, commonZh)
+const t: TodoRowProps['t'] = makeTranslate(es, commonEs)
 
 afterEach(cleanup)
 
@@ -83,28 +83,28 @@ describe('TodoRow', () => {
 
   it('summarizes counts and the active item from the call args', () => {
     render(<TodoRow {...rowProps(resultNode(ARGS))} />)
-    expect(screen.getByText('更新任务清单')).toBeTruthy()
-    expect(screen.getByText('1/3 已完成 · 写组件')).toBeTruthy()
+    expect(screen.getByText('Actualizar la lista de tareas')).toBeTruthy()
+    expect(screen.getByText('1/3 completadas · 写组件')).toBeTruthy()
   })
 
   it('reports the extra active count outside the ellipsized summary text', () => {
     const { container } = render(<TodoRow {...rowProps(resultNode(JSON.stringify({ todos: PARALLEL })))} />)
-    const text = screen.getByText('1/5 已完成 · 写组件')
+    const text = screen.getByText('1/5 completadas · 写组件')
     const extra = screen.getByText('+2')
     expect(text.contains(extra)).toBe(false)
-    expect(container.textContent).toContain('1/5 已完成 · 写组件+2')
+    expect(container.textContent).toContain('1/5 completadas · 写组件+2')
   })
 
   it('omits the active clause when no item is in progress and reads running-call args', () => {
     const args = JSON.stringify({ todos: [{ content: 'x', status: 'completed' }] })
     render(<TodoRow {...rowProps({ phase: 'start' as const, callId: 'c1', name: 'todo_write', argsRaw: args, turn: 1, step: 1, time: 1_000, subCalls: [] })} />)
-    expect(screen.getByText('1/1 已完成')).toBeTruthy()
+    expect(screen.getByText('1/1 completadas')).toBeTruthy()
   })
 
   it('keeps the counts when an active item has unusable content', () => {
     const args = JSON.stringify({ todos: [{ content: 'done', status: 'completed' }, { content: 42, status: 'in_progress' }] })
     const { container } = render(<TodoRow {...rowProps(resultNode(args))} />)
-    expect(screen.getByText('1/2 已完成')).toBeTruthy()
+    expect(screen.getByText('1/2 completadas')).toBeTruthy()
     expect(container.textContent).not.toContain('+')
   })
 
@@ -136,8 +136,8 @@ describe('TodoRow', () => {
     expect(screen.getByRole('button', { expanded: true })).toBeTruthy()
     expect(screen.getByText('搭骨架')).toBeTruthy()
     expect(screen.getAllByRole('listitem')).toHaveLength(3)
-    expect(screen.getByLabelText('进行中')).toBeTruthy()
-    expect(screen.queryByText('输入')).toBeNull()
+    expect(screen.getByLabelText('En curso')).toBeTruthy()
+    expect(screen.queryByText('ENT')).toBeNull()
   })
 
   it.each([

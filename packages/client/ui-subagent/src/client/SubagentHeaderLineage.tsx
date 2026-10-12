@@ -7,7 +7,8 @@ import {
 import type { SubagentAddress } from '@deepseek-ai/dsh-subagent/client'
 import type { SessionId } from '@deepseek-ai/dsh-session/types'
 import {
-  IconChevronDownOutlineRegular, IconChevronRightOutlineRegular, IconRefreshOutlineRegular, StateDot, Tooltip,
+  formatNumber, IconChevronDownOutlineRegular, IconChevronRightOutlineRegular, IconRefreshOutlineRegular, StateDot, Tooltip,
+  pluralSuffix,
 } from '@deepseek-ai/dsh-client-ui-primitives'
 import type { PropsLocale, PropsRuntime, TranslateNS } from '@deepseek-ai/dsh-client-ui-slots'
 import { NS } from './locales.ts'
@@ -55,9 +56,8 @@ function treeItems(root: HTMLDivElement | null): HTMLElement[] {
 
 /** Compact token count shared in shape with the conversation stats strip. */
 function formatTokens(value: number, t: TranslateNS<typeof NS>): string {
-  const scaled = (next: number): string => next >= 100
-    ? String(Math.round(next))
-    : String(Math.round(next * 10) / 10)
+  const scaled = (next: number): string =>
+    formatNumber(t('format.locale'), next >= 100 ? Math.round(next) : Math.round(next * 10) / 10, 0, 1)
   if (value < 1_000) return String(value)
   if (value < 1_000_000) return t('tokens.thousand', { value: scaled(value / 1_000) })
   return t('tokens.million', { value: scaled(value / 1_000_000) })
@@ -480,8 +480,8 @@ function CatalogDropdown({
   const directChildren = catalog?.entries ?? []
   const directCount = directChildren.length
   const runningCount = directChildren.filter(entry => entry.activity === 'running').length
-  const totalCountKey = directCount === 1 ? 'count.total.one' : 'count.total.other'
-  const runningCountKey = runningCount === 1 ? 'count.running.one' : 'count.running.other'
+  const totalCountKey = `count.total.${pluralSuffix(t('format.locale'), directCount)}` as const
+  const runningCountKey = `count.running.${pluralSuffix(t('format.locale'), runningCount)}` as const
   const presentedCatalog: SubagentCatalogSnapshot | undefined = catalog ?? (variant === 'switcher'
     ? { entries: [], state: 'loading', error: null }
     : undefined)

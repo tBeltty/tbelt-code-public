@@ -21,11 +21,11 @@ import { LocaleRuntime } from '@deepseek-ai/dsh-client-locale/client'
 import { makeTranslate, RemoteError, TestSessions } from '@deepseek-ai/dsh-client-test-runtime'
 import type { SessionFixture } from '@deepseek-ai/dsh-client-test-runtime'
 import type { RemoteFailure } from '@deepseek-ai/dsh-api-remotes/client'
-import { zh as commonZh } from '@deepseek-ai/dsh-client-locale/src/locales/zh.ts'
+import { es as commonEs } from '@deepseek-ai/dsh-client-locale/src/locales/es.ts'
 import type { GoalActivationSnapshot, GoalBarActions, GoalBarInjected } from '../src/client/slots.ts'
 import { apply, inject } from '../src/client/index.ts'
 import { GoalDock } from '../src/client/GoalBar.tsx'
-import { zh } from '../src/client/locales.ts'
+import { es } from '../src/client/locales.ts'
 import { apply as nodeApply } from '../src/index.ts'
 
 afterEach(cleanup)
@@ -349,7 +349,7 @@ describe('GoalDock adapter', () => {
       onResume: () => Promise.resolve({ ok: true, value: undefined }),
       onClear: () => Promise.resolve({ ok: true, value: undefined }),
     }
-    const t = makeTranslate(zh, commonZh)
+    const t = makeTranslate(es, commonEs)
     const dockProps = (up: () => GoalProjection | null | undefined) =>
       ({ useProjection: up, useGoalActivation, ...actions, t }) as unknown as Parameters<typeof GoalDock>[0]
     const shown = render(<GoalDock {...dockProps(useProjection)} />)
@@ -376,12 +376,12 @@ describe('GoalDock adapter', () => {
       onResume: () => Promise.resolve({ ok: true, value: undefined }),
       onClear: () => Promise.resolve({ ok: true, value: undefined }),
     }
-    const t = makeTranslate(zh, commonZh)
+    const t = makeTranslate(es, commonEs)
     const props = { useProjection, useGoalActivation, ...actions, t } as unknown as Parameters<typeof GoalDock>[0]
     const rendered = render(<GoalDock {...props} />)
-    expect(rendered.getByText('未运行的目标')).toBeTruthy()
-    expect(screen.getByRole('button', { name: '恢复目标' })).toBeTruthy()
-    expect(rendered.queryByRole('button', { name: '暂停目标' })).toBeNull()
+    expect(rendered.getByText('Objetivo inactivo')).toBeTruthy()
+    expect(screen.getByRole('button', { name: 'Reanudar objetivo' })).toBeTruthy()
+    expect(rendered.queryByRole('button', { name: 'Pausar objetivo' })).toBeNull()
   })
 })
 

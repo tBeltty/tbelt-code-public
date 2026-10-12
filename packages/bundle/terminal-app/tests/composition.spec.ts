@@ -30,6 +30,11 @@ describe('terminal profile', () => {
     }
   })
 
+  it('keeps the locale row so the Host stores the language the terminal reads', () => {
+    expect(byId('locale')).toMatchObject({ name: '@deepseek-ai/dsh-client-locale' })
+    expect(byId('locale')!.disabled).not.toBe(true)
+  })
+
   it('mounts no browser view', () => {
     const views = entries.filter(entry => entry.id?.startsWith('ui-'))
     expect(views.length).toBeGreaterThan(0)

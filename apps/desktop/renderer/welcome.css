@@ -121,13 +121,9 @@ body {
 .tagline em {
   color: var(--dsw-alias-label-primary);
   font-family: var(--dsw-font-family-brand);
-  font-size: 26px;
+  font-size: inherit;
   font-style: normal;
   font-weight: 500;
-}
-
-:lang(en) .tagline em {
-  font-size: inherit;
 }
 
 .actions {

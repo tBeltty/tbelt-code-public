@@ -6,10 +6,11 @@
  * @module @deepseek-ai/dsh-terminal-client/runner
  */
 import {
-  BRACKETED_PASTE_OFF, BRACKETED_PASTE_ON, chooseSession, createStyle, t,
+  BRACKETED_PASTE_OFF, BRACKETED_PASTE_ON, chooseSession, createStyle, resolveCopyLocale, setCopyLocale, t,
 } from '@deepseek-ai/dsh-terminal-views'
 import type { ImageProtocol, OpenCandidate } from '@deepseek-ai/dsh-terminal-views'
 import type { TerminalFiles } from './files.ts'
+import { loadSavedLanguage } from './config/language.ts'
 import type { HostTitleSettings } from './host-title.ts'
 import type { ClientServicesPort, SessionBindingPort, SessionListPort } from './ports.ts'
 import { listenForApprovals, listenForQuestions, TerminalSession } from './terminal-session.ts'
@@ -50,6 +51,8 @@ export interface RunnerEnvironment {
   readonly imageProtocol: ImageProtocol
   /** Clock reading in epoch milliseconds. */
   readonly now: () => number
+  /** Process environment that names the terminal's language, read when no language is saved. */
+  readonly languageEnvironment: Readonly<Record<string, string | undefined>>
   /** How the window title follows the session; the title is left alone when absent. */
   readonly hostTitle?: HostTitleSettings | undefined
 }
@@ -130,10 +133,12 @@ export async function runTerminal(
   request: RunnerRequest,
 ): Promise<TerminalRun> {
   const { stdin, stdout } = env
+  setCopyLocale(resolveCopyLocale(undefined, env.languageEnvironment))
   if (stdin.isTTY !== true || stdout.isTTY !== true || stdin.setRawMode === undefined) {
     throw new Error(t('error.notTty'))
   }
   const setRawMode = stdin.setRawMode.bind(stdin)
+  setCopyLocale(resolveCopyLocale(await loadSavedLanguage(services.remote), env.languageEnvironment))
   const list = await listReady(services)
   const choice = chooseSession(
     { resume: request.resume, continueLatest: request.continueLatest, cwd: env.cwd },
@@ -192,6 +197,7 @@ export async function runTerminal(
         files: env.files,
         imageProtocol: env.imageProtocol,
         now: env.now,
+        languageEnvironment: env.languageEnvironment,
       },
       hostTitle: env.hostTitle,
       onExit: leave,

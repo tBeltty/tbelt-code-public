@@ -4,7 +4,7 @@ import { cleanup, fireEvent, render } from '@testing-library/react'
 import { afterEach, expect, it, vi } from 'vitest'
 import { makeTranslate } from '@deepseek-ai/dsh-client-test-runtime'
 import { PresentedFileCard } from '../src/client/PresentedFileCard.tsx'
-import { en, zh } from '../src/client/locales.ts'
+import { en, es } from '../src/client/locales.ts'
 
 afterEach(cleanup)
 const props = () => ({
@@ -18,8 +18,8 @@ const props = () => ({
 })
 it('localizes reveal failures and accurately reports a directory-only action', () => {
   const p = props()
-  const view = render(<PresentedFileCard {...p} phase="revealError" t={makeTranslate(zh)} />)
-  expect(view.getByText(zh['presented.revealError'])).toBeTruthy()
+  const view = render(<PresentedFileCard {...p} phase="revealError" t={makeTranslate(es)} />)
+  expect(view.getByText(es['presented.revealError'])).toBeTruthy()
   view.rerender(<PresentedFileCard {...p} phase="revealed" host={{ ...p.host, fileManager: 'directory' }} />)
   expect(view.getByText(en['presented.directoryOpened'])).toBeTruthy()
   view.rerender(<PresentedFileCard {...p} phase="revealed" />)
@@ -40,7 +40,7 @@ it('shows the basename while retaining the full location for hover and actions',
 
 it.each([
   ['Quarterly summary (.pdf)', 'Quarterly summary'],
-  ['季度总结（PDF）', '季度总结'],
+  ['季度总结 (PDF)', '季度总结'],
 ] as const)('omits a trailing parenthesized file suffix from %s', (description, expected) => {
   const p = props()
   const view = render(<PresentedFileCard {...p} file={{ ...p.file, description }} />)
@@ -49,7 +49,7 @@ it.each([
 })
 
 
-it.each([en, zh])('distinguishes directory-only progress and errors in each locale', (dictionary) => {
+it.each([en, es])('distinguishes directory-only progress and errors in each locale', (dictionary) => {
   const p = { ...props(), t: makeTranslate(dictionary) }
   const view = render(<PresentedFileCard {...p} phase="revealing" />)
   expect(view.getByText(dictionary['presented.revealing'])).toBeTruthy()

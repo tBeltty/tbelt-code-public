@@ -14,9 +14,6 @@ ManifestDPIAware true
   !ifdef BUILD_UNINSTALLER
     BrandingText " "
     SetFont "Segoe UI" 9
-    !ifdef LANG_SIMPCHINESE
-      SetFont /LANG=${LANG_SIMPCHINESE} "Microsoft YaHei UI" 9
-    !endif
     !include "${INSTALLER_SOURCE_DIR}\uninstall.nsh"
   !endif
   !ifndef BUILD_UNINSTALLER

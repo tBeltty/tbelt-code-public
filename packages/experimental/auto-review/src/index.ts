@@ -660,8 +660,8 @@ function askUser(exec: ToolExecution, reason?: string): PreToolDecision {
     kind: 'ask',
     reason: reason === undefined ? denial : `${denial}: ${reason}`,
     displayReason: reason === undefined
-      ? { en: 'Auto review denied this call.', zh: 'Auto review 拒绝了此调用。' }
-      : { en: `Auto review denied this call: ${reason}`, zh: `Auto review 拒绝了此调用：${reason}` },
+      ? { en: 'Auto review denied this call.', es: 'Auto review rechazó esta llamada.' }
+      : { en: `Auto review denied this call: ${reason}`, es: `Auto review rechazó esta llamada: ${reason}` },
   }
 }
 

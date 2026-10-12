@@ -24,7 +24,7 @@ function derivedDocumentStore(remote: object) {
   const ctx = { remote } as never
   return new SettingsDocumentStore(ctx, new SettingsDescribeMirror(ctx))
 }
-import { en, zh } from '../src/client/locales.ts'
+import { en, es } from '../src/client/locales.ts'
 import { CurrentVersionRow } from '../src/client/CurrentVersionRow.tsx'
 import { DesktopUpdateBadge } from '../src/client/DesktopUpdateIndicator.tsx'
 import type { DesktopUpdateView } from '../src/types.ts'
@@ -229,7 +229,7 @@ it('reports a failed developer-tool write and allows retry', async () => {
 describe('current version', () => {
   it.each([
     ['Current version: 1.2.3-rc.4', en],
-    ['当前版本：1.2.3-rc.4', zh],
+    ['Versión actual: 1.2.3-rc.4', es],
   ])('renders the localized release label %s', (expected, dictionary) => {
     vi.stubEnv('DSH_CLIENT_VERSION', '1.2.3-rc.4')
     const translate: TriggerContentProps['t'] = (key, params) => {

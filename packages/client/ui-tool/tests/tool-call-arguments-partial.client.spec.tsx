@@ -7,7 +7,7 @@ import { createSnapshotStore } from '@deepseek-ai/dsh-client-store'
 import type { AssistantChatData, ToolResultNode } from '@deepseek-ai/dsh-client-ui-chat/client'
 import { useDisclosure } from '@deepseek-ai/dsh-client-ui-chat/src/client/chat/use-disclosure.ts'
 import { makeTranslate } from '@deepseek-ai/dsh-client-test-runtime'
-import { en, zh } from '@deepseek-ai/dsh-client-ui-conversation/src/client/locales.ts'
+import { en, es } from '@deepseek-ai/dsh-client-ui-conversation/src/client/locales.ts'
 import type { ToolCallHookContext } from '../src/client/contract/slots.ts'
 import { bindToolCallArgumentsPartial } from '../src/client/tool/tool-call-arguments-partial.ts'
 import { FileMutationRow } from '../src/client/tool/toolviews/file-mutation-row.tsx'
@@ -94,7 +94,7 @@ describe('tool argument prefix Hook', () => {
   })
 
   it.each([
-    ['write', en, 'Preparing content'], ['edit', zh, '正在准备内容'],
+    ['write', en, 'Preparing content'], ['edit', es, 'Preparando contenido de'],
   ] as const)('%s subscribes only during preparation and rounds raw length upward', (toolName, dictionary, label) => {
     const assistant = source(data(''))
     const usePartial = bindToolCallArgumentsPartial(standard, { assistant, callId: 'first' })
@@ -106,7 +106,7 @@ describe('tool argument prefix Hook', () => {
     const view = render(<FileMutationRow {...props} />)
     for (const [length, kilobytes] of [[0, 0], [1, 1], [1024, 1], [1025, 2], [12 * 1024, 12]]) {
       act(() => { assistant.set(data('中'.repeat(length!))) })
-      expect(view.getByText(`${label} ${kilobytes}KB`)).toBeTruthy()
+      expect(view.getByText(dictionary === en ? `${label} ${kilobytes}KB` : `${label} ${kilobytes} KB`)).toBeTruthy()
       expect(view.queryByRole('button')).toBeNull()
     }
     expect(assistant.listeners.size).toBe(1)

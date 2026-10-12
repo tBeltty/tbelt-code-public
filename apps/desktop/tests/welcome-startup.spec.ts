@@ -30,7 +30,7 @@ const state = vi.hoisted(() => ({
   openDevTools: vi.fn(),
   closeWelcome: vi.fn(),
   welcomeLocale: undefined as DesktopLocale | undefined,
-  preference: 'zh',
+  preference: 'es',
   hasApiKey: false,
   handlers: new Map<string, (...args: unknown[]) => unknown>(),
   listeners: new Map<string, (...args: unknown[]) => void>(),
@@ -174,7 +174,7 @@ afterEach(() => {
 it.each([false, true])('starts welcome onboarding without carrying update focus into login or skip (Windows update=%s)', async (updated) => {
   vi.resetModules()
   vi.clearAllMocks()
-  state.preference = 'zh'
+  state.preference = 'es'
   state.hasApiKey = false
   state.operations = undefined
   state.accountState.mockResolvedValue({ status: 'signed-out', attempt: null, links: { usageUrl: '', topUpUrl: '' } })
@@ -216,9 +216,9 @@ it.each([false, true])('starts welcome onboarding without carrying update focus 
   expect(state.loadWorkspace).toHaveBeenCalledExactlyOnceWith('dsh-app://app/')
   expect(state.showWorkspace).not.toHaveBeenCalled()
   state.loadWorkspace.mockClear()
-  expect(state.welcomeLocale).toMatchObject({ id: 'zh-CN' })
+  expect(state.welcomeLocale).toMatchObject({ id: 'es' })
   expect(await state.operations!.takeNotice()).toBeUndefined()
-  expect(state.dialogLocale!().id).toBe('zh-CN')
+  expect(state.dialogLocale!().id).toBe('es')
   const attemptId = 'login' as NonNullable<AccountView['attempt']>['id']
   const account: AccountView = { status: 'signed-out', links: { usageUrl: '', topUpUrl: '' },
     attempt: { id: attemptId, phase: 'waiting-browser', authorizeUrl: 'https://example.test/login' } }
@@ -251,7 +251,7 @@ it.each([false, true])('starts welcome onboarding without carrying update focus 
   expect(contents.send).toHaveBeenCalledWith(DESKTOP_IPC.enterWorkspace)
   const event = { sender: contents, senderFrame: contents.mainFrame }
   const bootstrap = state.handlers.get(DESKTOP_IPC.localeBootstrap)!
-  expect(await bootstrap(event)).toEqual({ languages: ['en-US'], preference: 'zh' })
+  expect(await bootstrap(event)).toEqual({ languages: ['en-US'], preference: 'es' })
   state.preference = 'en'
   expect(await bootstrap(event)).toEqual({ languages: ['en-US'], preference: 'en' })
   const changed = state.listeners.get(DESKTOP_IPC.localeChanged)!

@@ -8,7 +8,7 @@
  */
 import { useEffect, useState } from 'react'
 import type { SpendScopeSummary, SpendSummaryReading } from '@deepseek-ai/dsh-api-remotes/client'
-import { Tooltip } from '@deepseek-ai/dsh-client-ui-primitives'
+import { formatNumber, Tooltip } from '@deepseek-ai/dsh-client-ui-primitives'
 import type { PropsLocale } from '@deepseek-ai/dsh-client-ui-slots'
 import type { SpendPillInjected } from './slots.ts'
 import css from './SpendPill.module.css'
@@ -32,18 +32,19 @@ export function nearLimit(scope: SpendScopeSummary): boolean {
  * Format a spend figure in US dollars to the cent, keeping a non-zero amount
  * under one cent visible as such.
  * @param usd - amount in US dollars.
+ * @param tag - language tag from `format.locale`, for the decimal mark and digit grouping.
  * @returns the amount with a leading `$`.
  */
-export function formatSpend(usd: number): string {
+export function formatSpend(usd: number, tag: string): string {
   if (usd > 0 && usd < 0.01) return '<$0.01'
-  return `$${usd.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+  return `$${formatNumber(tag, usd, 2)}`
 }
 
 /** One scope's spend, followed by its limit when one is set. */
 function scopeReading(scope: SpendScopeSummary, t: PropsLocale<'model'>['t']): string {
   return scope.limitUsd === undefined
-    ? formatSpend(scope.spentUsd)
-    : t('spend.ofLimit', { spent: formatSpend(scope.spentUsd), limit: formatSpend(scope.limitUsd) })
+    ? formatSpend(scope.spentUsd, t('format.locale'))
+    : t('spend.ofLimit', { spent: formatSpend(scope.spentUsd, t('format.locale')), limit: formatSpend(scope.limitUsd, t('format.locale')) })
 }
 
 /**

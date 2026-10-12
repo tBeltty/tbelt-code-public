@@ -2,6 +2,10 @@
 
 <img src="docs/brand/tbelt_logo.png" alt="tBelt logo" width="64" />
 
+[![Release](https://img.shields.io/github/v/release/tBeltty/tbelt-code-public?include_prereleases&label=release&style=flat&labelColor=2b2b2b&color=4a4a4a)](https://github.com/tBeltty/tbelt-code-public/releases)
+[![License: AGPL v3](https://img.shields.io/badge/license-AGPL%20v3-4a4a4a?style=flat&labelColor=2b2b2b)](LICENSE)
+[![Platforms](https://img.shields.io/badge/platforms-macOS%20%7C%20Windows%20%7C%20Linux-4a4a4a?style=flat&labelColor=2b2b2b)](https://code.tbelt.online)
+
 tBelt Code is a coding agent for your desktop and your terminal. It works with any model provider and runs commands in the operating system's sandbox on your machine.
 
 Download the app from [code.tbelt.online](https://code.tbelt.online). It can install the `tbelt` command for your terminal. It is a developer preview; see [SAFETY.md](SAFETY.md).
@@ -18,7 +22,7 @@ Download the app from [code.tbelt.online](https://code.tbelt.online). It can ins
 - Long pasted text becomes a file attachment with a preview, and one click puts it back as text.
 - Images over 30 MB attach as files, with an upload percentage, instead of being refused.
 - Plans with inline comments and versions, reviewed before you approve.
-- The app is available in English and Spanish.
+- The app and `dsh terminal` are available in English and Spanish, and follow your system language until you pick one.
 - A light theme next to the dark one, or follow the system setting.
 - An Artifacts page listing the files each turn delivered or changed.
 - A side panel preview for HTML pages, images, PDFs and local dev servers.

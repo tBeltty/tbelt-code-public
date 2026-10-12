@@ -9,7 +9,7 @@ import { createPortal } from 'react-dom'
 import type { UseProjection } from '@deepseek-ai/dsh-api-session-controller/client'
 // Type-only: the `contextPressure` / `contextBreakdown` projection key merges.
 import type {} from '@deepseek-ai/dsh-token-meter/client'
-import { Tooltip, useAnchoredPosition, useDismissOnOutsidePointer } from '@deepseek-ai/dsh-client-ui-primitives'
+import { formatNumber, Tooltip, useAnchoredPosition, useDismissOnOutsidePointer } from '@deepseek-ai/dsh-client-ui-primitives'
 import type { ComposerBarProps } from '../contract/slots.ts'
 import { contextOccupancy } from '../context-occupancy.ts'
 import css from './ContextMeter.module.css'
@@ -39,9 +39,8 @@ const ROWS = [
  * @returns Compact localized count using K or M when needed.
  */
 function formatTokens(value: number, t: ComposerBarProps['t']): string {
-  const scaled = (candidate: number): string => candidate >= 100
-    ? String(Math.round(candidate))
-    : String(Math.round(candidate * 10) / 10)
+  const scaled = (candidate: number): string =>
+    formatNumber(t('format.locale'), candidate >= 100 ? Math.round(candidate) : Math.round(candidate * 10) / 10, 0, 1)
   if (value < 1_000) return String(value)
   if (value < 1_000_000) return t('number.thousand', { value: scaled(value / 1_000) })
   return t('number.million', { value: scaled(value / 1_000_000) })

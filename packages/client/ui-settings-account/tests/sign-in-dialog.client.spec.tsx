@@ -4,11 +4,11 @@ import { cleanup, fireEvent, render, screen, act } from '@testing-library/react'
 import { afterEach, expect, it, vi } from 'vitest'
 import type { AccountView, SignInAttemptId } from '@deepseek-ai/dsh-deepseek-account/types'
 import { SignInDialog } from '../src/client/SignInDialog.tsx'
-import { en, zh } from '../src/client/locales.ts'
+import { en, es } from '../src/client/locales.ts'
 
 afterEach(cleanup)
 const id = 'login-attempt' as SignInAttemptId
-function dialogProps(attempt: AccountView['attempt'], copy: typeof en | typeof zh = en, colorScheme: 'light' | 'dark' = 'dark') {
+function dialogProps(attempt: AccountView['attempt'], copy: typeof en | typeof es = en, colorScheme: 'light' | 'dark' = 'dark') {
   const start = vi.fn(async () => {})
   const cancel = vi.fn(async () => {})
   const close = vi.fn()
@@ -16,29 +16,29 @@ function dialogProps(attempt: AccountView['attempt'], copy: typeof en | typeof z
   return { start, cancel, close, useApiKey, colorScheme, t: (key: keyof typeof en) => copy[key],
     account: { view: { status: 'signed-out' as const, attempt, links: { usageUrl: 'https://platform.deepseek.com/usage', topUpUrl: 'https://platform.deepseek.com/top_up' } }, details: undefined, failed: false } }
 }
-function mount(attempt: AccountView['attempt'], copy: typeof en | typeof zh = en, colorScheme: 'light' | 'dark' = 'dark') {
+function mount(attempt: AccountView['attempt'], copy: typeof en | typeof es = en, colorScheme: 'light' | 'dark' = 'dark') {
   const props = dialogProps(attempt, copy, colorScheme)
   render(<SignInDialog {...props} />)
   return props
 }
-it.each([en, zh])('offers sign in or the existing API key editor', async (copy) => {
+it.each([en, es])('offers sign in or the existing API key editor', async (copy) => {
   const props = mount(null, copy)
-  await expect(`${screen.getByRole('dialog').textContent}\n`).toMatchFileSnapshot(`./expected/login-${copy === en ? 'en' : 'zh'}.txt`)
+  await expect(`${screen.getByRole('dialog').textContent}\n`).toMatchFileSnapshot(`./expected/login-${copy === en ? 'en' : 'es'}.txt`)
   fireEvent.click(screen.getByRole('button', { name: copy.addApiKey }))
   expect(props.useApiKey).toHaveBeenCalledOnce()
   expect(props.start).not.toHaveBeenCalled()
 })
-it.each([en, zh])('requires a user action after timeout', async (copy) => {
+it.each([en, es])('requires a user action after timeout', async (copy) => {
   const props = mount({ id, phase: 'expired', errorCode: 'expired' }, copy)
   expect(props.start).not.toHaveBeenCalled()
-  await expect(`${screen.getByRole('dialog').textContent}\n`).toMatchFileSnapshot(`./expected/login-timeout-${copy === en ? 'en' : 'zh'}.txt`)
+  await expect(`${screen.getByRole('dialog').textContent}\n`).toMatchFileSnapshot(`./expected/login-timeout-${copy === en ? 'en' : 'es'}.txt`)
   await act(async () => { fireEvent.click(screen.getByRole('button', { name: copy.retry })) })
   expect(props.start).toHaveBeenCalledOnce()
 })
-it.each([en, zh])('shows waiting actions and cancels before dismissing', async (copy) => {
+it.each([en, es])('shows waiting actions and cancels before dismissing', async (copy) => {
   const props = mount({ id, phase: 'waiting-browser', authorizeUrl: 'https://platform.deepseek.com/dsh/authorize?state=example' }, copy)
   expect(screen.getByRole('button', { name: copy.waiting }).hasAttribute('disabled')).toBe(true)
-  await expect(`${screen.getByRole('dialog').textContent}\n`).toMatchFileSnapshot(`./expected/login-waiting-${copy === en ? 'en' : 'zh'}.txt`)
+  await expect(`${screen.getByRole('dialog').textContent}\n`).toMatchFileSnapshot(`./expected/login-waiting-${copy === en ? 'en' : 'es'}.txt`)
   await act(async () => { fireEvent.click(screen.getByRole('button', { name: copy.cancel })) })
   expect(props.cancel).toHaveBeenCalledExactlyOnceWith(id)
   expect(props.close).toHaveBeenCalledOnce()
@@ -51,7 +51,7 @@ it('keeps an admitted credential commit open on Escape and close', () => {
   expect(props.cancel).not.toHaveBeenCalled()
 })
 
-it.each([en, zh])('restores the copy label two seconds after the latest successful copy', async (copy) => {
+it.each([en, es])('restores the copy label two seconds after the latest successful copy', async (copy) => {
   const clipboard = Object.getOwnPropertyDescriptor(navigator, 'clipboard')
   const writeText = vi.fn(async () => {})
   vi.useFakeTimers()
@@ -96,7 +96,7 @@ it('copies the authorization link with the palette of the current render', async
   }
 })
 
-it.each([en, zh])('shows a temporary copy failure without interrupting sign-in', async (copy) => {
+it.each([en, es])('shows a temporary copy failure without interrupting sign-in', async (copy) => {
   const clipboard = Object.getOwnPropertyDescriptor(navigator, 'clipboard')
   vi.useFakeTimers()
   try {
@@ -107,7 +107,7 @@ it.each([en, zh])('shows a temporary copy failure without interrupting sign-in',
     await act(async () => { fireEvent.click(screen.getByRole('button', { name: copy.copyLink })) })
     expect(screen.getByRole('dialog', { name: copy.browserTitle })).toBeTruthy()
     expect(screen.getByRole('button', { name: copy.copyFailed })).toBeTruthy()
-    await expect(`${screen.getByRole('dialog').textContent}\n`).toMatchFileSnapshot(`./expected/login-copy-failed-${copy === en ? 'en' : 'zh'}.txt`)
+    await expect(`${screen.getByRole('dialog').textContent}\n`).toMatchFileSnapshot(`./expected/login-copy-failed-${copy === en ? 'en' : 'es'}.txt`)
     act(() => { vi.advanceTimersByTime(1000) })
     Object.defineProperty(navigator, 'clipboard', { configurable: true, value: undefined })
     await act(async () => { fireEvent.click(screen.getByRole('button', { name: copy.copyFailed })) })
@@ -125,14 +125,14 @@ it.each([en, zh])('shows a temporary copy failure without interrupting sign-in',
   }
 })
 
-it.each([en, zh])('shows an error during an active attempt and waits for cancellation before retrying', async (copy) => {
+it.each([en, es])('shows an error during an active attempt and waits for cancellation before retrying', async (copy) => {
   const props = mount({ id, phase: 'waiting-browser' }, copy)
   cleanup()
   props.account.failed = true
   render(<SignInDialog {...props} />)
   expect(screen.getByRole('dialog', { name: copy.failureTitle })).toBeTruthy()
   expect(screen.queryByRole('button', { name: copy.waiting })).toBeNull()
-  await expect(`${screen.getByRole('dialog').textContent}\n`).toMatchFileSnapshot(`./expected/login-active-error-${copy === en ? 'en' : 'zh'}.txt`)
+  await expect(`${screen.getByRole('dialog').textContent}\n`).toMatchFileSnapshot(`./expected/login-active-error-${copy === en ? 'en' : 'es'}.txt`)
   const cancelled = Promise.withResolvers<undefined>()
   props.cancel.mockReturnValueOnce(cancelled.promise)
   fireEvent.click(screen.getByRole('button', { name: copy.retry }))

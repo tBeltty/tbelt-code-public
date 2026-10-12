@@ -11,7 +11,7 @@ import { InputHub } from '../src/client/input/hub.ts'
 import { ComposerMessagePrefixRegistry } from '../src/client/input/prefixes.ts'
 import { ConversationController } from '../src/client/service.ts'
 import { installStopShortcut } from '../src/client/stop-shortcut.ts'
-import { zh } from '../src/client/locales.ts'
+import { es } from '../src/client/locales.ts'
 
 const disposers: (() => void | Promise<void>)[] = []
 afterEach(async () => {
@@ -30,7 +30,7 @@ async function bench() {
   const reference = runtime.sessions.retain('s1' as SessionId)
   await reference.ready
   const prefixes = new ComposerMessagePrefixRegistry()
-  const hub = new InputHub(runtime.ctx, makeTranslate(zh, {}), prefixes)
+  const hub = new InputHub(runtime.ctx, makeTranslate(es, {}), prefixes)
   const fiber = runtime.ctx.plugin(ConversationController, {
     input: hub, blocks: new ComposerBlockRegistry(), prefixes, maxConcurrentFileUploads: 2,
   })

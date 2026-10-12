@@ -14,12 +14,12 @@ import type { SessionId } from '@deepseek-ai/dsh-session/types'
 import type { SessionStatusSnapshot } from '@deepseek-ai/dsh-client-ui-session/client'
 import type { WorkspaceId } from '@deepseek-ai/dsh-workspace/types'
 import { en as commonEn } from '@deepseek-ai/dsh-client-locale/src/locales/en.ts'
-import { zh as commonZh } from '@deepseek-ai/dsh-client-locale/src/locales/zh.ts'
+import { es as commonEs } from '@deepseek-ai/dsh-client-locale/src/locales/es.ts'
 import { EMPTY_CONVERSATION_SNAPSHOT } from '../src/client/contract/snapshot.ts'
 import type { ConversationSnapshot } from '../src/client/contract/snapshot.ts'
 import { createConversationStore } from '../src/client/stores.ts'
 import { SessionInputShell } from '../src/client/input/facade.ts'
-import { en, zh } from '../src/client/locales.ts'
+import { en, es } from '../src/client/locales.ts'
 import { ConversationContent } from '../src/client/skeleton/ConversationContent.tsx'
 import { ConversationHeader } from '../src/client/skeleton/ConversationHeader.tsx'
 import { ConversationMainPanel } from '../src/client/skeleton/ConversationMainPanel.tsx'
@@ -93,7 +93,7 @@ beforeEach(() => {
   vi.stubGlobal('ResizeObserver', ResizeObserverStub)
 })
 
-const t: ConversationContentProps['t'] = makeTranslate(zh, commonZh)
+const t: ConversationContentProps['t'] = makeTranslate(es, commonEs)
 
 const sid = (id: string) => id as SessionId
 const wid = (id: string) => id as WorkspaceId
@@ -560,7 +560,7 @@ describe('ConversationRoot resident composer', () => {
     expect(b.view.queryByRole('tablist')).toBeNull()
     expect(b.slotCalls).not.toContain('conversation.session.header.utilities')
     expect(b.slotCalls).not.toContain('conversation.session.header.actions')
-    expect(b.view.getByText('欢迎使用 tBelt Code')).toBeTruthy()
+    expect(b.view.getByText('Te damos la bienvenida a tBelt Code')).toBeTruthy()
     expect(b.view.queryByText('预览版')).toBeNull()
     expect(b.view.queryByTestId('view-chat')).toBeNull()
     // The same machine-backed textarea is live in the hero, and the
@@ -572,7 +572,7 @@ describe('ConversationRoot resident composer', () => {
     expect(b.store.store.getSnapshot().draft).toBe('draft in hero')
     // Picker: open through the chip; a pick switches to the other
     // workspace's blank session (draft carry is apply-layer wiring).
-    fireEvent.click(b.view.getByRole('button', { name: '选择工作区' }))
+    fireEvent.click(b.view.getByRole('button', { name: 'Elegir espacio de trabajo' }))
     const owner = b.pickerOwner() as { open: boolean; onPick(id: WorkspaceId): void }
     expect(owner.open).toBe(true)
     act(() => { owner.onPick(wid('second')) })
@@ -594,7 +594,7 @@ describe('ConversationRoot resident composer', () => {
     expect(conversationPhase(failed, EMPTY_CONVERSATION_SNAPSHOT)).toBe('engaging')
     const b = mount(failed, undefined, undefined, { summaryBlank: true })
     expect(b.view.container.querySelector('[data-phase]')?.getAttribute('data-phase')).toBe('active')
-    expect(b.view.queryByText('欢迎使用 tBelt Code')).toBeNull()
+    expect(b.view.queryByText('Te damos la bienvenida a tBelt Code')).toBeNull()
   })
 
   it('settling phase: a summary that does not prove the session blank hides the composer while it opens', () => {
@@ -626,7 +626,7 @@ describe('ConversationRoot resident composer', () => {
     // blank the column for the history round-trip.
     const root = b.view.container.querySelector('[data-phase]')
     expect(root?.getAttribute('data-phase')).toBe('hero')
-    expect(b.view.getByText('欢迎使用 tBelt Code')).toBeTruthy()
+    expect(b.view.getByText('Te damos la bienvenida a tBelt Code')).toBeTruthy()
     expect(b.view.getByRole('textbox')).toBeTruthy()
   })
 
@@ -672,13 +672,13 @@ describe('ConversationRoot resident composer', () => {
 
   it('opens the workspace picker from the Open folder button while no workspace is chosen', () => {
     const b = mount(sessionSnapshotOf({ blank: true }), [])
-    fireEvent.click(b.view.getByRole('button', { name: '打开文件夹' }))
+    fireEvent.click(b.view.getByRole('button', { name: 'Abrir carpeta' }))
     expect((b.pickerOwner() as { open: boolean }).open).toBe(true)
   })
 
   it('hides the Open folder button once a workspace is chosen', () => {
     const b = mount(sessionSnapshotOf({ blank: true }), [{ ...workspace('one'), sessionIds: [SID] }])
-    expect(b.view.queryByRole('button', { name: '打开文件夹' })).toBeNull()
+    expect(b.view.queryByRole('button', { name: 'Abrir carpeta' })).toBeNull()
   })
 
   it('rolls the pending workspace label back when switching fails', async () => {
@@ -691,7 +691,7 @@ describe('ConversationRoot resident composer', () => {
       ],
       selectWorkspace,
     )
-    fireEvent.click(b.view.getByRole('button', { name: '选择工作区' }))
+    fireEvent.click(b.view.getByRole('button', { name: 'Elegir espacio de trabajo' }))
     const owner = b.pickerOwner() as { onPick(id: WorkspaceId): void }
     await act(async () => { owner.onPick(wid('second')); await Promise.resolve() })
     expect(selectWorkspace).toHaveBeenCalledWith(wid('second'))
@@ -701,7 +701,7 @@ describe('ConversationRoot resident composer', () => {
 
   it('blank session keeps the interactive picker chip (workspace switchable until the first message)', () => {
     const b = mount(sessionSnapshotOf({ blank: true }))
-    const chip = b.view.getByRole('button', { name: '选择工作区' })
+    const chip = b.view.getByRole('button', { name: 'Elegir espacio de trabajo' })
     expect((chip as HTMLButtonElement).disabled).toBe(false)
     expect(b.slotCalls).toContain('conversation.hero.workspace')
     // The agent-preset chip sits in the same row, for the same reason: both

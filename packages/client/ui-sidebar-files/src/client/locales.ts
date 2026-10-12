@@ -18,31 +18,10 @@ declare module '@deepseek-ai/dsh-client-ui-slots' {
   }
 }
 
-/** Simplified Chinese dictionary and key-set source of truth. */
-export const zh = {
-  'shortcut.noSession': '请先选择会话',
-  'type.label': '文件',
-  'guide.title': '工作区文件',
-  'guide.description': '浏览会话工作区的文件',
-  loading: '正在读取…',
-  empty: '空目录',
-  truncated: '条目太多，只显示了一部分。',
-  noWorkspace: '这个会话没有工作区目录。',
-  reload: '重新读取',
-  autoRefresh: '自动刷新',
-  'autoRefresh.enable': '开启自动刷新',
-  'autoRefresh.disable': '关闭自动刷新',
-  'entry.other': '这不是文件或目录，没法打开。',
-  'error.notFound': '这个目录不在了。可能已被移动或删除。',
-  'error.outsideWorkspace': '这个目录在工作区之外，侧栏不会读取它。',
-  'error.notDirectory': '这不是一个目录。',
-  'error.unavailable': '读取失败：{message}',
-} satisfies Record<string, string>
-
 /** Files dictionary key union. */
-export type SidebarFilesKey = keyof typeof zh
+export type SidebarFilesKey = keyof typeof en
 
-/** English dictionary, checked against the Chinese key set. */
+/** English dictionary and key-set source of truth. */
 export const en = {
   'shortcut.noSession': 'Select a session first',
   'type.label': 'Files',
@@ -61,4 +40,25 @@ export const en = {
   'error.outsideWorkspace': 'That directory is outside the workspace, so the sidebar will not read it.',
   'error.notDirectory': 'That is not a directory.',
   'error.unavailable': 'Read failed: {message}',
-} satisfies Record<SidebarFilesKey, string>
+} satisfies Record<string, string>
+
+/** Spanish dictionary, checked complete against the English key set. */
+export const es = {
+  'shortcut.noSession': 'Selecciona primero una sesión',
+  'type.label': 'Archivos',
+  'guide.title': 'Archivos del espacio de trabajo',
+  'guide.description': 'Explora los archivos del espacio de trabajo de esta sesión',
+  loading: 'Leyendo…',
+  empty: 'Directorio vacío',
+  truncated: 'Hay demasiadas entradas; solo se muestran algunas.',
+  noWorkspace: 'Esta sesión no tiene directorio de trabajo.',
+  reload: 'Recargar',
+  autoRefresh: 'Actualización automática',
+  'autoRefresh.enable': 'Activar actualización automática',
+  'autoRefresh.disable': 'Desactivar actualización automática',
+  'entry.other': 'No es un archivo ni un directorio, así que no se puede abrir.',
+  'error.notFound': 'Ese directorio ya no existe. Puede que se haya movido o eliminado.',
+  'error.outsideWorkspace': 'Ese directorio está fuera del espacio de trabajo, así que la barra lateral no lo leerá.',
+  'error.notDirectory': 'Eso no es un directorio.',
+  'error.unavailable': 'Error de lectura: {message}',
+} satisfies Record<keyof typeof en, string>

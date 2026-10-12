@@ -13,7 +13,7 @@ import { apply as hostApply } from '../src/index.ts'
 
 // These specs assert the shipped Chinese copy. The lane has no jsdom `window`,
 // so browser-language detection never runs and a fresh LocaleRuntime opens on
-// FALLBACK_LOCALE (en); bench stages zh explicitly on the locale instead.
+// FALLBACK_LOCALE (en); bench stages es explicitly on the locale instead.
 
 /** One Host view of a served namespace. */
 function view(ns: string, revision = 0) {
@@ -28,7 +28,7 @@ async function bench(served?: string[]) {
   const ctx = new Context()
   await ctx.plugin(SlotRegistry).await()
   const locale = new LocaleRuntime(ctx)
-  locale.setLocale('zh')
+  locale.setLocale('es')
   ctx.provide('locale', locale)
   const describeSettings = vi.fn(() => Promise.resolve(served === undefined
     ? { ok: false, error: new RemoteError('gateway/internal', 'no provider', {}) }
@@ -64,7 +64,7 @@ describe('ui-settings-shell apply', () => {
     await vi.waitFor(() => { expect(slots.entries('plugins.item')).toHaveLength(1) })
     const entry = slots.entries('plugins.item')[0]!
     expect(entry.options).toMatchObject({ id: 'shell', order: 10 })
-    expect(resolveSlotLabel(entry.options.label)).toBe('终端')
+    expect(resolveSlotLabel(entry.options.label)).toBe('Shell')
     expect(entry.locale).toBe(NS)
     const face = (entry.inject as () => Pick<ShellCardFace, 'hooks'>)()
     expect(Object.keys(face.hooks)).toEqual(['shellCard'])

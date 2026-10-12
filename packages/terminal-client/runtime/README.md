@@ -7,7 +7,7 @@ kind: "package-reference"
 
 ## Summary
 
-`dsh terminal` shows one Session in your terminal and talks to the same Remote API as the browser GUI. This plugin builds that client inside the Host process from the Client plugins' browser bundles, connected over an in-process carrier with no socket, port or launch token. A `TerminalSession` draws the transcript and composer, sends prompts, cancels turns and answers permission requests. Slash commands open screens for providers, API keys, web search, settings, plugins, agent presets and permissions, so a fresh install is set up without the GUI. Use `dsh-headless` instead for one task per process.
+`dsh terminal` shows one Session in your terminal and talks to the same Remote API as the browser GUI. This plugin builds that client inside the Host process from the Client plugins' browser bundles, connected over an in-process carrier with no socket, port or launch token. A `TerminalSession` draws the transcript and composer, sends prompts, cancels turns and answers permission requests. Slash commands open screens for providers, API keys, web search, settings, plugins, agent presets, permissions and language, so a fresh install is set up without the GUI. Use `dsh-headless` instead for one task per process.
 
 ## Table of Contents
 
@@ -53,6 +53,7 @@ The session id printed at start and at exit is the part after `session-`, so the
 | `/plugins` | Turn bundles and single plugins on or off, install or remove a bundle |
 | `/agents` | Show an agent preset, use it for this session or make it the default |
 | `/permissions` | Choose how freely the agent may act, for this session and optionally for new sessions |
+| `/language` | Choose English, Spanish or the terminal's language; the choice is the `locale.preference` setting the GUI shares |
 | `/new [directory]` | Start a session in this or another directory |
 | `/attach <file>`, `/detach` | Add a file or image to the next message, or remove the attached ones |
 | Tab after `@` | Complete a file, directory or session name and write it as a reference |
@@ -85,7 +86,7 @@ The agent's own questions (`ask_user_question`) and the review of a plan from pl
 
 The panels (`/queue` to `/commands` above) run like the configuration screens, in place of the composer, over the same Remote methods and client services the GUI pages call. The rows, summaries and lines they draw come from `dsh-terminal-views`. A turn that changed files ends with a line that points to `/deliverables`. Workflow runs print a line when a run starts, when each member agent starts and ends, and when the run ends. The status line above the composer counts queued messages and attachments waiting for the next message.
 
-A screen reads and writes through the Remote methods the GUI settings pages call, so it shows the same providers, keys and values and refuses what the GUI refuses. Lists that tick several items (the models of a provider) take Enter to tick and the first row to continue. Questions that take a key hide what you type, check the key with the provider (`llm.discoverModels` with `live`, or `web.checkSearchKey`) before anything is stored, and never print it. A new provider is written in the order profile, then key, so a refused profile leaves no orphan key; the first model of a provider added while no model could run becomes the default for new sessions. `/providers` adds a local or custom server (Ollama, LM Studio or any compatible address) from the same templates as the GUI, and a provider can be set up with a typed model list when its server lists none. Only one screen is open at a time.
+A screen reads and writes through the Remote methods the GUI settings pages call, so it shows the same providers, keys and values and refuses what the GUI refuses. Lists that tick several items (the models of a provider) take Enter to tick and the first row to continue. Questions that take a key hide what you type, check the key with the provider (`llm.discoverModels` with `live`, or `web.checkSearchKey`) before anything is stored, and never print it. A new provider is written in the order profile, then key, so a refused profile leaves no orphan key; the first model of a provider added while no model could run becomes the default for new sessions. `/providers` adds a local or custom server (Ollama, LM Studio or any compatible address) from the same templates as the GUI, and a provider can be set up with a typed model list when its server lists none. `/language` writes `locale.preference`, the setting the GUI language selector writes, and switches the wording at once. Without a saved language the terminal reads `LC_ALL`, `LC_MESSAGES`, `LANGUAGE` and `LANG`. Only one screen is open at a time.
 
 `/attach` reads a PNG, JPEG, WebP or GIF by its first bytes, never by its extension, and sends it as an image part of the next message, after the text. Any other regular file is uploaded to the Host through the service the GUI uses and goes as a file part. A message the Host refuses keeps its attachments for the next try. Images in the conversation draw inline when the terminal speaks Kitty graphics (PNG only) or the iTerm2 protocol (every format, including WezTerm); elsewhere, and inside tmux or screen, they show as a line such as `[image shot.png · 800×600 · 24 KB]`. History of a reopened session shows markers only, so resuming a long session does not fetch every image.
 
@@ -130,7 +131,7 @@ The browser and terminal clients share every Client plugin of the data tier. The
 | [`src/runner.ts`](src/runner.ts) | Session choice, raw mode, bracketed paste, resize, restore on exit |
 | [`src/terminal-session.ts`](src/terminal-session.ts) | One conversation: input, composer, pickers, questions, commands, images, cancel, permission prompts |
 | [`src/host-title.ts`](src/host-title.ts) | The window title writer: writes on change, animates the spinner while a turn runs, hands the title back on release |
-| [`src/config/index.ts`](src/config/index.ts) | The configuration screens and their `FlowUi` questions: `providers`, `web-search`, `settings`, `plugins`, `agents`, `permissions`, `models` |
+| [`src/config/index.ts`](src/config/index.ts) | The configuration screens and their `FlowUi` questions: `providers`, `web-search`, `settings`, `plugins`, `agents`, `permissions`, `language`, `models` |
 | [`src/panels/index.ts`](src/panels/index.ts) | The panels, one module each, and the `runPanel` switch over `PanelName` |
 | [`src/panel-ports.ts`](src/panel-ports.ts) | The Remote namespaces and client services the panels call, as interfaces |
 | [`src/files.ts`](src/files.ts) | Reading an image or file to attach and checking a directory on the local disk |

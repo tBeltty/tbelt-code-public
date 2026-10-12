@@ -11,7 +11,7 @@ import { TranscriptViewRow, type TranscriptViewRowProps } from '../src/client/se
 import { PerformanceUsageRow } from '../src/client/settings/PerformanceUsageRow.tsx'
 import type { LinkOpening, PerformanceUsageMode, TranscriptViewMode } from '../src/chat-settings.ts'
 import { LinkOpeningRow } from '../src/client/settings/LinkOpeningRow.tsx'
-import { en, zh } from '../src/client/locale.ts'
+import { en, es } from '../src/client/locale.ts'
 
 afterEach(cleanup)
 
@@ -34,7 +34,7 @@ function noPendingInteraction() {
 // The resource hook the resources plugin merges into GlobalStandardProps; this row reads no address.
 const useResource = (() => ({ status: 'none' as const, value: undefined, failure: undefined })) as GlobalStandardProps['useResource']
 
-function mount(mode: TranscriptViewMode = 'standard', dictionary: typeof en | typeof zh = en) {
+function mount(mode: TranscriptViewMode = 'standard', dictionary: typeof en | typeof es = en) {
   const source = createSnapshotStore<TranscriptViewMode>(mode)
   const setTranscriptView = vi.fn((next: TranscriptViewMode) => { source.set(next) })
   const props: TranscriptViewRowProps = {
@@ -79,19 +79,19 @@ describe('TranscriptViewRow', () => {
   })
 
   it('shows all four work-detail values in Chinese', () => {
-    const b = mount('compact', zh)
-    expect(screen.getByText('工作步骤展示')).toBeDefined()
-    expect(screen.getByText('选择希望看到多少工具调用细节')).toBeDefined()
-    fireEvent.click(screen.getByRole('button', { name: '简洁' }))
-    fireEvent.click(screen.getByRole('menuitem', { name: '标准' }))
+    const b = mount('compact', es)
+    expect(screen.getByText('Detalle de llamadas a herramientas')).toBeDefined()
+    expect(screen.getByText('Elige cuánto detalle mostrar en las llamadas a herramientas')).toBeDefined()
+    fireEvent.click(screen.getByRole('button', { name: 'Compacto' }))
+    fireEvent.click(screen.getByRole('menuitem', { name: 'Estándar' }))
     expect(b.setTranscriptView).toHaveBeenLastCalledWith('standard')
-    fireEvent.click(screen.getByRole('button', { name: '标准' }))
-    fireEvent.click(screen.getByRole('menuitem', { name: '详细' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Estándar' }))
+    fireEvent.click(screen.getByRole('menuitem', { name: 'Detallado' }))
     expect(b.setTranscriptView).toHaveBeenLastCalledWith('detailed')
-    fireEvent.click(screen.getByRole('button', { name: '详细' }))
-    fireEvent.click(screen.getByRole('menuitem', { name: '完全展开' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Detallado' }))
+    fireEvent.click(screen.getByRole('menuitem', { name: 'Exhaustivo' }))
     expect(b.setTranscriptView).toHaveBeenLastCalledWith('verbose')
-    expect(screen.getByRole('button', { name: '完全展开' })).toBeDefined()
+    expect(screen.getByRole('button', { name: 'Exhaustivo' })).toBeDefined()
   })
 
   it('returns focus before publishing a mode change without refocusing after the menu closes', async () => {
@@ -141,7 +141,7 @@ describe('LinkOpeningRow', () => {
 
   it.each([
     [en, 'Open chat links in', 'Choose where to open web links', 'In-App Sidebar', 'Default Browser'],
-    [zh, '网页链接默认打开方式', '对话中网页链接的打开位置', '应用内侧边栏', '默认浏览器'],
+    [es, 'Abrir enlaces del chat en', 'Elige dónde abrir los enlaces web', 'Barra lateral de la app', 'Navegador predeterminado'],
   ] as const)('selects either destination using localized labels (%s)', (dictionary, title, description, sidebar, newTab) => {
     const b = mount('compact', dictionary)
     const source = createSnapshotStore<LinkOpening>('sidebar')

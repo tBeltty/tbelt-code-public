@@ -4,16 +4,16 @@ import { afterEach, describe, expect, it } from 'vitest'
 import { cleanup, render } from '@testing-library/react'
 import { AttachmentId } from '@deepseek-ai/dsh-attachment'
 import { makeTranslate } from '@deepseek-ai/dsh-client-test-runtime'
-import { zh as commonZh } from '@deepseek-ai/dsh-client-locale/src/locales/zh.ts'
+import { es as commonEs } from '@deepseek-ai/dsh-client-locale/src/locales/es.ts'
 import type { RenderMessageImages } from '@deepseek-ai/dsh-client-ui-conversation/client'
 import { AssistantMarkdown } from '../src/client/chat/AssistantMarkdown.tsx'
 import { useDetailedPresentation } from './presentation-fixture.client.ts'
 import { useDisclosure } from '../src/client/chat/use-disclosure.ts'
-import { zh } from '../src/client/locale.ts'
+import { es } from '../src/client/locale.ts'
 
 afterEach(cleanup)
 
-const t = makeTranslate(zh, commonZh)
+const t = makeTranslate(es, commonEs)
 
 const attachment = {
   attachmentId: AttachmentId(`sha256:${'a'.repeat(64)}`),

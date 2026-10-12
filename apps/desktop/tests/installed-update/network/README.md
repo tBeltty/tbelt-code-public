@@ -4,8 +4,6 @@ description: "Operator-owned Windows network fault and recovery for one verified
 
 # Test-application network fault
 
-English | [中文](README.zh.md)
-
 ## Summary
 
 Interrupt only the installed qualification application's outbound traffic, then remove that exact rule before retrying the update. The tools never disable an adapter, VPN, proxy, or firewall profile. Real traffic interruption remains an operator observation; tests substitute all firewall cmdlets.

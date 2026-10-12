@@ -1,17 +1,7 @@
 /** Locale-owned Excel preview controls and parser feedback. */
-export const zh = {
-  title: '表格', language: 'zh', loading: '文档渲染中...',
-  invalid: '无法打开此表格。请检查文件格式、内容或密码保护。',
-  tooLarge: '此表格超过预览大小限制。', timeout: '打开表格超时。请缩小文件后重试。',
-  encoding: '无法识别此文本文件的编码。请另存为 UTF-8 或带 BOM 的 UTF-16 后重试。',
-  formulaWarning: '此工作簿包含公式，显示结果可能缺失或不准确。',
-  unsupportedNotice: '当前预览不支持此工作簿中的{features}。请使用系统应用打开，以获得完整体验。',
-  charts: '图表', images: '图片', shapes: '形状', conditionalFormatting: '条件格式', featureSeparator: '、',
-  retry: '重试',
-} satisfies Record<string, string>
 
 /** Excel preview dictionary keys. */
-export type ExcelPreviewKey = keyof typeof zh
+export type ExcelPreviewKey = keyof typeof en
 
 /** English Excel preview copy. */
 export const en = {
@@ -23,7 +13,26 @@ export const en = {
   unsupportedNotice: 'This preview does not support {features} in this workbook. Open it in a system application for the full experience.',
   charts: 'charts', images: 'images', shapes: 'shapes', conditionalFormatting: 'conditional formatting', featureSeparator: ', ',
   retry: 'Retry',
-} satisfies Record<ExcelPreviewKey, string>
+} satisfies Record<string, string>
+
+/** Spanish dictionary, checked complete against the English key set. */
+export const es = {
+  title: 'Hoja de cálculo',
+  language: 'en',
+  loading: 'Renderizando documento...',
+  invalid: 'No se pudo abrir esta hoja de cálculo. Comprueba su formato, su contenido o si tiene contraseña.',
+  tooLarge: 'Este libro supera el límite de tamaño de la vista previa.',
+  timeout: 'Se agotó el tiempo al abrir este libro. Prueba con un archivo más pequeño.',
+  encoding: 'No se pudo leer esta codificación de texto. Guarda el archivo como UTF-8 o UTF-16 con BOM e inténtalo de nuevo.',
+  formulaWarning: 'Este libro contiene fórmulas. Los resultados mostrados pueden faltar o ser inexactos.',
+  unsupportedNotice: 'Esta vista previa no admite {features} de este libro. Ábrelo en una aplicación del sistema para verlo completo.',
+  charts: 'gráficos',
+  images: 'imágenes',
+  shapes: 'formas',
+  conditionalFormatting: 'formato condicional',
+  featureSeparator: ', ',
+  retry: 'Reintentar',
+} satisfies Record<keyof typeof en, string>
 
 declare module '@deepseek-ai/dsh-client-ui-slots' {
   interface LocaleNamespaceMap {

@@ -27,7 +27,7 @@ This package lets users browse grouped or flat Session lists, choose a Workspace
 
 Use the sidebar to browse Workspaces and their Sessions, reorder them, and start new ones; use the picker in the Session Intent hero to choose a Workspace for a new session. An open Workspace shows five idle, non-blank Sessions by default. Running Sessions, including parents with running children, remain visible in their ordered positions without using that quota; the selected blank **New Session** is also an extra row until its first prompt. Each **Show more** click reveals up to five more idle Sessions; after the final batch, **Show less** restores the initial rows while keeping running Sessions visible. Closing and reopening the Workspace also restores this folded projection.
 
-History rows without a stored title use the localized unnamed label (未命名 / Untitled), rather than a directory name. The current blank row remains New Session; other blank rows remain hidden. Rename drafts use the stored title, or start empty when unnamed; unnamed rows do not offer title copying.
+History rows without a stored title use the localized unnamed label (Untitled / Sin título), rather than a directory name. The current blank row remains New Session; other blank rows remain hidden. Rename drafts use the stored title, or start empty when unnamed; unnamed rows do not offer title copying.
 
 ### Reordering and view options
 
@@ -126,7 +126,7 @@ declare module '@deepseek-ai/dsh-client-ui-slots' {
 }
 
 const en: LocaleDictOf<typeof NS> = { export: 'Export {title}' }
-const zh: LocaleDictOf<typeof NS> = { export: '导出 {title}' }
+const es: LocaleDictOf<typeof NS> = { export: 'Exportar {title}' }
 
 interface ExportRowInjected {
   exportSession: (sessionId: SessionId) => void
@@ -149,7 +149,7 @@ function ExportRow({ sessionId, displayTitle, useMenuOpenState, exportSession, t
 export const inject = ['slots', 'locale']
 
 export function apply(ctx: Context): void {
-  ctx.effect(() => ctx.locale.register(NS, { en, zh }), 'acme-session-actions: dictionaries')
+  ctx.effect(() => ctx.locale.register(NS, { en, es }), 'acme-session-actions: dictionaries')
 
   // Order 500 places the row after the shipped Archive (400); `separatorBefore` opens the plugin group.
   ctx.slots.inject('sidebar.workspaces.session.menu.item', () => ctx.slots.register({

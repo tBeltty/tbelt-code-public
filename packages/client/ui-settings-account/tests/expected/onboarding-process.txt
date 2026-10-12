@@ -1,1 +1,1 @@
-你希望看到多少工作过程？这只会影响工作过程的展示方式，不会影响 tBelt Code 的工作能力。聚焦结果只看结果，保持界面简洁明了关键细节结果优先，仅展示重要步骤和关键操作完整过程查看完整工作过程，方便调试和排查问题上一步跳过
+¿Cuánto detalle quieres ver?Esto solo cambia cómo se muestra el progreso, no lo que tBelt Code puede hacer.Solo resultadosVer solo los resultados en una interfaz limpia y sencillaDetalles claveCentrado en los resultados, con solo los pasos y acciones más importantesTodos los detallesVer el proceso completo para depurar y diagnosticar con más facilidadAtrásOmitir

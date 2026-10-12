@@ -1,7 +1,7 @@
 /** Turn changes use a compact single-file card or a header with a folded file list. */
 import { useEffect, useId, useRef, useState } from 'react'
 import { resolveWorkspacePath } from '@deepseek-ai/dsh-util-workspace-path'
-import { FileTypeIcon, HoverCard, IconChevronDownOutlineRegular, IconChevronUpOutlineRegular } from '@deepseek-ai/dsh-client-ui-primitives'
+import { FileTypeIcon, formatNumber, HoverCard, IconChevronDownOutlineRegular, IconChevronUpOutlineRegular } from '@deepseek-ai/dsh-client-ui-primitives'
 import type { InjectFace, PropsLocale, SessionStandardProps } from '@deepseek-ai/dsh-client-ui-slots'
 import { changesDiffUrl, type ChangesSummary } from '../changes.ts'
 import type { DeliverablesInjected } from './Deliverables.tsx'
@@ -17,13 +17,11 @@ type PreviewProps = Pick<InjectFace<DeliverablesInjected>, 'useChangesDiff' | 'l
 /** Rows shown before the fold; the design's summary height for a closing message. */
 const COLLAPSED_ROWS = 4
 
-const GROUPED = new Intl.NumberFormat('en-US')
-
 /** Added and deleted line counts in the card's colors. */
 function Counts({ added, deleted, t }: { added: number; deleted: number } & PropsLocale<typeof NS>) {
   return <>
-    <span className={css.added}>{t('changes.added', { count: GROUPED.format(added) })}</span>
-    <span className={css.deleted}>{t('changes.deleted', { count: GROUPED.format(deleted) })}</span>
+    <span className={css.added}>{t('changes.added', { count: formatNumber(t('format.locale'), added) })}</span>
+    <span className={css.deleted}>{t('changes.deleted', { count: formatNumber(t('format.locale'), deleted) })}</span>
   </>
 }
 

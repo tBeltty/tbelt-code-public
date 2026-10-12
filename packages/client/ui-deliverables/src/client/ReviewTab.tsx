@@ -6,7 +6,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import type { ReactNode } from 'react'
 import {
-  IconChevronDownOutlineRegular, IconCompareSplitOutlineRegular, IconInspectOutlineRegular,
+  formatNumber, IconChevronDownOutlineRegular, IconCompareSplitOutlineRegular, IconInspectOutlineRegular,
   Button, IconNowrapFillRegular, IconWrapFillRegular, Menu, PathLabel, Tooltip,
 } from '@deepseek-ai/dsh-client-ui-primitives'
 import type { InjectFace, PropsLocale, PropsRenderSlots, PropsRuntime, PropsStore } from '@deepseek-ai/dsh-client-ui-slots'
@@ -26,8 +26,6 @@ import type { NS } from './locales.ts'
 import { FileDiff } from './FileDiff.tsx'
 import diffCss from './FileDiff.module.css'
 import css from './ReviewTab.module.css'
-
-const GROUPED = new Intl.NumberFormat('en-US')
 
 /** Summary and comparison reads, desktop metadata, and the native open supplied by the plugin. */
 export interface ReviewInjected {
@@ -70,8 +68,8 @@ function Counts({ file, t }: { file: WorkspaceChangedFile } & PropsLocale<typeof
   if (file.binary === true) return <span className={css.label}>{t('changes.binary')}</span>
   if (file.oversized === true) return <span className={css.label}>{t('changes.oversized')}</span>
   return <>
-    <span className={css.added}>{t('changes.added', { count: GROUPED.format(file.added) })}</span>
-    <span className={css.deleted}>{t('changes.deleted', { count: GROUPED.format(file.deleted) })}</span>
+    <span className={css.added}>{t('changes.added', { count: formatNumber(t('format.locale'), file.added) })}</span>
+    <span className={css.deleted}>{t('changes.deleted', { count: formatNumber(t('format.locale'), file.deleted) })}</span>
   </>
 }
 

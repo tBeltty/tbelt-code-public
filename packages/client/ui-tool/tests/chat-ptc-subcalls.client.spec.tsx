@@ -13,7 +13,7 @@ import type { PropsRenderSlots } from '@deepseek-ai/dsh-client-ui-slots'
 import {
   ConversationEventRegistry, ConversationViewRegistry, EMPTY_CONVERSATION_SNAPSHOT, type ConvViewOwnerProps,
 } from '@deepseek-ai/dsh-client-ui-conversation/client'
-import { en as conversationEn, NS as CONVERSATION_NS, zh as conversationZh } from '@deepseek-ai/dsh-client-ui-conversation/src/client/locales.ts'
+import { en as conversationEn, NS as CONVERSATION_NS, es as conversationEs } from '@deepseek-ai/dsh-client-ui-conversation/src/client/locales.ts'
 import { apply as applyChat, inject as injectChat } from '@deepseek-ai/dsh-client-ui-chat/client'
 import { apply as applyTool, inject as injectTool } from '../src/client/apply.ts'
 import { toolChatSnapshot } from './tool-fixtures.client.ts'
@@ -132,7 +132,7 @@ async function bench(snapshot: ChatSnapshot) {
   runtime.remote.provideNamespaces({ session: { openWorkspacePath } })
   const locale = new LocaleRuntime(ctx)
   ctx.provide('locale', locale)
-  locale.register(CONVERSATION_NS, { zh: conversationZh, en: conversationEn })
+  locale.register(CONVERSATION_NS, { es: conversationEs, en: conversationEn })
   runtime.slots.installLocale(locale)
 
   await runtime.root.declare(ROOT_CHILDREN, AppRoot)

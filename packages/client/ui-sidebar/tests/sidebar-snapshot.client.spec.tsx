@@ -14,12 +14,12 @@ import { act, cleanup, waitFor } from '@testing-library/react'
 import { SlotTestRuntime, usePinnedBrowserLanguages } from '@deepseek-ai/dsh-client-test-runtime'
 import { LocaleRuntime } from '@deepseek-ai/dsh-client-locale/client'
 import { en as commonEn } from '@deepseek-ai/dsh-client-locale/src/locales/en.ts'
-import { zh as commonZh } from '@deepseek-ai/dsh-client-locale/src/locales/zh.ts'
+import { es as commonEs } from '@deepseek-ai/dsh-client-locale/src/locales/es.ts'
 import { apply, inject } from '@deepseek-ai/dsh-client-ui-sidebar/client'
 
 // The service reads its initial locale from the browser; these specs assert
-// the shipped Chinese copy, so they state the browser they assume.
-usePinnedBrowserLanguages('zh-CN')
+// the shipped Spanish copy, so they state the browser they assume.
+usePinnedBrowserLanguages('es')
 
 beforeEach(() => {
   vi.stubEnv('DSH_CLIENT_COMMIT_HASH', 'abc1234')
@@ -34,7 +34,7 @@ afterEach(() => {
 
 /**
  * Boot the package over the slot test runtime. The default bench stays on
- * the service's default locale (zh — the fallback chain's base), pinning
+ * the service's system locale (Spanish in this bench), pinning
  * what an untouched client shows; `locale: 'en'` pins the en copy instead.
  * The installed face backs the entry's standard `t` seat either way.
  */
@@ -44,7 +44,7 @@ async function bench(options: { locale?: 'en' } = {}) {
   runtime.ctx.provide('layout', { toggleSidebar: vi.fn() })
   runtime.ctx.provide('uiWorkspace', { startSession: vi.fn() } as never)
   const locale = new LocaleRuntime(runtime.ctx)
-  locale.register('common', { zh: commonZh, en: commonEn })
+  locale.register('common', { es: commonEs, en: commonEn })
   if (options.locale === 'en') locale.setLocale('en')
   runtime.ctx.provide('locale', locale)
   runtime.slots.installLocale(locale)
@@ -54,11 +54,11 @@ async function bench(options: { locale?: 'en' } = {}) {
 }
 
 describe('sidebar shell snapshots', () => {
-  it('renders the expanded column in the default locale (zh, no setLocale)', async () => {
+  it('renders the expanded column in the default locale (es, no setLocale)', async () => {
     const { runtime } = await bench()
     const slot = runtime.renderSlot('sidebar', { collapsed: false, width: 300 })
     // Wordmark + capsule both start a session in the expanded state.
-    expect(slot.view.getAllByRole('button', { name: '新建会话' })).toHaveLength(2)
+    expect(slot.view.getAllByRole('button', { name: 'Nueva sesión' })).toHaveLength(2)
     expect(slot.container).toMatchSnapshot()
     await runtime.dispose()
   })
@@ -91,11 +91,11 @@ describe('sidebar shell snapshots', () => {
   it('a locale switch refreshes mounted copy without re-registration', async () => {
     const { runtime, locale } = await bench()
     const slot = runtime.renderSlot('sidebar', { collapsed: false, width: 300 })
-    expect(slot.view.getAllByRole('button', { name: '新建会话' })).toHaveLength(2)
+    expect(slot.view.getAllByRole('button', { name: 'Nueva sesión' })).toHaveLength(2)
     // Same fiber, same registration: setLocale alone re-renders the outlet.
     act(() => { locale.setLocale('en') })
     expect(slot.view.getAllByRole('button', { name: 'New session' })).toHaveLength(2)
-    expect(slot.view.queryByRole('button', { name: '新建会话' })).toBeNull()
+    expect(slot.view.queryByRole('button', { name: 'Nueva sesión' })).toBeNull()
     await runtime.dispose()
   })
 

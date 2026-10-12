@@ -51,13 +51,13 @@ const operations = {
 
 describe('desktop welcome window', () => {
   it.each(['darwin', 'win32', 'linux'] as const)('keeps the %s preview fixed-size and sandboxed', (platform) => {
-    const options = welcomeWindowOptions(platform, resolveDesktopLocale('zh-CN'))
+    const options = welcomeWindowOptions(platform, resolveDesktopLocale('es'))
     expect(options).toMatchObject({
       width: 600, height: 700, useContentSize: true, center: true, show: false,
       resizable: false, maximizable: false, fullscreenable: false,
       webPreferences: {
         nodeIntegration: false, contextIsolation: true, sandbox: true, webSecurity: true,
-        additionalArguments: ['--dsh-welcome-locale=zh-CN'],
+        additionalArguments: ['--dsh-welcome-locale=es'],
       },
     })
     expect(options.webPreferences?.preload).toMatch(/preload-welcome\.cjs$/u)

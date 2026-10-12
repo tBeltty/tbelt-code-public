@@ -1,8 +1,13 @@
 {
   "darwin:en-US": {
     "menu": [
-      { "label": "About tBelt Code", "role": "about" },
-      { "type": "separator" }
+      {
+        "label": "About tBelt Code",
+        "role": "about"
+      },
+      {
+        "type": "separator"
+      }
     ],
     "options": {
       "applicationName": "tBelt Code",
@@ -12,10 +17,15 @@
       "iconPath": "<app icon>"
     }
   },
-  "darwin:zh-CN": {
+  "darwin:es": {
     "menu": [
-      { "label": "关于 tBelt Code", "role": "about" },
-      { "type": "separator" }
+      {
+        "label": "Acerca de tBelt Code",
+        "role": "about"
+      },
+      {
+        "type": "separator"
+      }
     ],
     "options": {
       "applicationName": "tBelt Code",
@@ -25,10 +35,14 @@
       "iconPath": "<app icon>"
     }
   },
-  "win32:zh-CN": {
+  "win32:es": {
     "menu": [
-      { "label": "关于 tBelt Code" },
-      { "type": "separator" }
+      {
+        "label": "Acerca de tBelt Code"
+      },
+      {
+        "type": "separator"
+      }
     ],
     "options": {
       "applicationName": "tBelt Code",
@@ -40,8 +54,12 @@
   },
   "win32:en-US": {
     "menu": [
-      { "label": "About tBelt Code" },
-      { "type": "separator" }
+      {
+        "label": "About tBelt Code"
+      },
+      {
+        "type": "separator"
+      }
     ],
     "options": {
       "applicationName": "tBelt Code",

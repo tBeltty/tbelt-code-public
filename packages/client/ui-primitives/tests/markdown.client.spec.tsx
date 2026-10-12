@@ -55,7 +55,7 @@ describe('MarkdownText', () => {
     // The ts fence routed through the shared CodeBlock: shiki token spans + banner.
     expect(container.querySelector('pre.shiki')).not.toBeNull()
     expect(screen.getByText('ts')).toBeTruthy()
-    expect(screen.getByRole('button', { name: '复制' })).toBeTruthy()
+    expect(screen.getByRole('button', { name: 'Copy' })).toBeTruthy()
     expect(container.querySelector('br')).not.toBeNull()
     expect(screen.getByRole('link', { name: 'safe' }).getAttribute('target')).toBe('_blank')
     expect(screen.getByRole('link', { name: 'https://deepseek.com' })).toBeTruthy()

@@ -45,11 +45,11 @@ afterEach(() => {
   fixture.handlers.clear()
 })
 
-function setup(locale: DesktopLocale | (() => DesktopLocale) = resolveDesktopLocale('zh-CN')) {
+function setup(locale: DesktopLocale | (() => DesktopLocale) = resolveDesktopLocale('es')) {
   const parent = new fixture.FakeWindow({})
   dialogs = new DesktopUpdateDialog('preload-update-dialog.cjs', locale, new DesktopUpdateOverlays())
   const show = (signal?: AbortSignal) => dialogs!.show(parent as unknown as BrowserWindow, {
-    message: '下载完成', buttons: ['安装并重启'], cancelId: 1, ...(signal === undefined ? {} : { signal }),
+    message: '下载完成', buttons: ['Instalar y reiniciar'], cancelId: 1, ...(signal === undefined ? {} : { signal }),
   })
   const invoke = (channel: string, ...args: unknown[]) => {
     const window = fixture.windows.at(-1)!
@@ -66,7 +66,7 @@ it('accepts only a displayed choice from its own main frame and retains cancella
   const pending = f.show()
   expect(dialogs!.isOpen).toBe(true)
   const window = fixture.windows.at(-1)!
-  expect(f.invoke(UPDATE_DIALOG_IPC.status)).toMatchObject({ closeLabel: '关闭', buttons: ['安装并重启'], cancelId: 1 })
+  expect(f.invoke(UPDATE_DIALOG_IPC.status)).toMatchObject({ closeLabel: 'Cerrar', buttons: ['Instalar y reiniciar'], cancelId: 1 })
   const respond = fixture.handlers.get(UPDATE_DIALOG_IPC.respond)!
   expect(() => respond({ sender: {}, senderFrame: window.webContents.mainFrame }, 0)).toThrow(/unowned/)
   expect(() => respond({ sender: window.webContents, senderFrame: { ...window.webContents.mainFrame } }, 0)).toThrow(/unowned/)
@@ -139,7 +139,7 @@ it('supplies localized disclosure copy without putting diagnostics in the ordina
     message: '未能安全停止任务', technicalDetails: 'exit 0; shutdown acknowledged false',
   })
   expect(f.invoke(UPDATE_DIALOG_IPC.status)).toMatchObject({ detail: '',
-    technicalDetails: 'exit 0; shutdown acknowledged false', technicalDetailsLabel: '查看技术详情' })
+    technicalDetails: 'exit 0; shutdown acknowledged false', technicalDetailsLabel: 'Ver detalles técnicos' })
   dialogs!.cancel()
   await pending
 })
@@ -201,7 +201,7 @@ it.runIf(process.platform === 'darwin')('blocks parent keyboard input and redire
 it('reads the current locale for each presentation', async () => {
   let locale = resolveDesktopLocale('en')
   const f = setup(() => locale)
-  for (const language of ['zh-CN', 'en']) {
+  for (const language of ['es', 'en']) {
     locale = resolveDesktopLocale(language)
     const pending = f.show()
     const window = fixture.windows.at(-1)!

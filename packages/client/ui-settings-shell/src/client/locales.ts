@@ -10,7 +10,7 @@ export type ShellSettingsLocaleKey =
   | 'save' | 'saving' | 'saveFailed' | 'invalidNumber'
 
 /** English copy. */
-export const en: Record<ShellSettingsLocaleKey, string> = {
+export const en = {
   title: 'Shell',
   description: 'Limit how long each command may run and how much it may output.',
   timeoutMs: 'Command timeout (ms)',
@@ -25,25 +25,25 @@ export const en: Record<ShellSettingsLocaleKey, string> = {
   saving: 'Saving…',
   saveFailed: 'The deployment did not accept these values; they were left for you to correct.',
   invalidNumber: 'Enter a number, or leave blank to use the default.',
-}
+} satisfies Record<string, string>
 
-/** Simplified Chinese copy. */
-export const zh: Record<ShellSettingsLocaleKey, string> = {
-  title: '终端',
-  description: '限制每条命令最多能跑多久、最多输出多少内容。',
-  timeoutMs: '命令超时（毫秒）',
-  timeoutMsHint: '单条命令允许运行多久，超时即终止。',
-  maxOutputBytes: '单流输出上限（字节）',
-  maxOutputBytesHint: '超出部分会转存到临时文件，而不是被丢弃。',
-  overridden: '已覆盖',
-  reset: '恢复默认',
-  readOnly: '本部署的设置为只读。',
-  unavailable: '该插件当前未加载，暂时无法配置。',
-  save: '保存',
-  saving: '保存中…',
-  saveFailed: '本部署没有接受这些值，已保留供你修改。',
-  invalidNumber: '请填数字；留空表示使用默认值。',
-}
+/** Spanish dictionary, checked complete against the English key set. */
+export const es = {
+  title: 'Shell',
+  description: 'Limita cuánto puede durar cada comando y cuánta salida puede producir.',
+  timeoutMs: 'Tiempo límite del comando (ms)',
+  timeoutMsHint: 'Cuánto puede ejecutarse un comando antes de que se termine.',
+  maxOutputBytes: 'Límite de salida por flujo (bytes)',
+  maxOutputBytesHint: 'La salida que supere este límite pasa a un archivo temporal en lugar de perderse.',
+  overridden: 'Modificado',
+  reset: 'Restablecer el valor predeterminado',
+  readOnly: 'Esta instalación guarda los ajustes en modo de solo lectura.',
+  unavailable: 'Este plugin no está cargado, así que ahora no se puede configurar.',
+  save: 'Guardar',
+  saving: 'Guardando…',
+  saveFailed: 'La instalación no aceptó estos valores; se dejaron para que los corrijas.',
+  invalidNumber: 'Introduce un número, o déjalo en blanco para usar el valor predeterminado.',
+} satisfies Record<keyof typeof en, string>
 
 /**
  * The form frame's copy, read from this page's dictionary.

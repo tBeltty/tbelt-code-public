@@ -6,7 +6,7 @@ afterEach(() => { vi.unstubAllEnvs() })
 it('reports the inlined client build version and the requested language', () => {
   vi.stubEnv('DSH_CLIENT_VERSION', '1.2.3')
   expect(desktopClientVersion()).toBe('1.2.3')
-  expect(desktopClientMetadata('zh-CN')).toMatchObject({ version: '1.2.3', locale: 'zh-CN',
+  expect(desktopClientMetadata('es')).toMatchObject({ version: '1.2.3', locale: 'es',
     timezoneOffsetSeconds: -new Date().getTimezoneOffset() * 60 })
 })
 

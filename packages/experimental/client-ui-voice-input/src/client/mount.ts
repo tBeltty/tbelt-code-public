@@ -8,7 +8,7 @@ import type {} from '@deepseek-ai/dsh-client-ui-conversation/client'
 import type { TypertRemoteContribution } from '@deepseek-ai/dsh-typert-protocol'
 import { VoiceInput, type VoiceInputInjected } from './VoiceInput.tsx'
 import { Recording } from './audio.ts'
-import { en, NS, zh } from './locales.ts'
+import { en, es, NS } from './locales.ts'
 import type {} from '@deepseek-ai/dsh-client-ui-plugin-manager/client'
 import { observeReadiness } from './readiness.ts'
 import { VoicePreparation } from './PreparationCard.tsx'
@@ -17,7 +17,7 @@ import { VoiceSetupPrompt } from './VoiceSetupPrompt.tsx'
 export const inject = ['remote', 'slots', 'locale', 'pluginNavigation']
 
 function registerUi(ctx: Context): void {
-  ctx.effect(() => ctx.locale.register(NS, { zh, en }))
+  ctx.effect(() => ctx.locale.register(NS, { en, es }))
   const recordings = new Set<Recording>()
   const readiness = observeReadiness(ctx)
   ctx.effect(() => readiness.dispose)

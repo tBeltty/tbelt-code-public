@@ -4,7 +4,7 @@ import { act, cleanup, fireEvent, render, screen } from '@testing-library/react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { makeTranslate } from '@deepseek-ai/dsh-client-test-runtime'
 import { useDisclosure } from '@deepseek-ai/dsh-client-ui-chat/src/client/chat/use-disclosure.ts'
-import { zh } from '../src/client/locales.ts'
+import { es } from '../src/client/locales.ts'
 import { QuestionReplyBubble, QuestionReplyView } from '../src/client/QuestionReplyView.tsx'
 import type { QuestionReplyData } from '../src/client/question-reply.ts'
 
@@ -31,7 +31,7 @@ function renderView(data: QuestionReplyData) {
   return render(<QuestionReplyView {...props as ComponentProps<typeof QuestionReplyView>} />)
 }
 
-const t = makeTranslate(zh)
+const t = makeTranslate(es)
 const data = {
   callId: 'call-reply',
   outcome: 'answered',
@@ -47,7 +47,7 @@ describe('QuestionReplyView', () => {
   it('reopens the settled question details from the history bubble', () => {
     render(<QuestionReplyBubble data={data} t={t} />)
 
-    const bubble = screen.getByRole('button', { name: /展开问题详情/ })
+    const bubble = screen.getByRole('button', { name: /Abrir detalles de la pregunta/ })
     expect(bubble.getAttribute('aria-expanded')).toBe('false')
     expect(screen.getAllByText('A dashboard')).toHaveLength(1)
     expect(screen.getByRole('button', { name: 'copy' })).toBeTruthy()
@@ -56,11 +56,11 @@ describe('QuestionReplyView', () => {
 
     fireEvent.click(bubble)
 
-    expect(screen.getByRole('button', { name: /收起问题详情/ }).getAttribute('aria-expanded')).toBe('true')
+    expect(screen.getByRole('button', { name: /Cerrar detalles de la pregunta/ }).getAttribute('aria-expanded')).toBe('true')
     expect(screen.getByText('What should we build?')).toBeTruthy()
     expect(screen.getAllByText('What should we build?')).toHaveLength(1)
     expect(screen.getByText('A dashboard — A focused web surface.')).toBeTruthy()
-    expect(screen.getByText('回答：')).toBeTruthy()
+    expect(screen.getByText('Respuesta:')).toBeTruthy()
     expect(screen.getAllByText('A dashboard')).toHaveLength(1)
   })
 
@@ -70,7 +70,7 @@ describe('QuestionReplyView', () => {
     render(<QuestionReplyBubble data={data} t={t} />)
 
     fireEvent.click(screen.getByRole('button', { name: 'copy' }))
-    expect(writeText).toHaveBeenCalledWith('What should we build?\n回答：A dashboard')
+    expect(writeText).toHaveBeenCalledWith('What should we build?\nRespuesta: A dashboard')
     // Two microtask ticks: writeClipboard's own await, then the .then that
     // lands the success chrome.
     await act(async () => {
@@ -83,7 +83,7 @@ describe('QuestionReplyView', () => {
 
   it('renders through the conversation.chat.node slot with the same bubble', () => {
     renderView(data)
-    expect(screen.getByRole('group', { name: '回答先前等待中的问题' }).getAttribute('data-question-reply')).toBe('call-reply')
+    expect(screen.getByRole('group', { name: 'Responder a preguntas pendientes anteriores' }).getAttribute('data-question-reply')).toBe('call-reply')
   })
 
   it('shows a distinct header, marks an unanswered question skipped, and falls back to the raw text', () => {
@@ -98,14 +98,14 @@ describe('QuestionReplyView', () => {
       }}
       t={t}
     />)
-    fireEvent.click(screen.getByRole('button', { name: /展开问题详情/ }))
+    fireEvent.click(screen.getByRole('button', { name: /Abrir detalles de la pregunta/ }))
     expect(screen.getByText('Goal')).toBeTruthy()
     expect(screen.getByText('None')).toBeTruthy()
-    expect(screen.getAllByText('已跳过')).toHaveLength(2)
+    expect(screen.getAllByText('Omitida')).toHaveLength(2)
     cleanup()
 
     render(<QuestionReplyBubble data={{ ...data, questions: [], answers: [], text: 'raw reply text' }} t={t} />)
-    fireEvent.click(screen.getByRole('button', { name: /展开问题详情/ }))
+    fireEvent.click(screen.getByRole('button', { name: /Abrir detalles de la pregunta/ }))
     expect(screen.getByText('raw reply text')).toBeTruthy()
   })
 
@@ -143,8 +143,8 @@ describe('QuestionReplyView', () => {
     Object.defineProperty(navigator, 'clipboard', { configurable: true, value: { writeText } })
     render(<QuestionReplyBubble data={data} t={t} />)
 
-    fireEvent.click(screen.getByRole('button', { name: /展开问题详情/ }))
+    fireEvent.click(screen.getByRole('button', { name: /Abrir detalles de la pregunta/ }))
     fireEvent.click(screen.getByRole('button', { name: 'copy' }))
-    expect(writeText).toHaveBeenCalledWith('What should we build?\n回答：A dashboard')
+    expect(writeText).toHaveBeenCalledWith('What should we build?\nRespuesta: A dashboard')
   })
 })

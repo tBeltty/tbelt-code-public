@@ -7,11 +7,11 @@ import type { CordisDynamicPackageId, CordisDynamicPluginId, CordisDynamicPlugin
 import { CordisActionRow } from '../src/client/CordisActionRow.tsx'
 import { CordisDefineRow } from '../src/client/CordisDefineRow.tsx'
 import { CordisRunRow } from '../src/client/CordisRunRow.tsx'
-import { zh } from '../src/client/locales.ts'
+import { es } from '../src/client/locales.ts'
 
 afterEach(cleanup)
 
-const t = ((key: keyof typeof zh) => zh[key]) as Parameters<typeof CordisActionRow>[0]['t']
+const t = ((key: keyof typeof es) => es[key]) as Parameters<typeof CordisActionRow>[0]['t']
 
 function failed(name: string): ToolResultNode {
   return {

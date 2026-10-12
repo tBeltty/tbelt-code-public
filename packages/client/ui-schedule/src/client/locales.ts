@@ -2,34 +2,13 @@
  * `schedule.catalog` namespace dictionaries: the Session header catalog and the
  * Sidebar row mark with its hover-card task section.
  */
-import { frequencyEn, frequencyZh } from './frequency-locales.ts'
+import { frequencyEn, frequencyEs } from './frequency-locales.ts'
 
 /** Dictionary namespace owned by this plugin. */
 export const NS = 'schedule.catalog'
 
-/** Simplified Chinese dictionary (the key-set source of truth). */
-export const zh = {
-  'trigger.label': '提醒',
-  'list.loading': '正在加载提醒…',
-  'list.error': '无法加载提醒。',
-  'list.retry': '重试',
-  'delete.action': '删除',
-  'delete.pending': '正在删除…',
-  'delete.label': '删除提醒：{title}',
-  'list.open': '打开提醒详情：{title}',
-  'trigger.one': '{count} 个提醒',
-  'trigger.other': '{count} 个提醒',
-  'list.aria': '活动提醒',
-  'list.nextRun': '下次运行',
-  'frequency.once': '单次',
-  'frequency.every': '{value}{unit}一次',
-  ...frequencyZh,
-  'mark.aria': '{count} 个自动化任务',
-  'hover.more': '另有 {count} 个任务',
-} as const
-
-/** English dictionary, key-identical to the Chinese source of truth. */
-export const en: Record<ScheduleCatalogKey, string> = {
+/** English dictionary and key-set source of truth. */
+export const en = {
   'trigger.label': 'Reminders',
   'list.loading': 'Loading reminders…',
   'list.error': 'Could not load reminders.',
@@ -47,7 +26,28 @@ export const en: Record<ScheduleCatalogKey, string> = {
   ...frequencyEn,
   'mark.aria': '{count} scheduled tasks',
   'hover.more': '{count} more',
-}
+} satisfies Record<string, string>
+
+/** Spanish dictionary, checked complete against the English key set. */
+export const es = {
+  'trigger.label': 'Recordatorios',
+  'list.loading': 'Cargando recordatorios…',
+  'list.error': 'No se pudieron cargar los recordatorios.',
+  'list.retry': 'Reintentar',
+  'delete.action': 'Eliminar',
+  'delete.pending': 'Eliminando…',
+  'delete.label': 'Eliminar recordatorio: {title}',
+  'list.open': 'Abrir detalles del recordatorio: {title}',
+  'trigger.one': '{count} recordatorio',
+  'trigger.other': '{count} recordatorios',
+  'list.aria': 'Recordatorios activos',
+  'list.nextRun': 'Próxima ejecución',
+  'frequency.once': 'Una vez',
+  'frequency.every': 'Cada {value} {unit}',
+  ...frequencyEs,
+  'mark.aria': '{count} tareas programadas',
+  'hover.more': '{count} más',
+} satisfies Record<keyof typeof en, string>
 
 /** Key domain of the Schedule catalog namespace. */
-export type ScheduleCatalogKey = keyof typeof zh
+export type ScheduleCatalogKey = keyof typeof en

@@ -7,7 +7,7 @@ import { afterEach, expect, it, onTestFinished, vi } from 'vitest'
 import type { ExecFileOptions } from 'node:child_process'
 import type { MessageBoxOptions, MessageBoxReturnValue } from 'electron'
 import { DesktopCommandManager } from '../src/command-management.ts'
-import { en, zh, type DesktopMessages } from '../src/locale.ts'
+import { en, es, type DesktopMessages } from '../src/locale.ts'
 
 const external = vi.hoisted(() => ({ shell: null as string | null, cancelAuthorization: false, elevations: 0 }))
 
@@ -107,7 +107,7 @@ it('passes the displayed fingerprint and reports a stale worker refusal', async 
   expect(f.show.mock.lastCall![0].message).toBe(en.cliCommandChanged)
 })
 
-it.each([['en-US', en], ['zh-CN', zh]] as const)('repairs its own selected command without a switch confirmation in %s', async (locale, messages) => {
+it.each([['en-US', en], ['es', es]] as const)('repairs its own selected command without a switch confirmation in %s', async (locale, messages) => {
   const f = await fixture({ managed: true, messages })
   f.show.mockResolvedValueOnce({ response: 1, checkboxChecked: false }).mockResolvedValue({ response: 0, checkboxChecked: false })
   await f.manager.show()

@@ -23,7 +23,7 @@ import { deriveKeyRef, ModelsSettingsStore } from '../src/client/store.ts'
 import { createModelsOperations } from '../src/client/operations.ts'
 import type { ModelsOperations } from '../src/client/operations.ts'
 import type { ProviderRow } from '../src/client/store.ts'
-import { en, zh } from '../src/client/locales.ts'
+import { en, es } from '../src/client/locales.ts'
 import { settingsSchema } from './settings-schema.client.ts'
 
 afterEach(cleanup)
@@ -1984,7 +1984,7 @@ describe('apiKeyFailure', () => {
   })
 })
 
-it.each([en, zh])('edits the account model catalog without credential or endpoint fields', async (copy) => {
+it.each([en, es])('edits the account model catalog without credential or endpoint fields', async (copy) => {
   const mutate = vi.fn(() => Promise.resolve(remoteOk(accountNamespace())))
   const scripted = scriptedFace({ mutate })
   const ops = operationsWith(scripted.face)
@@ -2000,7 +2000,7 @@ it.each([en, zh])('edits the account model catalog without credential or endpoin
   expect(screen.getByDisplayValue('deepseek-v4-flash')).toBeTruthy()
   expect(screen.queryByText(content => content.includes(copy.advancedHint))).toBeNull()
   await expect(`${document.body.textContent}\n`)
-    .toMatchFileSnapshot(`./expected/deepseek-account-${copy === en ? 'en' : 'zh'}.txt`)
+    .toMatchFileSnapshot(`./expected/deepseek-account-${copy === en ? 'en' : 'es'}.txt`)
   const set = vi.spyOn(ops, 'storeCredential')
   fireEvent.change(screen.getAllByLabelText(new RegExp(copy.modelId))[0]!, { target: { value: 'deepseek-v4-mini' } })
   fireEvent.click(screen.getByText(copy.apply))

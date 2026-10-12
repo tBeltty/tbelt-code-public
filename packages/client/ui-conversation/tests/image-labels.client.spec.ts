@@ -1,11 +1,11 @@
 import { describe, expect, it } from 'vitest'
 import { makeTranslate } from '@deepseek-ai/dsh-client-test-runtime'
-import { zh as commonZh } from '@deepseek-ai/dsh-client-locale/src/locales/zh.ts'
+import { es as commonEs } from '@deepseek-ai/dsh-client-locale/src/locales/es.ts'
 import { attachmentErrorText, imageSizeText } from '../src/client/image-labels.ts'
-import { en, zh } from '../src/client/locales.ts'
+import { en, es } from '../src/client/locales.ts'
 
-const t = makeTranslate(zh, commonZh)
-const enT = makeTranslate(en, commonZh)
+const t = makeTranslate(es, commonEs)
+const enT = makeTranslate(en, commonEs)
 
 describe('attachment rejection copy', () => {
   const limits = {
@@ -23,22 +23,22 @@ describe('attachment rejection copy', () => {
   })
 
   it('maps user-solvable reasons to limit-naming copy', () => {
-    expect(attachmentErrorText(t, 'MODEL_DOES_NOT_SUPPORT_IMAGES')).toBe('当前模型不支持图片，请切换支持图片的模型')
-    expect(attachmentErrorText(t, 'IMAGE_TOO_MANY_PIXELS')).toBe('图片分辨率过大，请压缩后重试')
-    expect(attachmentErrorText(t, 'INVALID_IMAGE')).toBe('仅支持 PNG、JPG、WebP、GIF 格式的图片')
-    expect(attachmentErrorText(t, 'IMAGE_TYPE_MISMATCH')).toBe('仅支持 PNG、JPG、WebP、GIF 格式的图片')
-    expect(attachmentErrorText(t, 'TOO_MANY_IMAGES', limits)).toBe('一条消息最多添加 20 张图片')
-    expect(attachmentErrorText(t, 'IMAGE_TOO_LARGE', limits)).toBe('单张图片不能超过 5MB')
-    expect(attachmentErrorText(t, 'IMAGES_TOO_LARGE', limits)).toBe('图片总大小超过 100MB，请移除部分图片')
-    expect(attachmentErrorText(t, 'IMAGE_DIMENSION_TOO_LARGE', limits)).toBe('图片宽高不能超过 2000px，请缩小后重试')
+    expect(attachmentErrorText(t, 'MODEL_DOES_NOT_SUPPORT_IMAGES')).toBe('El modelo actual no admite imágenes; cambia a uno que sí')
+    expect(attachmentErrorText(t, 'IMAGE_TOO_MANY_PIXELS')).toBe('La resolución de la imagen es demasiado alta; comprímela e inténtalo de nuevo')
+    expect(attachmentErrorText(t, 'INVALID_IMAGE')).toBe('Solo se admiten imágenes PNG, JPG, WebP y GIF')
+    expect(attachmentErrorText(t, 'IMAGE_TYPE_MISMATCH')).toBe('Solo se admiten imágenes PNG, JPG, WebP y GIF')
+    expect(attachmentErrorText(t, 'TOO_MANY_IMAGES', limits)).toBe('Un mensaje puede incluir hasta 20 imágenes')
+    expect(attachmentErrorText(t, 'IMAGE_TOO_LARGE', limits)).toBe('Cada imagen debe pesar menos de 5MB')
+    expect(attachmentErrorText(t, 'IMAGES_TOO_LARGE', limits)).toBe('Las imágenes superan 100MB en total; quita algunas e inténtalo de nuevo')
+    expect(attachmentErrorText(t, 'IMAGE_DIMENSION_TOO_LARGE', limits)).toBe('Los lados de la imagen deben medir como máximo 2000px; reduce su tamaño e inténtalo de nuevo')
     expect(attachmentErrorText(enT, 'TOO_MANY_IMAGES', limits)).toBe('A message can include up to 20 images')
   })
 
   it('folds unknown reasons and limit reasons without projected limits into the send-failed line', () => {
-    expect(attachmentErrorText(t, 'INVALID_IMAGE_BASE64')).toBe('图片发送失败（INVALID_IMAGE_BASE64），请重新添加图片后再试')
-    expect(attachmentErrorText(t, 'TOO_MANY_IMAGES')).toBe('图片发送失败（TOO_MANY_IMAGES），请重新添加图片后再试')
-    expect(attachmentErrorText(t, 'IMAGE_TOO_LARGE')).toBe('图片发送失败（IMAGE_TOO_LARGE），请重新添加图片后再试')
-    expect(attachmentErrorText(t, 'IMAGES_TOO_LARGE')).toBe('图片发送失败（IMAGES_TOO_LARGE），请重新添加图片后再试')
-    expect(attachmentErrorText(t, 'IMAGE_DIMENSION_TOO_LARGE')).toBe('图片发送失败（IMAGE_DIMENSION_TOO_LARGE），请重新添加图片后再试')
+    expect(attachmentErrorText(t, 'INVALID_IMAGE_BASE64')).toBe('No se pudieron enviar las imágenes (INVALID_IMAGE_BASE64); vuelve a añadirlas e inténtalo de nuevo')
+    expect(attachmentErrorText(t, 'TOO_MANY_IMAGES')).toBe('No se pudieron enviar las imágenes (TOO_MANY_IMAGES); vuelve a añadirlas e inténtalo de nuevo')
+    expect(attachmentErrorText(t, 'IMAGE_TOO_LARGE')).toBe('No se pudieron enviar las imágenes (IMAGE_TOO_LARGE); vuelve a añadirlas e inténtalo de nuevo')
+    expect(attachmentErrorText(t, 'IMAGES_TOO_LARGE')).toBe('No se pudieron enviar las imágenes (IMAGES_TOO_LARGE); vuelve a añadirlas e inténtalo de nuevo')
+    expect(attachmentErrorText(t, 'IMAGE_DIMENSION_TOO_LARGE')).toBe('No se pudieron enviar las imágenes (IMAGE_DIMENSION_TOO_LARGE); vuelve a añadirlas e inténtalo de nuevo')
   })
 })

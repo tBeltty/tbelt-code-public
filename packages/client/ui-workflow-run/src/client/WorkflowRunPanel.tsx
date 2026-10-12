@@ -5,6 +5,7 @@ import {
 import {
   DisclosureRow, IconChevronRightOutlineRegular, StateDot,
   type DisclosureRowProps, type StateDotState,
+  pluralSuffix,
 } from '@deepseek-ai/dsh-client-ui-primitives'
 import type { PropsLocale, PropsRuntime } from '@deepseek-ai/dsh-client-ui-slots'
 import type { SessionListState, SessionTarget } from '@deepseek-ai/dsh-api-session-controller/client'
@@ -66,7 +67,7 @@ function statusCount(
 }
 
 function memberCount(count: number, t: WorkflowRunPanelProps['t']): string {
-  return t(count === 1 ? 'run.members.one' : 'run.members.other', { count })
+  return t(`run.members.${pluralSuffix(t('format.locale'), count)}`, { count })
 }
 
 type DisclosureMode = 'clean' | 'running' | 'abnormal'

@@ -13,12 +13,12 @@ import { useDisclosure } from '@deepseek-ai/dsh-client-ui-chat/src/client/chat/u
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import type { ToolCallBlock, ToolResultNode } from '@deepseek-ai/dsh-client-ui-chat/client'
 import { makeTranslate } from '@deepseek-ai/dsh-client-test-runtime'
-import { zh as commonZh } from '@deepseek-ai/dsh-client-locale/src/locales/zh.ts'
+import { es as commonEs } from '@deepseek-ai/dsh-client-locale/src/locales/es.ts'
 // Export discipline: packages/client/AGENTS.md.
 import { AskQuestionRow, askQuestionToolview } from '../src/client/tool/toolviews/ask-question-row.tsx'
 import type { UserQuestionPanels } from '../src/client/contract/slots.ts'
 import type { SessionId } from '@deepseek-ai/dsh-session/types'
-import { zh } from '@deepseek-ai/dsh-client-ui-conversation/src/client/locales.ts'
+import { es } from '@deepseek-ai/dsh-client-ui-conversation/src/client/locales.ts'
 
 afterEach(cleanup)
 
@@ -40,7 +40,7 @@ const resultNode = (argsRaw: string, resultText: string | null, over?: Partial<T
 const runningCall = (argsRaw: string): ToolCallBlock =>
   ({ phase: 'start', callId: 'c1', name: 'ask_user_question', argsRaw, turn: 1, step: 1, time: 1_000, subCalls: [] })
 
-const t = makeTranslate(zh, commonZh)
+const t = makeTranslate(es, commonEs)
 
 /** What the row's environment says about the call, beyond the recorded block. */
 interface RowEnvironment {
@@ -89,7 +89,7 @@ const queuedReply = (callId: string, entries: unknown[]): unknown => ({
 })
 
 /** Every pill the row can offer, by its visible copy. */
-const PILL = { reopen: '回答', review: '查看回答' } as const
+const PILL = { reopen: 'Responder', review: 'Ver respuestas' } as const
 
 /** The panel verbs the registered toolview hands each row of one Session. */
 interface PanelFace {
@@ -131,8 +131,8 @@ function injectedFace(get: (name: string) => PanelProvider | undefined): PanelFa
 describe('AskQuestionRow', () => {
   it('running call reads waiting (args-independent: the composer takeover shows the questions)', () => {
     const view = render(<AskQuestionRow {...rowProps(runningCall(ARGS))} />)
-    expect(screen.getByText('提问')).toBeTruthy()
-    expect(screen.getByText('等待回答')).toBeTruthy()
+    expect(screen.getByText('Hacer una pregunta')).toBeTruthy()
+    expect(screen.getByText('en espera')).toBeTruthy()
     expect(view.container.querySelector('[data-state="running"]')).not.toBeNull()
   })
 
@@ -180,7 +180,7 @@ describe('AskQuestionRow', () => {
       },
     )} />)
 
-    expect(screen.getByText('2/3 已回答')).toBeTruthy()
+    expect(screen.getByText('2/3 respondidas')).toBeTruthy()
     expect(screen.queryByRole('button', { name: PILL.reopen })).toBeNull()
     fireEvent.click(screen.getByRole('button', { name: PILL.review }))
     expect(screen.getByRole('button', { expanded: true })).toBeTruthy()
@@ -251,11 +251,11 @@ describe('AskQuestionRow', () => {
     // timeout lands; the projection is what says the question is over.
     render(<AskQuestionRow {...rowProps(resultNode(READABLE_ARGS, PENDING_RESULT))} />)
 
-    expect(screen.getByText('已结束')).toBeTruthy()
+    expect(screen.getByText('cerrada')).toBeTruthy()
     expect(screen.queryByRole('button', { name: PILL.reopen })).toBeNull()
     expect(screen.queryByRole('button', { name: PILL.review })).toBeNull()
     fireEvent.click(screen.getByRole('button', { expanded: false }))
-    expect(screen.getByText('该问题已结束，结果见下方对话')).toBeTruthy()
+    expect(screen.getByText('Esta pregunta está cerrada; su resultado aparece en la conversación.')).toBeTruthy()
     expect(screen.getByText('What do you want to accomplish?')).toBeTruthy()
     expect(screen.queryByText(/"pending"/)).toBeNull()
   })
@@ -267,7 +267,7 @@ describe('AskQuestionRow', () => {
     })
     render(<AskQuestionRow {...rowProps(repaired, { answerable: ['c1'], revealPanel })} />)
 
-    expect(screen.getByText('已继续工作，仍可回答')).toBeTruthy()
+    expect(screen.getByText('continuó; la respuesta sigue disponible')).toBeTruthy()
     fireEvent.click(screen.getByRole('button', { name: PILL.reopen }))
     expect(revealPanel).toHaveBeenCalledWith('c1')
   })
@@ -284,7 +284,7 @@ describe('AskQuestionRow', () => {
     })
     render(<AskQuestionRow {...rowProps(repaired, { settled: { c1: batch }, reviewPanel })} />)
 
-    expect(screen.getByText('2/3 已回答')).toBeTruthy()
+    expect(screen.getByText('2/3 respondidas')).toBeTruthy()
     fireEvent.click(screen.getByRole('button', { name: PILL.review }))
     expect(reviewPanel).toHaveBeenCalledWith('c1', expect.objectContaining({ answers: batch }))
   })
@@ -296,7 +296,7 @@ describe('AskQuestionRow', () => {
     })
     render(<AskQuestionRow {...rowProps(repaired, { settled: { c1: [] }, reviewPanel })} />)
 
-    expect(screen.getByText('已结束')).toBeTruthy()
+    expect(screen.getByText('cerrada')).toBeTruthy()
     expect(screen.queryByRole('button', { name: PILL.review })).toBeNull()
     expect(reviewPanel).not.toHaveBeenCalled()
   })
@@ -316,14 +316,14 @@ describe('AskQuestionRow', () => {
       { settled: { c1: answered }, reviewPanel },
     )} />)
 
-    expect(screen.getByText('2/3 已回答')).toBeTruthy()
-    expect(screen.queryByText('已结束')).toBeNull()
+    expect(screen.getByText('2/3 respondidas')).toBeTruthy()
+    expect(screen.queryByText('cerrada')).toBeNull()
     expect(screen.queryByRole('button', { name: PILL.reopen })).toBeNull()
 
     fireEvent.click(screen.getByRole('button', { expanded: false }))
     expect(screen.getByText('What do you want to accomplish?')).toBeTruthy()
     expect(screen.getByText('the web app')).toBeTruthy()
-    expect(screen.getByText('未回答')).toBeTruthy()
+    expect(screen.getByText('Sin responder')).toBeTruthy()
     expect(screen.queryByText(/"pending"/)).toBeNull()
 
     fireEvent.click(screen.getByRole('button', { name: PILL.review }))
@@ -339,7 +339,7 @@ describe('AskQuestionRow', () => {
 
   it('a reply that settled the call without answers leaves the row closed', () => {
     render(<AskQuestionRow {...rowProps(resultNode(READABLE_ARGS, PENDING_RESULT), { settled: { c1: [] } })} />)
-    expect(screen.getByText('已结束')).toBeTruthy()
+    expect(screen.getByText('cerrada')).toBeTruthy()
     expect(screen.queryByRole('button', { name: PILL.review })).toBeNull()
     expect(screen.queryByRole('button', { name: PILL.reopen })).toBeNull()
   })
@@ -364,7 +364,7 @@ describe('AskQuestionRow', () => {
       { id: 'b', selected: [], custom: 'freeform' },
       { id: 'c', selected: ['y', 'z'], custom: '' },
     ])))} />)
-    expect(screen.getByText('3/3 已回答')).toBeTruthy()
+    expect(screen.getByText('3/3 respondidas')).toBeTruthy()
   })
 
   it('shows a pending result as readable still-answerable questions', () => {
@@ -373,9 +373,9 @@ describe('AskQuestionRow', () => {
       { answerable: ['c1'] },
     )} />)
 
-    expect(screen.getByText('已继续工作，仍可回答')).toBeTruthy()
+    expect(screen.getByText('continuó; la respuesta sigue disponible')).toBeTruthy()
     fireEvent.click(screen.getByRole('button', { expanded: false }))
-    expect(screen.getByText('等待中的问题仍可在输入框中回答')).toBeTruthy()
+    expect(screen.getByText('Estas preguntas pendientes se pueden responder desde el cuadro de mensaje.')).toBeTruthy()
     expect(screen.getByText('What do you want to accomplish?')).toBeTruthy()
     expect(view.container.querySelector('[class*="ioCard"]')).toBeNull()
     expect(screen.queryByText(/"pending"/)).toBeNull()
@@ -396,7 +396,7 @@ describe('AskQuestionRow', () => {
     expect(screen.getByText('Which project should this apply to?')).toBeTruthy()
     expect(screen.getByText('deepseek-harness')).toBeTruthy()
     expect(screen.getByText('Anything else?')).toBeTruthy()
-    expect(screen.getByText('未回答')).toBeTruthy()
+    expect(screen.getByText('Sin responder')).toBeTruthy()
     expect(screen.queryByText(/"questions"/)).toBeNull()
     expect(screen.queryByText(/"answers"/)).toBeNull()
   })
@@ -440,19 +440,19 @@ describe('AskQuestionRow', () => {
       { id: 'notes', selected: [] },
     ])))} />)
 
-    expect(screen.getByText('2/3 已回答')).toBeTruthy()
+    expect(screen.getByText('2/3 respondidas')).toBeTruthy()
     expect(screen.queryByRole('button', { name: PILL.review })).toBeNull()
     expect(screen.queryByRole('button', { name: PILL.reopen })).toBeNull()
     expect(view.container.querySelector('[class*="rowAction"]')).toBeNull()
     fireEvent.click(screen.getByRole('button', { expanded: false }))
     expect(screen.getByText('the web app')).toBeTruthy()
-    expect(screen.getByText('未回答')).toBeTruthy()
+    expect(screen.getByText('Sin responder')).toBeTruthy()
   })
 
   it('a settled call whose questions failed validation keeps only its transcript', () => {
     const batch = [{ id: 'a', selected: ['x'] }]
     render(<AskQuestionRow {...rowProps(resultNode('oops', answers(batch)), { settled: { c1: batch } })} />)
-    expect(screen.getByText('1/1 已回答')).toBeTruthy()
+    expect(screen.getByText('1/1 respondidas')).toBeTruthy()
     expect(screen.queryByRole('button', { name: PILL.review })).toBeNull()
   })
 
@@ -512,7 +512,7 @@ describe('AskQuestionRow', () => {
       { id: 'b', selected: [], custom: '' },
       { id: 'c' },
     ])))} />)
-    expect(screen.getByText('1/3 已回答')).toBeTruthy()
+    expect(screen.getByText('1/3 respondidas')).toBeTruthy()
     expect(view.container.querySelector('[data-state="ok"]')).not.toBeNull()
   })
 
@@ -552,7 +552,7 @@ describe('AskQuestionRow', () => {
     const view = render(<AskQuestionRow {...rowProps(resultNode(args, answers([
       { id: 'a', selected: ['x'] },
     ])))} />)
-    expect(screen.getByText('1/1 已回答')).toBeTruthy()
+    expect(screen.getByText('1/1 respondidas')).toBeTruthy()
     fireEvent.click(screen.getByRole('button', { expanded: false }))
     expect(view.container.querySelector('[class*="ioCard"]')).not.toBeNull()
   })
@@ -573,10 +573,10 @@ describe('AskQuestionRow', () => {
     // ASK_CANCELLED: the ask_user_question handler's cancel error.
     const view = render(<AskQuestionRow {...rowProps(resultNode(READABLE_ARGS, null,
       { isError: true, error: { name: 'UserQuestionError', code: 'ASK_CANCELLED' } }))} />)
-    expect(screen.getByText('已取消')).toBeTruthy()
+    expect(screen.getByText('cancelada')).toBeTruthy()
     expect(view.container.querySelector('[data-state="ok"]')).not.toBeNull()
     fireEvent.click(screen.getByRole('button', { expanded: false }))
-    expect(screen.getByText('本轮已取消，未提交回答')).toBeTruthy()
+    expect(screen.getByText('Este conjunto de preguntas se canceló antes de enviar las respuestas.')).toBeTruthy()
     expect(screen.getByText('What do you want to accomplish?')).toBeTruthy()
     expect(screen.getByText('Which project should this apply to?')).toBeTruthy()
     expect(screen.getByText('Anything else?')).toBeTruthy()
@@ -589,10 +589,10 @@ describe('AskQuestionRow', () => {
     // ASK_ABORTED: the ask handler's turn-abort settlement.
     const view = render(<AskQuestionRow {...rowProps(resultNode(READABLE_ARGS, null,
       { isError: true, error: { name: 'UserQuestionError', code: 'ASK_ABORTED' } }))} />)
-    expect(screen.getByText('已中断')).toBeTruthy()
+    expect(screen.getByText('interrumpida')).toBeTruthy()
     expect(view.container.querySelector('[data-state="stopped"]')).not.toBeNull()
     fireEvent.click(screen.getByRole('button', { expanded: false }))
-    expect(screen.getByText('本轮已中断，未提交回答')).toBeTruthy()
+    expect(screen.getByText('Este conjunto de preguntas se interrumpió antes de enviar las respuestas.')).toBeTruthy()
     expect(screen.getByText('What do you want to accomplish?')).toBeTruthy()
     expect(view.container.querySelector('[class*="ioCard"]')).toBeNull()
   })
@@ -604,7 +604,7 @@ describe('AskQuestionRow', () => {
   ])('cancelled result keeps raw diagnostics for $label', ({ args }) => {
     const view = render(<AskQuestionRow {...rowProps(resultNode(args, null,
       { isError: true, error: { name: 'UserQuestionError', code: 'ASK_CANCELLED' } }))} />)
-    expect(screen.getByText('已取消')).toBeTruthy()
+    expect(screen.getByText('cancelada')).toBeTruthy()
     fireEvent.click(screen.getByRole('button', { expanded: false }))
     expect(view.container.querySelector('[class*="ioCard"]')).not.toBeNull()
   })
@@ -614,7 +614,7 @@ describe('AskQuestionRow', () => {
       { isError: true, error: { name: 'Interrupted', code: 'interrupted' } }))} />)
     expect(view.container.querySelector('[data-state="stopped"]')).not.toBeNull()
     expect(view.container.querySelector('[data-state="stopped"] svg')).not.toBeNull()
-    expect(screen.queryByText('已取消')).toBeNull()
+    expect(screen.queryByText('cancelada')).toBeNull()
     expect(screen.getByText(ARGS)).toBeTruthy()
   })
 

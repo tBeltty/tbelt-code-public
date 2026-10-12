@@ -6,8 +6,8 @@
 
 import { useEffect, useId, useState } from 'react'
 import type { SpendMonthReading } from '@deepseek-ai/dsh-api-remotes/client'
-import { SettingsForm, SettingsValueField } from '@deepseek-ai/dsh-client-ui-primitives'
-import type { InjectFace } from '@deepseek-ai/dsh-client-ui-slots'
+import { formatNumber, SettingsForm, SettingsValueField } from '@deepseek-ai/dsh-client-ui-primitives'
+import type { CommonKeyOf, InjectFace } from '@deepseek-ai/dsh-client-ui-slots'
 import type { SpendingLimitFace } from './spending-controller.ts'
 import type { ModelsKey } from './locales.ts'
 import styles from './ModelsSection.module.css'
@@ -20,13 +20,13 @@ export interface SpendingSectionInjected extends SpendingLimitFace {
    */
   readMonth: () => Promise<SpendMonthReading | undefined>
   /** Section copy. */
-  t: (key: ModelsKey, params?: Record<string, string | number>) => string
+  t: (key: ModelsKey | CommonKeyOf, params?: Record<string, string | number>) => string
 }
 
-/** Format a spend figure in US dollars to the cent. */
-function usd(amount: number): string {
+/** Format a spend figure in US dollars to the cent, with the decimal mark of the language tag `tag`. */
+function usd(amount: number, tag: string): string {
   if (amount > 0 && amount < 0.01) return '<$0.01'
-  return `$${amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+  return `$${formatNumber(tag, amount, 2)}`
 }
 
 /**
@@ -57,8 +57,8 @@ export function SpendingSection(props: InjectFace<SpendingSectionInjected>) {
             <span className={styles['spendMonthLabel']}>{t('spendingMonth')}</span>
             <span className={styles['spendMonthValue']}>
               {monthly.limitUsd === undefined
-                ? t('spendingMonthReading', { spent: usd(monthly.spentUsd) })
-                : t('spendingMonthOfLimit', { spent: usd(monthly.spentUsd), limit: usd(monthly.limitUsd) })}
+                ? t('spendingMonthReading', { spent: usd(monthly.spentUsd, t('format.locale')) })
+                : t('spendingMonthOfLimit', { spent: usd(monthly.spentUsd, t('format.locale')), limit: usd(monthly.limitUsd, t('format.locale')) })}
             </span>
             {monthly.unpricedCalls > 0
               ? <span className={styles['spendUnpriced']}>{t('spendingUnpriced', { count: monthly.unpricedCalls })}</span>

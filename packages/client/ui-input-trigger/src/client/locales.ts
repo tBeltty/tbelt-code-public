@@ -4,23 +4,10 @@
  * raw name), the pending row, and the listbox and header aria labels.
  */
 
-/** Simplified Chinese dictionary (the key-set source of truth). */
-export const zh = {
-  'command': '指令',
-  'skill': '技能',
-  'subagent': '子智能体',
-  'loading': '正在加载…',
-  'drill.aria': '进入目录',
-  'drill.hint': '进入目录',
-  'drill.key': 'Tab',
-  'crumbs.aria': '目录导航',
-  'suggestions.aria': '触发候选建议',
-} satisfies Record<string, string>
-
 /** The slash.menu namespace key union. */
-export type MenuKey = keyof typeof zh
+export type MenuKey = keyof typeof en
 
-/** English dictionary, checked complete against the zh key set. */
+/** English dictionary and key-set source of truth. */
 export const en = {
   'command': 'Commands',
   'skill': 'Skills',
@@ -31,4 +18,17 @@ export const en = {
   'drill.key': 'Tab',
   'crumbs.aria': 'Folder navigation',
   'suggestions.aria': 'Trigger suggestions',
-} satisfies Record<MenuKey, string>
+} satisfies Record<string, string>
+
+/** Spanish dictionary, checked complete against the English key set. */
+export const es = {
+  'command': 'Comandos',
+  'skill': 'Skills',
+  'subagent': 'Subagentes',
+  'loading': 'Cargando…',
+  'drill.aria': 'Explorar carpeta',
+  'drill.hint': 'Explorar carpeta',
+  'drill.key': 'Tab',
+  'crumbs.aria': 'Navegación de carpetas',
+  'suggestions.aria': 'Sugerencias del activador',
+} satisfies Record<keyof typeof en, string>

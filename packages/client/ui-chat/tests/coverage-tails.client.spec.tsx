@@ -3,13 +3,13 @@
 import { afterEach, describe, expect, it } from 'vitest'
 import { cleanup, render } from '@testing-library/react'
 import { makeTranslate } from '@deepseek-ai/dsh-client-test-runtime'
-import { zh as commonZh } from '@deepseek-ai/dsh-client-locale/src/locales/zh.ts'
+import { es as commonEs } from '@deepseek-ai/dsh-client-locale/src/locales/es.ts'
 import { AssistantMarkdown, type AssistantMarkdownProps } from '../src/client/chat/AssistantMarkdown.tsx'
 import { useDetailedPresentation } from './presentation-fixture.client.ts'
 import { useDisclosure } from '../src/client/chat/use-disclosure.ts'
-import { zh } from '../src/client/locale.ts'
+import { es } from '../src/client/locale.ts'
 
-const t: AssistantMarkdownProps['t'] = makeTranslate(zh, commonZh)
+const t: AssistantMarkdownProps['t'] = makeTranslate(es, commonEs)
 const renderMessageImages: AssistantMarkdownProps['renderMessageImages'] = () => null
 
 afterEach(cleanup)
@@ -29,9 +29,9 @@ describe('tails', () => {
         renderMessageImages={renderMessageImages}
       />,
     )
-    expect(view.getByText('思考')).toBeTruthy()
+    expect(view.getByText('Razonamiento')).toBeTruthy()
     expect(view.getByText('thinking hard')).toBeTruthy()
-    expect(view.getByText(/未知内容块/)).toBeTruthy()
+    expect(view.getByText(/Bloque de contenido desconocido/)).toBeTruthy()
     const stopped = render(
       <AssistantMarkdown useDisclosure={useDisclosure}
         usePresentation={useDetailedPresentation}
@@ -42,7 +42,7 @@ describe('tails', () => {
         renderMessageImages={renderMessageImages}
       />,
     )
-    expect(stopped.getByText('已停止')).toBeTruthy()
+    expect(stopped.getByText('Detenido')).toBeTruthy()
   })
 
   it('AssistantMarkdown skips the root shell when only tool-call heads remain', () => {

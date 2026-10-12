@@ -12,7 +12,7 @@ import type { SessionId } from '@deepseek-ai/dsh-session/types'
 import { ApprovalGrants, approvalModel, approvalOutcome } from '@deepseek-ai/dsh-presentation-approval'
 import { ApprovalPanel } from './ApprovalPanel.tsx'
 import { PendingApproval } from './contract/slots.ts'
-import { en, zh } from './locales.ts'
+import { en, es } from './locales.ts'
 
 export type {
   ApprovalComposerProps,
@@ -84,7 +84,7 @@ async function answerApproval(
  * @param ctx - Client root context.
  */
 export function apply(ctx: ClientContext): void {
-  ctx.effect(() => ctx.locale.register(NS, { zh, en }), 'ui-approval: dictionaries')
+  ctx.effect(() => ctx.locale.register(NS, { en, es }), 'ui-approval: dictionaries')
   ctx.inject(['shortcuts'], (scope) => {
     const t = ctx.locale.bind(NS)
     scope.effect(() => scope.shortcuts.registerFixed({

@@ -47,12 +47,12 @@
   white-space: nowrap;
 }
 
-.page:lang(en) .copy h1 {
+.page:is(:lang(en), :lang(es)) .copy h1 {
   font-family: var(--dsw-font-family-brand);
   font-weight: 300;
 }
 
-.page:lang(en) :is(.heroDescription, .subtitle, .cardTitle, .cardDescription) {
+.page:is(:lang(en), :lang(es)) :is(.heroDescription, .subtitle, .cardTitle, .cardDescription) {
   font-family: var(--dsw-font-family-brand);
 }
 
@@ -300,7 +300,7 @@
   outline-offset: 3px;
 }
 
-.page:lang(en) .navigation button {
+.page:is(:lang(en), :lang(es)) .navigation button {
   font-family: var(--dsw-font-family-brand);
 }
 

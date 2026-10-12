@@ -116,10 +116,6 @@
   width: 122px;
 }
 
-.eventColumn:where(:lang(zh)) {
-  width: 84px;
-}
-
 .contentColumn {
   width: auto;
 }
@@ -429,10 +425,6 @@
   align-items: flex-end;
   justify-content: flex-end;
   width: 76px;
-}
-
-.kindSlot:where(:lang(zh)) {
-  width: 44px;
 }
 
 .kindSlot :global([role='tooltip']) {

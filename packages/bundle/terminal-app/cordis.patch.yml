@@ -7,6 +7,8 @@
 # Product analytics and the telemetry exporter ship disabled in the web layer and
 # are not touched here; the terminal profile mounts neither.
 #
+# The locale row stays: its Host half owns the `locale.preference` setting the terminal reads and writes.
+#
 # The Connection row keeps its Host half (the Remote API handler) and drops the
 # web-runtime injection that only fed its browser trust fence.
 
@@ -44,9 +46,6 @@
   disabled: true
 
 - id: ui-theme
-  disabled: true
-
-- id: locale
   disabled: true
 
 - id: shortcuts

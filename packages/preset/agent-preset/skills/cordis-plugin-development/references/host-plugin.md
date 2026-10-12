@@ -28,7 +28,7 @@ A Host-only bundle needs no dependencies, install scripts, or build tool:
 
 ## Display metadata and icon
 
-Plugin Manager cards, bundle details, component rows, and the Settings plugin inventory read display text and an icon from the manifest without activating the plugin. Put the title and description in `locale/en.json` (other languages such as `locale/zh.json` use the same fields), and declare the icon as a top-level `icon` in `package.json`:
+Plugin Manager cards, bundle details, component rows, and the Settings plugin inventory read display text and an icon from the manifest without activating the plugin. Put the title and description in `locale/en.json` (other languages such as `locale/es.json` use the same fields), and declare the icon as a top-level `icon` in `package.json`:
 
 ```json
 { "meta": { "title": "My Decoration", "description": "Draws a badge under the composer." } }

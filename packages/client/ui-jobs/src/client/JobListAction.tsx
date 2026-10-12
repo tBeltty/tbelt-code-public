@@ -4,6 +4,7 @@ import type { SessionId } from '@deepseek-ai/dsh-session/types'
 import {
   IconChevronDownOutlineRegular, IconStopFillRegular, StateDot, TerminalBlock, useDismissOnOutsidePointer,
   type StateDotState, type TerminalBlockLabels,
+  pluralSuffix,
 } from '@deepseek-ai/dsh-client-ui-primitives'
 import type { InjectFace, PropsLocale, PropsRuntime, TranslateNS } from '@deepseek-ai/dsh-client-ui-slots'
 import { NS } from './locales.ts'
@@ -460,8 +461,8 @@ export function JobListAction({ sessionId, useJobs, watchRows, observe, killJob,
   if (visibleCount === 0) return null
 
   const countKey = liveRows.length > 0
-    ? (liveRows.length === 1 ? 'count.live.one' : 'count.live.other')
-    : (visibleCount === 1 ? 'count.idle.one' : 'count.idle.other')
+    ? `count.live.${pluralSuffix(t('format.locale'), liveRows.length)}` as const
+    : `count.idle.${pluralSuffix(t('format.locale'), visibleCount)}` as const
   const countLabel = t(countKey, { count: liveRows.length > 0 ? liveRows.length : visibleCount })
 
   const clearSettled = (): void => {

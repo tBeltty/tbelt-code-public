@@ -14,8 +14,9 @@ export {
 export type {
   ComposerEffect, ComposerFrame, ComposerRenderOptions, ComposerState, ComposerStep,
 } from './composer.ts'
-export { copyKey, t } from './copy.ts'
-export type { CopyKey, CopyParams } from './copy.ts'
+export { copyKey, getCopyLocale, setCopyLocale, t } from './copy.ts'
+export type { CopyKey, CopyLocale, CopyParams } from './copy.ts'
+export { resolveCopyLocale } from './locale.ts'
 export { helpLines } from './help.ts'
 export { hostTitle, ORCA_TITLE_MARKER, titleSequence, WORKING_FRAMES } from './host-title.ts'
 export type { HostActivity, HostTitleFacts } from './host-title.ts'
@@ -34,6 +35,7 @@ export {
 } from './keys.ts'
 export type { Key, KeyName } from './keys.ts'
 export { keyProblemText } from './credentials.ts'
+export { LANGUAGE_AUTOMATIC, languageItems, languageName } from './language.ts'
 export { permissionItems } from './permission.ts'
 export type { PermissionRow } from './permission.ts'
 export { bundleItems, PLUGIN_INSTALL, PLUGIN_SINGLE, pluginItems } from './plugins.ts'

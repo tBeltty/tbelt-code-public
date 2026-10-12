@@ -3,19 +3,19 @@
 import { cleanup, fireEvent, render, screen, act } from '@testing-library/react'
 import { afterEach, expect, it, vi } from 'vitest'
 import { SignOutDialog } from '../src/client/SignOutDialog.tsx'
-import { en, zh } from '../src/client/locales.ts'
+import { en, es } from '../src/client/locales.ts'
 
 afterEach(cleanup)
-function mount(running: boolean | 'unknown', copy: typeof en | typeof zh = en, signOut = vi.fn(async () => {})) {
+function mount(running: boolean | 'unknown', copy: typeof en | typeof es = en, signOut = vi.fn(async () => {})) {
   const close = vi.fn()
   render(<SignOutDialog running={running} signOut={signOut} close={close} t={key => copy[key]} />)
   return { signOut, close }
 }
-it.each([en, zh].flatMap(copy => ([false, true, 'unknown'] as const).map(running => ({ copy, running }))))(
+it.each([en, es].flatMap(copy => ([false, true, 'unknown'] as const).map(running => ({ copy, running }))))(
   'confirms sign-out with localized task impact: $running', async ({ copy, running }) => {
     const props = mount(running, copy)
     await expect(`${screen.getByRole('dialog').textContent}\n`)
-      .toMatchFileSnapshot(`./expected/sign-out-${running === 'unknown' ? 'unknown' : running ? 'running' : 'idle'}-${copy === en ? 'en' : 'zh'}.txt`)
+      .toMatchFileSnapshot(`./expected/sign-out-${running === 'unknown' ? 'unknown' : running ? 'running' : 'idle'}-${copy === en ? 'en' : 'es'}.txt`)
     expect(props.signOut).not.toHaveBeenCalled()
     await act(async () => { fireEvent.click(screen.getByRole('button', { name: copy.signOut })) })
     expect(props.signOut).toHaveBeenCalledOnce()

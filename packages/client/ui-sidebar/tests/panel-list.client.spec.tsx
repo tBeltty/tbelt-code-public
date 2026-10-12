@@ -7,7 +7,7 @@ import { act, cleanup, fireEvent, waitFor, within } from '@testing-library/react
 import { SlotTestRuntime } from '@deepseek-ai/dsh-client-test-runtime'
 import { LocaleRuntime } from '@deepseek-ai/dsh-client-locale/client'
 import { en as commonEn } from '@deepseek-ai/dsh-client-locale/src/locales/en.ts'
-import { zh as commonZh } from '@deepseek-ai/dsh-client-locale/src/locales/zh.ts'
+import { es as commonEs } from '@deepseek-ai/dsh-client-locale/src/locales/es.ts'
 import { IconGlobeOutlineRegular } from '@deepseek-ai/dsh-client-ui-primitives'
 import type { ILayout, MainPanelId } from '@deepseek-ai/dsh-client-ui-layout/client'
 import type { PropsRenderSlots, PropsRuntime, SlotLabel } from '@deepseek-ai/dsh-client-ui-slots'
@@ -52,9 +52,9 @@ async function bench(collapsed = false) {
       ctx.provide('layout', layout)
       ctx.provide('uiWorkspace', { startSession: vi.fn() } as never)
       ctx.provide('locale', locale)
-      ctx.effect(() => locale.register('common', { zh: commonZh, en: commonEn }), 'panel test: common locale')
+      ctx.effect(() => locale.register('common', { es: commonEs, en: commonEn }), 'panel test: common locale')
       ctx.effect(() => locale.register('sidebar-panel-test', {
-        zh: { alpha: '甲面板' }, en: { alpha: 'Alpha panel' },
+        es: { alpha: '甲面板' }, en: { alpha: 'Alpha panel' },
       }), 'panel test: panel locale')
       ctx.slots.installLocale(locale)
       ctx.slots.inject('main', () => ctx.slots.register({ name: 'main', key: 'conversation' }, () => (
@@ -219,7 +219,7 @@ describe('sidebar global panels', () => {
     await mountPanels(runtime, locale)
     const navigation = await view.findByRole('navigation', { name: 'Global panels' })
     const entries = runtime.slots.entries('sidebar.panellist')
-    act(() => { locale.setLocale('zh') })
+    act(() => { locale.setLocale('es') })
     await waitFor(() => {
       expect(within(navigation).getByRole('button', { name: '甲面板' }).textContent).toBe('甲面板')
     })
@@ -273,7 +273,7 @@ describe('sidebar global panels', () => {
     expect(runtime.slots.spec('sidebar.panellist')).toBeUndefined()
     expect(runtime.slots.entries('sidebar.panellist')).toEqual([])
     expect(view.getByRole('heading', { name: 'Alpha content' })).toBeTruthy()
-    act(() => { locale.setLocale('zh') })
+    act(() => { locale.setLocale('es') })
     expect(view.queryByRole('navigation')).toBeNull()
   })
 })

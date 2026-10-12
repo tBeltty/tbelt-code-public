@@ -1,14 +1,14 @@
 // @vitest-environment jsdom
-import { act, cleanup, fireEvent, render, screen } from '@testing-library/react'
+import { act, cleanup, fireEvent, render, screen, within } from '@testing-library/react'
 import { useState } from 'react'
 import { afterEach, expect, it, vi } from 'vitest'
 import { DesktopOnboarding } from '../src/client/DesktopOnboarding.tsx'
 import type { DesktopOnboardingProps, DesktopOnboardingState } from '../src/client/onboarding-contract.ts'
-import { en, zh } from '../src/client/locales.ts'
+import { en, es } from '../src/client/locales.ts'
 
 afterEach(() => { cleanup(); vi.unstubAllGlobals() })
 
-function mount(step: DesktopOnboardingState['progress']['step'] = 'welcome', balance: 'zero' | 'positive' | 'bonus' | 'failed' | 'loading' = 'positive', status: DesktopOnboardingState['status'] = 'ready', copy: typeof zh = zh, creditFunded = false) {
+function mount(step: DesktopOnboardingState['progress']['step'] = 'welcome', balance: 'zero' | 'positive' | 'bonus' | 'failed' | 'loading' = 'positive', status: DesktopOnboardingState['status'] = 'ready', copy: typeof es = es, creditFunded = false) {
   vi.stubGlobal('ResizeObserver', class { observe() {} disconnect() {} })
   const track = vi.fn()
   const complete = vi.fn(async () => true)
@@ -28,7 +28,7 @@ function mount(step: DesktopOnboardingState['progress']['step'] = 'welcome', bal
       progress: { version: 1, step, purpose: null, process: null, completion: null, usage: 'compact', developerTools: false },
     })
     changeStatus = (value) => { setState(current => ({ ...current, status: value })) }
-    return <DesktopOnboarding track={track} locale={copy === zh ? 'zh' : 'en'} state={state} t={key => copy[key]} complete={complete} retry={retry}
+    return <DesktopOnboarding track={track} locale={copy === es ? 'es' : 'en'} state={state} t={key => copy[key]} complete={complete} retry={retry}
       update={async (change) => {
         setState(current => ({ ...current, status: 'saving' }))
         const saved = await update(change)
@@ -49,37 +49,37 @@ function mount(step: DesktopOnboardingState['progress']['step'] = 'welcome', bal
 
 it('keeps welcome mandatory and enters credit only through Start', async () => {
   const operations = mount()
-  expect(screen.queryByRole('button', { name: zh.onboardingSkip })).toBeNull()
-  expect(screen.queryByRole('button', { name: zh.onboardingBack })).toBeNull()
+  expect(screen.queryByRole('button', { name: es.onboardingSkip })).toBeNull()
+  expect(screen.queryByRole('button', { name: es.onboardingBack })).toBeNull()
   fireEvent.keyDown(document, { key: 'Escape' })
   expect(operations.complete).not.toHaveBeenCalled()
-  await act(async () => { fireEvent.click(screen.getByRole('button', { name: zh.onboardingStart })) })
-  expect(screen.getByRole('heading', { name: zh.onboardingCredit })).toBeTruthy()
+  await act(async () => { fireEvent.click(screen.getByRole('button', { name: es.onboardingStart })) })
+  expect(screen.getByRole('heading', { name: es.onboardingCredit })).toBeTruthy()
   expect(operations.update).toHaveBeenCalledWith({ step: 'credit' })
 })
 
 it('covers the application without showing an unfinished step while durable settings load', () => {
   mount('welcome', 'positive', 'loading')
-  expect(screen.getByRole('status').textContent).toBe(zh.onboardingLoading)
-  expect(screen.queryByRole('button', { name: zh.onboardingStart })).toBeNull()
+  expect(screen.getByRole('status').textContent).toBe(es.onboardingLoading)
+  expect(screen.queryByRole('button', { name: es.onboardingStart })).toBeNull()
   expect(document.querySelector('[data-desktop-onboarding]')).toBeNull()
 })
 
 it.each(['zero', 'positive', 'bonus', 'failed', 'loading'] as const)('always offers recharge with %s balance and only confirms known unavailable credit', async (balance) => {
   const operations = mount('credit', balance)
-  expect(screen.getByRole('button', { name: zh.onboardingTopUp })).toBeTruthy()
-  await act(async () => { fireEvent.click(screen.getByRole('button', { name: zh.onboardingLater })) })
+  expect(screen.getByRole('button', { name: es.onboardingTopUp })).toBeTruthy()
+  await act(async () => { fireEvent.click(screen.getByRole('button', { name: es.onboardingLater })) })
   if (balance === 'zero') {
-    expect(screen.getByRole('dialog', { name: zh.onboardingNoCreditTitle })).toBeTruthy()
+    expect(screen.getByRole('dialog', { name: es.onboardingNoCreditTitle })).toBeTruthy()
     expect(operations.update).not.toHaveBeenCalled()
-    await act(async () => { fireEvent.click(screen.getByRole('button', { name: zh.onboardingUnderstood })) })
+    await act(async () => { fireEvent.click(screen.getByRole('button', { name: es.onboardingUnderstood })) })
   }
   expect(operations.update).toHaveBeenCalledWith({ step: 'purpose' })
 })
 
 it('stays on credit after the viewer returns from the shared recharge page', async () => {
   const operations = mount('credit')
-  await act(async () => { fireEvent.click(screen.getByRole('button', { name: zh.onboardingTopUp })) })
+  await act(async () => { fireEvent.click(screen.getByRole('button', { name: es.onboardingTopUp })) })
   expect(operations.openPlatformPage).toHaveBeenCalledWith('top-up', expect.any(Function))
   // The shared host owns Back and the post-top-up read; this flow keeps the
   // credit page available through the return.
@@ -89,31 +89,31 @@ it('stays on credit after the viewer returns from the shared recharge page', asy
 
 it('allows both purposes and retains choices across back navigation', async () => {
   const operations = mount('purpose')
-  expect(screen.queryByRole('button', { name: zh.onboardingContinue })).toBeNull()
-  await act(async () => { fireEvent.click(screen.getByRole('checkbox', { name: zh.onboardingOffice })) })
-  await act(async () => { fireEvent.click(screen.getByRole('checkbox', { name: zh.onboardingDevelopment })) })
+  expect(screen.queryByRole('button', { name: es.onboardingContinue })).toBeNull()
+  await act(async () => { fireEvent.click(screen.getByRole('checkbox', { name: es.onboardingOffice })) })
+  await act(async () => { fireEvent.click(screen.getByRole('checkbox', { name: es.onboardingDevelopment })) })
   expect(operations.update).toHaveBeenLastCalledWith({ purpose: 'both' })
-  await act(async () => { fireEvent.click(screen.getByRole('button', { name: zh.onboardingContinue })) })
+  await act(async () => { fireEvent.click(screen.getByRole('button', { name: es.onboardingContinue })) })
   expect(screen.getAllByRole('radio')).toHaveLength(3)
-  await act(async () => { fireEvent.click(screen.getByRole('button', { name: zh.onboardingBack })) })
-  expect(screen.getByRole<HTMLInputElement>('checkbox', { name: zh.onboardingOffice }).checked).toBe(true)
-  expect(screen.getByRole<HTMLInputElement>('checkbox', { name: zh.onboardingDevelopment }).checked).toBe(true)
+  await act(async () => { fireEvent.click(screen.getByRole('button', { name: es.onboardingBack })) })
+  expect(screen.getByRole<HTMLInputElement>('checkbox', { name: es.onboardingOffice }).checked).toBe(true)
+  expect(screen.getByRole<HTMLInputElement>('checkbox', { name: es.onboardingDevelopment }).checked).toBe(true)
 })
 
 it('finishes the office path without asking for process detail', async () => {
   const operations = mount('purpose')
-  await act(async () => { fireEvent.click(screen.getByRole('checkbox', { name: zh.onboardingOffice })) })
-  await act(async () => { fireEvent.click(screen.getByRole('button', { name: zh.onboardingContinue })) })
+  await act(async () => { fireEvent.click(screen.getByRole('checkbox', { name: es.onboardingOffice })) })
+  await act(async () => { fireEvent.click(screen.getByRole('button', { name: es.onboardingContinue })) })
   expect(operations.complete).toHaveBeenCalledWith('completed')
   expect(screen.queryByRole('radiogroup')).toBeNull()
 })
 
 it('supports radio arrow keys and requires a process choice before finishing', async () => {
   const operations = mount('process')
-  expect(screen.queryByRole('button', { name: zh.onboardingEnter })).toBeNull()
+  expect(screen.queryByRole('button', { name: es.onboardingEnter })).toBeNull()
   await act(async () => { fireEvent.keyDown(screen.getAllByRole('radio')[0]!, { key: 'ArrowRight' }) })
   expect(operations.update).toHaveBeenCalledWith({ process: 'standard' })
-  await act(async () => { fireEvent.click(screen.getByRole('button', { name: zh.onboardingEnter })) })
+  await act(async () => { fireEvent.click(screen.getByRole('button', { name: es.onboardingEnter })) })
   expect(operations.complete).toHaveBeenCalledWith('completed')
 })
 
@@ -121,7 +121,7 @@ it.each(['purpose', 'process'] as const)('keeps the %s action mounted without na
   const operations = mount(step)
   const choices = screen.getAllByRole(step === 'purpose' ? 'checkbox' : 'radio')
   await act(async () => { fireEvent.click(choices[0]!) })
-  const button = screen.getByRole('button', { name: step === 'purpose' ? zh.onboardingContinue : zh.onboardingEnter })
+  const button = screen.getByRole('button', { name: step === 'purpose' ? es.onboardingContinue : es.onboardingEnter })
   let finish!: (saved: boolean) => void
   operations.update.mockImplementationOnce(() => new Promise<boolean>((resolve) => { finish = resolve }))
   fireEvent.click(choices[1]!)
@@ -138,13 +138,13 @@ it.each(['purpose', 'process'] as const)('keeps the %s action mounted without na
 
 it('requires explicit skip confirmation and Escape only closes that dialog', async () => {
   const operations = mount('purpose')
-  fireEvent.click(screen.getByRole('button', { name: zh.onboardingSkip }))
-  expect(screen.getByRole('dialog', { name: zh.onboardingSkipTitle })).toBeTruthy()
+  fireEvent.click(screen.getByRole('button', { name: es.onboardingSkip }))
+  expect(screen.getByRole('dialog', { name: es.onboardingSkipTitle })).toBeTruthy()
   fireEvent.keyDown(document, { key: 'Escape' })
   expect(screen.queryByRole('dialog')).toBeNull()
   expect(operations.complete).not.toHaveBeenCalled()
-  fireEvent.click(screen.getByRole('button', { name: zh.onboardingSkip }))
-  await act(async () => { fireEvent.click(screen.getByRole('button', { name: zh.onboardingEnter })) })
+  fireEvent.click(screen.getByRole('button', { name: es.onboardingSkip }))
+  await act(async () => { fireEvent.click(screen.getByRole('button', { name: es.onboardingEnter })) })
   expect(operations.complete).toHaveBeenCalledWith('skipped')
 })
 
@@ -162,7 +162,7 @@ it.each(['welcome', 'credit', 'purpose', 'process'] as const)('records English %
     .toMatchFileSnapshot(`./expected/onboarding-${step}-en.txt`)
 })
 
-it.each([zh, en])('offers Continue and recharge for a balance confirmed before entry', async (copy) => {
+it.each([es, en])('offers Continue and recharge for a balance confirmed before entry', async (copy) => {
   const operations = mount('credit', 'positive', 'ready', copy, true)
   expect(screen.queryByRole('button', { name: copy.onboardingLater })).toBeNull()
   await act(async () => { fireEvent.click(screen.getByRole('button', { name: copy.onboardingFundedTopUp })) })
@@ -173,13 +173,13 @@ it.each([zh, en])('offers Continue and recharge for a balance confirmed before e
 })
 
 it('continues directly from funded credit', async () => {
-  const operations = mount('credit', 'positive', 'ready', zh, true)
-  await act(async () => { fireEvent.click(screen.getByRole('button', { name: zh.onboardingContinue })) })
+  const operations = mount('credit', 'positive', 'ready', es, true)
+  await act(async () => { fireEvent.click(screen.getByRole('button', { name: es.onboardingContinue })) })
   expect(operations.update).toHaveBeenCalledWith({ step: 'purpose' })
   expect(operations.openPlatformPage).not.toHaveBeenCalled()
 })
 
-it.each([zh, en])('keeps purpose descriptions unchanged when selecting and deselecting cards', async (copy) => {
+it.each([es, en])('keeps purpose descriptions unchanged when selecting and deselecting cards', async (copy) => {
   mount('purpose', 'zero', 'ready', copy)
   for (const name of [copy.onboardingOffice, copy.onboardingDevelopment]) {
     for (let click = 0; click < 2; click++) {
@@ -192,37 +192,37 @@ it.each([zh, en])('keeps purpose descriptions unchanged when selecting and desel
 
 it('keeps the recharge request releasable so the flow can still leave credit', async () => {
   const operations = mount('credit')
-  await act(async () => { fireEvent.click(screen.getByRole('button', { name: zh.onboardingTopUp })) })
+  await act(async () => { fireEvent.click(screen.getByRole('button', { name: es.onboardingTopUp })) })
   expect(operations.openPlatformPage).toHaveBeenCalledWith('top-up', expect.any(Function))
   await act(async () => { operations.back() })
   expect(document.querySelector('[data-desktop-onboarding="credit"]')).toBeTruthy()
-  await act(async () => { fireEvent.click(screen.getByRole('button', { name: zh.onboardingBack })) })
+  await act(async () => { fireEvent.click(screen.getByRole('button', { name: es.onboardingBack })) })
   expect(document.querySelector('[data-desktop-onboarding="welcome"]')).toBeTruthy()
 })
 
 it('closes skip confirmation when saving fails so the page can show retry', async () => {
   const operations = mount('purpose')
   operations.complete.mockResolvedValueOnce(false)
-  await act(async () => { fireEvent.click(screen.getByRole('button', { name: zh.onboardingSkip })) })
-  await act(async () => { fireEvent.click(screen.getByRole('button', { name: zh.onboardingEnter })) })
+  await act(async () => { fireEvent.click(screen.getByRole('button', { name: es.onboardingSkip })) })
+  await act(async () => { fireEvent.click(screen.getByRole('button', { name: es.onboardingEnter })) })
   expect(screen.queryByRole('dialog')).toBeNull()
   expect(document.querySelector('[data-desktop-onboarding="purpose"]')).toBeTruthy()
 })
 
 it.each(['zero', 'positive', 'bonus', 'failed', 'loading'] as const)('confirms skipping the credit page with %s balance before completion', async (balance) => {
   const operations = mount('credit', balance)
-  await act(async () => { fireEvent.click(screen.getByRole('button', { name: zh.onboardingSkip })) })
-  expect(screen.getByRole('dialog', { name: zh.onboardingNoCreditTitle })).toBeTruthy()
-  expect(screen.queryByRole('dialog', { name: zh.onboardingSkipTitle })).toBeNull()
+  await act(async () => { fireEvent.click(screen.getByRole('button', { name: es.onboardingSkip })) })
+  expect(screen.getByRole('dialog', { name: es.onboardingNoCreditTitle })).toBeTruthy()
+  expect(screen.queryByRole('dialog', { name: es.onboardingSkipTitle })).toBeNull()
   expect(operations.complete).not.toHaveBeenCalled()
-  await act(async () => { fireEvent.click(screen.getByRole('button', { name: zh.onboardingUnderstood })) })
+  await act(async () => { fireEvent.click(screen.getByRole('button', { name: es.onboardingUnderstood })) })
   expect(operations.complete).toHaveBeenCalledWith('skipped')
   expect(operations.update).not.toHaveBeenCalled()
 })
 
 it('retries a rejected settings write from the page alert', async () => {
   const h = mount('purpose', 'positive', 'error')
-  await act(async () => { fireEvent.click(screen.getByRole('button', { name: zh.onboardingRetry })) })
+  await act(async () => { fireEvent.click(screen.getByRole('button', { name: es.onboardingRetry })) })
   expect(h.retry).toHaveBeenCalledOnce()
 })
 
@@ -230,8 +230,8 @@ it('keeps selection unchanged while a purpose write is pending', async () => {
   const h = mount('purpose')
   const pending = Promise.withResolvers<boolean>()
   h.update.mockReturnValueOnce(pending.promise)
-  fireEvent.click(screen.getByRole('checkbox', { name: zh.onboardingOffice }))
-  fireEvent.click(screen.getByRole('checkbox', { name: zh.onboardingDevelopment }))
+  fireEvent.click(screen.getByRole('checkbox', { name: es.onboardingOffice }))
+  fireEvent.click(screen.getByRole('checkbox', { name: es.onboardingDevelopment }))
   expect(h.update).toHaveBeenCalledOnce()
   await act(async () => { pending.resolve(true) })
 })
@@ -257,7 +257,7 @@ it('supports both radio arrow directions, wraps around, and ignores other keys o
 
 it('traps Tab in confirmation, closes it, and keeps the selected page', async () => {
   mount('purpose')
-  const trigger = screen.getByRole('button', { name: zh.onboardingSkip })
+  const trigger = screen.getByRole('button', { name: es.onboardingSkip })
   trigger.focus()
   fireEvent.click(trigger)
   const dialog = screen.getByRole('dialog')
@@ -272,20 +272,20 @@ it('traps Tab in confirmation, closes it, and keeps the selected page', async ()
   fireEvent.keyDown(first, { key: 'Tab' })
   fireEvent.keyDown(last, { key: 'Tab', shiftKey: true })
   fireEvent.keyDown(first, { key: 'a' })
-  fireEvent.click(screen.getByRole('button', { name: zh.onboardingKeepSetting }))
+  fireEvent.click(screen.getByRole('button', { name: es.onboardingKeepSetting }))
   expect(screen.queryByRole('dialog')).toBeNull()
   expect(document.activeElement).toBe(trigger)
   fireEvent.click(trigger)
-  fireEvent.click(screen.getByRole('button', { name: zh.close }))
+  fireEvent.click(screen.getByRole('button', { name: es.close }))
   expect(screen.queryByRole('dialog')).toBeNull()
 })
 
 it('opens recharge directly from a credit warning', async () => {
   const h = mount('credit', 'zero')
-  await act(async () => { fireEvent.click(screen.getByRole('button', { name: zh.onboardingLater })) })
-  await act(async () => { fireEvent.click(screen.getByRole('button', { name: zh.onboardingGoTopUp })) })
+  await act(async () => { fireEvent.click(screen.getByRole('button', { name: es.onboardingLater })) })
+  await act(async () => { fireEvent.click(within(screen.getByRole('dialog', { name: es.onboardingNoCreditTitle })).getByRole('button', { name: es.onboardingGoTopUp })) })
   expect(h.openPlatformPage).toHaveBeenCalledWith('top-up', expect.any(Function))
-  expect(screen.queryByRole('dialog', { name: zh.onboardingNoCreditTitle })).toBeNull()
+  expect(screen.queryByRole('dialog', { name: es.onboardingNoCreditTitle })).toBeNull()
 })
 
 it('does not render a finished flow', () => {
@@ -301,7 +301,7 @@ it.each(['complete', 'cancel', 'reduced'] as const)('settles the page transition
   Object.defineProperty(HTMLElement.prototype, 'animate', { configurable: true, value: animate })
   try {
     mount()
-    await act(async () => { fireEvent.click(screen.getByRole('button', { name: zh.onboardingStart })) })
+    await act(async () => { fireEvent.click(screen.getByRole('button', { name: es.onboardingStart })) })
     if (mode === 'reduced') expect(animate).not.toHaveBeenCalled()
     else {
       expect(animate).toHaveBeenCalledOnce()
@@ -320,30 +320,30 @@ it.each(['complete', 'cancel', 'reduced'] as const)('settles the page transition
 
 it('does not restore focus to a disconnected confirmation trigger', () => {
   mount('purpose')
-  const trigger = screen.getByRole('button', { name: zh.onboardingSkip })
+  const trigger = screen.getByRole('button', { name: es.onboardingSkip })
   trigger.focus()
   fireEvent.click(trigger)
   trigger.remove()
-  fireEvent.click(screen.getByRole('button', { name: zh.close }))
+  fireEvent.click(screen.getByRole('button', { name: es.close }))
   expect(screen.queryByRole('dialog')).toBeNull()
 })
 
 it('returns from purpose to credit without dropping the selected purpose', async () => {
   const h = mount('purpose')
-  await act(async () => { fireEvent.click(screen.getByRole('button', { name: zh.onboardingBack })) })
+  await act(async () => { fireEvent.click(screen.getByRole('button', { name: es.onboardingBack })) })
   expect(h.update).toHaveBeenCalledWith({ step: 'credit' })
 })
 
 
 it('reports visible pages once, funded Continue, and popup close', async () => {
-  const b = mount('credit', 'positive', 'ready', zh, true)
+  const b = mount('credit', 'positive', 'ready', es, true)
   expect(b.track).toHaveBeenCalledExactlyOnceWith('onboarding_page_view', { page_name: 'onboarding_recharge' })
-  await act(async () => { fireEvent.click(screen.getByRole('button', { name: zh.onboardingSkip })) })
+  await act(async () => { fireEvent.click(screen.getByRole('button', { name: es.onboardingSkip })) })
   expect(b.track).toHaveBeenCalledWith('onboarding_popup_view', { popup_name: 'skip_charge' })
   b.track.mockClear()
-  await act(async () => { fireEvent.click(screen.getByRole('button', { name: zh.close })) })
+  await act(async () => { fireEvent.click(screen.getByRole('button', { name: es.close })) })
   expect(b.track).toHaveBeenCalledExactlyOnceWith('onboarding_popup_click', { popup_name: 'skip_charge', button_name: 'close' })
-  await act(async () => { fireEvent.click(screen.getByRole('button', { name: zh.onboardingContinue })) })
+  await act(async () => { fireEvent.click(screen.getByRole('button', { name: es.onboardingContinue })) })
   expect(b.track).toHaveBeenCalledWith('onboarding_page_click', { page_name: 'onboarding_recharge', button_name: 'continue' })
   expect(b.track).toHaveBeenCalledWith('onboarding_page_view', { page_name: 'onboarding_use_case' })
 })
@@ -355,7 +355,7 @@ it('does not report the loading surface as a page', () => {
 
 it('does not repeat page or popup exposure during save and refresh', () => {
   const b = mount('credit')
-  fireEvent.click(screen.getByRole('button', { name: zh.onboardingSkip }))
+  fireEvent.click(screen.getByRole('button', { name: es.onboardingSkip }))
   act(() => { b.changeStatus('saving') })
   act(() => { b.changeStatus('loading') })
   act(() => { b.changeStatus('ready') })
@@ -364,8 +364,8 @@ it('does not repeat page or popup exposure during save and refresh', () => {
 
 it('reports closing the skip-settings popup', () => {
   const b = mount('purpose')
-  fireEvent.click(screen.getByRole('button', { name: zh.onboardingSkip }))
+  fireEvent.click(screen.getByRole('button', { name: es.onboardingSkip }))
   b.track.mockClear()
-  fireEvent.click(screen.getByRole('button', { name: zh.close }))
+  fireEvent.click(screen.getByRole('button', { name: es.close }))
   expect(b.track).toHaveBeenCalledExactlyOnceWith('onboarding_popup_click', { popup_name: 'skip_setting', button_name: 'close' })
 })

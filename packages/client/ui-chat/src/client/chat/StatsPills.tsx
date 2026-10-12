@@ -6,7 +6,7 @@
 
 import { memo, useMemo, useState } from 'react'
 import { createPortal } from 'react-dom'
-import { IconDatabaseOutlineRegular, IconGaugeOutlineRegular } from '@deepseek-ai/dsh-client-ui-primitives'
+import { decimalMark, IconDatabaseOutlineRegular, IconGaugeOutlineRegular } from '@deepseek-ai/dsh-client-ui-primitives'
 import type { UseProjection } from '@deepseek-ai/dsh-api-session-controller/client'
 import type { InjectFace, SnapshotSelectorHook } from '@deepseek-ai/dsh-client-ui-slots'
 // Type-only: merges the sessionStats key into SessionProjectionMap for useProjection.
@@ -101,13 +101,14 @@ export function formatDuration(ms: number, t: ChatViewSlotProps['t']): string {
 /**
  * Display-ready cache-hit share of prompt-side input over the whole durable log.
  * @param usage - the session's token-usage projection value.
+ * @param mark - decimal mark of the displayed language.
  * @returns integer text when integer rounding stays below 100, otherwise the
  * minimum decimal precision that still rounds below 100; a full hit returns
  * 100, and no billed input returns null.
  */
-export function cacheHitPercent(usage: TokenUsageProjection): string | null {
+export function cacheHitPercent(usage: TokenUsageProjection, mark: string): string | null {
   const denominator = billedInputTokens(usage)
-  return formatCacheHitPercent(usage.cacheReadTokens, denominator)
+  return formatCacheHitPercent(usage.cacheReadTokens, denominator, 0, mark)
 }
 
 /**
@@ -143,7 +144,7 @@ function TimePill({ stats, t, dialog }: {
   const counts = t('stats.counts', { turns: stats.turns, steps: stats.steps })
   const tps = stats.decodeMs > 0
     ? t('message.tokensPerSecond', {
-      tps: formatTokensPerSecond(stats.decodeTokens / (stats.decodeMs / 1_000)),
+      tps: formatTokensPerSecond(stats.decodeTokens / (stats.decodeMs / 1_000), t('format.locale')),
     })
     : null
   const label = (
@@ -220,7 +221,7 @@ function TimePill({ stats, t, dialog }: {
               <>
                 <dt>{t('stats.dialog.speed')}</dt>
                 <dd>{t('message.tokensPerSecond', {
-                  tps: formatTokensPerSecond(stats.decodeTokens / (stats.decodeMs / 1_000)),
+                  tps: formatTokensPerSecond(stats.decodeTokens / (stats.decodeMs / 1_000), t('format.locale')),
                 })}</dd>
               </>
             )}
@@ -241,7 +242,7 @@ function UsagePill({ usage, t, dialog }: {
   // Same aggregate as the Turn pill's totalTokens: every prompt-side billing bucket plus output.
   const total = billedInputTokens(usage) + usage.outputTokens
   const totalText = t('message.turnUsage.count', { count: formatTokens(total, t) })
-  const cacheHit = cacheHitPercent(usage)
+  const cacheHit = cacheHitPercent(usage, decimalMark(t('format.locale')))
   const cacheHitText = cacheHit !== null ? t('stats.cacheHit', { percent: cacheHit }) : null
   return (
     <span ref={rootRef} className={css.anchor}>
@@ -331,9 +332,9 @@ export const StatsPills = memo(function StatsPills({ useChat, useProjection, use
     && (billedInputTokens(usage) > 0 || usage.outputTokens > 0)
   if (mode === 'compact') {
     const speed = stats.decodeMs > 0
-      ? t('message.tokensPerSecond', { tps: formatTokensPerSecond(stats.decodeTokens / (stats.decodeMs / 1_000)) })
+      ? t('message.tokensPerSecond', { tps: formatTokensPerSecond(stats.decodeTokens / (stats.decodeMs / 1_000), t('format.locale')) })
       : null
-    const cacheHit = hasTokens ? cacheHitPercent(usage) : null
+    const cacheHit = hasTokens ? cacheHitPercent(usage, decimalMark(t('format.locale'))) : null
     if (speed === null && cacheHit === null) return null
     return (
       <div className={css.root} data-composer-stats>

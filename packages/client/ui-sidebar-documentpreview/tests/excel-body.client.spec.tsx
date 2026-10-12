@@ -4,7 +4,7 @@ import { act, cleanup, fireEvent, render, screen, waitFor } from '@testing-libra
 import { afterEach, expect, it, vi } from 'vitest'
 import { makeTranslate } from '@deepseek-ai/dsh-client-test-runtime'
 import { Config } from '../src/config.ts'
-import { en, zh } from '../src/client/excel/locales.ts'
+import { en, es } from '../src/client/excel/locales.ts'
 import type { ExcelBodyProps, LoadedExcelBodyProps } from '../src/client/excel/LazyExcelBody.tsx'
 
 const mocked = vi.hoisted(() => ({ parse: vi.fn(), workbook: vi.fn((_props: unknown) => null) }))
@@ -57,7 +57,7 @@ it('shows loading then a workbook with editing and recalculation disabled', asyn
   expect(signal.aborted).toBe(true)
 })
 
-it.each([en, zh])('lists only detected unsupported content and clears the notice on file replacement', async (dictionary) => {
+it.each([en, es])('lists only detected unsupported content and clears the notice on file replacement', async (dictionary) => {
   const t = makeTranslate(dictionary)
   mocked.parse.mockResolvedValueOnce({ ...formulaValue, unsupportedFeatures: ['charts', 'images', 'shapes', 'conditionalFormatting'] })
     .mockResolvedValueOnce(value)

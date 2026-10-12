@@ -7,6 +7,7 @@ import {
   IconTrashOutlineRegular,
   useAnchoredPosition,
   useDismissOnOutsidePointer,
+  pluralSuffix,
 } from '@deepseek-ai/dsh-client-ui-primitives'
 import type { InjectFace, PropsLocale, PropsRuntime } from '@deepseek-ai/dsh-client-ui-slots'
 import type {} from '@deepseek-ai/dsh-client-ui-conversation/client'
@@ -83,7 +84,7 @@ export function ScheduleCatalogAction({
   const known = records.length
   const triggerLabel = known === 0
     ? t('trigger.label')
-    : t(known === 1 ? 'trigger.one' : 'trigger.other', { count: known })
+    : t(`trigger.${pluralSuffix(t('format.locale'), known)}`, { count: known })
   // One task has no list to choose from, so its entry opens the detail directly
   // once the read settles. A refresh republishes `loading` while retaining the
   // rows, so the entry stays expandable for that read: the popover shows the

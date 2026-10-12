@@ -26,7 +26,7 @@ import type { LinkOpeningRowInjected } from '../src/client/settings/LinkOpeningR
 import type { QuoteDockInjected } from '../src/client/quote/QuoteChip.tsx'
 import { ComposerMessagePrefixRegistry } from '../../ui-conversation/src/client/input/prefixes.ts'
 
-usePinnedBrowserLanguages('zh-CN')
+usePinnedBrowserLanguages('es')
 
 const ROOT = 'root-1' as SessionId
 const ATTACHMENT = {
@@ -254,7 +254,7 @@ describe('Chat inject API', () => {
       const quoteRow = () => registerFixed.mock.calls.map(([command]) => command).filter(command => command.id === 'chat.quote')
       await vi.waitFor(() => { expect(quoteRow()).toHaveLength(1) })
       expect(quoteRow()[0]).toMatchObject({ keys: ['⌘', 'L'], bindings: [{ code: 'KeyL', modifiers: ['primary'] }], group: 'input' })
-      expect(quoteRow()[0]!.label()).toBe('引用')
+      expect(quoteRow()[0]!.label()).toBe('Citar')
       const { injected } = b.chatViewApi(b.rootReference)
       expect(injected.quoteShortcut).toEqual({ keys: ['⌘', 'L'], mac: true })
     } finally {

@@ -1,4 +1,9 @@
 /** Layout command labels. */
-export const zh = { toggle: '展开／收起左侧栏' }
+
 /** English labels for the same layout commands. */
-export const en: Record<keyof typeof zh, string> = { toggle: 'Toggle left sidebar' }
+export const en = { toggle: 'Toggle left sidebar' } satisfies Record<string, string>
+
+/** Spanish dictionary, checked complete against the English key set. */
+export const es = {
+  toggle: 'Mostrar u ocultar la barra lateral izquierda',
+} satisfies Record<keyof typeof en, string>

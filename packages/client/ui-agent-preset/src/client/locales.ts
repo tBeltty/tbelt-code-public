@@ -19,6 +19,8 @@ export type AgentPresetSettingsKey =
   | 'presetPtcDescription'
   | 'presetMinimalName'
   | 'presetMinimalDescription'
+  | 'presetFastName'
+  | 'presetFastDescription'
   | 'presetCordisName'
   | 'presetCordisDescription'
   | 'inUse'
@@ -56,6 +58,9 @@ export const en = {
   presetMinimalName: 'Minimal mode',
   presetMinimalDescription:
     'The agent works using only a terminal tool. Useful for testing and comparing its basic performance.',
+  presetFastName: 'Fast mode',
+  presetFastDescription:
+    'A short prompt and a few core tools keep each step small and quick. The agent turns on search, web, subagents and other tools when a task needs them.',
   presetCordisName: 'Creator mode',
   presetCordisDescription:
     'Customize tBelt Code through conversation. Let the agent write plugins that add features or UI, or combine tools and prompts to create your own mode.',
@@ -96,6 +101,9 @@ export const es = {
   presetPtcDescription: 'Incluye todas las capacidades del modo estándar. Se adapta mejor a las tareas que llaman a herramientas por lotes y luego filtran, organizan, deduplican, cuentan o resumen los resultados.',
   presetMinimalName: 'Modo mínimo',
   presetMinimalDescription: 'El agente trabaja solo con una herramienta de terminal. Útil para probar y comparar su rendimiento básico.',
+  presetFastName: 'Modo rápido',
+  presetFastDescription:
+    'Un prompt corto y pocas herramientas básicas mantienen cada paso pequeño y veloz. El agente activa la búsqueda, la web, los subagentes y otras herramientas cuando una tarea las necesita.',
   presetCordisName: 'Modo creador',
   presetCordisDescription: 'Personaliza tBelt Code conversando. Deja que el agente escriba plugins que añadan funciones o interfaz, o combine herramientas y prompts para crear tu propio modo.',
   inUse: 'Predeterminado',

@@ -1195,3 +1195,17 @@ describe('completion notices', () => {
     expect(warn).toHaveBeenCalledWith(expect.stringContaining('unexpected inject bug'))
   })
 })
+
+describe('tool:jobs prompt section', () => {
+  it('guides only scopes where job_output is visible', async () => {
+    const { ctx } = await setup()
+    const key = { id: 'section-agent' } as unknown as Agent
+    let scope!: ReturnType<typeof createScope>
+    await ctx.plugin(Object.assign((inner: Context) => { scope = createScope(inner, key) }, { inject: ['tools', 'systemPrompt'] }))
+    const guidance = async (): Promise<string | undefined> =>
+      (await ctx.systemPrompt.assemble({ scope: key })).sections.find(section => section.name === 'tool:jobs')?.text
+    expect(await guidance()).toContain('Track every background job id you start.')
+    scope.ctx.tools.restrict({ deny: ['job_output'] })
+    expect(await guidance()).toBe('')
+  })
+})

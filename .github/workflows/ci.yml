@@ -42,6 +42,9 @@ jobs:
       - name: No telemetry by default
         run: scripts/check-no-default-telemetry.sh
 
+      - name: Exact workspace ranges
+        run: scripts/check-workspace-ranges.sh
+
   primary:
     name: Quality gate (Linux)
     if: ${{ github.event_name == 'workflow_dispatch' && !github.event.repository.private }}

@@ -51,6 +51,18 @@ export const guideEn = {
     '> Run the tests for this project, find the cause of the failure, and make the smallest fix. Run the relevant tests again and report the result.',
     'Run the same task separately in Standard and Minimal modes from the same starting state. Compare task completion, tool calls, and the resulting changes. Minimal mode performs the work through terminal commands.',
   ].join('\n\n'),
+  guideFastIntro: 'Choose Fast mode for small, well-defined tasks where speed and low cost matter. Name the files involved and say how to check the result.',
+  guideFastExplanation: [
+    '### What is included',
+    'Terminal commands, file reading, writing, and editing, and Skills. The prompt is a few lines long, so each step sends far less than in Standard mode. Compaction stays on for long tasks.',
+    '### Other capabilities',
+    'File search, web search, subagents, workflows, background jobs, todo lists, and memory start off. The agent turns on a group when the task needs it and keeps it on for the rest of the session. Scheduled follow-ups and language-server queries are not available in this mode.',
+  ].join('\n\n'),
+  guideFastUsage: [
+    '### Fix a small bug',
+    '> The date in the invoice footer shows the wrong month. Find the cause in src/invoice, fix it, and run the invoice tests.',
+    'Expected output: a small change and the test result. The agent searches the code on its own, turning on file search first.',
+  ].join('\n\n'),
   guideCordisIntro: 'Choose Creator mode for a new task. Describe the capability you want, where it should appear, and how you will verify it.',
   guideCordisExplanation: [
     '### What you can create',
@@ -91,6 +103,18 @@ export const guideEs = {
   guideMinimalIntro: 'Elige el modo mínimo para una tarea nueva. Para comparar, mantén constantes el modelo, los permisos, la entrada y el estado inicial del espacio de trabajo en todas las ejecuciones.',
   guideMinimalExplanation: '### Qué incluye\\n\\nUna herramienta de shell persistente y un prompt del sistema fijo. El preajuste integrado no carga skills, planificación, compactación de contexto ni el contexto de ejecución estándar.\\n\\n### Cuándo elegirlo\\n\\nÚsalo como referencia para experimentos y comparaciones. Aún puede leer archivos y ejecutar scripts mediante comandos de shell, pero ofrece menos formas integradas de gestionar una tarea larga. Tener menos herramientas no lo hace necesariamente más fácil para quien empieza.',
   guideMinimalUsage: '### Comparar el rendimiento en una corrección pequeña\\n\\n> Ejecuta las pruebas de este proyecto, encuentra la causa del fallo y haz la corrección más pequeña posible. Vuelve a ejecutar las pruebas relevantes e informa del resultado.\\n\\nEjecuta la misma tarea por separado en los modos estándar y mínimo desde el mismo estado inicial. Compara la finalización de la tarea, las llamadas a herramientas y los cambios resultantes. El modo mínimo hace el trabajo mediante comandos de terminal.',
+  guideFastIntro: 'Elige el modo rápido para tareas pequeñas y bien definidas en las que importan la velocidad y el coste. Indica los archivos implicados y cómo comprobar el resultado.',
+  guideFastExplanation: [
+    '### Qué incluye',
+    'Comandos de terminal, lectura, escritura y edición de archivos, y skills. El prompt tiene pocas líneas, así que cada paso envía mucho menos que en el modo estándar. La compactación sigue activa en las tareas largas.',
+    '### Otras capacidades',
+    'La búsqueda de archivos, la búsqueda web, los subagentes, los workflows, las tareas en segundo plano, las listas de tareas y la memoria empiezan desactivados. El agente activa un grupo cuando la tarea lo necesita y lo mantiene activo el resto de la sesión. Los seguimientos programados y las consultas al servidor de lenguaje no están disponibles en este modo.',
+  ].join('\n\n'),
+  guideFastUsage: [
+    '### Corregir un error pequeño',
+    '> La fecha del pie de la factura muestra el mes equivocado. Encuentra la causa en src/invoice, corrígela y ejecuta las pruebas de facturas.',
+    'Resultado esperado: un cambio pequeño y el resultado de las pruebas. El agente busca en el código por su cuenta y activa antes la búsqueda de archivos.',
+  ].join('\n\n'),
   guideCordisIntro: 'Elige el modo creador para una tarea nueva. Describe la capacidad que quieres, dónde debe aparecer y cómo la vas a verificar.',
   guideCordisExplanation: '### Qué puedes crear\\n\\nEl modo creador incluye las herramientas de tarea estándar, además de inspección del runtime, gestión persistente de plugins y guías para crear plugins de Cordis y preajustes de agente. Puede crear un plugin que añada una capacidad o una interfaz, o un preajuste que combine herramientas y prompts para un trabajo concreto.\\n\\n### Plugins y modos\\n\\nUn plugin añade capacidades a tBelt Code, como una herramienta, una conexión a un servicio o una entrada en la interfaz. Un modo es un preajuste de agente que selecciona herramientas y define cómo trabaja el agente en una tarea. Un plugin puede incluirse en un preajuste propio.\\n\\n### Cómo entra en vigor el resultado\\n\\nPide al agente que instale y verifique el resultado, no solo que genere el código fuente. Un plugin puede cargarse al instante o requerir un reinicio, según lo que cambie. Un preajuste recién creado se elige al empezar una tarea nueva.',
   guideCordisUsage: '### Añadir una interfaz\\n\\n> Crea un plugin de tBelt Code que añada a la barra lateral una entrada de notas del proyecto. Quiero explorar los archivos Markdown de este espacio de trabajo y previsualizar una nota seleccionada. Instálalo y comprueba que la página se abre.\\n\\nResultado esperado: un plugin instalado con una entrada y una página de vista previa que funcionan, más los pasos de activación que falten.\\n\\n### Añadir una herramienta\\n\\n> Crea un plugin con una herramienta que lea el informe de pruebas de este proyecto y resuma las pruebas fallidas. Regístralo y verifícalo con un informe de ejemplo.\\n\\nResultado esperado: un plugin con una herramienta invocable y una llamada de ejemplo verificada.\\n\\n### Crear mi propio modo\\n\\n> Crea un modo “Revisión de código” basado en el modo estándar. Que dé prioridad a posibles errores y a huecos en las pruebas, cite rutas y líneas de archivos y pregunte antes de modificar archivos. Guárdalo como un preajuste seleccionable.\\n\\nResultado esperado: un preajuste propio para tareas nuevas. Estas instrucciones de revisión guían al agente; los ajustes de permisos determinan qué acciones puede ejecutar.',

@@ -2090,7 +2090,7 @@ importers:
         specifier: workspace:*
         version: link:../../guard/command-budget
       '@deepseek-ai/dsh-command-clear':
-        specifier: workspace:^
+        specifier: workspace:*
         version: link:../../session/command-clear
       '@deepseek-ai/dsh-command-compact':
         specifier: workspace:*
@@ -2102,10 +2102,10 @@ importers:
         specifier: workspace:*
         version: link:../../goal/command-goal
       '@deepseek-ai/dsh-command-remember':
-        specifier: workspace:^
+        specifier: workspace:*
         version: link:../../memory/command-remember
       '@deepseek-ai/dsh-command-undo':
-        specifier: workspace:^
+        specifier: workspace:*
         version: link:../../git-safety/command-undo
       '@deepseek-ai/dsh-commands':
         specifier: workspace:*
@@ -2141,7 +2141,7 @@ importers:
         specifier: workspace:*
         version: link:../../fs/fs-sandbox
       '@deepseek-ai/dsh-git-safety-net':
-        specifier: workspace:^
+        specifier: workspace:*
         version: link:../../git-safety/git-safety-net
       '@deepseek-ai/dsh-goal':
         specifier: workspace:*
@@ -2174,10 +2174,10 @@ importers:
         specifier: workspace:*
         version: link:../../mcp/mcp-resources
       '@deepseek-ai/dsh-memory-recall':
-        specifier: workspace:^
+        specifier: workspace:*
         version: link:../../memory/memory-recall
       '@deepseek-ai/dsh-memory-storage':
-        specifier: workspace:^
+        specifier: workspace:*
         version: link:../../memory/memory-storage
       '@deepseek-ai/dsh-otel':
         specifier: workspace:*
@@ -2186,7 +2186,7 @@ importers:
         specifier: workspace:*
         version: link:../../interaction/permission-presets
       '@deepseek-ai/dsh-permission-rules':
-        specifier: workspace:^
+        specifier: workspace:*
         version: link:../../guard/permission-rules
       '@deepseek-ai/dsh-plan-mode':
         specifier: workspace:*
@@ -2207,7 +2207,7 @@ importers:
         specifier: workspace:*
         version: link:../../guard/repeat-tool-reminder
       '@deepseek-ai/dsh-repo-map':
-        specifier: workspace:^
+        specifier: workspace:*
         version: link:../../context/repo-map
       '@deepseek-ai/dsh-sandbox-local':
         specifier: workspace:*
@@ -2321,13 +2321,13 @@ importers:
         specifier: workspace:*
         version: link:../../shell/tool-pwsh
       '@deepseek-ai/dsh-tool-recall-memory':
-        specifier: workspace:^
+        specifier: workspace:*
         version: link:../../memory/tool-recall-memory
       '@deepseek-ai/dsh-tool-remember':
-        specifier: workspace:^
+        specifier: workspace:*
         version: link:../../memory/tool-remember
       '@deepseek-ai/dsh-tool-search-replace':
-        specifier: workspace:^
+        specifier: workspace:*
         version: link:../../fs/tool-search-replace
       '@deepseek-ai/dsh-tool-skill':
         specifier: workspace:*
@@ -2919,6 +2919,9 @@ importers:
       '@deepseek-ai/dsh-tool-goal':
         specifier: workspace:*
         version: link:../../goal/tool-goal
+      '@deepseek-ai/dsh-tool-groups':
+        specifier: workspace:*
+        version: link:../../preset/tool-groups
       '@deepseek-ai/dsh-tool-jobs':
         specifier: workspace:*
         version: link:../../jobs/tool-jobs
@@ -6927,40 +6930,40 @@ importers:
         specifier: workspace:^
         version: link:../../../vendor/loader
       '@deepseek-ai/dsh-agent':
-        specifier: workspace:^
+        specifier: workspace:*
         version: link:../../core/agent
       '@deepseek-ai/dsh-agent-loop':
-        specifier: workspace:^
+        specifier: workspace:*
         version: link:../../core/agent-loop
       '@deepseek-ai/dsh-fs-local':
-        specifier: workspace:^
+        specifier: workspace:*
         version: link:../../fs/fs-local
       '@deepseek-ai/dsh-llm':
-        specifier: workspace:^
+        specifier: workspace:*
         version: link:../../llm/llm
       '@deepseek-ai/dsh-session':
-        specifier: workspace:^
+        specifier: workspace:*
         version: link:../../core/session
       '@deepseek-ai/dsh-session-projection':
-        specifier: workspace:^
+        specifier: workspace:*
         version: link:../../session/session-projection
       '@deepseek-ai/dsh-subprocess':
-        specifier: workspace:^
+        specifier: workspace:*
         version: link:../../subprocess/subprocess
       '@deepseek-ai/dsh-subprocess-local':
-        specifier: workspace:^
+        specifier: workspace:*
         version: link:../../subprocess/subprocess-local
       '@deepseek-ai/dsh-system-prompt':
-        specifier: workspace:^
+        specifier: workspace:*
         version: link:../../core/system-prompt
       '@deepseek-ai/dsh-token-meter':
-        specifier: workspace:^
+        specifier: workspace:*
         version: link:../../llm/token-meter
       '@deepseek-ai/dsh-tool-fs':
-        specifier: workspace:^
+        specifier: workspace:*
         version: link:../../fs/tool-fs
       '@deepseek-ai/dsh-tools':
-        specifier: workspace:^
+        specifier: workspace:*
         version: link:../../core/tools
 
   packages/context/session-reference:
@@ -9743,43 +9746,43 @@ importers:
         specifier: workspace:^
         version: link:../../../vendor/cordis
       '@deepseek-ai/dsh-agent':
-        specifier: workspace:^
+        specifier: workspace:*
         version: link:../../core/agent
       '@deepseek-ai/dsh-agent-loop-testkit':
-        specifier: workspace:^
+        specifier: workspace:*
         version: link:../../test-support/agent-loop-testkit
       '@deepseek-ai/dsh-fs':
-        specifier: workspace:^
+        specifier: workspace:*
         version: link:../fs
       '@deepseek-ai/dsh-fs-local':
-        specifier: workspace:^
+        specifier: workspace:*
         version: link:../fs-local
       '@deepseek-ai/dsh-fs-observation-policy':
-        specifier: workspace:^
+        specifier: workspace:*
         version: link:../fs-observation-policy
       '@deepseek-ai/dsh-fs-sandbox':
-        specifier: workspace:^
+        specifier: workspace:*
         version: link:../fs-sandbox
       '@deepseek-ai/dsh-llm':
-        specifier: workspace:^
+        specifier: workspace:*
         version: link:../../llm/llm
       '@deepseek-ai/dsh-sandbox':
-        specifier: workspace:^
+        specifier: workspace:*
         version: link:../../sandbox/sandbox
       '@deepseek-ai/dsh-sandbox-policy':
-        specifier: workspace:^
+        specifier: workspace:*
         version: link:../../sandbox/sandbox-policy
       '@deepseek-ai/dsh-session':
-        specifier: workspace:^
+        specifier: workspace:*
         version: link:../../core/session
       '@deepseek-ai/dsh-session-projection':
-        specifier: workspace:^
+        specifier: workspace:*
         version: link:../../session/session-projection
       '@deepseek-ai/dsh-system-prompt':
-        specifier: workspace:^
+        specifier: workspace:*
         version: link:../../core/system-prompt
       '@deepseek-ai/dsh-tools':
-        specifier: workspace:^
+        specifier: workspace:*
         version: link:../../core/tools
 
   packages/fs/tool-str-replace-editor:
@@ -9843,34 +9846,34 @@ importers:
         specifier: workspace:^
         version: link:../../../vendor/loader
       '@deepseek-ai/dsh-agent':
-        specifier: workspace:^
+        specifier: workspace:*
         version: link:../../core/agent
       '@deepseek-ai/dsh-agent-loop':
-        specifier: workspace:^
+        specifier: workspace:*
         version: link:../../core/agent-loop
       '@deepseek-ai/dsh-agent-loop-testkit':
-        specifier: workspace:^
+        specifier: workspace:*
         version: link:../../test-support/agent-loop-testkit
       '@deepseek-ai/dsh-commands':
-        specifier: workspace:^
+        specifier: workspace:*
         version: link:../../interaction/commands
       '@deepseek-ai/dsh-fs':
-        specifier: workspace:^
+        specifier: workspace:*
         version: link:../../fs/fs
       '@deepseek-ai/dsh-fs-local':
-        specifier: workspace:^
+        specifier: workspace:*
         version: link:../../fs/fs-local
       '@deepseek-ai/dsh-fs-observation-policy':
-        specifier: workspace:^
+        specifier: workspace:*
         version: link:../../fs/fs-observation-policy
       '@deepseek-ai/dsh-git-safety-net':
-        specifier: workspace:^
+        specifier: workspace:*
         version: link:../git-safety-net
       '@deepseek-ai/dsh-session':
-        specifier: workspace:^
+        specifier: workspace:*
         version: link:../../core/session
       '@deepseek-ai/dsh-session-projection':
-        specifier: workspace:^
+        specifier: workspace:*
         version: link:../../session/session-projection
 
   packages/git-safety/git-safety-net:
@@ -9879,25 +9882,25 @@ importers:
         specifier: workspace:^
         version: link:../../../vendor/cordis
       '@deepseek-ai/dsh-agent':
-        specifier: workspace:^
+        specifier: workspace:*
         version: link:../../core/agent
       '@deepseek-ai/dsh-agent-loop':
-        specifier: workspace:^
+        specifier: workspace:*
         version: link:../../core/agent-loop
       '@deepseek-ai/dsh-agent-loop-testkit':
-        specifier: workspace:^
+        specifier: workspace:*
         version: link:../../test-support/agent-loop-testkit
       '@deepseek-ai/dsh-fs':
-        specifier: workspace:^
+        specifier: workspace:*
         version: link:../../fs/fs
       '@deepseek-ai/dsh-fs-local':
-        specifier: workspace:^
+        specifier: workspace:*
         version: link:../../fs/fs-local
       '@deepseek-ai/dsh-fs-observation-policy':
-        specifier: workspace:^
+        specifier: workspace:*
         version: link:../../fs/fs-observation-policy
       '@deepseek-ai/dsh-session-projection':
-        specifier: workspace:^
+        specifier: workspace:*
         version: link:../../session/session-projection
 
   packages/goal/command-goal:
@@ -10102,10 +10105,10 @@ importers:
   packages/guard/permission-rules:
     dependencies:
       '@deepseek-ai/dsh-destructive-command-policy':
-        specifier: workspace:^
+        specifier: workspace:*
         version: link:../destructive-command-policy
       '@deepseek-ai/dsh-util-values':
-        specifier: workspace:^
+        specifier: workspace:*
         version: link:../../util/values
       '@deepseek-ai/schemastery':
         specifier: link:../../../vendor/schemastery
@@ -10121,46 +10124,46 @@ importers:
         specifier: workspace:^
         version: link:../../../vendor/loader
       '@deepseek-ai/dsh-agent':
-        specifier: workspace:^
+        specifier: workspace:*
         version: link:../../core/agent
       '@deepseek-ai/dsh-agent-loop-testkit':
-        specifier: workspace:^
+        specifier: workspace:*
         version: link:../../test-support/agent-loop-testkit
       '@deepseek-ai/dsh-agent-preset-registry':
-        specifier: workspace:^
+        specifier: workspace:*
         version: link:../../preset/agent-preset-registry
       '@deepseek-ai/dsh-bash-local':
-        specifier: workspace:^
+        specifier: workspace:*
         version: link:../../shell/bash-local
       '@deepseek-ai/dsh-llm':
-        specifier: workspace:^
+        specifier: workspace:*
         version: link:../../llm/llm
       '@deepseek-ai/dsh-session':
-        specifier: workspace:^
+        specifier: workspace:*
         version: link:../../core/session
       '@deepseek-ai/dsh-session-projection':
-        specifier: workspace:^
+        specifier: workspace:*
         version: link:../../session/session-projection
       '@deepseek-ai/dsh-settings':
-        specifier: workspace:^
+        specifier: workspace:*
         version: link:../../settings/settings
       '@deepseek-ai/dsh-shell':
-        specifier: workspace:^
+        specifier: workspace:*
         version: link:../../shell/shell
       '@deepseek-ai/dsh-shell-env':
-        specifier: workspace:^
+        specifier: workspace:*
         version: link:../../shell/shell-env
       '@deepseek-ai/dsh-subprocess-local':
-        specifier: workspace:^
+        specifier: workspace:*
         version: link:../../subprocess/subprocess-local
       '@deepseek-ai/dsh-tool-bash':
-        specifier: workspace:^
+        specifier: workspace:*
         version: link:../../shell/tool-bash
       '@deepseek-ai/dsh-tools':
-        specifier: workspace:^
+        specifier: workspace:*
         version: link:../../core/tools
       '@deepseek-ai/dsh-user-approval':
-        specifier: workspace:^
+        specifier: workspace:*
         version: link:../../interaction/user-approval
       '@types/picomatch':
         specifier: ^3.0.2
@@ -11343,25 +11346,25 @@ importers:
         specifier: workspace:^
         version: link:../../../vendor/loader
       '@deepseek-ai/dsh-agent':
-        specifier: workspace:^
+        specifier: workspace:*
         version: link:../../core/agent
       '@deepseek-ai/dsh-agent-loop-testkit':
-        specifier: workspace:^
+        specifier: workspace:*
         version: link:../../test-support/agent-loop-testkit
       '@deepseek-ai/dsh-commands':
-        specifier: workspace:^
+        specifier: workspace:*
         version: link:../../interaction/commands
       '@deepseek-ai/dsh-memory-storage':
-        specifier: workspace:^
+        specifier: workspace:*
         version: link:../memory-storage
       '@deepseek-ai/dsh-session':
-        specifier: workspace:^
+        specifier: workspace:*
         version: link:../../core/session
       '@deepseek-ai/dsh-storage':
-        specifier: workspace:^
+        specifier: workspace:*
         version: link:../../storage/storage
       '@deepseek-ai/dsh-storage-domain':
-        specifier: workspace:^
+        specifier: workspace:*
         version: link:../../storage/storage-domain
 
   packages/memory/memory-recall:
@@ -11374,22 +11377,22 @@ importers:
         specifier: workspace:^
         version: link:../../../vendor/cordis
       '@deepseek-ai/dsh-agent':
-        specifier: workspace:^
+        specifier: workspace:*
         version: link:../../core/agent
       '@deepseek-ai/dsh-llm':
-        specifier: workspace:^
+        specifier: workspace:*
         version: link:../../llm/llm
       '@deepseek-ai/dsh-memory-storage':
-        specifier: workspace:^
+        specifier: workspace:*
         version: link:../memory-storage
       '@deepseek-ai/dsh-session':
-        specifier: workspace:^
+        specifier: workspace:*
         version: link:../../core/session
       '@deepseek-ai/dsh-storage':
-        specifier: workspace:^
+        specifier: workspace:*
         version: link:../../storage/storage
       '@deepseek-ai/dsh-storage-domain':
-        specifier: workspace:^
+        specifier: workspace:*
         version: link:../../storage/storage-domain
 
   packages/memory/memory-redact:
@@ -11401,13 +11404,13 @@ importers:
   packages/memory/memory-storage:
     dependencies:
       '@deepseek-ai/dsh-brand':
-        specifier: workspace:^
+        specifier: workspace:*
         version: link:../../util/brand
       '@deepseek-ai/dsh-memory-redact':
-        specifier: workspace:^
+        specifier: workspace:*
         version: link:../memory-redact
       '@deepseek-ai/dsh-project-root':
-        specifier: workspace:^
+        specifier: workspace:*
         version: link:../../util/project-root
       yaml:
         specifier: ^2.9.0
@@ -11420,19 +11423,19 @@ importers:
         specifier: workspace:^
         version: link:../../../vendor/cordis
       '@deepseek-ai/dsh-atomic-write':
-        specifier: workspace:^
+        specifier: workspace:*
         version: link:../../util/atomic-write
       '@deepseek-ai/dsh-fs':
-        specifier: workspace:^
+        specifier: workspace:*
         version: link:../../fs/fs
       '@deepseek-ai/dsh-home-paths':
-        specifier: workspace:^
+        specifier: workspace:*
         version: link:../../util/home-paths
       '@deepseek-ai/dsh-storage':
-        specifier: workspace:^
+        specifier: workspace:*
         version: link:../../storage/storage
       '@deepseek-ai/dsh-storage-domain':
-        specifier: workspace:^
+        specifier: workspace:*
         version: link:../../storage/storage-domain
 
   packages/memory/tool-recall-memory:
@@ -11444,31 +11447,31 @@ importers:
         specifier: workspace:^
         version: link:../../../vendor/loader
       '@deepseek-ai/dsh-agent':
-        specifier: workspace:^
+        specifier: workspace:*
         version: link:../../core/agent
       '@deepseek-ai/dsh-agent-loop-testkit':
-        specifier: workspace:^
+        specifier: workspace:*
         version: link:../../test-support/agent-loop-testkit
       '@deepseek-ai/dsh-llm':
-        specifier: workspace:^
+        specifier: workspace:*
         version: link:../../llm/llm
       '@deepseek-ai/dsh-memory-storage':
-        specifier: workspace:^
+        specifier: workspace:*
         version: link:../memory-storage
       '@deepseek-ai/dsh-session':
-        specifier: workspace:^
+        specifier: workspace:*
         version: link:../../core/session
       '@deepseek-ai/dsh-storage':
-        specifier: workspace:^
+        specifier: workspace:*
         version: link:../../storage/storage
       '@deepseek-ai/dsh-storage-domain':
-        specifier: workspace:^
+        specifier: workspace:*
         version: link:../../storage/storage-domain
       '@deepseek-ai/dsh-system-prompt':
-        specifier: workspace:^
+        specifier: workspace:*
         version: link:../../core/system-prompt
       '@deepseek-ai/dsh-tools':
-        specifier: workspace:^
+        specifier: workspace:*
         version: link:../../core/tools
 
   packages/memory/tool-remember:
@@ -11480,31 +11483,31 @@ importers:
         specifier: workspace:^
         version: link:../../../vendor/loader
       '@deepseek-ai/dsh-agent':
-        specifier: workspace:^
+        specifier: workspace:*
         version: link:../../core/agent
       '@deepseek-ai/dsh-agent-loop-testkit':
-        specifier: workspace:^
+        specifier: workspace:*
         version: link:../../test-support/agent-loop-testkit
       '@deepseek-ai/dsh-llm':
-        specifier: workspace:^
+        specifier: workspace:*
         version: link:../../llm/llm
       '@deepseek-ai/dsh-memory-storage':
-        specifier: workspace:^
+        specifier: workspace:*
         version: link:../memory-storage
       '@deepseek-ai/dsh-session':
-        specifier: workspace:^
+        specifier: workspace:*
         version: link:../../core/session
       '@deepseek-ai/dsh-storage':
-        specifier: workspace:^
+        specifier: workspace:*
         version: link:../../storage/storage
       '@deepseek-ai/dsh-storage-domain':
-        specifier: workspace:^
+        specifier: workspace:*
         version: link:../../storage/storage-domain
       '@deepseek-ai/dsh-system-prompt':
-        specifier: workspace:^
+        specifier: workspace:*
         version: link:../../core/system-prompt
       '@deepseek-ai/dsh-tools':
-        specifier: workspace:^
+        specifier: workspace:*
         version: link:../../core/tools
 
   packages/plan/plan-mode:
@@ -11757,6 +11760,31 @@ importers:
       '@deepseek-ai/dsh-system-prompt':
         specifier: workspace:*
         version: link:../../core/system-prompt
+
+  packages/preset/tool-groups:
+    dependencies:
+      '@deepseek-ai/schemastery':
+        specifier: link:../../../vendor/schemastery
+        version: link:../../../vendor/schemastery
+    devDependencies:
+      '@deepseek-ai/cordis':
+        specifier: workspace:~
+        version: link:../../../vendor/cordis
+      '@deepseek-ai/dsh-agent':
+        specifier: workspace:*
+        version: link:../../core/agent
+      '@deepseek-ai/dsh-llm':
+        specifier: workspace:*
+        version: link:../../llm/llm
+      '@deepseek-ai/dsh-session':
+        specifier: workspace:*
+        version: link:../../core/session
+      '@deepseek-ai/dsh-system-prompt':
+        specifier: workspace:*
+        version: link:../../core/system-prompt
+      '@deepseek-ai/dsh-tools':
+        specifier: workspace:*
+        version: link:../../core/tools
 
   packages/ptc-runtime/ptc-runtime:
     devDependencies:
@@ -12261,34 +12289,34 @@ importers:
         specifier: workspace:^
         version: link:../../../vendor/loader
       '@deepseek-ai/dsh-agent':
-        specifier: workspace:^
+        specifier: workspace:*
         version: link:../../core/agent
       '@deepseek-ai/dsh-agent-loop':
-        specifier: workspace:^
+        specifier: workspace:*
         version: link:../../core/agent-loop
       '@deepseek-ai/dsh-agent-loop-testkit':
-        specifier: workspace:^
+        specifier: workspace:*
         version: link:../../test-support/agent-loop-testkit
       '@deepseek-ai/dsh-brand':
-        specifier: workspace:^
+        specifier: workspace:*
         version: link:../../util/brand
       '@deepseek-ai/dsh-commands':
-        specifier: workspace:^
+        specifier: workspace:*
         version: link:../../interaction/commands
       '@deepseek-ai/dsh-goal':
-        specifier: workspace:^
+        specifier: workspace:*
         version: link:../../goal/goal
       '@deepseek-ai/dsh-llm':
-        specifier: workspace:^
+        specifier: workspace:*
         version: link:../../llm/llm
       '@deepseek-ai/dsh-session':
-        specifier: workspace:^
+        specifier: workspace:*
         version: link:../../core/session
       '@deepseek-ai/dsh-session-projection':
-        specifier: workspace:^
+        specifier: workspace:*
         version: link:../session-projection
       '@deepseek-ai/dsh-token-meter':
-        specifier: workspace:^
+        specifier: workspace:*
         version: link:../../llm/token-meter
 
   packages/session/session-checkpoint-policy:
@@ -15227,7 +15255,7 @@ importers:
         specifier: workspace:^
         version: link:../../../vendor/cordis
       '@deepseek-ai/dsh-fs':
-        specifier: workspace:^
+        specifier: workspace:*
         version: link:../../fs/fs
 
   packages/util/time:
@@ -15343,7 +15371,7 @@ importers:
   packages/web/web-fetch-http:
     dependencies:
       '@deepseek-ai/dsh-llm':
-        specifier: workspace:^
+        specifier: workspace:*
         version: link:../../llm/llm
       '@deepseek-ai/schemastery':
         specifier: link:../../../vendor/schemastery
@@ -15387,7 +15415,7 @@ importers:
   packages/web/web-search-deepseek:
     dependencies:
       '@deepseek-ai/dsh-llm':
-        specifier: workspace:^
+        specifier: workspace:*
         version: link:../../llm/llm
       '@deepseek-ai/schemastery':
         specifier: link:../../../vendor/schemastery

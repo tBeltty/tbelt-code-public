@@ -233,10 +233,10 @@ describe('the shipped Web composition', () => {
     }
   })
 
-  it('supplies both shipped presets, and only those, from the system root', async () => {
+  it('supplies the shipped presets, and only those, from the system root', async () => {
     const listed = await ctx.agentPresets.list()
 
-    expect(listed.map(preset => preset.id).sort()).toEqual(['cordis', 'minimal', 'ptc', 'standard'])
+    expect(listed.map(preset => preset.id).sort()).toEqual(['cordis', 'fast', 'minimal', 'ptc', 'standard'])
     expect(listed.every(preset => !('path' in preset))).toBe(true)
     expect(ctx.agentPresets.defaultId).toBe('standard')
   })
@@ -319,6 +319,39 @@ describe('the shipped Web composition', () => {
       expect(handle.agent.ctx.get('fs')?.sandboxMode).toBe(ctx.get('fs')?.sandboxMode)
       expect(ctx.agentPresets.serviceFor(handle.agent, 'compaction')).toBeUndefined()
       expect(handle.agent.ctx.get('compaction')).toBeUndefined()
+    } finally {
+      await handle.dispose()
+    }
+  })
+
+  it('composes `fast` with the core tools on and the rest behind `enable_tools`', async () => {
+    const handle = await ctx.agents.create({
+      sessionId: SessionId('preset-fast'),
+      setup: agentCtx => ctx.agentPresets.mount(agentCtx, 'fast').then(() => undefined),
+    })
+    try {
+      expect(toolNames(ctx, handle.agent)).toEqual([
+        'bash', 'edit', 'enable_tools', 'exit_plan_mode', 'read', 'read_image', 'skill', 'working_directory', 'write',
+      ])
+      const assembly = await ctx.systemPrompt.assemble({ scope: handle.agent })
+      const groups = assembly.sections.find(section => section.name === 'tool-groups')?.text ?? ''
+      for (const name of ['search', 'web', 'tasks', 'background', 'agents', 'workflow', 'memory', 'present']) {
+        expect(groups).toContain(`- ${name}: `)
+      }
+      const enable = ctx.tools.schemas(handle.agent).find(tool => tool.name === 'enable_tools')
+      expect(JSON.stringify(enable?.parameters)).toContain('"workflow"')
+
+      await ctx.tools.execute({
+        signal: new AbortController().signal,
+        callId: ToolCallId('fast-enable'),
+        name: 'enable_tools',
+        arguments: { group: 'search' },
+        agent: handle.agent,
+      })
+      expect(toolNames(ctx, handle.agent)).toEqual(expect.arrayContaining(['glob', 'grep']))
+      expect(toolNames(ctx, handle.agent)).not.toContain('web_search')
+      expect(ctx.commands.find(handle.agent, 'goal')).toBeUndefined()
+      expect(ctx.commands.find(handle.agent, 'compact')).toBeDefined()
     } finally {
       await handle.dispose()
     }

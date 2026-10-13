@@ -501,6 +501,7 @@
     { "path": "./packages/experimental/webhook-github" },
     { "path": "./packages/todo/tool-todo" },
     { "path": "./packages/plan/plan-mode" },
+    { "path": "./packages/preset/tool-groups" },
     { "path": "./packages/preset/agent-preset-registry" },
     { "path": "./packages/preset/agent-preset" },
     { "path": "./packages/preset/persona" },

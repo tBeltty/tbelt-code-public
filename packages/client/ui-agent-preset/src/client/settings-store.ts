@@ -48,10 +48,10 @@ export interface AgentPresetOption {
 
 /** Whether a shipped preset requires the Coding Tools preference.
  * @param preset Roster entry; named custom overrides keep their own behavior.
- * @returns True only for the built-in PTC and Minimal presets.
+ * @returns True only for the built-in PTC, Minimal, and Fast presets.
  */
 export function requiresCodingTools(preset: AgentPresetOption | undefined): boolean {
-  return preset !== undefined && isBuiltInPreset(preset) && (preset.id === 'ptc' || preset.id === 'minimal')
+  return preset !== undefined && isBuiltInPreset(preset) && (preset.id === 'ptc' || preset.id === 'minimal' || preset.id === 'fast')
 }
 
 /** One roster entry exactly as the host reports it. */

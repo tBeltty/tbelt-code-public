@@ -156,7 +156,7 @@ describe('optional bundles', () => {
       const warnings: string[] = []
       const composed = composeEntries([...shipped, ...selected], warning => warnings.push(warning))
       expect(warnings).toEqual([])
-      for (const id of ['preset-standard', 'preset-cordis', 'preset-ptc', 'preset-minimal']) {
+      for (const id of ['preset-standard', 'preset-cordis', 'preset-ptc', 'preset-minimal', 'preset-fast']) {
         expect(presetRows(composed, id)).toEqual(presetRows(baseline, id))
       }
       const ids = flattenRows(composed).map(row => row.id)

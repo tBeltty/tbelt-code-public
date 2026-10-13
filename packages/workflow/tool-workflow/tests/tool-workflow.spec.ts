@@ -3,6 +3,7 @@ import { describe, expect, it, onTestFinished, vi } from 'vitest'
 import { Context } from '@deepseek-ai/cordis'
 import Loader from '@deepseek-ai/cordis-plugin-loader'
 import SystemPrompt from '@deepseek-ai/dsh-system-prompt'
+import { createScope } from '@deepseek-ai/dsh-scope'
 import ToolRuntime, { TOOL_ABORTED_BEFORE_DISPATCH } from '@deepseek-ai/dsh-tools'
 import type { ToolExecutionResult, ToolExecutionToken } from '@deepseek-ai/dsh-tools'
 import type { Agent } from '@deepseek-ai/dsh-agent'
@@ -692,5 +693,23 @@ describe('dsh-tool-workflow', () => {
       expect(ring).toContain('halfway')
       expect(jobs.read(jobId, parent.id).result).toContain('"ok": true')
     }, 15_000)
+  })
+})
+
+describe('tool:workflow prompt section', () => {
+  it('guides only scopes where the workflow tool is visible', async () => {
+    const ctx = new Context()
+    await ctx.plugin(SystemPrompt)
+    await ctx.plugin(ToolRuntime)
+    await ctx.plugin(StubEngine)
+    await ctx.plugin(toolWorkflow, {})
+    const key = { id: 'section-agent' } as unknown as Agent
+    let scope!: ReturnType<typeof createScope>
+    await ctx.plugin(Object.assign((inner: Context) => { scope = createScope(inner, key) }, { inject: ['tools', 'systemPrompt'] }))
+    const guidance = async (): Promise<string | undefined> =>
+      (await ctx.systemPrompt.assemble({ scope: key })).sections.find(section => section.name === 'tool:workflow')?.text
+    expect(await guidance()).toContain('Use the workflow tool ONLY')
+    scope.ctx.tools.restrict({ deny: ['workflow'] })
+    expect(await guidance()).toBe('')
   })
 })

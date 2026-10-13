@@ -69,6 +69,7 @@ import BrowserUseRegistry from '@deepseek-ai/dsh-browser-use'
 import * as StagehandBrowserTools from '@deepseek-ai/dsh-experimental-browser-use-stagehand-native'
 import type TeamService from '@deepseek-ai/dsh-experimental-agent-team'
 import * as ToolTeam from '@deepseek-ai/dsh-experimental-tool-agent-team'
+import * as ToolGroups from '@deepseek-ai/dsh-tool-groups'
 import * as ToolTodo from '@deepseek-ai/dsh-tool-todo'
 import type PluginManager from '@deepseek-ai/dsh-plugin-manager'
 import * as PluginManagerTools from '@deepseek-ai/dsh-plugin-manager/tools'
@@ -615,6 +616,18 @@ const TOOL_PACKAGES: ToolPackage[] = [
     scope: ctx => catalogChildScopes.get(ctx) as Agent,
     note:
       'All nine tools are scoped to implicit Team Leads and durable teammates. The shipped dsh-base bundle keeps the package disabled; the documented Agent Teams profile patch enables it while disabling the legacy continuable-child control names.',
+  },
+  {
+    pkg: '@deepseek-ai/dsh-tool-groups',
+    dir: 'tool-groups',
+    source: 'packages/preset/tool-groups/src/index.ts',
+    requires: ['ctx.tools', 'ctx.systemPrompt', 'owning Agent session'],
+    writes: ['tool/call', 'tool/result'],
+    async mount(ctx) {
+      await ctx.plugin(ToolGroups, { groups: [{ name: 'search', description: 'Find files and text.', tools: ['glob', 'grep'] }] })
+    },
+    note:
+      'enable_tools lifts a per-agent mask over the configured tools; the loop logs them as a tool addition on its next step. The catalog mounts one example group; the `group` enum lists the configured names.',
   },
   {
     pkg: '@deepseek-ai/dsh-tool-todo',

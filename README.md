@@ -42,6 +42,7 @@ Download the app from [code.tbelt.online](https://code.tbelt.online). It can ins
 - A repository map in context at the start of each session.
 - An Automation tasks page for the tasks and reminders agents schedule.
 - Inspector, Coder and Tester subagents, and saved agent presets.
+- Fast mode: a short prompt and a few core tools. The agent turns on search, web, subagents and other tool groups when a task needs them.
 - MCP servers, skills and plugins.
 - `tbelt` opens `dsh terminal`, and `dsh-tui` does the same. Install both, and `dsh`, from the app on macOS, Windows and Linux.
 - A built-in skill that shows agents how to write and install new skills.

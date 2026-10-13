@@ -28,10 +28,10 @@
   "license": "MIT",
   "peerDependencies": {
     "@deepseek-ai/cordis": "workspace:^",
-    "@deepseek-ai/dsh-fs": "workspace:^"
+    "@deepseek-ai/dsh-fs": "workspace:*"
   },
   "devDependencies": {
     "@deepseek-ai/cordis": "workspace:^",
-    "@deepseek-ai/dsh-fs": "workspace:^"
+    "@deepseek-ai/dsh-fs": "workspace:*"
   }
 }

@@ -8,7 +8,7 @@ import {
   captureStableAria, compareOrRefreshGolden, launchWebScaffold,
   watchConsole, webSnapshotMode, type WebScaffold,
 } from './scaffold.ts'
-import { openSettings, connectFreshWorkspaceZh, saveFailureShot, ZH_BROWSER_LOCALE } from './support.ts'
+import { openSettings, connectFreshWorkspace, saveFailureShot, EN_BROWSER_LOCALE } from './support.ts'
 
 const EXPECTED = fileURLToPath(new URL('./expected/deepseek-messages-settings/', import.meta.url))
 
@@ -21,7 +21,7 @@ describe.skipIf(webSnapshotMode() === 'record')('web e2e: DeepSeek Messages sett
   beforeAll(async () => {
     scaffold = await launchWebScaffold({ deepSeekMissingCredential: true })
     browser = await chromium.launch()
-    page = await browser.newPage({ viewport: { width: 1680, height: 1000 }, locale: ZH_BROWSER_LOCALE })
+    page = await browser.newPage({ viewport: { width: 1680, height: 1000 }, locale: EN_BROWSER_LOCALE })
     tripwire = watchConsole(page)
     await page.goto(scaffold.authenticatedUrl, { waitUntil: 'load' })
   }, 120_000)
@@ -42,28 +42,28 @@ describe.skipIf(webSnapshotMode() === 'record')('web e2e: DeepSeek Messages sett
     expect(scaffold.ctx.agentDefaultModel.currentSelection()).toEqual({ provider: 'unconfigured', model: 'none' })
     // The first-run step is model-agnostic (never names DeepSeek); configuring
     // DeepSeek's key happens through the ordinary Models surface instead.
-    const onboarding = page.getByRole('dialog', { name: '选择一个模型提供方开始使用' })
+    const onboarding = page.getByRole('dialog', { name: 'Choose a model provider to get started' })
     await onboarding.waitFor({ timeout: 15_000 })
-    await onboarding.getByRole('button', { name: '稍后配置' }).click()
+    await onboarding.getByRole('button', { name: 'Configure later' }).click()
     await onboarding.waitFor({ state: 'detached' })
-    await openSettings(page, 'zh')
-    const dialog = page.getByRole('dialog', { name: '设置', exact: true })
-    await dialog.getByRole('button', { name: '模型', exact: true }).click()
+    await openSettings(page)
+    const dialog = page.getByRole('dialog', { name: 'Settings', exact: true })
+    await dialog.getByRole('button', { name: 'Models', exact: true }).click()
     await dialog.getByText('DeepSeek', { exact: true }).waitFor()
     expect(await dialog.getByText('DeepSeek', { exact: true }).count()).toBe(1)
     // Unconfigured, the row's edit form is already open — no separate Edit click.
     const messages = dialog
-    await messages.getByText('自定义设置', { exact: true }).click()
-    expect(await messages.getByLabel('API 地址', { exact: true }).getAttribute('placeholder'))
+    await messages.getByText('Customized settings', { exact: true }).click()
+    expect(await messages.getByLabel('Base URL', { exact: true }).getAttribute('placeholder'))
       .toBe('https://api.deepseek.com/anthropic')
     await compareOrRefreshGolden(join(EXPECTED, 'cards.expected.md'),
       await captureStableAria(page, '[role="dialog"]', scaffold.workspaceCwd), webSnapshotMode())
-    await messages.getByLabel('API 密钥', { exact: true }).fill('sk-e2e-messages')
-    await messages.getByLabel('API 地址', { exact: true }).fill('https://messages.example/anthropic')
-    expect(await messages.getByLabel('模型 ID 1').inputValue()).toBe('deepseek-flash')
-    await messages.getByLabel('显示名称 1', { exact: true }).fill('Messages Flash')
-    await messages.getByRole('button', { name: '保存', exact: true }).click()
-    await dialog.getByText('已保存 DeepSeek (deepseek-official)。', { exact: true }).waitFor()
+    await messages.getByLabel('API key', { exact: true }).fill('sk-e2e-messages')
+    await messages.getByLabel('Base URL', { exact: true }).fill('https://messages.example/anthropic')
+    expect(await messages.getByLabel('Model ID 1').inputValue()).toBe('deepseek-flash')
+    await messages.getByLabel('Display name 1', { exact: true }).fill('Messages Flash')
+    await messages.getByRole('button', { name: 'Save', exact: true }).click()
+    await dialog.getByText('Saved DeepSeek (deepseek-official).', { exact: true }).waitFor()
 
     const settings = await readFile(join(scaffold.harnessHome, 'profiles', 'scaffold', 'cordis.patch.yml'), 'utf8')
     expect(settings).toContain('https://messages.example/anthropic')
@@ -80,14 +80,14 @@ describe.skipIf(webSnapshotMode() === 'record')('web e2e: DeepSeek Messages sett
     await page.keyboard.press('Escape')
     // The shipped composition names no default model, so pick the saved route as one.
     await scaffold.ctx.agentDefaultModel.saveSelection({ provider: 'deepseek-official', model: 'deepseek-flash' })
-    await connectFreshWorkspaceZh(page, scaffold.workspaceCwd, 'messages-settings-e2e')
-    await page.getByRole('button', { name: /^选择模型/ }).click()
-    await page.getByRole('menuitem', { name: /^模型/ }).click()
+    await connectFreshWorkspace(page, scaffold.workspaceCwd, 'messages-settings-e2e')
+    await page.getByRole('button', { name: /^Select model/ }).click()
+    await page.getByRole('menuitem', { name: /^Model/ }).click()
     await page.getByRole('menuitemradio', { name: 'Messages Flash', exact: true }).waitFor()
     await compareOrRefreshGolden(join(EXPECTED, 'picker.expected.md'),
-      await captureStableAria(page, '[role="group"][aria-label="模型与推理等级"]', scaffold.workspaceCwd), webSnapshotMode())
+      await captureStableAria(page, '[role="group"][aria-label="Model and reasoning effort"]', scaffold.workspaceCwd), webSnapshotMode())
     await page.keyboard.press('Escape')
-    await page.getByRole('menuitem', { name: /推理等级/ }).click()
+    await page.getByRole('menuitem', { name: /Effort/ }).click()
     const effortWeights = await page.getByRole('menuitemradio').evaluateAll(rows => rows.map(row =>
       getComputedStyle(row.querySelector('span span')!).fontWeight,
     ))
@@ -101,7 +101,7 @@ describe.skipIf(webSnapshotMode() === 'record')('web e2e: DeepSeek Messages sett
     await scaffold.ctx.agentDefaultModel.saveSelection({ provider: 'deepseek-official', model: 'deepseek-v4-flash' })
     await page.reload({ waitUntil: 'load' })
     const input = page.locator('[data-composer-input]').first()
-    const trigger = page.getByRole('button', { name: '请选择模型', exact: true })
+    const trigger = page.getByRole('button', { name: 'Select model', exact: true })
     await trigger.waitFor()
     expect(scaffold.ctx.agentDefaultModel.currentSelection()).toEqual({
       provider: 'deepseek-official', model: 'deepseek-v4-flash',

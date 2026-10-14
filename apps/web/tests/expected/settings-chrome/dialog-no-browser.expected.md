@@ -8,16 +8,20 @@
     - button "Agent presets"
   - button "Open configuration file"
   - button "Close"
-  - text: Permission Choose the default permission mode for new sessions
+  - text: Permission Edits files inside the workspace and asks before going outside it.
   - button "Workspace Write"
   - text: Language
-  - button "English"
+  - button "Automatic"
+  - text: Appearance
+  - button "Light"
+  - button "Dark" [pressed]
+  - button "System"
   - text: Font size Only affects conversation content 14
   - button "Increase font size"
   - button "Decrease font size"
   - text: px
   - button "More font settings"
-  - text: Work details Choose how much detail to show for tool calls
+  - text: Tool call details Choose how much detail to show for tool calls
   - button "Detailed"
   - text: When to Collapse Work Details Choose when to automatically collapse work details
   - button "On completion"
@@ -30,6 +34,4 @@
   - button "Queue"
   - text: Timing and token usage Choose how much timing and token usage to show under replies
   - button "Detailed"
-  - text: Upload Session Log when using the official model API Help improve DeepSeek models and products.
-  - switch "Upload Session Log when using the official model API"
   - text: "Current version: {{version}}"

@@ -8,58 +8,59 @@
     - list:
       - listitem:
         - button "Edit shortcut for Open keyboard shortcuts"
-        - text: Open keyboard shortcuts Ctrl + /
+        - text: Open keyboard shortcuts ⌘ /
       - listitem:
         - button "Edit shortcut for New Session"
-        - text: New Session Ctrl + Alt + N
+        - text: New Session ⌥ ⌘ N
       - listitem:
         - button "Edit shortcut for Toggle left sidebar"
-        - text: Toggle left sidebar Ctrl + Alt + B
+        - text: Toggle left sidebar ⌥ ⌘ B
       - listitem:
         - button "Edit shortcut for Search sessions"
-        - text: Search sessions Ctrl + Alt + K
+        - text: Search sessions ⌥ ⌘ K
       - listitem:
         - button "Edit shortcut for Add workspace"
-        - text: Add workspace Ctrl + Alt + O
+        - text: Add workspace ⌥ ⌘ O
       - listitem:
         - button "Edit shortcut for Rename session"
-        - text: Rename session Ctrl + Alt + G
+        - text: Rename session ⌥ ⌘ G
       - listitem:
         - button "Edit shortcut for Fork session"
-        - text: Fork session Ctrl + Shift + F
+        - text: Fork session ⇧ ⌘ F
       - listitem:
         - button "Edit shortcut for Archive session"
-        - text: Archive session Ctrl + Alt + A
+        - text: Archive session ⌥ ⌘ A
       - listitem:
         - button "Edit shortcut for Open settings"
-        - text: Open settings Ctrl + Alt + ,
+        - text: Open settings ⌥ ⌘ ,
       - listitem:
         - button "Edit shortcut for Toggle right sidebar"
-        - text: Toggle right sidebar Ctrl + Shift + B
+        - text: Toggle right sidebar ⇧ ⌘ B
       - listitem:
         - button "Edit shortcut for Workspace files"
-        - text: Workspace files Ctrl + Alt + P
+        - text: Workspace files ⌥ ⌘ P
       - listitem:
         - button "Edit shortcut for New terminal"
-        - text: "New terminal Ctrl + `"
+        - text: "New terminal ⌃ `"
       - listitem:
         - button "Edit shortcut for Split"
-        - text: Split Ctrl + \
+        - text: Split ⌘ \
       - listitem:
         - button "Edit shortcut for Toggle panel fullscreen"
-        - text: Toggle panel fullscreen Ctrl + Alt + Enter
+        - text: Toggle panel fullscreen ⌥ ⌘ Enter
       - listitem:
         - button "Edit shortcut for Refresh current page"
-        - text: Refresh current page Ctrl + Alt + R
+        - text: Refresh current page No shortcut
       - listitem:
         - button "Edit shortcut for Close current page or window"
-        - text: Close current page or window Ctrl + Alt + W
+        - text: Close current page or window ⌥ ⌘ W
   - region "Message input":
     - heading "Message input" [level=3]
     - list:
-      - listitem: Use the complementary Queue / Steer action Ctrl + Enter
+      - listitem: Quote ⌘ L
+      - listitem: Use the complementary Queue / Steer action ⌘ Enter
       - listitem: Open reference menu @
-      - listitem: New line Shift + Enter
+      - listitem: New line ⇧ Enter
       - listitem: Send message Enter
       - listitem: Open command menu /
       - listitem: Stop generating Esc Esc

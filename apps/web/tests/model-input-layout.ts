@@ -14,9 +14,9 @@ export async function assertModelInputLayout(page: Page, editor: Locator): Promi
   try {
     for (const viewport of [original, { width: 760, height: 1000 }]) {
       await page.setViewportSize(viewport)
-      const context = await editor.getByLabel('上下文窗口 1', { exact: true }).boundingBox()
-      const output = await editor.getByLabel('最大输出 token 数 1', { exact: true }).boundingBox()
-      const types = await editor.getByRole('group', { name: '输入类型 1' }).boundingBox()
+      const context = await editor.getByLabel('Context window 1', { exact: true }).boundingBox()
+      const output = await editor.getByLabel('Max output tokens 1', { exact: true }).boundingBox()
+      const types = await editor.getByRole('group', { name: 'Input types 1' }).boundingBox()
       expect(context).not.toBeNull()
       expect(output).not.toBeNull()
       expect(types).not.toBeNull()

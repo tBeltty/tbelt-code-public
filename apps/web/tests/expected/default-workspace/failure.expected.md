@@ -1,1 +1,1 @@
-- alert: 无法创建默认工作区，请通过“选择工作区”选择文件夹
+- alert: Unable to create default workspace. Use Choose workspace to select a folder.

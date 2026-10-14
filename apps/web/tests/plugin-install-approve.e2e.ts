@@ -7,7 +7,7 @@ import { fileURLToPath } from 'node:url'
 import { chromium } from 'playwright'
 import { expect, it } from 'vitest'
 import { launchWebScaffold, captureStableAria, compareOrRefreshGolden, webSnapshotMode, watchConsole, type WebScaffold } from './scaffold.ts'
-import { ZH_BROWSER_LOCALE } from './support.ts'
+import { EN_BROWSER_LOCALE } from './support.ts'
 
 it('offers approval for blocked install scripts and installs once they are allowed', async () => {
   const scratch = await mkdtemp(join(tmpdir(), 'dsh-install-approve-'))
@@ -42,31 +42,31 @@ it('offers approval for blocked install scripts and installs once they are allow
         console.log('Built native-package');
         });
       `)
-      const page = await browser.newPage({ viewport: { width: 1440, height: 1000 }, locale: ZH_BROWSER_LOCALE })
+      const page = await browser.newPage({ viewport: { width: 1440, height: 1000 }, locale: EN_BROWSER_LOCALE })
       const tripwire = watchConsole(page)
       await page.goto(scaffold.authenticatedUrl)
       await page.waitForSelector('[class*="frame"]')
-      if (await page.getByRole('dialog', { name: '设置' }).count() > 0) await page.keyboard.press('Escape')
-      await page.getByRole('navigation', { name: '全局面板' }).getByRole('button', { name: '插件', exact: true }).click()
+      if (await page.getByRole('dialog', { name: 'Settings' }).count() > 0) await page.keyboard.press('Escape')
+      await page.getByRole('navigation', { name: 'Global panels' }).getByRole('button', { name: 'Plugins', exact: true }).click()
       const panel = page.locator('[data-plugin-panel]')
-      await panel.getByRole('button', { name: '添加插件', exact: true }).click()
+      await panel.getByRole('button', { name: 'Add plugin', exact: true }).click()
       const dialog = page.getByRole('dialog')
       await dialog.getByRole('textbox').fill('native-package')
-      await dialog.getByRole('button', { name: '安装', exact: true }).click()
+      await dialog.getByRole('button', { name: 'Install', exact: true }).click()
       // pnpm's refusal becomes the approval block, naming the package whose script waits; plain retry is not offered.
-      const approval = dialog.getByRole('group', { name: '需要允许安装脚本' })
+      const approval = dialog.getByRole('group', { name: 'Install scripts need permission' })
       await approval.waitFor({ timeout: 20_000 })
       await expect.poll(() => approval.getByText('native-package', { exact: true }).count()).toBe(1)
-      expect(await dialog.getByRole('button', { name: '重试', exact: true }).count()).toBe(0)
+      expect(await dialog.getByRole('button', { name: 'Retry', exact: true }).count()).toBe(0)
       expect(await readFile(policyPath, 'utf8')).toContain('native-package: set this to true or false')
       const snapshot = (await captureStableAria(page, '[role="dialog"]', scaffold.workspaceCwd))
         .split(process.execPath).join('{{node}}')
         .split(scaffold.harnessHome).join('{{harnessHome}}')
       await compareOrRefreshGolden(fileURLToPath(new URL('./expected/plugin-install-approve/blocked.expected.md', import.meta.url)), snapshot, webSnapshotMode())
-      await approval.getByRole('button', { name: '允许这些脚本并重试', exact: true }).click()
+      await approval.getByRole('button', { name: 'Allow these scripts and retry', exact: true }).click()
       // The Host saved the permission before running pnpm again, and the installed screen says so.
-      await dialog.getByRole('button', { name: '立即启用', exact: true }).waitFor({ timeout: 20_000 })
-      await dialog.getByText('已允许运行安装脚本：native-package', { exact: true }).waitFor()
+      await dialog.getByRole('button', { name: 'Enable now', exact: true }).waitFor({ timeout: 20_000 })
+      await dialog.getByText('Install scripts allowed for native-package', { exact: true }).waitFor()
       expect(await readFile(policyPath, 'utf8')).toMatch(/native-package: true/)
       expect(JSON.parse(await readFile(join(profile, 'package.json'), 'utf8'))).toMatchObject({ dependencies: { 'native-package': '1.0.0' } })
       expect(tripwire.pageErrors).toEqual([])

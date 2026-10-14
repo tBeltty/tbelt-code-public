@@ -14,7 +14,7 @@ import { excelDrawingFixture } from '../../../packages/client/ui-sidebar-documen
 import { xlsFixture } from '../../../packages/client/ui-sidebar-documentpreview/tests/xls-fixture.ts'
 import { pdfFixture, selectionPdfFixture } from '../../../packages/client/ui-sidebar-documentpreview/tests/pdf-fixture.ts'
 import { assertFixtureInventory, compareOrRefreshGolden, launchWebScaffold, watchConsole, webSnapshotMode, type WebScaffold } from './scaffold.ts'
-import { openSettings, connectFreshWorkspace, connectFreshWorkspaceZh, newEnglishPage, saveFailureShot, scrollIntoView } from './support.ts'
+import { EN_BROWSER_LOCALE, openSettings, connectFreshWorkspace, newEnglishPage, saveFailureShot, scrollIntoView } from './support.ts'
 
 const FIXTURE = fileURLToPath(new URL('../../../snapshots/web/lifecycle-chrome/session.v3.jsonl', import.meta.url))
 const SNAPSHOT_DIR = fileURLToPath(new URL('../../../snapshots/web/document-preview', import.meta.url))
@@ -171,7 +171,8 @@ async function expectExcelLayout(excel: Locator): Promise<void> {
   }))).toBe(true)
 }
 
-it.skipIf(MODE === 'record').each(['en-US', 'zh-CN'])('fills the spreadsheet pane with read-only controls in %s', async (locale) => {
+it.skipIf(MODE === 'record')('fills the spreadsheet pane with read-only controls', async () => {
+  const locale = EN_BROWSER_LOCALE
   const scaffold = await launchWebScaffold({ replayFixture: FIXTURE, paceMs: 5, compareReplaySession: false })
   let browser: Browser | undefined
   try {
@@ -180,7 +181,7 @@ it.skipIf(MODE === 'record').each(['en-US', 'zh-CN'])('fills the spreadsheet pan
     const consoleErrors = watchConsole(page)
     onTestFailed(async () => { await saveFailureShot(page, `screenshots/0908-document-preview/excel-resize-${locale}-${process.pid}`) })
     await page.goto(scaffold.authenticatedUrl, { waitUntil: 'load' })
-    await (locale === 'zh-CN' ? connectFreshWorkspaceZh : connectFreshWorkspace)(page, scaffold.workspaceCwd)
+    await connectFreshWorkspace(page, scaffold.workspaceCwd)
     const settled = scaffold.whenTurnSettled()
     const input = page.locator('[data-composer-input]').first()
     await input.fill(PROMPT)
@@ -262,7 +263,7 @@ it.skipIf(MODE === 'record').each(['en-US', 'zh-CN'])('fills the spreadsheet pan
     await expect.poll(() => zoom.innerText()).toBe('150%')
     await zoom.click()
     await excel.locator('.fortune-zoom-ratio-item').getByText('100%', { exact: true }).click()
-    const filesTab = column.locator('[data-dockkit-tab]').filter({ has: page.getByText(locale === 'zh-CN' ? '文件' : 'Files', { exact: true }) })
+    const filesTab = column.locator('[data-dockkit-tab]').filter({ has: page.getByText('Files', { exact: true }) })
     const preview = column.locator('[data-textpreview-url]')
     await openPreviewFile(column, filesTab, preview, 'meeting.xlsx')
     const tabScroller = excel.locator('.fortune-sheettab-container-c')
@@ -850,7 +851,7 @@ else process.exit(1);
       `- Local script: ${await basicHtml.locator('#local-result').innerText()}`,
       `- Network requests: ${previewNetworkRequests}`,
     ].join('\n'))
-    await openSettings(page, 'en')
+    await openSettings(page)
     const settings = page.getByRole('dialog', { name: 'Settings' })
     await settings.getByRole('switch', { name: 'Show coding view' }).click()
     await expect.poll(() => settings.getByRole('switch', { name: 'Show coding view' }).getAttribute('aria-checked')).toBe('true')

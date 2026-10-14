@@ -250,14 +250,14 @@ async function launchDraftFixture(beforeBrowserOpen?: (page: Page, scaffold: Web
 function structuredDraft(sessionId: SessionId, title: string): DraftSnapshot {
   const file = `@"${FILE_NAME}"`
   const folder = '@"目录/"'
-  const session = formatSessionReferenceMention({ sessionId, label: '关联会话 🧩' })
+  const session = formatSessionReferenceMention({ sessionId, label: 'Linked session 🧩' })
   const references: DraftSnapshot['references'] = []
   let text = `${title} 🧭 e\u0301 雪\n`
   for (let repeat = 0; repeat < 2; repeat++) {
     for (const item of [
       { ref: file, label: FILE_NAME, appearance: 'file' },
       { ref: folder, label: '目录/', appearance: 'folder' },
-      { ref: session, label: '关联会话 🧩', appearance: 'session' },
+      { ref: session, label: 'Linked session 🧩', appearance: 'session' },
     ] as const) {
       references.push({
         ...item, offset: text.length, length: item.ref.length,
@@ -394,7 +394,7 @@ it('restores repeated file, folder and Session capsules across edits, Workspace 
       await assertDraft(page, item.id, item.draft)
       await composer(page).click()
       await page.keyboard.press(EDITOR_END)
-      const suffix = ` · 编辑${round} 🧪`
+      const suffix = ` · Edit${round} 🧪`
       await page.keyboard.insertText(suffix)
       item.draft = { ...item.draft, text: item.draft.text + suffix }
       await assertDraft(page, item.id, item.draft)

@@ -29,6 +29,8 @@
     "lib/index.js",
     "lib/markdown.js",
     "skills",
+    "audit-skills",
+    "presets",
     "lib/types/**/*.d.ts"
   ],
   "license": "MIT",

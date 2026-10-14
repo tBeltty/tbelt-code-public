@@ -1,21 +1,21 @@
 - text: 简单画一个 SVG 表示冯诺依曼架构, 保存为 von-neumann.svg {{clock}}
-- button "复制"
-- status: 已完成
-- button "已完成，用时 {{duration}}" [expanded]
-- button "已完成分析" [expanded]
-- button "思考 The user wants a simple SVG diagram of the von Neumann architecture, saved as von-neumann.svg. Let me create a clean SVG showing CPU (control unit, ALU), memory, input, and output with bidirectional data/control buses."
+- button "Copy"
+- status: Completed
+- button "Completed in {{duration}}" [expanded]
+- button "Analysis completed" [expanded]
+- button "Think The user wants a simple SVG diagram of the von Neumann architecture, saved as von-neumann.svg. Let me create a clean SVG showing CPU (control unit, ALU), memory, input, and output with bidirectional data/control buses."
 - paragraph: 我来创建一个冯诺依曼架构的 SVG 示意图。
-- button "已写入文件并调用工具" [expanded]
-- button "写入 von-neumann.svg 6KB +83 -0":
-  - text: 写入
+- button "Wrote files and called tools" [expanded]
+- button "Write von-neumann.svg 6KB +83 -0":
+  - text: Write
   - button "von-neumann.svg"
   - text: 6KB +83 -0
-- button "思考 The file is created. Let me present it as a deliverable."
-- button "交付文件 已交付 von-neumann.svg"
+- button "Think The file is created. Let me present it as a deliverable."
+- button "Present files Delivered von-neumann.svg"
 - paragraph:
   - text: 已创建
   - code:
-    - button "在侧边栏打开 {{cwd}}/workspace/von-neumann.svg": von-neumann.svg
+    - button "Open {{cwd}}/workspace/von-neumann.svg in sidebar": von-neumann.svg
   - text: ，一个简洁的冯诺依曼架构示意图，包含：
 - list:
   - listitem:
@@ -31,13 +31,13 @@
     - strong: 总线连接
     - text: ：CPU 与内存间的地址总线，以及 CPU 与 I/O 设备间的数据/控制线，箭头标明数据流向
 - paragraph: 下方附一行核心思想说明：指令与数据以二进制统一存储在存储器中。用浏览器打开该 SVG 文件即可查看。
-- button "查看 von-neumann.svg 的改动": 已编辑 von-neumann.svg +83 -0
-- text: 此主机没有可用的桌面，无法使用外部程序打开文件或文件夹；文件仍可在侧边栏预览
-- button "在侧边栏预览 {{cwd}}/workspace/von-neumann.svg"
+- button "View changes to von-neumann.svg": Edited von-neumann.svg +83 -0
+- text: This Host has no desktop available to open files or folders in external apps. Files can still be previewed in the sidebar.
+- button "Preview {{cwd}}/workspace/von-neumann.svg in sidebar"
 - text: von-neumann.svg 冯诺依曼架构示意图 SVG
-- button "复制"
-- button "好的回答"
-- button "有问题的回答"
-- button "在新对话中分支"
-- button "用量 32K tok"
+- button "Copy"
+- button "Good response"
+- button "Bad response"
+- button "Branch into a new conversation"
+- button "Usage 32K tok"
 - text: {{clock}}

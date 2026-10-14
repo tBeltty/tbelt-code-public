@@ -2,8 +2,8 @@ name: CI
 
 # The full quality gate needs more than a standard GitHub-hosted runner, so it
 # only runs when started by hand (Actions > CI > Run workflow). Pushes and pull
-# requests run the light checks, which need no dependency install. Every job
-# is skipped in private repositories.
+# requests run the light checks, which install nothing beyond the TypeScript
+# compiler for the locale check. Every job is skipped in private repositories.
 on:
   push:
     branches: [main]
@@ -44,6 +44,19 @@ jobs:
 
       - name: Exact workspace ranges
         run: scripts/check-workspace-ranges.sh
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      # Every locale dictionary must declare the keys English declares. Only
+      # the compiler is installed; the check reads dictionaries from the AST.
+      - name: Locale dictionaries match English
+        run: |
+          ts=$(sed -nE 's#.*"typescript": "\^?([0-9.]+)".*#\1#p' package.json)
+          npm install --no-save --no-package-lock --ignore-scripts --prefix "$RUNNER_TEMP/ts" "typescript@$ts"
+          ln -s "$RUNNER_TEMP/ts/node_modules" node_modules
+          node scripts/verify-locale-parity.ts
 
   primary:
     name: Quality gate (Linux)

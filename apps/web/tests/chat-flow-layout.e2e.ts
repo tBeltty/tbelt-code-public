@@ -13,7 +13,7 @@ it.each(['turn-tail-actions', 'goal-multi-turn-actions', 'present'] as const)(
     onTestFinished(() => scaffold.close())
     if (scenario === 'present') {
       await writeFile(join(scaffold.workspaceCwd, 'report.txt'), 'DELIVERED_REPORT\n')
-      await writeFile(join(scaffold.workspaceCwd, '说明.txt'), 'DELIVERED_NOTE\n')
+      await writeFile(join(scaffold.workspaceCwd, 'Instructions.txt'), 'DELIVERED_NOTE\n')
     }
     const fixture = await selectedSessionFixture(fileURLToPath(
       new URL(`../../../snapshots/web/${scenario}/session.v3.jsonl`, import.meta.url),

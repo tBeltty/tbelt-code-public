@@ -7,7 +7,7 @@ import {
   launchWebScaffold, watchConsole, webSnapshotMode,
   type WebConsoleTripwire, type WebScaffold,
 } from './scaffold.ts'
-import { ZH_BROWSER_LOCALE } from './support.ts'
+import { EN_BROWSER_LOCALE } from './support.ts'
 
 const MODE = webSnapshotMode()
 const MOUNT = '/tools/dsh/'
@@ -25,7 +25,7 @@ describe.skipIf(MODE === 'record')('web e2e: public mount through a prefix-strip
     browser = await chromium.launch()
     page = await browser.newPage({
       viewport: { width: 1440, height: 960 },
-      locale: ZH_BROWSER_LOCALE,
+      locale: EN_BROWSER_LOCALE,
     })
     tripwire = watchConsole(page)
     page.on('request', (request) => { requestUrls.push(request.url()) })
@@ -47,7 +47,7 @@ describe.skipIf(MODE === 'record')('web e2e: public mount through a prefix-strip
   const offMountRequests = (): string[] => requestUrls.filter(url => !url.startsWith(scaffold.baseUrl))
 
   it('loads the shell, its plugin bundles, and the Gateway WebSocket under the mount', async () => {
-    await page.getByRole('button', { name: '新建会话', exact: true }).first().waitFor({ timeout: 15_000 })
+    await page.getByRole('button', { name: 'New session', exact: true }).first().waitFor({ timeout: 15_000 })
     expect(new URL(page.url()).pathname).toBe(MOUNT)
 
     // Every resource the page requested — bundles, manifest, icon, and whatever

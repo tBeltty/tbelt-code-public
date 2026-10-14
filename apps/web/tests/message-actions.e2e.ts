@@ -335,7 +335,7 @@ describe('web e2e: message IconActions and clocks on settled history', () => {
     onTestFailed(() => saveFailureShot(page, 'web-e2e-performance-usage'))
     const stats = page.locator('[data-composer-stat]')
     const statsText = async (): Promise<string> => (await stats.allTextContents()).join(' ')
-    await openSettings(page, 'en')
+    await openSettings(page)
     const dialog = page.getByRole('dialog', { name: 'Settings', exact: true })
     const row = dialog.getByText('Timing and token usage', { exact: true }).locator('../..')
     await row.getByRole('button', { name: 'Detailed', exact: true }).click()
@@ -350,7 +350,7 @@ describe('web e2e: message IconActions and clocks on settled history', () => {
     await compareOrRefreshGolden(join(SNAPSHOT_DIR, 'compact.expected.md'), await captureStableAria(page, '[data-composer-dock]', scaffold.workspaceCwd), MODE)
     const warningStart = tripwire.warnings.length
     await page.reload()
-    await openSettings(page, 'en')
+    await openSettings(page)
     await row.getByRole('button', { name: 'Compact', exact: true }).waitFor()
     acknowledgeReloadConnectionLoss(tripwire, warningStart)
     await row.getByRole('button', { name: 'Compact', exact: true }).click()

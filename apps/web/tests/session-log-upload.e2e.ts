@@ -38,7 +38,7 @@ it.skipIf(webSnapshotMode() === 'record')('persists the upload switch and omits 
     return settled
   }
   const setUpload = async (enabled: boolean) => {
-    await openSettings(page, 'en')
+    await openSettings(page)
     const toggle = page.getByRole('switch', { name: 'Upload Session Log when using the official model API' })
     await expect.poll(() => toggle.getAttribute('aria-checked')).toBe(String(!enabled))
     await toggle.click()
@@ -56,7 +56,7 @@ it.skipIf(webSnapshotMode() === 'record')('persists the upload switch and omits 
   const first = server.requests[0]!.body as { dsh_session_log: { throughSeq: number } }
   await setUpload(false)
   await page.reload()
-  await openSettings(page, 'en')
+  await openSettings(page)
   await expect.poll(() => page.getByRole('switch', { name: 'Upload Session Log when using the official model API' }).getAttribute('aria-checked')).toBe('false')
   await page.keyboard.press('Escape')
   expect(await send('upload-disabled-marker')).toBe(sessionId)

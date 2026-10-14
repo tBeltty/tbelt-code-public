@@ -1,4 +1,4 @@
-/** Web-localized copy for the five shipped presets and declared copy for every other row. */
+/** Web-localized copy for the seven shipped presets and declared copy for every other row. */
 
 import { describe, expect, it } from 'vitest'
 import { en, presetDisplayText, es } from '../src/client/locales.ts'
@@ -11,6 +11,8 @@ describe('preset display copy', () => {
     ['ptc', 'presetPtcName', 'presetPtcDescription'],
     ['minimal', 'presetMinimalName', 'presetMinimalDescription'],
     ['fast', 'presetFastName', 'presetFastDescription'],
+    ['audit-manual', 'presetAuditManualName', 'presetAuditManualDescription'],
+    ['audit-autonomous', 'presetAuditAutoName', 'presetAuditAutoDescription'],
     ['cordis', 'presetCordisName', 'presetCordisDescription'],
   ] as const)('localizes the shipped %s preset in English and Chinese', (id, nameKey, descriptionKey) => {
     const preset = { id }

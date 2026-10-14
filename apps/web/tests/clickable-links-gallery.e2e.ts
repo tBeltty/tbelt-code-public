@@ -467,7 +467,7 @@ describe('web e2e: clickable links gallery', () => {
     await markdown.locator(`a[href="${HTTP_URL}"]`).click()
     await expect.poll(() => browserAddress.inputValue()).toBe(HTTP_URL)
 
-    await openSettings(page, 'en')
+    await openSettings(page)
     await page.getByRole('button', { name: 'In-App Sidebar', exact: true }).click()
     await page.getByRole('menuitem', { name: 'Default Browser', exact: true }).click()
     await expect.poll(() => scaffold.ctx.settings.describe().find(row => row.ns === 'ui-chat')?.value).toMatchObject({ linkOpening: 'new-tab' })
@@ -484,7 +484,7 @@ describe('web e2e: clickable links gallery', () => {
     }
 
     await page.reload()
-    await openSettings(page, 'en')
+    await openSettings(page)
     await page.getByRole('button', { name: 'Default Browser', exact: true }).click()
     await page.getByRole('menuitem', { name: 'In-App Sidebar', exact: true }).click()
     await expect.poll(() => scaffold.ctx.settings.describe().find(row => row.ns === 'ui-chat')?.value).toMatchObject({ linkOpening: 'sidebar' })

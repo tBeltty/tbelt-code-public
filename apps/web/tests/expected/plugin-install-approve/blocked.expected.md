@@ -1,17 +1,17 @@
-- dialog "插件安装失败":
-  - button "返回编辑": 编辑
-  - button "关闭"
-  - alert: 插件安装失败
-  - paragraph: 有依赖的安装脚本需要你允许后才能继续
+- dialog "The plugin could not be installed":
+  - button "Back to editing": Edit
+  - button "Close"
+  - alert: The plugin could not be installed
+  - paragraph: A dependency's install scripts need your permission before the install can continue
   - paragraph: native-package
-  - paragraph: 版本 1.0.0
-  - group "需要允许安装脚本":
-    - heading "需要允许安装脚本" [level=3]
-    - paragraph: 以下包声明了安装脚本，pnpm 默认不运行。
+  - paragraph: Version 1.0.0
+  - group "Install scripts need permission":
+    - heading "Install scripts need permission" [level=3]
+    - paragraph: These packages have install scripts that pnpm did not run.
     - list:
       - listitem:
         - code: native-package
-    - paragraph: 允许后，脚本会以你的权限在本机运行，授权保存在当前 profile，之后不再询问。
-    - paragraph: 只在信任这些包时允许。
-    - button "允许这些脚本并重试"
-  - button "查看安装详情"
+    - paragraph: Once allowed, the scripts run here with your permissions, and the permission is saved in this profile.
+    - paragraph: Allow only packages you trust.
+    - button "Allow these scripts and retry"
+  - button "Show install details"

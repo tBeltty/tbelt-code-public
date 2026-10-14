@@ -26,7 +26,7 @@ import { afterAll, beforeAll, describe, expect, it, onTestFailed } from 'vitest'
 import { createMessage, createUserMessage } from '@deepseek-ai/dsh-llm'
 import { acknowledgeReloadConnectionLoss, launchWebScaffold, watchConsole, type WebScaffold } from './scaffold.ts'
 import {
-  connectFreshWorkspace, newEnglishPage, saveFailureShot, ZH_BROWSER_LOCALE,
+  connectFreshWorkspace, newEnglishPage, saveFailureShot, EN_BROWSER_LOCALE,
 } from './support.ts'
 
 /** The produced file the seeded turn writes, and what the preview should show. */
@@ -1140,8 +1140,8 @@ describe('web e2e: shipped right Sidebar', () => {
     // screenshot it takes is what the copy draft gets reviewed from. It lives in
     // this block because a settled session is its precondition too — a case that
     // depends on a sibling block's setup passes only in the right order.
-    it('renders the shipped Chinese copy on a Chinese page', async () => {
-      const zhPage = await browser.newPage({ viewport: { width: 1680, height: 1000 }, locale: ZH_BROWSER_LOCALE })
+    it('renders the shipped copy on an English page', async () => {
+      const zhPage = await browser.newPage({ viewport: { width: 1680, height: 1000 }, locale: EN_BROWSER_LOCALE })
       await zhPage.addInitScript(() => { Object.defineProperty(navigator, 'platform', { configurable: true, value: 'MacIntel' }) })
       const zhTripwire = watchConsole(zhPage)
       onTestFailed(() => saveFailureShot(zhPage, 'web-e2e-sidebar-right-zh'))
@@ -1155,9 +1155,9 @@ describe('web e2e: shipped right Sidebar', () => {
         const column = zhPage.locator('[data-rightbar-col]')
         await expandOf(zhPage).waitFor({ timeout: 20_000 })
         await expandOf(zhPage).click()
-        await expect.poll(async () => await tabTitles(column)).toEqual(['开始'])
+        await expect.poll(async () => await tabTitles(column)).toEqual(['Start'])
         await column.locator('[data-sidebar-right-guide-entry="files"]').click()
-        await expect.poll(async () => await tabTitles(column)).toEqual(['文件'])
+        await expect.poll(async () => await tabTitles(column)).toEqual(['Files'])
         await column.locator('[data-dockkit-add-tab]').click()
 
         const guide = column.locator('[data-sidebar-right-guide]')
@@ -1166,9 +1166,9 @@ describe('web e2e: shipped right Sidebar', () => {
         // the column has the width, and a screenshot taken mid-transition reads
         // as a layout defect that is not there.
         expect(await width(column)).toBeGreaterThan(300)
-        await expect.poll(async () => await tabTitles(column)).toEqual(['文件', '开始'])
+        await expect.poll(async () => await tabTitles(column)).toEqual(['File', 'Start'])
         await expect.poll(async () => await guide.locator('[data-sidebar-right-guide-entry="files"]').innerText())
-          .toBe('工作区文件\n浏览会话工作区的文件\n⌥\n⌘\nP')
+          .toBe("Workspace files\nBrowse files in this session's workspace\n⌥\n⌘\nP")
         const fileEntry = guide.locator('[data-sidebar-right-guide-entry="files"]')
         const terminalEntry = guide.locator('[data-sidebar-right-guide-entry="terminal"]')
         for (const entry of [fileEntry, terminalEntry]) {

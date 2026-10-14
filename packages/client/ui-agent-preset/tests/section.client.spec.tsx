@@ -191,6 +191,8 @@ it.each([
   ['ptc', en.presetPtcName, 'How tools are called', 'Check a set of configuration files'],
   ['minimal', en.presetMinimalName, 'What is included', 'Compare performance on a small bug fix'],
   ['fast', en.presetFastName, 'What is included', 'Fix a small bug'],
+  ['audit-manual', en.presetAuditManualName, 'How it works', 'Migrate a module in phases'],
+  ['audit-autonomous', en.presetAuditAutoName, 'How it works', 'Migrate a module in phases'],
   ['cordis', en.presetCordisName, 'What you can create', 'Add a UI'],
 ])('opens both help sections for %s without changing the default', (id, name, heading, exampleTitle) => {
   const actions = view({ rows: [{ id, isDefault: false }] })

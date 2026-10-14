@@ -3,7 +3,7 @@ import { fileURLToPath } from 'node:url'
 import { chromium } from 'playwright'
 import { describe, expect, it, onTestFinished } from 'vitest'
 import { compareOrRefreshGolden, launchWebScaffold, watchConsole, webSnapshotMode } from './scaffold.ts'
-import { saveFailureShot } from './support.ts'
+import { EN_BROWSER_LOCALE, saveFailureShot } from './support.ts'
 
 const NOTICE_EXPECTED = fileURLToPath(new URL('./expected/new-session-refused/notice.expected.md', import.meta.url))
 const MODE = webSnapshotMode()
@@ -27,19 +27,19 @@ describe.skipIf(MODE === 'record')('web e2e: refused New Session', () => {
     onTestFinished(() => scaffold.close())
     const browser = await chromium.launch()
     try {
-      const page = await browser.newPage({ locale: 'zh-CN', timezoneId: 'Asia/Shanghai' })
+      const page = await browser.newPage({ locale: EN_BROWSER_LOCALE, timezoneId: 'Asia/Shanghai' })
       const tripwire = watchConsole(page)
       try {
         await page.goto(scaffold.authenticatedUrl)
         // Startup prepares the default Workspace, and its own blank-Session
         // attempt is refused without a notice: the hero stays on the picker.
-        await page.getByRole('button', { name: '选择工作区', exact: true }).waitFor()
+        await page.getByRole('button', { name: 'Choose workspace', exact: true }).waitFor()
         await expect.poll(() => scaffold.ctx.workspaceRegistry.list().length).toBe(1)
         expect(scaffold.ctx.sessions.list()).toEqual([])
         expect(await page.getByRole('alert').count()).toBe(0)
 
-        await page.getByRole('button', { name: '新建会话', exact: true }).first().click()
-        const notice = page.getByRole('alert').filter({ hasText: '新建会话失败' })
+        await page.getByRole('button', { name: 'New session', exact: true }).first().click()
+        const notice = page.getByRole('alert').filter({ hasText: 'New session failed' })
         await notice.waitFor()
         await compareOrRefreshGolden(NOTICE_EXPECTED, await notice.ariaSnapshot(), MODE)
         expect(scaffold.ctx.sessions.list()).toEqual([])

@@ -1,11 +1,11 @@
-- dialog "添加插件":
-  - heading "添加插件" [level=2]
-  - button "关闭"
-  - paragraph: 输入插件的包名、GitHub 仓库地址或本地目录路径。
-  - textbox "包名或地址":
-    - /placeholder: 例如 dsh-plugin-whale-pet
+- dialog "Add plugin":
+  - heading "Add plugin" [level=2]
+  - button "Close"
+  - paragraph: Enter the plugin's package name, GitHub repository address, or local directory path.
+  - textbox "Package name or address":
+    - /placeholder: for example dsh-plugin-whale-pet
     - text: slow-package
-  - button "插件安装引导和示例"
-  - button "安装源 默认安装源"
-  - note: 请确认插件来源可信。插件在本机以你的权限运行，来源不明的插件可能损坏 tBelt Code，或读取和泄露你的数据。 按需安装的官方插件会在版本与 DSH 不同时提供“更新”。其他插件请先卸载再安装新版。
-  - button "安装"
+  - button "Install guide and examples"
+  - button "Registry Default registry"
+  - note: "Install only plugins you trust: they run with your permissions and can damage tBelt Code or leak your data. On-demand Official plugins offer Update when their version differs from tBelt Code. To update other plugins, uninstall and reinstall them."
+  - button "Install"

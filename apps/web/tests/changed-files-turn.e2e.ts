@@ -15,7 +15,7 @@ import {
   fixtureUserPrompts, launchWebScaffold, recordFixture, watchConsole,
   webSnapshotMode, type WebScaffold,
 } from './scaffold.ts'
-import { openSettings, connectFreshWorkspaceZh, expandOwningTurnProcess, ZH_BROWSER_LOCALE } from './support.ts'
+import { openSettings, connectFreshWorkspace, expandOwningTurnProcess, EN_BROWSER_LOCALE } from './support.ts'
 
 const DIR = fileURLToPath(new URL('../../../snapshots/web/changed-files-turn', import.meta.url))
 const FIXTURE = join(DIR, 'session.v3.jsonl')
@@ -84,13 +84,13 @@ describe('web e2e: a git workspace turn ends with its changed files', () => {
     await seedRepository(join(scaffold.workspaceCwd, 'workspace'))
     browser = await chromium.launch()
     const context = await browser.newContext({
-      viewport: { width: 1680, height: 1000 }, locale: ZH_BROWSER_LOCALE, timezoneId: 'Asia/Shanghai',
+      viewport: { width: 1680, height: 1000 }, locale: EN_BROWSER_LOCALE, timezoneId: 'Asia/Shanghai',
     })
     page = await context.newPage()
     tripwire = watchConsole(page)
     await page.goto(scaffold.authenticatedUrl, { waitUntil: 'load' })
     await page.waitForSelector('[class*="frame"]')
-    await connectFreshWorkspaceZh(page, scaffold.workspaceCwd)
+    await connectFreshWorkspace(page, scaffold.workspaceCwd)
   })
 
   afterAll(async () => {
@@ -205,20 +205,20 @@ describe('web e2e: a git workspace turn ends with its changed files', () => {
     expect(await header.getByRole('tablist').count()).toBe(0)
     const compactHeight = await header.evaluate(element => element.getBoundingClientRect().height)
     expect(compactHeight).toBeLessThan(60)
-    await openSettings(page, 'zh')
-    const settings = page.getByRole('dialog', { name: '设置' })
-    await settings.getByRole('switch', { name: '显示代码工作视图' }).click()
-    await expect.poll(() => settings.getByRole('switch', { name: '显示代码工作视图' }).getAttribute('aria-checked')).toBe('true')
-    await settings.getByRole('button', { name: '关闭', exact: true }).click()
+    await openSettings(page)
+    const settings = page.getByRole('dialog', { name: 'Settings' })
+    await settings.getByRole('switch', { name: 'Show coding view' }).click()
+    await expect.poll(() => settings.getByRole('switch', { name: 'Show coding view' }).getAttribute('aria-checked')).toBe('true')
+    await settings.getByRole('button', { name: 'Close', exact: true }).click()
     await header.getByRole('tablist').waitFor({ state: 'visible' })
     expect(await header.evaluate(element => element.getBoundingClientRect().height)).toBeGreaterThan(compactHeight)
     await card.waitFor({ state: 'visible' })
-    expect(await card.getByText('已编辑 4 个文件', { exact: true }).count()).toBe(1)
+    expect(await card.getByText('Edited 4 files', { exact: true }).count()).toBe(1)
     expect(await card.getByRole('listitem').count()).toBe(4)
-    expect(await card.getByRole('button', { name: '展开全部 4 个改动文件' }).count()).toBe(0)
+    expect(await card.getByRole('button', { name: 'Show all 4 changed files' }).count()).toBe(0)
     // The header and every row open the turn's review in the Sidebar, with or without a Host desktop.
-    expect(await card.getByRole('button', { name: '在侧边栏查看本轮改动' }).count()).toBe(1)
-    expect(await card.getByRole('button', { name: '查看 notes.txt 的改动' }).count()).toBe(1)
+    expect(await card.getByRole('button', { name: 'Review this turn’s changes in the sidebar' }).count()).toBe(1)
+    expect(await card.getByRole('button', { name: 'View changes to notes.txt' }).count()).toBe(1)
     const geometry = await card.evaluate((element) => {
       const requiredElement = <T extends Element>(value: T | null | undefined, name: string): T => {
         if (value === null || value === undefined) throw new Error(`changed-files layout is missing ${name}`)
@@ -272,7 +272,7 @@ describe('web e2e: a git workspace turn ends with its changed files', () => {
 
   it('previews a single column with a scrollable path and no file notes or hunk headers', async () => {
     const card = page.locator('[data-changed-files]')
-    const row = card.getByRole('button', { name: '查看 notes.txt 的改动' })
+    const row = card.getByRole('button', { name: 'View changes to notes.txt' })
     const preview = page.locator('[data-changes-hover-preview]')
     const entrance = hoverOpacityTransition(page, false)
     await row.hover()
@@ -315,7 +315,7 @@ describe('web e2e: a git workspace turn ends with its changed files', () => {
     const review = page.locator('[data-changes-review]')
     await review.locator('[data-review-file="notes.txt"]').waitFor({ state: 'visible' })
     await review.locator('[data-review-view="unified"]').waitFor({ state: 'visible' })
-    await card.getByRole('button', { name: '查看 src/util.ts 的改动' }).hover()
+    await card.getByRole('button', { name: 'View changes to src/util.ts' }).hover()
     await preview.locator('[data-diff-code]').first().waitFor({ state: 'visible' })
     expect(await preview.locator('[data-review-view="unified"]').count()).toBe(1)
     expect(await preview.locator('[data-diff-note]').isVisible()).toBe(false)
@@ -347,11 +347,11 @@ describe('web e2e: a git workspace turn ends with its changed files', () => {
       root.locator('[data-diff-line]').evaluateAll(lines => lines.map(line => `${line.getAttribute('data-diff-line')}:${line.textContent}`))
     const review = column.locator('[data-changes-review]')
     // The header lands on the first listed file; a row lands on its own.
-    await card.getByRole('button', { name: '在侧边栏查看本轮改动' }).click()
+    await card.getByRole('button', { name: 'Review this turn’s changes in the sidebar' }).click()
     await review.locator('[data-review-file="app.local"]').waitFor({ state: 'visible' })
-    await card.getByRole('button', { name: '查看 notes.txt 的改动' }).click()
+    await card.getByRole('button', { name: 'View changes to notes.txt' }).click()
     await review.locator('[data-review-file="notes.txt"]').waitFor({ state: 'visible' })
-    expect(await column.locator('[data-dockkit-tab]').filter({ hasText: '第 1 轮改动' }).count()).toBe(1)
+    expect(await column.locator('[data-dockkit-tab]').filter({ hasText: 'Review · turn 1' }).count()).toBe(1)
     await review.locator('[data-review-view="unified"]').waitFor({ state: 'visible' })
     const compareTool = review.locator('[data-review-tool="split"]')
     const wrapTool = review.locator('[data-review-tool="wrap"]')
@@ -443,7 +443,7 @@ describe('web e2e: a git workspace turn ends with its changed files', () => {
     expect(addedRule.numberLeft).toBeCloseTo(rightContextRule.numberLeft, 1)
     expect(addedRule.textLeft).toBeCloseTo(rightContextRule.textLeft, 1)
     // The ignored file has no snapshot; its comparison comes from the copies captured around the write call.
-    await review.getByRole('button', { name: '选择要查看的文件' }).click()
+    await review.getByRole('button', { name: 'Choose the file to review' }).click()
     const selectedAlignment = await page.getByRole('menuitem').filter({ hasText: 'notes.txt' }).evaluate((row) => {
       const center = (element: Element) => {
         const rect = element.getBoundingClientRect()
@@ -462,11 +462,11 @@ describe('web e2e: a git workspace turn ends with its changed files', () => {
     await review.locator('[data-review-file="app.local"]').waitFor({ state: 'visible' })
     await expect.poll(() => drawn(review)).toEqual(['add:1+mode=demo'])
     expect(await compareTool.getAttribute('aria-pressed')).toBe('true')
-    expect(await review.getByText('本轮新建的文件').count()).toBe(1)
+    expect(await review.getByText('Created in this turn').count()).toBe(1)
     // A mixed comparison uses the tab's retained split preference.
-    await card.getByRole('button', { name: '查看 intro.md 的改动' }).click()
+    await card.getByRole('button', { name: 'View changes to intro.md' }).click()
     await review.locator('[data-review-file="intro.md"]').waitFor({ state: 'visible' })
-    expect(await column.locator('[data-dockkit-tab]').filter({ hasText: '第 1 轮改动' }).count()).toBe(1)
+    expect(await column.locator('[data-dockkit-tab]').filter({ hasText: 'Review · turn 1' }).count()).toBe(1)
     await review.locator('[data-review-view="split"]').waitFor({ state: 'visible' })
     expect(await compareTool.getAttribute('aria-pressed')).toBe('true')
     const deletedLine = review.locator('[data-diff-side="left"] [data-diff-line="del"]').first()
@@ -542,7 +542,7 @@ describe('web e2e: a git workspace turn ends with its changed files', () => {
     } finally {
       await scrollLayout.evaluate(element => element.parentNode!.removeChild(element))
     }
-    await review.getByRole('button', { name: '自动换行' }).click()
+    await review.getByRole('button', { name: 'Line wrap' }).click()
     await review.locator('[data-review-view][data-review-wrap]').waitFor({ state: 'visible' })
     await expect.poll(() => drawn(review)).toEqual(['del:1# 示例项目1# 项目说明', 'context:22', 'context:3一个用于演示的仓库。3一个用于演示的仓库。'])
     const wrappedAddition = review.locator('[data-diff-line="del"] > span').nth(1)
@@ -567,7 +567,7 @@ describe('web e2e: a git workspace turn ends with its changed files', () => {
 
   it.skipIf(MODE === 'record')('keeps the file menu aligned while dragging the floating review', async () => {
     const column = page.locator('[data-rightbar-col]')
-    const tab = column.locator('[data-dockkit-tab]').filter({ hasText: '第 1 轮改动' })
+    const tab = column.locator('[data-dockkit-tab]').filter({ hasText: 'Review · turn 1' })
     const tabBox = await tab.boundingBox()
     if (tabBox === null) throw new Error('review tab is not rendered')
     await page.mouse.move(tabBox.x + 6, tabBox.y + tabBox.height / 2)
@@ -579,7 +579,7 @@ describe('web e2e: a git workspace turn ends with its changed files', () => {
     }
     const floating = page.locator('[data-dockkit-float]').filter({ has: page.locator('[data-changes-review]') })
     await floating.waitFor({ state: 'visible' })
-    const selector = floating.getByRole('button', { name: '选择要查看的文件' })
+    const selector = floating.getByRole('button', { name: 'Choose the file to review' })
     await selector.click()
     const menu = page.getByRole('menu')
     await menu.waitFor({ state: 'visible' })
@@ -615,7 +615,7 @@ describe('web e2e: a git workspace turn ends with its changed files', () => {
 
   it('keeps edge gestures inside either diff column and accepts reverse scrolling', async () => {
     const review = page.locator('[data-changes-review]')
-    await review.getByRole('button', { name: '自动换行' }).click()
+    await review.getByRole('button', { name: 'Line wrap' }).click()
     const body = review.locator('[data-review-view="split"]:not([data-review-wrap])')
     await body.waitFor({ state: 'visible' })
     // A scrollable parent makes escaped edge gestures observable without native trackpad rebound.
@@ -627,7 +627,7 @@ describe('web e2e: a git workspace turn ends with its changed files', () => {
     onTestFinished(async () => {
       await layout.evaluate(element => element.parentNode!.removeChild(element))
       await body.evaluate((element) => { element.scrollTo(0, 0) })
-      await review.getByRole('button', { name: '自动换行' }).click()
+      await review.getByRole('button', { name: 'Line wrap' }).click()
     })
     const input = await page.context().newCDPSession(page)
     try {
@@ -683,7 +683,7 @@ describe('web e2e: a git workspace turn ends with its changed files', () => {
       hunks: [{ oldStart: 1, oldLines: 1, newStart: 1, newLines: 2, lines: ['-before', '+after', '+extra'] }],
     } }))
     await preview.goto(scaffold.authenticatedUrl, { waitUntil: 'load' })
-    await preview.locator('[data-changed-files]').getByRole('button', { name: '查看 notes.txt 的改动' }).click()
+    await preview.locator('[data-changed-files]').getByRole('button', { name: 'View changes to notes.txt' }).click()
     const review = preview.locator('[data-changes-review]')
     await review.locator('[data-review-view="split"]').waitFor({ state: 'visible' })
     const emptyRowLayout = await preview.addStyleTag({ content: `
@@ -742,9 +742,9 @@ describe('web e2e: a git workspace turn ends with its changed files', () => {
       } })
     })
     await preview.goto(scaffold.authenticatedUrl, { waitUntil: 'load' })
-    await preview.locator('[data-changed-files]').getByRole('button', { name: '在侧边栏查看本轮改动' }).click()
+    await preview.locator('[data-changed-files]').getByRole('button', { name: 'Review this turn’s changes in the sidebar' }).click()
     const review = preview.locator('[data-changes-review]')
-    const selector = review.getByRole('button', { name: '选择要查看的文件' })
+    const selector = review.getByRole('button', { name: 'Choose the file to review' })
     const label = selector.locator('[data-path-label]')
     const layout = await preview.addStyleTag({ content: '[data-sidebar-right-panel] { width: 340px !important; }' })
     const resize = async (width: number) => {

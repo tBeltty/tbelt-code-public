@@ -1,10 +1,10 @@
-- region "账号与余额":
+- region "Account":
   - text: Radius example
   - status: r***@example.com
-  - link "更多账号信息":
+  - link "More account information":
     - /url: https://platform.deepseek.com/
-  - text: 充值余额 ¥128.50 赠金余额 ¥12.00 更多
-  - link "查询用量":
+  - text: Topped-up balance ¥128.50 Granted balance ¥12.00 More
+  - link "View usage":
     - /url: https://platform.deepseek.com/usage
-  - link "充值":
+  - link "Top up":
     - /url: https://platform.deepseek.com/top_up

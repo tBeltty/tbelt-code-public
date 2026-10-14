@@ -16,14 +16,14 @@ import {
   acknowledgeReloadConnectionLoss, assertFixtureInventory, captureStableAria, compareOrRefreshGolden,
   launchWebScaffold, watchConsole, webSnapshotMode, type WebScaffold,
 } from './scaffold.ts'
-import { openSettings, ZH_BROWSER_LOCALE, saveFailureShot } from './support.ts'
+import { openSettings, EN_BROWSER_LOCALE, saveFailureShot } from './support.ts'
 
 const SNAPSHOT_DIR = fileURLToPath(new URL('./expected/onboarding-deepseek-config', import.meta.url))
 const ONBOARDING_EXPECTED = join(SNAPSHOT_DIR, 'onboarding.expected.md')
 const MISSING_EXPECTED = join(SNAPSHOT_DIR, 'missing.expected.md')
 const MODELS_EXPECTED = join(SNAPSHOT_DIR, 'models.expected.md')
 const DEFAULT_MODELS_EXPECTED = join(SNAPSHOT_DIR, 'default-models.expected.md')
-const ONBOARDING_STEP = '选择一个模型提供方开始使用'
+const ONBOARDING_STEP = 'Choose a model provider to get started'
 const MODE = webSnapshotMode()
 
 describe.skipIf(MODE === 'record')('web e2e: first-run DeepSeek credential setup', () => {
@@ -36,8 +36,7 @@ describe.skipIf(MODE === 'record')('web e2e: first-run DeepSeek credential setup
   beforeAll(async () => {
     scaffold = await launchWebScaffold({ deepSeekMissingCredential: true })
     browser = await chromium.launch()
-    // The scenario asserts the shipped Chinese copy, so the browser asks for it.
-    page = await browser.newPage({ viewport: { width: 1440, height: 960 }, locale: ZH_BROWSER_LOCALE })
+    page = await browser.newPage({ viewport: { width: 1440, height: 960 }, locale: EN_BROWSER_LOCALE })
     tripwire = watchConsole(page)
     page.on('console', message => browserConsole.push(message.text()))
     await page.goto(scaffold.authenticatedUrl, { waitUntil: 'load' })
@@ -61,26 +60,26 @@ describe.skipIf(MODE === 'record')('web e2e: first-run DeepSeek credential setup
     // templates and a custom-provider form, none of which is the shipped
     // DeepSeek row. Deferring it is how a user reaches that row's own edit
     // form on the ordinary Models surface.
-    await onboarding.getByRole('button', { name: '稍后配置' }).click()
+    await onboarding.getByRole('button', { name: 'Configure later' }).click()
     await onboarding.waitFor({ state: 'detached', timeout: 15_000 })
     expect(await page.locator('#root').evaluate(root => (root as HTMLElement).inert)).toBe(false)
 
-    await page.getByRole('button', { name: '设置', exact: true }).click()
-    const settings = page.getByRole('dialog', { name: '设置' })
+    await page.getByRole('button', { name: 'Settings', exact: true }).click()
+    const settings = page.getByRole('dialog', { name: 'Settings' })
     await settings.waitFor({ timeout: 10_000 })
-    await settings.getByRole('button', { name: '模型' }).click()
+    await settings.getByRole('button', { name: 'Models' }).click()
     const deepSeekRow = settings.getByText('DeepSeek', { exact: true }).first()
     await deepSeekRow.waitFor({ timeout: 10_000 })
     // Unconfigured, the row starts with its own edit form already open — no
     // separate Edit click, unlike a row that already has a stored key.
-    const keyInput = settings.getByLabel('API 密钥', { exact: true })
+    const keyInput = settings.getByLabel('API key', { exact: true })
     await keyInput.waitFor({ timeout: 10_000 })
     const initial = await captureStableAria(page, '[role="dialog"]', scaffold.workspaceCwd)
     await compareOrRefreshGolden(MISSING_EXPECTED, initial, MODE)
 
     const secret = `dsh_onboarding_${randomBytes(12).toString('hex')}`
     await keyInput.fill(secret)
-    await settings.getByRole('button', { name: '保存', exact: true }).click()
+    await settings.getByRole('button', { name: 'Save', exact: true }).click()
     await keyInput.waitFor({ state: 'detached', timeout: 15_000 })
 
     const stored = await readFile(join(scaffold.harnessHome, '.credentials.yaml'), 'utf8')
@@ -91,8 +90,8 @@ describe.skipIf(MODE === 'record')('web e2e: first-run DeepSeek credential setup
 
     // The ordinary Models surface reuses the refreshed join and exposes the
     // configured write-only placeholder without a reload.
-    await deepSeekRow.locator('xpath=ancestor::li').getByRole('button', { name: '编辑' }).click()
-    const configuredInput = settings.getByLabel('API 密钥', { exact: true })
+    await deepSeekRow.locator('xpath=ancestor::li').getByRole('button', { name: 'Edit' }).click()
+    const configuredInput = settings.getByLabel('API key', { exact: true })
     await configuredInput.waitFor({ timeout: 10_000 })
     await expect.poll(
       () => configuredInput.getAttribute('placeholder'),
@@ -130,7 +129,7 @@ describe.skipIf(MODE === 'record')('web e2e: first-run DeepSeek credential setup
       const sightings: string[] = []
       ;(window as unknown as { __takeoverSightings: string[] }).__takeoverSightings = sightings
       setInterval(() => {
-        if (document.querySelector('[role="dialog"][aria-label="选择一个模型提供方开始使用"]') !== null) {
+        if (document.querySelector('[role="dialog"][aria-label="Choose a model provider to get started"]') !== null) {
           sightings.push('chrome')
         }
         if (document.getElementById('root')?.inert === true) sightings.push('inert')
@@ -168,29 +167,29 @@ describe.skipIf(MODE === 'record')('web e2e: first-run DeepSeek credential setup
     onTestFailed(() => saveFailureShot(page, 'web-e2e-onboarding-deepseek-models'))
     // Opened here rather than inherited: the credential test reloads the page
     // after configuring the key, so nothing carries an open dialog across.
-    await openSettings(page, 'zh')
-    const settings = page.getByRole('dialog', { name: '设置' })
+    await openSettings(page)
+    const settings = page.getByRole('dialog', { name: 'Settings' })
     await settings.waitFor({ timeout: 10_000 })
-    await settings.getByRole('button', { name: '模型', exact: true }).click()
+    await settings.getByRole('button', { name: 'Models', exact: true }).click()
     const deepSeek = settings.getByText('DeepSeek', { exact: true }).first()
     await deepSeek.waitFor({ timeout: 10_000 })
-    await deepSeek.locator('xpath=ancestor::li').getByRole('button', { name: '编辑' }).click()
-    await settings.getByText('自定义设置').click()
-    expect(await settings.getByLabel('模型 ID 1').inputValue()).toBe('deepseek-flash')
-    expect(await settings.getByLabel('显示名称 1').inputValue()).toBe('DeepSeek-V4.1-Flash')
-    expect(await settings.getByLabel('模型 ID 2').inputValue()).toBe('deepseek-v4-pro')
-    expect(await settings.getByRole('button', { name: /删除模型/ }).count()).toBe(2)
-    await settings.getByRole('button', { name: '模型选项 1' }).click()
-    expect(await settings.getByRole('group', { name: '输入类型 1' }).getByRole('checkbox', { name: '图片' }).isChecked()).toBe(true)
+    await deepSeek.locator('xpath=ancestor::li').getByRole('button', { name: 'Edit' }).click()
+    await settings.getByText('Customized settings').click()
+    expect(await settings.getByLabel('Model ID 1').inputValue()).toBe('deepseek-flash')
+    expect(await settings.getByLabel('Display name 1').inputValue()).toBe('DeepSeek-V4.1-Flash')
+    expect(await settings.getByLabel('Model ID 2').inputValue()).toBe('deepseek-v4-pro')
+    expect(await settings.getByRole('button', { name: /Delete model/ }).count()).toBe(2)
+    await settings.getByRole('button', { name: 'Model options 1' }).click()
+    expect(await settings.getByRole('group', { name: 'Input types 1' }).getByRole('checkbox', { name: 'Image' }).isChecked()).toBe(true)
     await assertModelInputLayout(page, settings)
     const defaultModels = await captureStableAria(page, '[role="dialog"]', scaffold.workspaceCwd)
     await compareOrRefreshGolden(DEFAULT_MODELS_EXPECTED, defaultModels, MODE)
-    await settings.getByLabel('显示名称 1').fill('Configured Flash')
-    await settings.getByRole('group', { name: '输入类型 1' }).getByRole('checkbox', { name: '图片' }).uncheck()
-    await settings.getByRole('button', { name: '保存', exact: true }).click()
-    await settings.getByLabel('模型 ID 1').waitFor({ state: 'detached', timeout: 15_000 })
+    await settings.getByLabel('Display name 1').fill('Configured Flash')
+    await settings.getByRole('group', { name: 'Input types 1' }).getByRole('checkbox', { name: 'Image' }).uncheck()
+    await settings.getByRole('button', { name: 'Save', exact: true }).click()
+    await settings.getByLabel('Model ID 1').waitFor({ state: 'detached', timeout: 15_000 })
     // The save notice settles the directory refresh before Edit clears it for the next draft.
-    await settings.getByText('已保存 DeepSeek (deepseek-official)。', { exact: true }).waitFor({ timeout: 15_000 })
+    await settings.getByText('Saved DeepSeek (deepseek-official).', { exact: true }).waitFor({ timeout: 15_000 })
     const savedDefaults = await readFile(join(scaffold.harnessHome, 'profiles', 'scaffold', 'cordis.patch.yml'), 'utf8')
     expect(savedDefaults).toContain('id: deepseek-flash')
     expect(savedDefaults).toContain('inputModalities:')
@@ -202,30 +201,30 @@ describe.skipIf(MODE === 'record')('web e2e: first-run DeepSeek credential setup
     await expect(scaffold.ctx.llm.resolveModelInfo('deepseek-official', 'deepseek-v4-pro')).resolves.toMatchObject({
       name: 'DeepSeek-V4-Pro', inputModalities: ['text'],
     })
-    await deepSeek.locator('xpath=ancestor::li').getByRole('button', { name: '编辑' }).click()
-    await settings.getByText('自定义设置').click()
+    await deepSeek.locator('xpath=ancestor::li').getByRole('button', { name: 'Edit' }).click()
+    await settings.getByText('Customized settings').click()
     for (let index = 0; index < 2; index++) {
-      await settings.getByRole('button', { name: /删除模型/ }).first().click()
+      await settings.getByRole('button', { name: /Delete model/ }).first().click()
     }
-    await settings.getByRole('button', { name: '添加模型', exact: true }).click()
-    const customModelId = settings.getByLabel('模型 ID 1')
+    await settings.getByRole('button', { name: 'Add model', exact: true }).click()
+    const customModelId = settings.getByLabel('Model ID 1')
     await customModelId.fill('private-preview')
-    await settings.getByLabel('显示名称 1').fill('Private Preview')
-    await settings.getByRole('button', { name: '模型选项 1' }).click()
-    await settings.getByLabel('上下文窗口 1').fill('131072')
-    await settings.getByLabel('最大输出 token 数 1').fill('64K')
-    expect(await settings.getByRole('group', { name: '输入类型 1' }).getByRole('checkbox', { name: '图片' }).isChecked()).toBe(false)
-    await settings.getByRole('group', { name: '输入类型 1' }).getByRole('checkbox', { name: '图片' }).check()
+    await settings.getByLabel('Display name 1').fill('Private Preview')
+    await settings.getByRole('button', { name: 'Model options 1' }).click()
+    await settings.getByLabel('Context window 1').fill('131072')
+    await settings.getByLabel('Max output tokens 1').fill('64K')
+    expect(await settings.getByRole('group', { name: 'Input types 1' }).getByRole('checkbox', { name: 'Image' }).isChecked()).toBe(false)
+    await settings.getByRole('group', { name: 'Input types 1' }).getByRole('checkbox', { name: 'Image' }).check()
 
     await expect.poll(
-      () => settings.getByLabel('API 密钥', { exact: true }).getAttribute('placeholder'),
+      () => settings.getByLabel('API key', { exact: true }).getAttribute('placeholder'),
       { timeout: 10_000 },
     ).toBe('已配置——输入新值可替换')
     const modelEditor = await captureStableAria(page, '[role="dialog"]', scaffold.workspaceCwd)
     await compareOrRefreshGolden(MODELS_EXPECTED, modelEditor, MODE)
-    await settings.getByRole('button', { name: '保存', exact: true }).click()
+    await settings.getByRole('button', { name: 'Save', exact: true }).click()
     await customModelId.waitFor({ state: 'detached', timeout: 15_000 })
-    await settings.getByText('已保存 DeepSeek (deepseek-official)。', { exact: true }).waitFor({ timeout: 15_000 })
+    await settings.getByText('Saved DeepSeek (deepseek-official).', { exact: true }).waitFor({ timeout: 15_000 })
 
     const document = await readFile(join(scaffold.harnessHome, 'profiles', 'scaffold', 'cordis.patch.yml'), 'utf8')
     expect(document).toContain('id: private-preview')
@@ -236,11 +235,11 @@ describe.skipIf(MODE === 'record')('web e2e: first-run DeepSeek credential setup
     await expect(scaffold.ctx.llm.resolveModelInfo('deepseek-official', 'private-preview')).resolves.toMatchObject({
       inputModalities: ['text', 'image'],
     })
-    await deepSeek.locator('xpath=ancestor::li').getByRole('button', { name: '编辑' }).click()
-    await settings.getByText('自定义设置').click()
-    await settings.getByRole('button', { name: '模型选项 1' }).click()
-    expect(await settings.getByRole('group', { name: '输入类型 1' }).getByRole('checkbox', { name: '图片' }).isChecked()).toBe(true)
-    await settings.getByRole('button', { name: '取消', exact: true }).click()
+    await deepSeek.locator('xpath=ancestor::li').getByRole('button', { name: 'Edit' }).click()
+    await settings.getByText('Customized settings').click()
+    await settings.getByRole('button', { name: 'Model options 1' }).click()
+    expect(await settings.getByRole('group', { name: 'Input types 1' }).getByRole('checkbox', { name: 'Image' }).isChecked()).toBe(true)
+    await settings.getByRole('button', { name: 'Cancel', exact: true }).click()
 
     await page.keyboard.press('Escape')
     await settings.waitFor({ state: 'detached', timeout: 10_000 })
@@ -248,18 +247,18 @@ describe.skipIf(MODE === 'record')('web e2e: first-run DeepSeek credential setup
     // trigger — on the page; the scaffold boots without one. Deleting the
     // previously selected model just above leaves nothing selected, so the
     // composer's placeholder reads "select a model first" rather than the
-    // ordinary hero text connectFreshWorkspaceZh waits for; wait on the model
+    // ordinary hero text connectFreshWorkspace waits for; wait on the model
     // trigger itself instead, which is what this scenario actually needs.
     const workspaceName = 'model-fallback-e2e'
     mkdirSync(join(scaffold.workspaceCwd, workspaceName), { recursive: true })
-    await page.getByRole('textbox', { name: '选择工作区' }).click()
-    const workspaceDialog = page.getByRole('dialog', { name: '选择工作区目录' })
+    await page.getByRole('textbox', { name: 'Choose workspace' }).click()
+    const workspaceDialog = page.getByRole('dialog', { name: 'Select Workspace Directory' })
     await workspaceDialog.waitFor({ timeout: 10_000 })
-    await workspaceDialog.getByRole('button', { name: '编辑路径' }).click()
-    const pathInput = workspaceDialog.getByRole('textbox', { name: '编辑路径' })
+    await workspaceDialog.getByRole('button', { name: 'Edit path' }).click()
+    const pathInput = workspaceDialog.getByRole('textbox', { name: 'Edit path' })
     await pathInput.fill(join(scaffold.workspaceCwd, workspaceName))
     await pathInput.press('Enter')
-    await workspaceDialog.getByRole('button', { name: '打开', exact: true }).click()
+    await workspaceDialog.getByRole('button', { name: 'Open', exact: true }).click()
 
     const modelTrigger = page.getByRole('button', { name: /^(请)?选择模型|unconfigured\/none/ })
     await modelTrigger.waitFor({ timeout: 10_000 })
@@ -275,11 +274,11 @@ describe.skipIf(MODE === 'record')('web e2e: first-run DeepSeek credential setup
     await page.keyboard.press('Escape')
     const selection = scaffold.ctx.agentDefaultModel.currentSelection()
     await scaffold.ctx.credentials.unset(credentialRef('DEEPSEEK_API_KEY'))
-    const seat = page.getByRole('button', { name: '请选择模型', exact: true })
+    const seat = page.getByRole('button', { name: 'Select model', exact: true })
     await seat.waitFor()
     await seat.click()
-    const picker = page.getByRole('group', { name: '模型与推理等级' })
-    await picker.getByText('暂无可用模型', { exact: true }).waitFor()
+    const picker = page.getByRole('group', { name: 'Model and reasoning effort' })
+    await picker.getByText('No models available.', { exact: true }).waitFor()
     expect(await picker.getByRole('menuitemradio').count()).toBe(0)
     expect(scaffold.ctx.agentDefaultModel.currentSelection()).toEqual(selection)
     await compareOrRefreshGolden(join(SNAPSHOT_DIR, 'empty.expected.md'), await picker.ariaSnapshot(), MODE)

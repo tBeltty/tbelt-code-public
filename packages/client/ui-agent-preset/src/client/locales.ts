@@ -21,6 +21,10 @@ export type AgentPresetSettingsKey =
   | 'presetMinimalDescription'
   | 'presetFastName'
   | 'presetFastDescription'
+  | 'presetAuditManualName'
+  | 'presetAuditManualDescription'
+  | 'presetAuditAutoName'
+  | 'presetAuditAutoDescription'
   | 'presetCordisName'
   | 'presetCordisDescription'
   | 'inUse'
@@ -61,6 +65,10 @@ export const en = {
   presetFastName: 'Fast mode',
   presetFastDescription:
     'A short prompt and a few core tools keep each step small and quick. The agent turns on search, web, subagents and other tools when a task needs them.',
+  presetAuditManualName: 'Manual audit mode',
+  presetAuditManualDescription: 'The agent plans work as numbered tasks with checks, hands each task to an implementer, and approves it only after re-running the checks. You launch each implementer and see every verdict.',
+  presetAuditAutoName: 'Autonomous audit mode',
+  presetAuditAutoDescription: 'Same audit method, but the agent launches the implementers itself and re-runs every check. You get one short report per finished phase.',
   presetCordisName: 'Creator mode',
   presetCordisDescription:
     'Customize tBelt Code through conversation. Let the agent write plugins that add features or UI, or combine tools and prompts to create your own mode.',
@@ -104,6 +112,10 @@ export const es = {
   presetFastName: 'Modo rápido',
   presetFastDescription:
     'Un prompt corto y pocas herramientas básicas mantienen cada paso pequeño y veloz. El agente activa la búsqueda, la web, los subagentes y otras herramientas cuando una tarea las necesita.',
+  presetAuditManualName: 'Modo auditoría manual',
+  presetAuditManualDescription: 'El agente planifica el trabajo en tareas numeradas con comprobaciones, entrega cada tarea a un implementador y la aprueba solo después de volver a ejecutar las comprobaciones. Tú lanzas cada implementador y ves cada veredicto.',
+  presetAuditAutoName: 'Modo auditoría autónomo',
+  presetAuditAutoDescription: 'El mismo método de auditoría, pero el agente lanza los implementadores por su cuenta y vuelve a ejecutar cada comprobación. Recibes un informe corto por cada fase terminada.',
   presetCordisName: 'Modo creador',
   presetCordisDescription: 'Personaliza tBelt Code conversando. Deja que el agente escriba plugins que añadan funciones o interfaz, o combine herramientas y prompts para crear tu propio modo.',
   inUse: 'Predeterminado',
@@ -139,6 +151,10 @@ export const el = {
   presetMinimalDescription: 'Ο πράκτορας εργάζεται χρησιμοποιώντας μόνο ένα εργαλείο τερματικού. Χρήσιμη για δοκιμές και συγκρίσεις της βασικής του απόδοσης.',
   presetFastName: 'Γρήγορη λειτουργία',
   presetFastDescription: 'Ένα σύντομο prompt και λίγα βασικά εργαλεία κρατούν κάθε βήμα μικρό και γρήγορο. Ο πράκτορας ενεργοποιεί την αναζήτηση, το διαδίκτυο, τους υποπράκτορες και άλλα εργαλεία όταν τα χρειάζεται η εργασία.',
+  presetAuditManualName: 'Χειροκίνητη λειτουργία ελέγχου',
+  presetAuditManualDescription: 'Ο πράκτορας οργανώνει τη δουλειά σε αριθμημένες εργασίες με ελέγχους, δίνει κάθε εργασία σε έναν υλοποιητή και την εγκρίνει μόνο αφού ξανατρέξει τους ελέγχους. Εσείς ξεκινάτε κάθε υλοποιητή και βλέπετε κάθε απόφαση.',
+  presetAuditAutoName: 'Αυτόνομη λειτουργία ελέγχου',
+  presetAuditAutoDescription: 'Η ίδια μέθοδος ελέγχου, αλλά ο πράκτορας ξεκινά μόνος του τους υλοποιητές και ξανατρέχει κάθε έλεγχο. Λαμβάνετε μια σύντομη αναφορά για κάθε ολοκληρωμένη φάση.',
   presetCordisName: 'Λειτουργία Δημιουργού',
   presetCordisDescription: 'Προσαρμόστε το tBelt Code μέσα από συζήτηση. Αφήστε τον πράκτορα να γράψει πρόσθετα που προσθέτουν λειτουργίες ή διεπαφή, ή να συνδυάσει εργαλεία και prompts για να φτιάξει τη δική σας λειτουργία.',
   inUse: 'Προεπιλογή',
@@ -174,6 +190,10 @@ export const fr = {
   presetMinimalDescription: 'L’agent travaille avec un seul outil de terminal. Utile pour tester et comparer ses performances de base.',
   presetFastName: 'Mode Rapide',
   presetFastDescription: 'Un prompt court et quelques outils essentiels gardent chaque étape petite et rapide. L’agent active la recherche, le web, les sous-agents et d’autres outils quand une tâche le demande.',
+  presetAuditManualName: 'Mode Audit manuel',
+  presetAuditManualDescription: 'L’agent découpe le travail en tâches numérotées avec des vérifications, confie chaque tâche à un exécutant et ne l’approuve qu’après avoir relancé les vérifications. Vous lancez chaque exécutant et voyez chaque verdict.',
+  presetAuditAutoName: 'Mode Audit autonome',
+  presetAuditAutoDescription: 'La même méthode d’audit, mais l’agent lance lui-même les exécutants et relance chaque vérification. Vous recevez un court rapport par phase terminée.',
   presetCordisName: 'Mode Créateur',
   presetCordisDescription: 'Personnalisez tBelt Code en conversant. Laissez l’agent écrire des plugins qui ajoutent des fonctionnalités ou une interface, ou combiner outils et prompts pour créer votre propre mode.',
   inUse: 'Par défaut',

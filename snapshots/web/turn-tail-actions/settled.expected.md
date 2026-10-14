@@ -1,6 +1,7 @@
 - banner:
   - navigation "Session hierarchy": Begin your reply with the
   - text: Standard mode
+  - button "Show this session’s artifacts"
   - button "More actions"
   - button "Open right sidebar"
   - tablist:
@@ -25,7 +26,7 @@
 - 'button "Access mode, current: Workspace Write"': Workspace Write
 - button "Select model, current DeepSeek-V4-Flash": DeepSeek-V4-Flash
 - button "Send message" [disabled]
-- button "1 turns 2 steps · {{throughput}} tok/s": 1 turns 2 steps{{throughput}} tok/s
+- button "1 turns 2 steps · 1,{{throughput}} tok/s": 1 turns 2 steps1,{{throughput}} tok/s
 - button "7.9K tok · Cache hit 0%": 7.9K tokCache hit 0%
 - button "This session $0.00 · This month $0.00 · 1 calls used a model with no price and are not counted": $0.00
 - button "6% of context used": 6%

@@ -4,6 +4,12 @@ Notable changes to tBelt Code, newest first. The format follows [Keep a Changelo
 
 ## [Unreleased]
 
+## [0.2.1-alpha.2.20261014.3] - 2026-10-14
+
+### Added
+
+- Manual audit mode and Autonomous audit mode split multi-phase work into numbered tasks with checks. The agent approves a task only after re-running its checks. In the manual mode you launch each implementer yourself. The autonomous mode launches them for you and reports once per finished phase. Neither is selected by default.
+
 ## [0.2.1-alpha.2.20261014.2] - 2026-10-14
 
 ### Fixed
@@ -300,7 +306,8 @@ Notable changes to tBelt Code, newest first. The format follows [Keep a Changelo
 - Downloads no longer return an older installer.
 - A key that ran out of credit or hit its spending limit is reported as a quota problem instead of an invalid API key.
 
-[Unreleased]: https://github.com/tBeltty/tbelt-code-public/compare/v0.2.1-alpha.2.20261014.2...HEAD
+[Unreleased]: https://github.com/tBeltty/tbelt-code-public/compare/v0.2.1-alpha.2.20261014.3...HEAD
+[0.2.1-alpha.2.20261014.3]: https://github.com/tBeltty/tbelt-code-public/releases/tag/v0.2.1-alpha.2.20261014.3
 [0.2.1-alpha.2.20261014.2]: https://github.com/tBeltty/tbelt-code-public/releases/tag/v0.2.1-alpha.2.20261014.2
 [0.2.1-alpha.2.20261014]: https://github.com/tBeltty/tbelt-code-public/releases/tag/v0.2.1-alpha.2.20261014
 [0.2.1-alpha.2.20261013.2]: https://github.com/tBeltty/tbelt-code-public/releases/tag/v0.2.1-alpha.2.20261013.2

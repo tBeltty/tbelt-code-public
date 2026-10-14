@@ -105,7 +105,7 @@ function tablesMarkdown(): string {
     `| ${LONG_CELL_MARKER} | Value |`,
     '| --- | --- |',
     `| path | ${LONG_TOKEN} |`,
-    `| 说明 | ${CJK_SENTENCE} |`,
+    `| Instructions | ${CJK_SENTENCE} |`,
     '',
     TAIL_MARKER,
   ].join('\n')

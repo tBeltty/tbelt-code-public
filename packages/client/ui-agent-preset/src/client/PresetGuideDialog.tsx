@@ -21,6 +21,8 @@ const guides = new Map<string, PresetGuide>([
   ['ptc', { name: 'presetPtcName', intro: 'guidePtcIntro', explanation: 'guidePtcExplanation', usage: 'guidePtcUsage' }],
   ['minimal', { name: 'presetMinimalName', intro: 'guideMinimalIntro', explanation: 'guideMinimalExplanation', usage: 'guideMinimalUsage' }],
   ['fast', { name: 'presetFastName', intro: 'guideFastIntro', explanation: 'guideFastExplanation', usage: 'guideFastUsage' }],
+  ['audit-manual', { name: 'presetAuditManualName', intro: 'guideAuditIntro', explanation: 'guideAuditExplanation', usage: 'guideAuditUsage' }],
+  ['audit-autonomous', { name: 'presetAuditAutoName', intro: 'guideAuditIntro', explanation: 'guideAuditExplanation', usage: 'guideAuditUsage' }],
   ['cordis', { name: 'presetCordisName', intro: 'guideCordisIntro', explanation: 'guideCordisExplanation', usage: 'guideCordisUsage' }],
 ])
 

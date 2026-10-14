@@ -1,6 +1,6 @@
 - listitem:
-  - button "查看 slow-package": slow-package
-  - switch "启用 slow-package" [checked]
+  - button "View slow-package": slow-package
+  - switch "Enable slow-package" [checked]
 
 [
   {

@@ -272,7 +272,7 @@ describe('web e2e: assistant IconActions wait for the turn to end', () => {
     expect(await process.getAttribute('aria-expanded')).toBe('false')
     expect(await tool.isVisible()).toBe(false)
 
-    await openSettings(page, 'en')
+    await openSettings(page)
     const dialog = page.getByRole('dialog', { name: 'Settings' })
     await dialog.getByText('Tool call details', { exact: true }).locator('../..')
       .getByRole('button', { name: 'Detailed', exact: true }).click()
@@ -302,7 +302,7 @@ describe('web e2e: assistant IconActions wait for the turn to end', () => {
       await process.click()
     }
 
-    await openSettings(page, 'en')
+    await openSettings(page)
     const restored = page.getByRole('dialog', { name: 'Settings' })
     await restored.getByText('Tool call details', { exact: true }).locator('../..')
       .getByRole('button', { name: label, exact: true }).click()

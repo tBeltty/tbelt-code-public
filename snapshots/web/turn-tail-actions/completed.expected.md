@@ -1,6 +1,7 @@
 - banner:
   - navigation "Session hierarchy": Begin your reply with the
   - text: Standard mode
+  - button "Show this session’s artifacts"
   - button "More actions"
   - button "Open right sidebar"
   - tablist:

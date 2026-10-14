@@ -1,1 +1,1 @@
-- text: 动态插件已启用
+- text: Live plugin enabled

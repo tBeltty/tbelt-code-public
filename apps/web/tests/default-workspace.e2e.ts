@@ -8,7 +8,7 @@ import {
   assertFinalWorkspaceSnapshot, captureStableAria, compareOrRefreshGolden, fixtureUserPrompts, launchWebScaffold,
   selectedSessionFixture, watchConsole, webSnapshotMode,
 } from './scaffold.ts'
-import { newEnglishPage, saveFailureShot } from './support.ts'
+import { EN_BROWSER_LOCALE, newEnglishPage, saveFailureShot } from './support.ts'
 
 const FIXTURE = fileURLToPath(new URL('../../../snapshots/web/fresh-round-trip/session.v3.jsonl', import.meta.url))
 const EXPECTED = fileURLToPath(new URL('../../../snapshots/web/default-workspace/ui.expected.md', import.meta.url))
@@ -52,7 +52,7 @@ describe.skipIf(MODE === 'record')('web e2e: default Workspace', () => {
         const sessionId = await settled
         const workspace = scaffold.ctx.workspaceRegistry.list()[0]!
         expect(workspace.title).toBe('default-workspace')
-        expect(workspace.path).toBe(join(scaffold.workspaceCwd, 'Documents', 'deepseek-harness', 'default-workspace'))
+        expect(workspace.path).toBe(join(scaffold.workspaceCwd, 'Documents', 'tbelt-code', 'default-workspace'))
         expect((await stat(workspace.path)).isDirectory()).toBe(true)
         expect(workspace.sessionIds).toContain(sessionId)
         expect(scaffold.ctx.sessions.get(sessionId)?.header.cwd).toBe(workspace.path)
@@ -73,33 +73,33 @@ describe.skipIf(MODE === 'record')('web e2e: default Workspace', () => {
   it('reports a startup directory conflict and opens the composed folder picker for recovery', async () => {
     const scaffold = await launchWebScaffold({ firstUse: true })
     onTestFinished(() => scaffold.close())
-    const parent = join(scaffold.workspaceCwd, 'Documents', 'deepseek-harness')
+    const parent = join(scaffold.workspaceCwd, 'Documents', 'tbelt-code')
     await mkdir(parent, { recursive: true })
-    // A Chinese reader gets the same fixed directory name, so the same occupant conflicts.
+    // A reader in any language gets the same fixed directory name, so the same occupant conflicts.
     await writeFile(join(parent, 'default-workspace'), 'occupied')
     const chosen = join(scaffold.workspaceCwd, 'chosen')
     await mkdir(chosen)
     const browser = await chromium.launch()
     try {
-      const page = await browser.newPage({ locale: 'zh-CN', timezoneId: 'Asia/Shanghai' })
+      const page = await browser.newPage({ locale: EN_BROWSER_LOCALE, timezoneId: 'Asia/Shanghai' })
       const tripwire = watchConsole(page)
       try {
         await page.goto(scaffold.authenticatedUrl)
         const input = page.locator('[data-composer-input][contenteditable="true"]').first()
-        const notice = page.getByRole('alert').filter({ hasText: '无法创建默认工作区' })
+        const notice = page.getByRole('alert').filter({ hasText: 'Unable to create default workspace' })
         await notice.waitFor()
         expect(scaffold.ctx.workspaceRegistry.list()).toEqual([])
         expect(scaffold.ctx.sessions.list()).toEqual([])
         await compareOrRefreshGolden(FAILURE_EXPECTED, await notice.ariaSnapshot(), MODE)
         expect(await page.getByRole('dialog').count()).toBe(0)
         expect(await input.count()).toBe(0)
-        await page.getByRole('button', { name: '选择工作区', exact: true }).click()
-        const picker = page.getByRole('dialog', { name: '选择工作区目录' })
+        await page.getByRole('button', { name: 'Choose workspace', exact: true }).click()
+        const picker = page.getByRole('dialog', { name: 'Select Workspace Directory' })
         await picker.waitFor()
-        await picker.getByRole('button', { name: '编辑路径', exact: true }).click()
-        await picker.getByRole('textbox', { name: '编辑路径' }).fill(chosen)
+        await picker.getByRole('button', { name: 'Edit path', exact: true }).click()
+        await picker.getByRole('textbox', { name: 'Edit path' }).fill(chosen)
         await page.keyboard.press('Enter')
-        await picker.getByRole('button', { name: '打开', exact: true }).click()
+        await picker.getByRole('button', { name: 'Open', exact: true }).click()
         await picker.waitFor({ state: 'hidden' })
         await expect.poll(() => scaffold.ctx.workspaceRegistry.list().length).toBe(1)
         await input.waitFor()

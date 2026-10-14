@@ -18,7 +18,7 @@ import { chromium } from 'playwright'
 import { afterAll, beforeAll, describe, expect, it, onTestFailed } from 'vitest'
 import { SessionId } from '@deepseek-ai/dsh-session'
 import { launchWebScaffold, watchConsole, captureStableAria, compareOrRefreshGolden, webSnapshotMode, type WebScaffold } from './scaffold.ts'
-import { ZH_BROWSER_LOCALE, connectFreshWorkspaceZh, saveFailureShot } from './support.ts'
+import { EN_BROWSER_LOCALE, connectFreshWorkspace, saveFailureShot } from './support.ts'
 
 /** Points the shipped shared Agent default at this scenario's own route. */
 const OVERLAY = fileURLToPath(new URL('./default-model.overlay.yml', import.meta.url))
@@ -78,13 +78,13 @@ describe('web e2e: the composer model switch is the default for later sessions',
       },
     })
     browser = await chromium.launch()
-    page = await browser.newPage({ viewport: { width: 1680, height: 1000 }, locale: ZH_BROWSER_LOCALE })
+    page = await browser.newPage({ viewport: { width: 1680, height: 1000 }, locale: EN_BROWSER_LOCALE })
     tripwire = watchConsole(page)
     await page.goto(scaffold.authenticatedUrl, { waitUntil: 'load' })
     await page.waitForSelector('[class*="frame"]', { timeout: 30_000 })
     // The composer's seats only exist once a workspace is connected: without
     // one the input is the locked placeholder and no session scope is open.
-    await connectFreshWorkspaceZh(page, scaffold.workspaceCwd)
+    await connectFreshWorkspace(page, scaffold.workspaceCwd)
   }, 120_000)
 
   afterAll(async () => {
@@ -94,26 +94,26 @@ describe('web e2e: the composer model switch is the default for later sessions',
 
   it('keeps command popup search borders transparent in both palettes', async () => {
     const composer = page.locator('[data-composer-input]').first()
-    await page.getByRole('button', { name: '添加文件或调用指令', exact: true }).click()
+    await page.getByRole('button', { name: 'Add files or run commands', exact: true }).click()
     const commandMenuBounds = await page.locator('[data-trigger-menu]').boundingBox()
-    await page.getByRole('option', { name: /^模型/ }).click()
-    const search = page.getByRole('textbox', { name: '筛选选项', exact: true })
+    await page.getByRole('option', { name: /^Model/ }).click()
+    const search = page.getByRole('textbox', { name: 'Filter options', exact: true })
     await search.waitFor()
     try {
-      const popupBounds = await page.locator('[aria-label="/model 选项"]').boundingBox()
+      const popupBounds = await page.locator('[aria-label="/model Options"]').boundingBox()
       expect(popupBounds).not.toBeNull()
       expect(commandMenuBounds).not.toBeNull()
       expect(popupBounds!.width).toBeCloseTo(commandMenuBounds!.width)
       expect(popupBounds!.x).toBeCloseTo(commandMenuBounds!.x)
-      expect(await search.getAttribute('placeholder')).toBe('搜索模型…')
+      expect(await search.getAttribute('placeholder')).toBe('Search models…')
       await page.getByRole('option').first().waitFor()
       await compareOrRefreshGolden(
         fileURLToPath(new URL('./expected/default-model/command-picker.expected.md', import.meta.url)),
-        await captureStableAria(page, '[aria-label="/model 选项"]', scaffold.workspaceCwd),
+        await captureStableAria(page, '[aria-label="/model Options"]', scaffold.workspaceCwd),
         webSnapshotMode(),
       )
       await search.fill('no-model-matches')
-      await page.getByText('没有匹配的模型。', { exact: true }).waitFor()
+      await page.getByText('No matching models.', { exact: true }).waitFor()
       await search.fill('')
       const borders = await search.evaluate((input) => {
         const body = input.ownerDocument.body
@@ -159,23 +159,23 @@ describe('web e2e: the composer model switch is the default for later sessions',
       return stuck
     }
     try {
-      await page.getByRole('button', { name: /^选择模型/ }).click()
-      await page.getByRole('menuitem', { name: /^模型/ }).click()
-      const menu = page.getByRole('group', { name: '模型与推理等级', exact: true })
-      const menuSearch = page.getByRole('searchbox', { name: '搜索模型…' })
+      await page.getByRole('button', { name: /^Select model/ }).click()
+      await page.getByRole('menuitem', { name: /^Model/ }).click()
+      const menu = page.getByRole('group', { name: 'Model and reasoning effort', exact: true })
+      const menuSearch = page.getByRole('searchbox', { name: 'Search models…' })
       const order = await readGroups(menu, 'menuitemradio')
-      const sticky = await checkSticky(menu, menu.getByRole('menu', { name: '模型', exact: true }))
+      const sticky = await checkSticky(menu, menu.getByRole('menu', { name: 'Model', exact: true }))
       await menuSearch.fill('  ACMLG  ')
       const filtered = await readGroups(menu, 'menuitemradio')
       await menuSearch.press('Escape')
       await page.keyboard.press('Escape')
-      await page.getByRole('button', { name: '添加文件或调用指令', exact: true }).click()
-      await page.getByRole('option', { name: /^模型/ }).click()
-      const popup = page.locator('[aria-label="/model 选项"]')
+      await page.getByRole('button', { name: 'Add files or run commands', exact: true }).click()
+      await page.getByRole('option', { name: /^Model/ }).click()
+      const popup = page.locator('[aria-label="/model Options"]')
       await popup.getByRole('option').first().waitFor()
       expect(await readGroups(popup, 'option')).toEqual(order)
       expect(await checkSticky(popup, popup.getByRole('listbox'))).toEqual(sticky)
-      const popupSearch = page.getByRole('textbox', { name: '筛选选项', exact: true })
+      const popupSearch = page.getByRole('textbox', { name: 'Filter options', exact: true })
       await popupSearch.fill('  ACMLG  ')
       expect(await readGroups(popup, 'option')).toEqual(filtered)
       expect(await popupSearch.evaluate(node => node === node.ownerDocument.activeElement)).toBe(true)
@@ -187,8 +187,8 @@ describe('web e2e: the composer model switch is the default for later sessions',
   })
 
   it('hides search only in the button menu when four models remain', async () => {
-    const trigger = page.getByRole('button', { name: /^选择模型/ })
-    const search = page.getByRole('searchbox', { name: '搜索模型…' })
+    const trigger = page.getByRole('button', { name: /^Select model/ })
+    const search = page.getByRole('searchbox', { name: 'Search models…' })
     const setModels = (expanded: boolean) => scaffold.ctx.settings.update('llm-pi-ai', {
       providers: { [ROUTE]: {
         displayName: 'Acme Gateway', api: 'openai-completions', baseURL: 'https://gateway.acme.example/v1',
@@ -199,7 +199,7 @@ describe('web e2e: the composer model switch is the default for later sessions',
     try {
       await setModels(false)
       await trigger.click()
-      await page.getByRole('menuitem', { name: /^模型/ }).click()
+      await page.getByRole('menuitem', { name: /^Model/ }).click()
       await expect.poll(() => page.getByRole('menuitemradio').count()).toBe(4)
       expect(await search.count()).toBe(0)
       const current = page.getByRole('menuitemradio', { name: 'Origin Large', exact: true })
@@ -211,11 +211,11 @@ describe('web e2e: the composer model switch is the default for later sessions',
       await page.keyboard.press('Enter')
       await expect.poll(() => trigger.evaluate(node => node === node.ownerDocument.activeElement)).toBe(true)
       expect(await trigger.evaluate(node => getComputedStyle(node).boxShadow)).toBe('none')
-      await page.getByRole('button', { name: '添加文件或调用指令', exact: true }).click()
-      await page.getByRole('option', { name: /^模型/ }).click()
-      const commandSearch = page.getByRole('textbox', { name: '筛选选项', exact: true })
+      await page.getByRole('button', { name: 'Add files or run commands', exact: true }).click()
+      await page.getByRole('option', { name: /^Model/ }).click()
+      const commandSearch = page.getByRole('textbox', { name: 'Filter options', exact: true })
       await commandSearch.waitFor()
-      expect(await commandSearch.getAttribute('placeholder')).toBe('搜索模型…')
+      expect(await commandSearch.getAttribute('placeholder')).toBe('Search models…')
       await commandSearch.press('Escape')
       await page.locator('[data-composer-input]').first().fill('')
       expect(await rows.count()).toBe(0)
@@ -224,7 +224,7 @@ describe('web e2e: the composer model switch is the default for later sessions',
       await page.keyboard.press('Escape')
       await setModels(true)
       await trigger.click()
-      await page.getByRole('menuitem', { name: /^模型/ }).click()
+      await page.getByRole('menuitem', { name: /^Model/ }).click()
       await expect.poll(() => page.getByRole('menuitemradio').count()).toBe(5)
       await search.waitFor()
       await search.press('Escape')
@@ -239,14 +239,14 @@ describe('web e2e: the composer model switch is the default for later sessions',
       platform: document.documentElement.getAttribute('data-platform'),
       theme: document.body.getAttribute('data-ds-dark-theme'),
     }))
-    const surface = page.getByRole('group', { name: '模型与推理等级', exact: true })
-    const trigger = page.getByRole('button', { name: /^选择模型/ })
-    const search = page.getByRole('searchbox', { name: '搜索模型…' })
+    const surface = page.getByRole('group', { name: 'Model and reasoning effort', exact: true })
+    const trigger = page.getByRole('button', { name: /^Select model/ })
+    const search = page.getByRole('searchbox', { name: 'Search models…' })
     try {
       await page.setViewportSize({ width: 1680, height: 220 })
       await trigger.click()
-      await page.getByRole('menuitem', { name: /^模型/ }).click()
-      const scroller = page.getByRole('menu', { name: '模型', exact: true })
+      await page.getByRole('menuitem', { name: /^Model/ }).click()
+      const scroller = page.getByRole('menu', { name: 'Model', exact: true })
       const headings = surface.locator('section[role="group"] > div')
       const readPinned = () => headings.evaluateAll(nodes => nodes.map(node => node.hasAttribute('data-stuck')))
       const resetScroll = async (): Promise<void> => {
@@ -284,16 +284,16 @@ describe('web e2e: the composer model switch is the default for later sessions',
       await search.fill('Origin Large')
       await expect.poll(() => headings.count()).toBe(1)
       await expect.poll(readPinned).toEqual([false])
-      await page.getByRole('button', { name: '清除搜索', exact: true }).click()
+      await page.getByRole('button', { name: 'Clear search', exact: true }).click()
       await expect.poll(readPinned).toEqual([false, false, false])
       await search.fill('zzzz')
       await expect.poll(() => surface.locator('[data-stuck]').count()).toBe(0)
-      await page.getByRole('button', { name: '清除搜索', exact: true }).click()
+      await page.getByRole('button', { name: 'Clear search', exact: true }).click()
       await expect.poll(readPinned).toEqual([false, false, false])
       await search.press('Escape')
       await page.keyboard.press('Escape')
       await trigger.click()
-      await page.getByRole('menuitem', { name: /^模型/ }).click()
+      await page.getByRole('menuitem', { name: /^Model/ }).click()
       expect(await search.inputValue()).toBe('')
       await resetScroll()
     } finally {
@@ -319,14 +319,14 @@ describe('web e2e: the composer model switch is the default for later sessions',
       reason: 'initial',
     })
 
-    const trigger = page.getByRole('button', { name: /^选择模型/ })
+    const trigger = page.getByRole('button', { name: /^Select model/ })
     await trigger.waitFor({ timeout: 15_000 })
     expect(await trigger.evaluate(element => getComputedStyle(element).fontWeight)).toBe('400')
     await trigger.click()
-    const modelMenuBounds = await page.getByRole('menu', { name: '模型与推理等级', exact: true }).boundingBox()
+    const modelMenuBounds = await page.getByRole('menu', { name: 'Model and reasoning effort', exact: true }).boundingBox()
     const composerBounds = await page.locator('[data-composer-card]').first().boundingBox()
     expect(modelMenuBounds!.width).toBeLessThan(composerBounds!.width)
-    const modelCell = page.getByRole('menuitem', { name: /^模型/ })
+    const modelCell = page.getByRole('menuitem', { name: /^Model/ })
     await trigger.press('ArrowDown')
     expect(await modelCell.evaluate(element => element.matches(':focus-visible'))).toBe(true)
     expect(await modelCell.evaluate(element => getComputedStyle(element).outlineStyle)).toBe('none')
@@ -335,7 +335,7 @@ describe('web e2e: the composer model switch is the default for later sessions',
     await modelCell.hover()
     expect(await modelCell.evaluate(element => getComputedStyle(element).backgroundColor)).toBe(focusedBackground)
     await modelCell.click()
-    const search = page.getByRole('searchbox', { name: '搜索模型…' })
+    const search = page.getByRole('searchbox', { name: 'Search models…' })
     const rowIds = await page.getByRole('menuitemradio').evaluateAll(rows => rows.map(row => row.id))
     const initialHighlight = rowIds.indexOf(await search.getAttribute('aria-activedescendant') ?? '')
     expect(initialHighlight).toBeGreaterThanOrEqual(0)
@@ -375,7 +375,7 @@ describe('web e2e: the composer model switch is the default for later sessions',
       getComputedStyle(row.querySelector('span span')!).fontWeight,
     ))
     expect(new Set(modelWeights)).toEqual(new Set(['400']))
-    const headingPalettes = await page.getByRole('group', { name: '模型与推理等级', exact: true }).evaluate((menu) => {
+    const headingPalettes = await page.getByRole('group', { name: 'Model and reasoning effort', exact: true }).evaluate((menu) => {
       const html = menu.ownerDocument.documentElement
       const body = menu.ownerDocument.body
       const previousPlatform = html.getAttribute('data-platform')
@@ -412,18 +412,18 @@ describe('web e2e: the composer model switch is the default for later sessions',
       expect(palette.headingRadii).toEqual([palette.platform === 'darwin' ? '0px' : palette.optionRadius])
     }
     await search.fill('zzzz')
-    await page.getByText('没有匹配的模型。', { exact: true }).waitFor()
-    await page.getByRole('button', { name: '清除搜索', exact: true }).click()
+    await page.getByText('No matching models.', { exact: true }).waitFor()
+    await page.getByRole('button', { name: 'Clear search', exact: true }).click()
     expect(await search.inputValue()).toBe('')
     expect(await search.evaluate(input => input === input.ownerDocument.activeElement)).toBe(true)
     expect(await page.getByRole('menuitemradio').count()).toBe(modelWeights.length)
-    expect(await page.getByRole('button', { name: '清除搜索', exact: true }).count()).toBe(0)
+    expect(await page.getByRole('button', { name: 'Clear search', exact: true }).count()).toBe(0)
     await search.fill('  ACMLG  ')
     expect(await page.getByRole('menuitemradio').allTextContents()).toEqual(['Acme Large'])
     expect(await page.getByRole('group', { name: 'Origin Gateway', exact: true }).count()).toBe(0)
     await compareOrRefreshGolden(
       fileURLToPath(new URL('./expected/default-model/search.expected.md', import.meta.url)),
-      await captureStableAria(page, '[role="group"][aria-label="模型与推理等级"]', scaffold.workspaceCwd),
+      await captureStableAria(page, '[role="group"][aria-label="Model and reasoning effort"]', scaffold.workspaceCwd),
       webSnapshotMode(),
     )
     const entered = Promise.withResolvers<undefined>()
@@ -487,7 +487,7 @@ describe('web e2e: the composer model switch is the default for later sessions',
         baseURL: 'https://gateway.origin.example/v1', models: [{ id: START_MODEL, name: 'Origin Large' }] },
     } })
 
-    const seat = page.getByRole('button', { name: '请选择模型', exact: true })
+    const seat = page.getByRole('button', { name: 'Select model', exact: true })
     await seat.waitFor()
     expect(await box.isEnabled()).toBe(true)
     expect(scaffold.ctx.agentDefaultModel.currentSelection()).toMatchObject({ provider: ROUTE, model: MODEL })

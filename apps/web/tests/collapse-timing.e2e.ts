@@ -75,7 +75,7 @@ describe.skipIf(MODE === 'record')('web e2e: recorded collapse timing', () => {
   })
 
   async function selectPreference(title: string, choice: string): Promise<void> {
-    await openSettings(page, 'en')
+    await openSettings(page)
     const dialog = page.getByRole('dialog', { name: 'Settings', exact: true })
     const row = dialog.getByText(title, { exact: true }).locator('../..')
     await row.getByRole('button').click()

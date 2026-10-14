@@ -13,6 +13,8 @@ export type BuiltInPresetCopyKey =
   | 'presetPtcName' | 'presetPtcDescription'
   | 'presetMinimalName' | 'presetMinimalDescription'
   | 'presetFastName' | 'presetFastDescription'
+  | 'presetAuditManualName' | 'presetAuditManualDescription'
+  | 'presetAuditAutoName' | 'presetAuditAutoDescription'
   | 'presetCordisName' | 'presetCordisDescription'
 
 /** Preset roster fields needed to resolve display copy. */
@@ -43,6 +45,8 @@ const BUILT_IN_PRESET_KEYS: Readonly<Partial<Record<string, PresetLocaleKeys>>> 
   ptc: { name: 'presetPtcName', description: 'presetPtcDescription' },
   minimal: { name: 'presetMinimalName', description: 'presetMinimalDescription' },
   fast: { name: 'presetFastName', description: 'presetFastDescription' },
+  'audit-manual': { name: 'presetAuditManualName', description: 'presetAuditManualDescription' },
+  'audit-autonomous': { name: 'presetAuditAutoName', description: 'presetAuditAutoDescription' },
   cordis: { name: 'presetCordisName', description: 'presetCordisDescription' },
 }
 

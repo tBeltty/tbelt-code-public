@@ -29,7 +29,7 @@ describe.skipIf(MODE === 'record')('web e2e: native and Client locale preference
     tripwire = watchConsole(page)
     await page.exposeFunction('nativeLocaleRead', () => {
       const section = scaffold.ctx.settings.describe().find(row => row.ns === 'locale')!.value as { preference?: string }
-      return { languages: ['ja-JP', 'zh-CN', 'en-US'], preference: section.preference ?? null }
+      return { languages: ['ja-JP', 'es-ES', 'en-US'], preference: section.preference ?? null }
     })
     await page.exposeFunction('nativeLocaleChanged', (locale: string) => { reported.push(locale) })
     await page.addInitScript(() => {
@@ -54,14 +54,14 @@ describe.skipIf(MODE === 'record')('web e2e: native and Client locale preference
   it('uses OS languages without saving them, then shares an explicit choice across reloads', async () => {
     onTestFailed(() => saveFailureShot(page, 'web-e2e-desktop-locale'))
     await page.goto(scaffold.authenticatedUrl, { waitUntil: 'load' })
-    await openSettings(page, 'zh')
-    const zhDialog = page.getByRole('dialog', { name: '设置', exact: true })
-    await zhDialog.getByRole('button', { name: '中文', exact: true }).waitFor()
-    await expect.poll(() => reported).toEqual(['zh'])
+    await page.getByRole('button', { name: 'Ajustes', exact: true }).click()
+    const esDialog = page.getByRole('dialog', { name: 'Ajustes', exact: true })
+    await esDialog.getByRole('button', { name: 'Automático', exact: true }).waitFor()
+    await expect.poll(() => reported).toEqual(['es'])
     expect(scaffold.ctx.settings.describe().find(row => row.ns === 'locale')!.value).toEqual({})
     await compareOrRefreshGolden(join(SNAPSHOT_DIR, 'automatic.expected.md'),
       await captureStableAria(page, '[role="dialog"]', scaffold.workspaceCwd, versionCapture), MODE)
-    await zhDialog.getByRole('button', { name: '中文', exact: true }).click()
+    await esDialog.getByRole('button', { name: 'Automático', exact: true }).click()
     await page.getByRole('menuitem', { name: 'English', exact: true }).click()
     const enDialog = page.getByRole('dialog', { name: 'Settings', exact: true })
     await enDialog.getByRole('button', { name: 'English', exact: true }).waitFor()
@@ -74,7 +74,7 @@ describe.skipIf(MODE === 'record')('web e2e: native and Client locale preference
     reported.length = 0
     await page.reload({ waitUntil: 'load' })
     acknowledgeReloadConnectionLoss(tripwire, warningsBefore)
-    await openSettings(page, 'en')
+    await openSettings(page)
     await enDialog.getByRole('button', { name: 'English', exact: true }).waitFor()
     await expect.poll(() => reported).toEqual(['en'])
     expect(await page.evaluate(() => document.documentElement.lang)).toBe('en')

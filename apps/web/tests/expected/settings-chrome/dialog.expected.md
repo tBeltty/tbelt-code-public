@@ -1,35 +1,37 @@
-- dialog "设置":
+- dialog "Settings":
   - navigation:
-    - text: 设置
-    - button "通用设置"
-    - button "模型"
-    - button "花费"
-    - button "内置插件"
-    - button "Agent 预设"
-  - button "打开配置文件"
-  - button "关闭"
-  - text: 权限 选择新会话的默认权限模式
-  - button "工作区内修改"
-  - text: 语言
-  - button "中文"
-  - text: 字号大小 仅影响会话内容的字号 14
-  - button "增大字号"
-  - button "减小字号"
+    - text: Settings
+    - button "General"
+    - button "Models"
+    - button "Spending"
+    - button "System inspector"
+    - button "Agent presets"
+  - button "Open configuration file"
+  - button "Close"
+  - text: Permission Edits files inside the workspace and asks before going outside it.
+  - button "Workspace Write"
+  - text: Language
+  - button "Automatic"
+  - text: Appearance
+  - button "Light"
+  - button "Dark" [pressed]
+  - button "System"
+  - text: Font size Only affects conversation content 14
+  - button "Increase font size"
+  - button "Decrease font size"
   - text: px
-  - button "更多字体设置"
-  - text: 工作步骤展示 选择希望看到多少工具调用细节
-  - button "详细"
-  - text: 工作步骤收起时机 选择何时自动收起工作步骤
-  - button "回答结束后"
-  - text: 显示代码工作视图 开启后，显示轨迹、本轮代码差异，可选择完整的 Agent 预设切换
-  - switch "显示代码工作视图"
-  - text: 快捷键
-  - paragraph: 查看和编辑当前可用的快捷键和输入操作
-  - button "编辑快捷键"
-  - text: 繁忙时的发送行为 智能体运行时 Enter 键和发送按钮的行为；Cmd/Ctrl+Enter 使用另一行为
-  - button "排队发送"
-  - text: 性能与用量 选择性能与用量信息展示的详细程度
-  - button "详细"
-  - text: 在使用官方模型 API 时上传 Session Log 帮助改进 DeepSeek 模型与产品
-  - switch "在使用官方模型 API 时上传 Session Log"
-  - text: 当前版本：{{version}}
+  - button "More font settings"
+  - text: Tool call details Choose how much detail to show for tool calls
+  - button "Detailed"
+  - text: When to Collapse Work Details Choose when to automatically collapse work details
+  - button "On completion"
+  - text: Show coding view Shows trajectory, code diffs, and all Agent presets
+  - switch "Show coding view"
+  - text: Keyboard shortcuts
+  - paragraph: View and edit available shortcuts and input actions
+  - button "Edit shortcuts"
+  - text: Sending while the agent works Queue holds your message until the agent finishes. Steer sends it into the current turn. Cmd/Ctrl+Enter does the other one.
+  - button "Queue"
+  - text: Timing and token usage Choose how much timing and token usage to show under replies
+  - button "Detailed"
+  - text: "Current version: {{version}}"

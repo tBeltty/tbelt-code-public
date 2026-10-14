@@ -35,6 +35,7 @@
     "presets/ptc.patch.yml",
     "presets/minimal.patch.yml",
     "presets/fast.patch.yml",
+    "presets/audit.patch.yml",
     "presets/cordis.patch.yml",
     "presets/agents.patch.yml",
     "lib/public-url-*.js",
@@ -49,6 +50,7 @@
         "./presets/ptc.patch.yml",
         "./presets/minimal.patch.yml",
         "./presets/fast.patch.yml",
+        "./presets/audit.patch.yml",
         "./presets/cordis.patch.yml",
         "./presets/agents.patch.yml"
       ]

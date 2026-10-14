@@ -144,3 +144,17 @@ describe('the shipped creator skills', () => {
     }
   })
 })
+
+describe('shipped audit skill', () => {
+  const auditSkill = join(fileURLToPath(new URL('../audit-skills/', import.meta.url)), 'auditor-executor-protocol')
+
+  it('renders below the pruner threshold and links only to shipped references', () => {
+    const text = readFileSync(join(auditSkill, 'SKILL.md'), 'utf8')
+    expect(codePointLength(text)).toBeLessThan(PRUNER_THRESHOLD_CHARS)
+    const linked = [...text.matchAll(/`(references\/[\w-]+\.md)`/g)].map(match => match[1]!)
+    expect(linked.length).toBeGreaterThan(0)
+    for (const file of linked) {
+      expect(codePointLength(readFileSync(join(auditSkill, file), 'utf8'))).toBeLessThan(PRUNER_THRESHOLD_CHARS)
+    }
+  })
+})

@@ -236,7 +236,7 @@ describe('the shipped Web composition', () => {
   it('supplies the shipped presets, and only those, from the system root', async () => {
     const listed = await ctx.agentPresets.list()
 
-    expect(listed.map(preset => preset.id).sort()).toEqual(['cordis', 'fast', 'minimal', 'ptc', 'standard'])
+    expect(listed.map(preset => preset.id).sort()).toEqual(['audit-autonomous', 'audit-manual', 'cordis', 'fast', 'minimal', 'ptc', 'standard'])
     expect(listed.every(preset => !('path' in preset))).toBe(true)
     expect(ctx.agentPresets.defaultId).toBe('standard')
   })
@@ -352,6 +352,26 @@ describe('the shipped Web composition', () => {
       expect(toolNames(ctx, handle.agent)).not.toContain('web_search')
       expect(ctx.commands.find(handle.agent, 'goal')).toBeUndefined()
       expect(ctx.commands.find(handle.agent, 'compact')).toBeDefined()
+    } finally {
+      await handle.dispose()
+    }
+  })
+
+  it.each([
+    ['audit-manual', 'Run mode: Guided'],
+    ['audit-autonomous', 'Run mode: Autonomous'],
+  ])('composes `%s` with the protocol skill and its run mode in the persona', async (id, mode) => {
+    const handle = await ctx.agents.create({
+      sessionId: SessionId(`preset-${id}`),
+      setup: agentCtx => ctx.agentPresets.mount(agentCtx, id).then(() => undefined),
+    })
+    try {
+      expect(toolNames(ctx, handle.agent)).toEqual(expect.arrayContaining(['bash', 'read', 'edit', 'skill', 'subagent']))
+      const scoped = (await ctx.skills.list({ scope: handle.agent })).map(skill => skill.name)
+      expect(scoped).toContain('auditor-executor-protocol')
+      const assembly = await ctx.systemPrompt.assemble({ scope: handle.agent })
+      const persona = assembly.sections.find(section => section.name === 'deployment:persona-prefix')?.text ?? ''
+      expect(persona).toContain(mode)
     } finally {
       await handle.dispose()
     }

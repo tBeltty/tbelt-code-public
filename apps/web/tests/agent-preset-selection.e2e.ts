@@ -257,7 +257,7 @@ describe('web e2e: agent-preset selection', () => {
     await page.getByRole('button', { name: 'Standard mode', exact: true }).click()
     await page.getByRole('menuitem', { name: /^Minimal mode/ }).click()
     await page.getByRole('button', { name: 'Minimal mode', exact: true }).waitFor()
-    await openSettings(page, 'en')
+    await openSettings(page)
     const dialog = page.getByRole('dialog', { name: 'Settings' })
     const codingTools = dialog.getByRole('switch', { name: 'Show coding view' })
     await codingTools.click()
@@ -267,7 +267,7 @@ describe('web e2e: agent-preset selection', () => {
     await page.getByRole('button', { name: 'Standard mode', exact: true }).waitFor({ timeout: 10_000 })
     await expect.poll(() => livePreset(scaffold)).toBe('standard')
 
-    await openSettings(page, 'en')
+    await openSettings(page)
     await codingTools.click()
     await expect.poll(() => codingTools.getAttribute('aria-checked')).toBe('true')
     await dialog.getByRole('button', { name: 'Agent presets' }).click()
@@ -361,7 +361,7 @@ describe('web e2e: agent-preset selection', () => {
     onTestFailed(() => saveFailureShot(page, 'web-e2e-agent-preset-disabled'))
     await expect.poll(() => livePreset(scaffold), { timeout: 15_000 }).toBe('standard')
 
-    await openSettings(page, 'en')
+    await openSettings(page)
     const dialog = page.getByRole('dialog', { name: 'Settings' })
     await dialog.getByRole('button', { name: 'Agent presets' }).click()
     await dialog.getByRole('button', { name: 'Set as new task default: Minimal mode' }).click()
@@ -394,7 +394,7 @@ describe('web e2e: agent-preset selection', () => {
     await freshConversation.waitFor()
     await page.getByRole('button', { name: 'Standard mode', exact: true }).waitFor()
 
-    await openSettings(page, 'en')
+    await openSettings(page)
     const reopened = page.getByRole('dialog', { name: 'Settings' })
     await reopened.getByRole('button', { name: 'General', exact: true }).click()
     const reopenedDeveloperTools = reopened.getByRole('switch', { name: 'Show coding view' })

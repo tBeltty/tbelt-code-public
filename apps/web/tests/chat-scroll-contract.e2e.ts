@@ -540,7 +540,7 @@ describe('web e2e: long Chat scroll contract', () => {
       await page.setViewportSize({ width: 1280, height: 720 })
       await page.emulateMedia({ reducedMotion: 'no-preference' })
       await openSeed(page, fixture, fixture.markers.assistant(8))
-      await openSettings(page, 'en')
+      await openSettings(page)
       await page.getByRole('dialog', { name: 'Settings', exact: true })
         .getByText('When to Collapse Work Details', { exact: true }).locator('../..')
         .getByRole('button', { name: 'On completion', exact: true }).click()
@@ -647,7 +647,7 @@ describe('web e2e: long Chat scroll contract', () => {
       await page.setViewportSize({ width: 1280, height: 720 })
       await page.emulateMedia({ reducedMotion: 'no-preference' })
       const selectPreference = async (title: string, choice: string): Promise<void> => {
-        await openSettings(page, 'en')
+        await openSettings(page)
         const dialog = page.getByRole('dialog', { name: 'Settings', exact: true })
         const row = dialog.getByText(title, { exact: true }).locator('../..')
         await row.getByRole('button').click()
@@ -743,7 +743,7 @@ describe('web e2e: long Chat scroll contract', () => {
       const { page } = world
       await page.setViewportSize({ width: 1280, height: 720 })
       await page.emulateMedia({ reducedMotion: 'no-preference' })
-      await openSettings(page, 'en')
+      await openSettings(page)
       const dialog = page.getByRole('dialog', { name: 'Settings', exact: true })
       for (const [title, choice] of [
         ['Work details', 'Standard'],
@@ -1112,7 +1112,7 @@ describe('web e2e: long Chat scroll contract', () => {
     }, async (world) => {
       await world.page.emulateMedia({ reducedMotion: 'no-preference' })
       await openSeed(world.page, HISTORY_FIXTURE, HISTORY_FIXTURE.markers.assistant(HISTORY_FIXTURE.turns))
-      await openSettings(world.page, 'en')
+      await openSettings(world.page)
       await world.page.getByRole('dialog', { name: 'Settings', exact: true })
         .getByText('Tool call details', { exact: true }).locator('../..')
         .getByRole('button', { name: 'Detailed', exact: true }).click()

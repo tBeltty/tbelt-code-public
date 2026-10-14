@@ -1,6 +1,6 @@
 {
   "meta": {
     "title": "Revue automatique des autorisations",
-    "description": "Ajoute un mode d’autorisation Auto review qui utilise le modèle pour évaluer l’autorisation avant chaque appel d’outil."
+    "description": "Ajoute un mode d’autorisation Revue automatique qui utilise le modèle pour évaluer l’autorisation avant chaque appel d’outil."
   }
 }

@@ -1,6 +1,6 @@
 {
   "meta": {
     "title": "Sous-agent Codex",
-    "description": "Délègue une tâche à Codex avec son authentification et ses réglages natifs."
+    "description": "Délègue une tâche à Codex avec son authentification et ses paramètres natifs."
   }
 }

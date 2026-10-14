@@ -72,5 +72,5 @@ export const fr = {
   'time.hours': '{n} h',
   'time.days': '{n} j',
   'time.months': '{n} mois',
-  'time.years': '{n} an',
+  'time.years': '{n} a',
 } satisfies Record<keyof typeof en, string>

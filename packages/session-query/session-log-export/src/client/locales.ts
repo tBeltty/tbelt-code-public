@@ -47,7 +47,7 @@ export const el = {
 export const fr = {
   'header.more': 'Plus d’actions',
   'menu.download': 'Télécharger le journal de session',
-  'menu.feedback': 'Commentaires',
+  'menu.feedback': 'Avis',
   'dialog.preparingTitle': 'Exportation de la session',
   'dialog.preparingDescription': 'Préparation d’un fichier ZIP contenant cette session, ses sous-sessions et ses pièces jointes.',
   'dialog.successTitle': 'Téléchargement de la session lancé',

@@ -161,7 +161,7 @@ export const fr = {
   'duration.hours': '{hours} h {minutes} min',
   'duration.title.live': 'En cours depuis {duration}',
   'duration.title.done': 'A duré {duration}',
-  'output.gap': '… sortie plus ancienne abandonnée …',
+  'output.gap': '… sortie antérieure omise …',
   'output.error': 'flux de sortie en direct interrompu\u00a0: {error}',
   'terminal.signal': 'signal {signal}',
   'terminal.exitCode': 'sortie {code}',

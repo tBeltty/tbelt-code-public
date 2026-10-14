@@ -116,5 +116,5 @@ export const fr = {
   'fontFamily.terminal.title': 'Police du terminal',
   'fontFamily.terminal.description': 'Utilisée pour le terminal de la barre latérale. Séparez les polices par des virgules\u00a0; laissez vide pour la valeur par défaut',
   'fontFamily.placeholder': 'Par défaut',
-  'fontSize.more': 'Plus de réglages de police',
+  'fontSize.more': 'Plus de paramètres de police',
 } satisfies Record<keyof typeof en, string>

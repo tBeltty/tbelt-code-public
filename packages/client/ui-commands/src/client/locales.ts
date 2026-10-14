@@ -126,7 +126,7 @@ export const fr = {
   'label.export': 'Exporter',
   'description.goal': 'Définir ou afficher l’objectif d’une tâche de longue durée',
   'description.plan': 'Entrer dans le mode plan ou en sortir',
-  'description.btw': 'Posez une question à part sans interrompre l’agent',
+  'description.btw': 'Poser une question à part sans interrompre l’agent',
   'description.feedback': 'Enregistrer un avis sur cette session',
   'description.compact': 'Compacter l’historique de conversation le plus ancien',
   'description.permission': 'Changer de préréglage d’autorisations (mode bac à sable + politique d’approbation)',

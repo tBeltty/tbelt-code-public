@@ -97,6 +97,11 @@
   gap: 8px;
 }
 
+/* The shared search input sets a 240px flex basis for the row toolbar; in this column it would set the height. */
+.modelPicker > input[type='search'] {
+  flex: 0 0 auto;
+}
+
 .setupFooter {
   display: flex;
   align-items: center;

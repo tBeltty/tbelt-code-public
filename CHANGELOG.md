@@ -4,6 +4,13 @@ Notable changes to tBelt Code, newest first. The format follows [Keep a Changelo
 
 ## [Unreleased]
 
+## [0.2.1-alpha.2.20261014.4] - 2026-10-14
+
+### Fixed
+
+- The model search box in provider setup is one line tall instead of filling the dialog.
+- When the app's background process stops, the error names the signal that ended it and the log says whether the app or the process itself asked to stop.
+
 ## [0.2.1-alpha.2.20261014.3] - 2026-10-14
 
 ### Added
@@ -306,7 +313,8 @@ Notable changes to tBelt Code, newest first. The format follows [Keep a Changelo
 - Downloads no longer return an older installer.
 - A key that ran out of credit or hit its spending limit is reported as a quota problem instead of an invalid API key.
 
-[Unreleased]: https://github.com/tBeltty/tbelt-code-public/compare/v0.2.1-alpha.2.20261014.3...HEAD
+[Unreleased]: https://github.com/tBeltty/tbelt-code-public/compare/v0.2.1-alpha.2.20261014.4...HEAD
+[0.2.1-alpha.2.20261014.4]: https://github.com/tBeltty/tbelt-code-public/releases/tag/v0.2.1-alpha.2.20261014.4
 [0.2.1-alpha.2.20261014.3]: https://github.com/tBeltty/tbelt-code-public/releases/tag/v0.2.1-alpha.2.20261014.3
 [0.2.1-alpha.2.20261014.2]: https://github.com/tBeltty/tbelt-code-public/releases/tag/v0.2.1-alpha.2.20261014.2
 [0.2.1-alpha.2.20261014]: https://github.com/tBeltty/tbelt-code-public/releases/tag/v0.2.1-alpha.2.20261014

@@ -197,6 +197,7 @@ describe('desktop host process', () => {
     ["process.send({ type: 'ready', url: 4 })", 'invalid IPC event'],
     ["process.send({ type: 'fatal', message: 'startup failed', diagnostic: 42 })", 'invalid IPC event'],
     ['process.exit(0)', 'host stopped'],
+    ["process.kill(process.pid, 'SIGKILL')", 'host stopped by SIGKILL'],
   ])('rejects startup when the child fails before readiness: %s', async (source, message) => {
     const host = hostProcess(projectWithHost(source))
     await expect(host.start()).rejects.toThrow(message)

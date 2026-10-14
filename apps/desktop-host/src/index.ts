@@ -50,7 +50,8 @@ async function main(): Promise<void> {
     if (!process.connected || process.send === undefined) { resolve(); return }
     process.send(message, (error) => { if (error === null) resolve(); else reject(error) })
   })
-  const stop = (): Promise<void> => stopping ??= (async () => {
+  const stop = (reason: string): Promise<void> => stopping ??= (async () => {
+    console.error(`dsh desktop host stopping: ${reason}`)
     // Startup failure is reported by main; shutdown only owns a tree that booted.
     const running = await application.catch(() => undefined)
     await running?.shutdown.shutdown(0)
@@ -59,7 +60,7 @@ async function main(): Promise<void> {
   })()
   process.on('message', (message: unknown) => {
     if (typeof message !== 'object' || message === null || !('type' in message)) return
-    if (message.type === 'shutdown') { void stop(); return }
+    if (message.type === 'shutdown') { void stop('shutdown requested by the shell'); return }
     if (message.type === 'quit-inspection') {
       if (!('requestId' in message) || !Number.isSafeInteger(message.requestId)) return
       const requestId = message.requestId
@@ -89,7 +90,7 @@ async function main(): Promise<void> {
       }
     })().catch((error: unknown) => { console.error(error) })
   })
-  process.once('disconnect', () => { void stop() })
+  process.once('disconnect', () => { void stop('IPC channel to the shell closed') })
   const { ctx } = await application
   control.updateTasks = installDesktopUpdateTaskControl(ctx)
   control.quitInspection = installDesktopQuitInspection(ctx)

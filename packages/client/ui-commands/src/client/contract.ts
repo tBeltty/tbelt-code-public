@@ -86,6 +86,14 @@ export interface ActionSpec {
    * @param session - the ClientSessionContext captured at invocation.
    */
   run(session: ClientSessionContext): void
+  /**
+   * Run the action for an argued line (`/name text`) instead of submitting the
+   * line to the Host command. Meaningful only on a decoration of a Host command
+   * that accepts input; absent, an argued line reaches the Host command.
+   * @param session - the ClientSessionContext captured at submission.
+   * @param input - the text after the command name, trimmed.
+   */
+  runWithInput?(session: ClientSessionContext, input: string): void
 }
 
 /** The UI behavior of a contribution or decoration. */

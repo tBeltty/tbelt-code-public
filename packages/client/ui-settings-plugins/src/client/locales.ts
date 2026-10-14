@@ -20,3 +20,21 @@ export const es = {
   tabs: 'Vistas de plugins',
   empty: 'Esta instalación no expone vistas de plugins.',
 } satisfies Record<keyof typeof en, string>
+
+/** Greek dictionary, checked complete against the English key set. */
+export const el = {
+  nav: 'Επιθεωρητής συστήματος',
+  title: 'Επιθεωρητής συστήματος',
+  intro: 'Επιθεωρήστε τα πρόσθετα που συνοδεύουν αυτή την εγκατάσταση.',
+  tabs: 'Προβολές πρόσθετων',
+  empty: 'Αυτή η εγκατάσταση δεν εκθέτει προβολές πρόσθετων.',
+} satisfies Record<keyof typeof en, string>
+
+/** French dictionary, checked complete against the English key set. */
+export const fr = {
+  nav: 'Inspecteur du système',
+  title: 'Inspecteur du système',
+  intro: 'Inspectez les plugins fournis avec ce déploiement.',
+  tabs: 'Vues des plugins',
+  empty: 'Ce déploiement n’expose aucune vue de plugin.',
+} satisfies Record<keyof typeof en, string>

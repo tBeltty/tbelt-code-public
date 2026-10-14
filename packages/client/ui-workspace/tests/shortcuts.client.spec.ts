@@ -47,7 +47,7 @@ async function bench(runtime: 'web' | 'desktop' = 'desktop', platform: ShortcutP
   const directory = createSnapshotStore(true)
   ctx.provide('slots', { entries: () => directory.getSnapshot() ? [{}] : [], subscribe: (_name: string, listener: () => void) => directory.subscribe(listener) })
   const locale = new LocaleRuntime(ctx)
-  locale.register('workspace', { en, es })
+  locale.register('workspace', { en, es, el: en, fr: en })
   locale.setLocale('en')
   ctx.provide('locale', locale)
   const navigation = {

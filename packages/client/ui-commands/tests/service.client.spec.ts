@@ -547,6 +547,37 @@ describe('decorations (bare-invocation UI on host commands)', () => {
     expect(outcome.claim.token).toBe('/goal ')
   })
 
+  it('an argued line goes to an action decoration that takes input, never to the host', async () => {
+    const { command, source, mint, warm, executeCalls } = await bench()
+    const seen: string[] = []
+    command.decorate(goalDecoration({
+      ui: { kind: 'action', run: () => {}, runWithInput: (_session, input) => { seen.push(input) } },
+    }))
+    const scope = mint('s1')
+    await warm(proj('s1'))
+    const argued = await source.matchEnter!(proj('s1'), '/goal ship it', new AbortController().signal, { attachments: 0 })
+    if (argued === undefined || argued === 'handled' || !('claim' in argued)) throw new Error('expected the host claim')
+    expect(await argued.claim.submit('  ship it ', scope.ctx, [])).toEqual({ kind: 'success' })
+    expect(seen).toEqual(['ship it'])
+    expect(executeCalls).toEqual([])
+  })
+
+  it('an unavailable action decoration leaves the argued line to the host', async () => {
+    const { command, source, mint, warm, executeCalls } = await bench()
+    const seen: string[] = []
+    command.decorate(goalDecoration({
+      available: () => false,
+      ui: { kind: 'action', run: () => {}, runWithInput: (_session, input) => { seen.push(input) } },
+    }))
+    const scope = mint('s1')
+    await warm(proj('s1'))
+    const argued = await source.matchEnter!(proj('s1'), '/goal ship it', new AbortController().signal, { attachments: 0 })
+    if (argued === undefined || argued === 'handled' || !('claim' in argued)) throw new Error('expected the host claim')
+    await argued.claim.submit('ship it', scope.ctx, [])
+    expect(seen).toEqual([])
+    expect(executeCalls).toEqual([{ sessionId: sid('s1'), line: '/goal ship it', images: [] }])
+  })
+
   it('a decoration with no host row never fires (bare enter misses; menu pick misses)', async () => {
     const { command, source, mint, warm } = await bench()
     command.decorate(goalDecoration({ name: 'phantom' }))

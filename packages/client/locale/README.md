@@ -1,5 +1,5 @@
 ---
-description: "Localization for the web GUI: the English and Spanish preference, system-language detection, typed namespace dictionaries, and the framework translation seat, for users and plugin authors."
+description: "Localization for the web GUI: the English, Spanish, Greek and French preference, system-language detection, typed namespace dictionaries, and the framework translation seat, for users and plugin authors."
 kind: "package-reference"
 ---
 
@@ -7,7 +7,7 @@ kind: "package-reference"
 
 ## Summary
 
-Use `dsh-client-locale` to switch the web GUI between the shipped English and Spanish locales or languages added by client plugins. User selections take effect immediately; loopback pages persist them in `$DSH_HOME/cordis.patch.yml`, while non-loopback pages keep them only for the current process. Without a stored selection, the desktop app follows the operating-system language and a browser follows its own language list. Plugin authors add typed namespace dictionaries and translate through the public locale API; slot-rendered copy updates without a reload.
+Use `dsh-client-locale` to switch the web GUI between the shipped English, Spanish, Greek and French locales or languages added by client plugins. User selections take effect immediately; loopback pages persist them in `$DSH_HOME/cordis.patch.yml`, while non-loopback pages keep them only for the current process. Without a stored selection, the desktop app follows the operating-system language and a browser follows its own language list. Plugin authors add typed namespace dictionaries and translate through the public locale API; slot-rendered copy updates without a reload.
 
 ## Table of Contents
 
@@ -27,17 +27,17 @@ Use it wherever the web GUI needs a language switch or translated copy: the ship
 
 ### Choosing a language
 
-Open Settings → General and select Automatic, English or Spanish, or a registered language. The active locale is applied immediately: the UI copy switches, `<html lang>` points at the active locale id, and the choice is written to the durable settings section. Automatic removes the stored choice. Without one, the client selects the first registered language that matches the system language list by full tag and then primary subtag, falling back to English. A stored external locale waits for its definition to register instead of becoming active while unavailable.
+Open Settings → General and select Automatic, English, Spanish, Greek or French, or a registered language. The active locale is applied immediately: the UI copy switches, `<html lang>` points at the active locale id, and the choice is written to the durable settings section. Automatic removes the stored choice. Without one, the client selects the first registered language that matches the system language list by full tag and then primary subtag, falling back to English. A stored external locale waits for its definition to register instead of becoming active while unavailable.
 
 Native shells may provide `__DSH_LOCALE__` with an asynchronous `read()` and an `onChange(locale)` callback. Initialization supplies the current Host preference and ordered OS languages before the Client mounts. Automatic selection stays provisional; only Settings selections write `locale.preference`. A fresh read on each page load prevents a stale preload preference after reload. Ordinary browsers keep navigator-based detection and their existing settings-scope policy.
 
 ### Spanish
 
-`es` ships with this package as a registered language whose fallback is `en`. Every namespace declares an `es` dictionary beside its `en` dictionary, with exactly the same keys. Units, separators and product names that read the same in both languages repeat the English text. The parity test in `scripts/locale-dictionary-parity.spec.ts` rejects a key present in one language and absent from the other.
+`es`, `el` and `fr` ship with this package as registered languages whose fallback is `en`. Every namespace declares an `es`, `el` and `fr` dictionary beside its `en` dictionary, with exactly the same keys and placeholders. Units, separators and product names that read the same in every language repeat the English text. French dictionaries place a no-break space before `:`, `;`, `?`, `!` and inside guillemets, and their `number.groupSeparator` is a narrow no-break space. The parity test in `scripts/locale-dictionary-parity.spec.ts` rejects a key present in one language and absent from another.
 
 ### Registering a dictionary
 
-Call `ctx.locale.register(ns, { en, es })` with a namespace merged into `LocaleNamespaceMap`; the compiler checks every key against the namespace's typed key union and requires both shipped locales. Consumers translate through `ctx.locale.bind(ns)` or the framework-injected `t` seat. A dictionary registered after the UI is already mounted is picked up without a remount.
+Call `ctx.locale.register(ns, { en, es, el, fr })` with a namespace merged into `LocaleNamespaceMap`; the compiler checks every key against the namespace's typed key union and requires the shipped locales. Consumers translate through `ctx.locale.bind(ns)` or the framework-injected `t` seat. A dictionary registered after the UI is already mounted is picked up without a remount.
 
 ### Resolving package text
 
@@ -102,7 +102,7 @@ The typed object form requires complete dictionaries for both built-in locales. 
 | [`src/client/index.ts`](src/client/index.ts) | `LocaleRuntime`, dictionary registry, Language row registration, `locale/change` event |
 | [`src/index.ts`](src/index.ts) | Node half: registers the `locale` settings namespace |
 | [`src/locale-settings.ts`](src/locale-settings.ts) | The durable schema for `locale.preference` |
-| [`src/locales/`](src/locales/) | The shipped `en`/`es` dictionaries for the common namespace |
+| [`src/locales/`](src/locales/) | The shipped `en`, `es`, `el` and `fr` dictionaries for the common namespace |
 
 </details>
 

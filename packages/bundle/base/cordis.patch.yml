@@ -346,6 +346,9 @@
     - id: command-feedback
       name: '@deepseek-ai/dsh-command-feedback'
 
+    - id: command-btw
+      name: '@deepseek-ai/dsh-command-btw'
+
     - id: goal
       name: '@deepseek-ai/dsh-goal'
 

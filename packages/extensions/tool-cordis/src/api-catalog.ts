@@ -581,6 +581,43 @@ export const SERVICE_API: readonly ServiceApiEntry[] = [
     ],
   },
   {
+    key: 'btw',
+    summary: 'Side conversation service: one in-memory thread per live Session.',
+    description: 'Side conversation service: one in-memory thread per live Session.',
+    methods: [
+      {
+        signature: '@Remote(\'ask\') ask(request: BtwAskRequest): Promise<BtwResult<BtwTurn>>',
+        description: 'Ask the side conversation one question.',
+        parameters: [{ name: 'request', description: 'target Session and question.' }],
+        returns: 'the answered turn, or the reason none was produced.',
+      },
+      {
+        signature: '@Remote(\'send\') send(request: BtwSessionRequest): Promise<BtwResult<BtwDelivery>>',
+        description: 'Queue the side conversation\'s unsent turns on the main agent as context.',
+        parameters: [{ name: 'request', description: 'target Session.' }],
+        returns: 'how the context was written and how many turns it carried.',
+      },
+      {
+        signature: '@Remote(\'reset\') reset(request: BtwSessionRequest): Promise<BtwResult<BtwThread>>',
+        description: 'Discard the side conversation. Turns already delivered stay in the main conversation.',
+        parameters: [{ name: 'request', description: 'target Session.' }],
+        returns: 'the now-empty thread.',
+      },
+      {
+        signature: '@Remote(\'get\') get(request: BtwSessionRequest): Promise<BtwResult<BtwThread>>',
+        description: 'Read the side conversation.',
+        parameters: [{ name: 'request', description: 'target Session.' }],
+        returns: 'the turns asked so far and how many were delivered.',
+      },
+      {
+        signature: 'async runCommand(invocation: CommandInvocation): Promise<CommandResult>',
+        description: 'Run one `/btw` command line against the receiving agent.',
+        parameters: [{ name: 'invocation', description: 'receiving agent, raw input, and UI cancellation.' }],
+        returns: 'the answer, a delivery acknowledgement, or a usage or failure error.',
+      },
+    ],
+  },
+  {
     key: 'clientModules',
     summary: 'The web plugin table service: incremental `dsh.client` scan + wire composition + bundle route + index injection rows.',
     description: 'The web plugin table service: incremental `dsh.client` scan + wire composition + bundle route + index injection rows. Construction runs the activation scan synchronously — a malformed declaration or missing bundle among the already-loaded entries aggregates into one loud throw (FAILED fiber; the boot activation audit reports it).',
@@ -4971,6 +5008,42 @@ export const TYPE_API: readonly TypeApiEntry[] = [
   {
     name: 'BrowserUseProviderName',
     declaration: 'export type BrowserUseProviderName = Branded<\'BrowserUseProviderName\'>;',
+  },
+  {
+    name: 'BtwAskRequest',
+    declaration: 'export interface BtwAskRequest extends BtwSessionRequest {\n    readonly question: string;\n}',
+  },
+  {
+    name: 'BtwDelivery',
+    declaration: 'export interface BtwDelivery {\n    readonly form: BtwDeliveryForm;\n    readonly turns: number;\n}',
+  },
+  {
+    name: 'BtwDeliveryForm',
+    declaration: 'export type BtwDeliveryForm = \'verbatim\' | \'summary\';',
+  },
+  {
+    name: 'BtwError',
+    declaration: 'export interface BtwError {\n    readonly code: BtwErrorCode;\n    readonly message: string;\n}',
+  },
+  {
+    name: 'BtwErrorCode',
+    declaration: 'export type BtwErrorCode = \'session-not-found\' | \'empty-question\' | \'busy\' | \'no-route\' | \'model-failed\' | \'nothing-to-send\';',
+  },
+  {
+    name: 'BtwResult',
+    declaration: 'export type BtwResult<T> = {\n    readonly ok: true;\n    readonly value: T;\n} | {\n    readonly ok: false;\n    readonly error: BtwError;\n};',
+  },
+  {
+    name: 'BtwSessionRequest',
+    declaration: 'export interface BtwSessionRequest {\n    readonly sessionId: SessionId;\n}',
+  },
+  {
+    name: 'BtwThread',
+    declaration: 'export interface BtwThread {\n    readonly turns: readonly BtwTurn[];\n    readonly sentTurns: number;\n}',
+  },
+  {
+    name: 'BtwTurn',
+    declaration: 'export interface BtwTurn {\n    readonly question: string;\n    readonly answer: string;\n}',
   },
   {
     name: 'BundleInfo',

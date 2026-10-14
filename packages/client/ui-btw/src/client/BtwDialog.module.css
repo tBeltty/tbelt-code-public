@@ -1,0 +1,128 @@
+/* The doubled selector overrides the Modal card geometry. */
+.dialog.dialog {
+  gap: 20px;
+  width: min(560px, 100%);
+  border-radius: var(--dsw-radius-panel);
+}
+
+.thread {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  min-height: 160px;
+  max-height: min(46vh, 420px);
+  overflow-y: auto;
+}
+
+.empty {
+  margin: auto;
+  max-width: 340px;
+  color: var(--dsw-alias-label-caption);
+  font-size: 13px;
+  line-height: 20px;
+  text-align: center;
+}
+
+.turn {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.question,
+.answer,
+.waiting {
+  margin: 0;
+  font-size: 14px;
+  line-height: 22px;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.question {
+  color: var(--dsw-alias-label-primary);
+}
+
+.answer {
+  padding: 10px 14px;
+  border: 0.5px solid var(--dsw-alias-border-l4);
+  border-radius: var(--dsw-radius-lg);
+  background: var(--dsw-alias-bg-layer-1);
+  color: var(--dsw-alias-label-primary);
+}
+
+.waiting {
+  color: var(--dsw-alias-label-caption);
+}
+
+.who {
+  display: block;
+  color: var(--dsw-alias-label-caption);
+  font-size: 12px;
+  line-height: 18px;
+}
+
+.sent {
+  align-self: flex-end;
+  color: var(--dsw-alias-label-caption);
+  font-size: 12px;
+  line-height: 18px;
+}
+
+.compose {
+  display: flex;
+  align-items: flex-end;
+  gap: 8px;
+}
+
+/* The field starts at one line, grows with its text where supported, and
+   scrolls after the cap. */
+.field {
+  display: block;
+  flex: 1;
+  min-height: 44px;
+  max-height: 160px;
+  box-sizing: border-box;
+  padding: 10px 14px;
+  border: 0.5px solid var(--dsw-alias-border-l4);
+  border-radius: var(--dsw-radius-lg);
+  background: var(--dsw-alias-bg-layer-1);
+  color: var(--dsw-alias-label-primary);
+  font: inherit;
+  font-size: 14px;
+  line-height: 22px;
+  field-sizing: content;
+  resize: none;
+  transition: border-color 120ms ease, box-shadow 120ms ease;
+}
+
+.field::placeholder {
+  color: var(--dsw-alias-label-caption);
+}
+
+.field:focus {
+  outline: none;
+  border-color: var(--dsw-alias-border-l3);
+  box-shadow: 0 0 0 1px var(--dsw-alias-state-business-primary);
+}
+
+.ask {
+  height: 44px;
+  padding: 0 18px;
+  border-radius: var(--dsw-radius-lg);
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.actions {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  width: 100%;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .field {
+    transition: none;
+  }
+}

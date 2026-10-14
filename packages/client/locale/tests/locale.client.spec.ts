@@ -161,7 +161,7 @@ describe('LocaleRuntime', () => {
     // A browser naming no shipped language opens at FALLBACK_LOCALE with
     // nothing stored. Choosing that same language in the menu must become
     // durable, or a Chinese browser sharing the home still opens Chinese.
-    stubLanguages('fr-FR')
+    stubLanguages('it-IT')
     const host = stubConfigForm<LocaleSettings>()
     const { svc } = make(host)
     expect(svc.getLocale().active).toBe('en')
@@ -179,7 +179,7 @@ describe('LocaleRuntime', () => {
 
   it('throws on unknown locale ids', () => {
     const { svc } = make()
-    expect(() => { svc.setLocale('fr') }).toThrow('not registered')
+    expect(() => { svc.setLocale('it') }).toThrow('not registered')
   })
 
   it('registers an external locale for selection, translation, persistence, and reversible disposal', () => {
@@ -197,7 +197,7 @@ describe('LocaleRuntime', () => {
 
     dispose()
     expect(svc.getLocale().active).toBe('es')
-    expect(svc.getLocale().locales.map(locale => locale.id)).toEqual(['en', 'es'])
+    expect(svc.getLocale().locales.map(locale => locale.id)).toEqual(['en', 'es', 'el', 'fr'])
     expect(svc.bind('ns')('hello')).toBe('Hello')
     const revision = svc.getLocale().revision
     dispose()
@@ -226,11 +226,11 @@ describe('LocaleRuntime', () => {
       .toThrow('not a BCP 47-style tag')
     expect(() => svc.addLanguage({ id: '123', label: 'Numeric', fallback: 'en' }))
       .toThrow('not a BCP 47-style tag')
-    expect(() => svc.addLanguage({ id: 'fr', label: '   ', fallback: 'en' }))
+    expect(() => svc.addLanguage({ id: 'it', label: '   ', fallback: 'en' }))
       .toThrow('label must not be empty')
-    expect(() => svc.addLanguage({ id: 'fr', label: 'Français', fallback: 'bad tag' }))
+    expect(() => svc.addLanguage({ id: 'it', label: 'Italiano', fallback: 'bad tag' }))
       .toThrow('locale fallback')
-    expect(() => svc.addLanguage({ id: 'fr', label: 'Français', fallback: 'de' }))
+    expect(() => svc.addLanguage({ id: 'it', label: 'Italiano', fallback: 'de' }))
       .toThrow('not registered')
   })
 
@@ -246,34 +246,34 @@ describe('LocaleRuntime', () => {
   it('walks each language fallback recursively for every dictionary key', () => {
     const { svc } = make()
     svc.register('ns', 'en', { base: 'English', shared: 'English shared' })
-    svc.register('ns', 'fr', { shared: 'Français' })
-    svc.register('ns', 'fr-CA', { local: 'Québec' })
+    svc.register('ns', 'it', { shared: 'Italiano' })
+    svc.register('ns', 'it-CH', { local: 'Ticino' })
     svc.register('common', 'en', { commonBase: 'Common English' })
-    svc.register('common', 'fr', { commonShared: 'Common French' })
-    svc.addLanguage({ id: 'fr', label: 'Français', fallback: 'en' })
-    svc.addLanguage({ id: 'fr-CA', label: 'Français (Canada)', fallback: 'fr' })
-    svc.setLocale('fr-CA')
+    svc.register('common', 'it', { commonShared: 'Common Italian' })
+    svc.addLanguage({ id: 'it', label: 'Italiano', fallback: 'en' })
+    svc.addLanguage({ id: 'it-CH', label: 'Italiano (Svizzera)', fallback: 'it' })
+    svc.setLocale('it-CH')
     const t = svc.bind('ns')
-    expect(t('local')).toBe('Québec')
-    expect(t('shared')).toBe('Français')
+    expect(t('local')).toBe('Ticino')
+    expect(t('shared')).toBe('Italiano')
     expect(t('base')).toBe('English')
-    expect(t('commonShared')).toBe('Common French')
+    expect(t('commonShared')).toBe('Common Italian')
     expect(t('commonBase')).toBe('Common English')
   })
 
   it('rejects a fallback cycle exposed by re-registering an unloaded language', () => {
     const { svc } = make()
     svc.register('ns', 'en', { base: 'English' })
-    const removeFr = svc.addLanguage({ id: 'fr', label: 'Français', fallback: 'en' })
-    svc.addLanguage({ id: 'fr-CA', label: 'Français (Canada)', fallback: 'fr' })
-    svc.setLocale('fr-CA')
-    removeFr()
+    const removeIt = svc.addLanguage({ id: 'it', label: 'Italiano', fallback: 'en' })
+    svc.addLanguage({ id: 'it-CH', label: 'Italiano (Svizzera)', fallback: 'it' })
+    svc.setLocale('it-CH')
+    removeIt()
     expect(svc.bind('ns')('base')).toBe('English')
-    expect(() => svc.addLanguage({ id: 'de', label: 'Deutsch', fallback: 'fr-CA' }))
-      .toThrow('locale fallback "fr" is not registered')
-    expect(() => svc.addLanguage({ id: 'fr', label: 'Français', fallback: 'fr-CA' }))
+    expect(() => svc.addLanguage({ id: 'de', label: 'Deutsch', fallback: 'it-CH' }))
+      .toThrow('locale fallback "it" is not registered')
+    expect(() => svc.addLanguage({ id: 'it', label: 'Italiano', fallback: 'it-CH' }))
       .toThrow('fallback cycle')
-    expect(svc.getLocale().locales.map(locale => locale.id)).toEqual(['en', 'es', 'fr-CA'])
+    expect(svc.getLocale().locales.map(locale => locale.id)).toEqual(['en', 'es', 'el', 'fr', 'it-CH'])
   })
 
   it('adopts a saved external locale when its definition registers later', () => {
@@ -324,7 +324,7 @@ describe('LocaleRuntime', () => {
     stubLanguages('es')
     expect(make().svc.getLocale().active).toBe('es')
     // An unshipped language walks the list to the first one this app ships.
-    stubLanguages('fr-FR', 'en-US')
+    stubLanguages('it-IT', 'en-US')
     expect(make().svc.getLocale().active).toBe('en')
     // Only `language` populated: an empty ordered list, and a host that
     // exposes no `languages` property at all.
@@ -334,8 +334,15 @@ describe('LocaleRuntime', () => {
     expect(make().svc.getLocale().active).toBe('en')
     // No shipped language anywhere in the browser's preferences: en is the
     // product default rather than an arbitrary near-match.
-    stubLanguages('fr-FR', 'de')
+    stubLanguages('it-IT', 'de')
     expect(make().svc.getLocale().active).toBe('en')
+  })
+
+  it('opens in a shipped Greek or French browser language through its primary subtag', () => {
+    stubLanguages('el-GR', 'en-US')
+    expect(make().svc.getLocale().active).toBe('el')
+    stubLanguages('fr-CA')
+    expect(make().svc.getLocale().active).toBe('fr')
   })
 
   it('re-evaluates browser languages as external definitions register and unload', () => {
@@ -388,11 +395,13 @@ describe('LocaleRuntime', () => {
     expect(svc.bind('ns2')('onlyEs')).toBe('onlyEs')
   })
 
-  it('starts with exactly the two shipped locales and their fallback relation', () => {
+  it('starts with exactly the four shipped locales and their fallback relation', () => {
     const { svc } = make()
     expect(svc.getLocale().locales).toEqual([
       { id: 'en', label: 'English' },
       { id: 'es', label: 'Español', fallback: 'en' },
+      { id: 'el', label: 'Ελληνικά', fallback: 'en' },
+      { id: 'fr', label: 'Français', fallback: 'en' },
     ])
   })
 })

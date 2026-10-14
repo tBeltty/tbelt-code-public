@@ -71,6 +71,66 @@ export const es = {
   saveFailed: 'La instalación no aceptó estos valores; se dejaron para que los corrijas.',
 } satisfies Record<keyof typeof en, string>
 
+/** Greek dictionary, checked complete against the English key set. */
+export const el = {
+  title: 'Αναζήτηση στο διαδίκτυο',
+  description: 'Επιλέξτε τον πάροχο αναζήτησης που χρησιμοποιεί ο πράκτορας για επίκαιρες πληροφορίες.',
+  provider: 'Πάροχος αναζήτησης',
+  providerHint: 'Ο πράκτορας κάνει αναζητήσεις μόνο μέσω του παρόχου που επιλέγετε εδώ. Το κλειδί σας στέλνεται σε αυτόν τον πάροχο και πουθενά αλλού.',
+  noProviders: 'Δεν είναι εγκατεστημένος κανένας πάροχος αναζήτησης.',
+  providerExa: 'Exa',
+  providerPerplexity: 'Perplexity',
+  providerBrave: 'Brave',
+  providerTavily: 'Tavily',
+  apiKey: 'Κλειδί API',
+  apiKeyHint: 'Αποθηκεύεται εκτός του αρχείου ρυθμίσεων και ελέγχεται με τον πάροχο πριν την αποθήκευση. Αφήστε το κενό για να κρατήσετε το τρέχον κλειδί.',
+  apiKeySet: 'Το κλειδί API έχει ρυθμιστεί',
+  apiKeyUnset: 'Δεν έχει ρυθμιστεί κλειδί.',
+  apiKeyPlaceholder: 'Εισαγάγετε το κλειδί API σας',
+  apiKeyReplace: 'Αντικατάσταση API',
+  apiKeyKeep: 'Διατήρηση τρέχοντος κλειδιού',
+  checking: 'Έλεγχος του κλειδιού με τον πάροχο…',
+  keyMissing: 'Προσθέστε το κλειδί API αυτού του παρόχου πριν αποθηκεύσετε.',
+  keyRejected: 'Ο πάροχος απέρριψε αυτό το κλειδί. Δεν αποθηκεύτηκε τίποτα.',
+  keyQuota: 'Το κλειδί λειτουργεί, αλλά ο πάροχος αναφέρει ότι δεν απομένει όριο ή πίστωση. Αποθηκεύτηκε· οι αναζητήσεις αποτυγχάνουν μέχρι να ανανεωθεί το όριο.',
+  keyError: 'Δεν ήταν δυνατός ο έλεγχος του κλειδιού. Δεν αποθηκεύτηκε τίποτα.',
+  readOnly: 'Αυτή η εγκατάσταση αποθηκεύει τις ρυθμίσεις μόνο για ανάγνωση.',
+  unavailable: 'Η αναζήτηση στο διαδίκτυο δεν έχει φορτωθεί, επομένως δεν μπορεί να ρυθμιστεί αυτή τη στιγμή.',
+  save: 'Αποθήκευση',
+  saving: 'Αποθήκευση…',
+  saveFailed: 'Η εγκατάσταση δεν δέχτηκε αυτές τις τιμές· αφέθηκαν για να τις διορθώσετε.',
+} satisfies Record<keyof typeof en, string>
+
+/** French dictionary, checked complete against the English key set. */
+export const fr = {
+  title: 'Recherche web',
+  description: 'Choisissez le fournisseur de recherche que l’agent utilise pour obtenir des informations récentes.',
+  provider: 'Fournisseur de recherche',
+  providerHint: 'L’agent ne recherche que via le fournisseur choisi ici. Votre clé n’est envoyée qu’à ce fournisseur et nulle part ailleurs.',
+  noProviders: 'Aucun fournisseur de recherche n’est installé.',
+  providerExa: 'Exa',
+  providerPerplexity: 'Perplexity',
+  providerBrave: 'Brave',
+  providerTavily: 'Tavily',
+  apiKey: 'Clé API',
+  apiKeyHint: 'Stockée en dehors du fichier de paramètres et vérifiée auprès du fournisseur avant l’enregistrement. Laissez vide pour conserver la clé actuelle.',
+  apiKeySet: 'Clé API configurée',
+  apiKeyUnset: 'Aucune clé n’est configurée.',
+  apiKeyPlaceholder: 'Saisissez votre clé API',
+  apiKeyReplace: 'Remplacer la clé API',
+  apiKeyKeep: 'Conserver la clé actuelle',
+  checking: 'Vérification de la clé auprès du fournisseur…',
+  keyMissing: 'Ajoutez la clé API de ce fournisseur avant d’enregistrer.',
+  keyRejected: 'Le fournisseur a rejeté cette clé. Rien n’a été enregistré.',
+  keyQuota: 'La clé fonctionne, mais le fournisseur indique qu’il ne reste ni quota ni crédit. Elle a été enregistrée\u00a0; les recherches échouent tant que le quota n’est pas renouvelé.',
+  keyError: 'Impossible de vérifier la clé. Rien n’a été enregistré.',
+  readOnly: 'Ce déploiement stocke les paramètres en lecture seule.',
+  unavailable: 'La recherche web n’est pas chargée\u00a0: elle ne peut pas être configurée pour le moment.',
+  save: 'Enregistrer',
+  saving: 'Enregistrement…',
+  saveFailed: 'Le déploiement n’a pas accepté ces valeurs\u00a0; elles ont été laissées pour que vous les corrigiez.',
+} satisfies Record<keyof typeof en, string>
+
 /** Locale key naming each shipped provider; another id renders as itself. */
 export const PROVIDER_NAMES: Readonly<Record<string, WebSearchSettingsLocaleKey>> = {
   exa: 'providerExa',

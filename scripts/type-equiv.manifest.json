@@ -2441,6 +2441,51 @@
       "doc": "docs/subsystems/worktrees.md",
       "symbol": "CreatedWorktree",
       "source": "packages/experimental/worktree/src/types.ts"
+    },
+    {
+      "doc": "docs/subsystems/commands.md",
+      "symbol": "BtwTurn",
+      "source": "packages/interaction/command-btw/src/types.ts"
+    },
+    {
+      "doc": "docs/subsystems/commands.md",
+      "symbol": "BtwThread",
+      "source": "packages/interaction/command-btw/src/types.ts"
+    },
+    {
+      "doc": "docs/subsystems/commands.md",
+      "symbol": "BtwErrorCode",
+      "source": "packages/interaction/command-btw/src/types.ts"
+    },
+    {
+      "doc": "docs/subsystems/commands.md",
+      "symbol": "BtwError",
+      "source": "packages/interaction/command-btw/src/types.ts"
+    },
+    {
+      "doc": "docs/subsystems/commands.md",
+      "symbol": "BtwResult",
+      "source": "packages/interaction/command-btw/src/types.ts"
+    },
+    {
+      "doc": "docs/subsystems/commands.md",
+      "symbol": "BtwSessionRequest",
+      "source": "packages/interaction/command-btw/src/types.ts"
+    },
+    {
+      "doc": "docs/subsystems/commands.md",
+      "symbol": "BtwAskRequest",
+      "source": "packages/interaction/command-btw/src/types.ts"
+    },
+    {
+      "doc": "docs/subsystems/commands.md",
+      "symbol": "BtwDeliveryForm",
+      "source": "packages/interaction/command-btw/src/types.ts"
+    },
+    {
+      "doc": "docs/subsystems/commands.md",
+      "symbol": "BtwDelivery",
+      "source": "packages/interaction/command-btw/src/types.ts"
     }
   ]
 }

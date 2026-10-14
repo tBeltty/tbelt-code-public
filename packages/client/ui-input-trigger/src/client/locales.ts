@@ -32,3 +32,29 @@ export const es = {
   'crumbs.aria': 'Navegación de carpetas',
   'suggestions.aria': 'Sugerencias del activador',
 } satisfies Record<keyof typeof en, string>
+
+/** Greek dictionary, checked complete against the English key set. */
+export const el = {
+  'command': 'Εντολές',
+  'skill': 'Δεξιότητες',
+  'subagent': 'Υποπράκτορες',
+  'loading': 'Φόρτωση…',
+  'drill.aria': 'Περιήγηση στον φάκελο',
+  'drill.hint': 'Περιήγηση στον φάκελο',
+  'drill.key': 'Tab',
+  'crumbs.aria': 'Πλοήγηση φακέλων',
+  'suggestions.aria': 'Προτάσεις ενεργοποίησης',
+} satisfies Record<keyof typeof en, string>
+
+/** French dictionary, checked complete against the English key set. */
+export const fr = {
+  'command': 'Commandes',
+  'skill': 'Compétences',
+  'subagent': 'Sous-agents',
+  'loading': 'Chargement…',
+  'drill.aria': 'Parcourir le dossier',
+  'drill.hint': 'Parcourir le dossier',
+  'drill.key': 'Tab',
+  'crumbs.aria': 'Navigation dans les dossiers',
+  'suggestions.aria': 'Suggestions de déclenchement',
+} satisfies Record<keyof typeof en, string>

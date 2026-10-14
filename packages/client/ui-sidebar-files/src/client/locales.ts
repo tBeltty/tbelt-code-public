@@ -62,3 +62,45 @@ export const es = {
   'error.notDirectory': 'Eso no es un directorio.',
   'error.unavailable': 'Error de lectura: {message}',
 } satisfies Record<keyof typeof en, string>
+
+/** Greek dictionary, checked complete against the English key set. */
+export const el = {
+  'shortcut.noSession': 'Επιλέξτε πρώτα μια συνεδρία',
+  'type.label': 'Αρχεία',
+  'guide.title': 'Αρχεία του χώρου εργασίας',
+  'guide.description': 'Περιήγηση στα αρχεία του χώρου εργασίας αυτής της συνεδρίας',
+  loading: 'Ανάγνωση…',
+  empty: 'Κενός φάκελος',
+  truncated: 'Υπάρχουν πάρα πολλές καταχωρίσεις· εμφανίζονται μόνο μερικές.',
+  noWorkspace: 'Αυτή η συνεδρία δεν έχει φάκελο χώρου εργασίας.',
+  reload: 'Επαναφόρτωση',
+  autoRefresh: 'Αυτόματη ανανέωση',
+  'autoRefresh.enable': 'Ενεργοποίηση αυτόματης ανανέωσης',
+  'autoRefresh.disable': 'Απενεργοποίηση αυτόματης ανανέωσης',
+  'entry.other': 'Δεν είναι αρχείο ή φάκελος, επομένως δεν μπορεί να ανοιχτεί.',
+  'error.notFound': 'Αυτός ο φάκελος δεν υπάρχει πια. Ίσως έχει μετακινηθεί ή διαγραφεί.',
+  'error.outsideWorkspace': "Αυτός ο φάκελος βρίσκεται εκτός του χώρου εργασίας, γι' αυτό η πλευρική γραμμή δεν θα τον διαβάσει.",
+  'error.notDirectory': 'Αυτό δεν είναι φάκελος.',
+  'error.unavailable': 'Η ανάγνωση απέτυχε: {message}',
+} satisfies Record<keyof typeof en, string>
+
+/** French dictionary, checked complete against the English key set. */
+export const fr = {
+  'shortcut.noSession': 'Sélectionnez d’abord une session',
+  'type.label': 'Fichiers',
+  'guide.title': 'Fichiers de l’espace de travail',
+  'guide.description': 'Parcourir les fichiers de l’espace de travail de cette session',
+  loading: 'Lecture…',
+  empty: 'Dossier vide',
+  truncated: 'Trop d’entrées, seule une partie est affichée.',
+  noWorkspace: 'Cette session n’a pas de dossier d’espace de travail.',
+  reload: 'Recharger',
+  autoRefresh: 'Actualisation automatique',
+  'autoRefresh.enable': 'Activer l’actualisation automatique',
+  'autoRefresh.disable': 'Désactiver l’actualisation automatique',
+  'entry.other': 'Ni fichier ni dossier\u00a0: il ne peut pas être ouvert.',
+  'error.notFound': 'Ce dossier n’existe plus. Il a peut-être été déplacé ou supprimé.',
+  'error.outsideWorkspace': 'Ce dossier est en dehors de l’espace de travail\u00a0: la barre latérale ne le lira pas.',
+  'error.notDirectory': 'Ce n’est pas un dossier.',
+  'error.unavailable': 'Échec de la lecture\u00a0: {message}',
+} satisfies Record<keyof typeof en, string>

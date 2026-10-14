@@ -53,7 +53,7 @@ The session id printed at start and at exit is the part after `session-`, so the
 | `/plugins` | Turn bundles and single plugins on or off, install or remove a bundle |
 | `/agents` | Show an agent preset, use it for this session or make it the default |
 | `/permissions` | Choose how freely the agent may act, for this session and optionally for new sessions |
-| `/language` | Choose English, Spanish or the terminal's language; the choice is the `locale.preference` setting the GUI shares |
+| `/language` | Choose English, Spanish, Greek, French or the terminal's language; the choice is the `locale.preference` setting the GUI shares |
 | `/new [directory]` | Start a session in this or another directory |
 | `/attach <file>`, `/detach` | Add a file or image to the next message, or remove the attached ones |
 | Tab after `@` | Complete a file, directory or session name and write it as a reference |

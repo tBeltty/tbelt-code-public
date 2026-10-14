@@ -135,7 +135,7 @@ async function bench(snapshot: ChatSnapshot) {
   runtime.remote.provideNamespaces({ session: { openWorkspacePath } })
   const locale = new LocaleRuntime(ctx)
   ctx.provide('locale', locale)
-  locale.register(CONVERSATION_NS, { es: conversationEs, en: conversationEn })
+  locale.register(CONVERSATION_NS, { es: conversationEs, en: conversationEn, el: conversationEn, fr: conversationEn })
   runtime.slots.installLocale(locale)
 
   await runtime.root.declare(ROOT_CHILDREN, AppRoot)

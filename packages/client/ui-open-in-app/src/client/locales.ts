@@ -77,5 +77,45 @@ export const es = {
   'app.terminal': 'Terminal',
 } satisfies Record<keyof typeof en, string>
 
+/** Greek dictionary, checked complete against the English key set. */
+export const el = {
+  'open.title': 'Άνοιγμα στο {app}',
+  'path.appDefault': '{app} (προεπιλογή)',
+  'path.appsError': 'Δεν ήταν δυνατή η φόρτωση των εφαρμογών',
+  'shortcut.busy': 'Άνοιγμα του χώρου εργασίας',
+  'shortcut.unavailable': 'Ο τρέχων χώρος εργασίας ή η τοπική εφαρμογή δεν είναι διαθέσιμα',
+  'open.tooltip': 'Άνοιγμα τοπικά',
+  'path.open': 'Άνοιγμα',
+  'path.more': 'Περισσότεροι τρόποι ανοίγματος',
+  'path.reveal': 'Εμφάνιση θέσης του αρχείου',
+  'path.openError': 'Δεν ήταν δυνατό το άνοιγμα. Δοκιμάστε ξανά.',
+  'path.revealError': 'Δεν ήταν δυνατή η εμφάνιση της θέσης του αρχείου. Δοκιμάστε ξανά.',
+  ...PRODUCT_NAMES,
+  'app.finder': 'Finder',
+  'app.explorer': 'Εξερεύνηση αρχείων',
+  'app.filemanager': 'Αρχεία',
+  'app.terminal': 'Τερματικό',
+} satisfies Record<keyof typeof en, string>
+
+/** French dictionary, checked complete against the English key set. */
+export const fr = {
+  'open.title': 'Ouvrir dans {app}',
+  'path.appDefault': '{app} (par défaut)',
+  'path.appsError': 'Impossible de charger les applications',
+  'shortcut.busy': 'Ouverture de l’espace de travail',
+  'shortcut.unavailable': 'L’espace de travail actuel ou l’application locale est indisponible',
+  'open.tooltip': 'Ouvrir en local',
+  'path.open': 'Ouvrir',
+  'path.more': 'Autres façons d’ouvrir',
+  'path.reveal': 'Afficher l’emplacement du fichier',
+  'path.openError': 'Impossible d’ouvrir. Réessayez.',
+  'path.revealError': 'Impossible d’afficher l’emplacement du fichier. Réessayez.',
+  ...PRODUCT_NAMES,
+  'app.finder': 'Finder',
+  'app.explorer': 'Explorateur de fichiers',
+  'app.filemanager': 'Fichiers',
+  'app.terminal': 'Terminal',
+} satisfies Record<keyof typeof en, string>
+
 /** Key domain of the `open-in-app` namespace (English is the source of truth). */
 export type OpenInAppKey = keyof typeof en

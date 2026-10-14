@@ -44,3 +44,33 @@ export const es = {
   'time.months': '{n} m',
   'time.years': '{n} a',
 } satisfies Record<keyof typeof en, string>
+
+/** Greek dictionary, checked complete against the English key set. */
+export const el = {
+  'section.files': 'Αρχεία και φάκελοι',
+  'section.subagents': 'Υποπράκτορες',
+  'section.sessions': 'Συνεδρίες',
+  'candidate.noCwd': '(χωρίς cwd)',
+  'crumb.root': 'Χώρος εργασίας',
+  'time.now': 'τώρα',
+  'time.minutes': '{n}λ',
+  'time.hours': '{n}ω',
+  'time.days': '{n}ημ.',
+  'time.months': '{n}μ.',
+  'time.years': '{n}έ.',
+} satisfies Record<keyof typeof en, string>
+
+/** French dictionary, checked complete against the English key set. */
+export const fr = {
+  'section.files': 'Fichiers et dossiers',
+  'section.subagents': 'Sous-agents',
+  'section.sessions': 'Sessions',
+  'candidate.noCwd': '(pas de cwd)',
+  'crumb.root': 'Espace de travail',
+  'time.now': 'à l’instant',
+  'time.minutes': '{n} min',
+  'time.hours': '{n} h',
+  'time.days': '{n} j',
+  'time.months': '{n} mois',
+  'time.years': '{n} an',
+} satisfies Record<keyof typeof en, string>

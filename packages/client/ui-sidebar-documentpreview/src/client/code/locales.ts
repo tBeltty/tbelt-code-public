@@ -21,3 +21,17 @@ export const es = {
   copy: 'Copiar',
   copied: 'Copiado',
 } satisfies Record<keyof typeof en, string>
+
+/** Greek dictionary, checked complete against the English key set. */
+export const el = {
+  title: 'Κώδικας',
+  copy: 'Αντιγραφή',
+  copied: 'Αντιγράφηκε',
+} satisfies Record<keyof typeof en, string>
+
+/** French dictionary, checked complete against the English key set. */
+export const fr = {
+  title: 'Code',
+  copy: 'Copier',
+  copied: 'Copié',
+} satisfies Record<keyof typeof en, string>

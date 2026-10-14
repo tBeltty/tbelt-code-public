@@ -1,0 +1,6 @@
+{
+  "meta": {
+    "title": "Conscience du temps",
+    "description": "À chaque étape, indique au modèle l’heure actuelle, le fuseau horaire du navigateur et le temps écoulé depuis le message précédent."
+  }
+}

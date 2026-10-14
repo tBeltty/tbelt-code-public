@@ -42,7 +42,7 @@ import { AgentPresetSection } from './AgentPresetSection.tsx'
 import type { AgentPresetSectionInjected } from './AgentPresetSection.tsx'
 import { AgentPresetSeatController, type AgentPresetStage } from './seat-store.ts'
 import { AgentPresetSectionController } from './section-store.ts'
-import { en, es, type AgentPresetSettingsKey } from './locales.ts'
+import { en, es, el, fr, type AgentPresetSettingsKey } from './locales.ts'
 import { AGENT_PRESET_SETTINGS_NS, AgentPresetSettingsController } from './settings-store.ts'
 
 declare module '@deepseek-ai/dsh-client-ui-slots' {
@@ -127,7 +127,7 @@ export function apply(ctx: ClientContext): void {
     return binding === undefined ? undefined : seatFor(binding)
   }
 
-  ctx.effect(() => ctx.locale.register('settings.agentPreset', { en, es }), 'ui-agent-preset: settings row dictionaries')
+  ctx.effect(() => ctx.locale.register('settings.agentPreset', { en, es, el, fr }), 'ui-agent-preset: settings row dictionaries')
 
   ctx.effect(() => {
     let requested = 0

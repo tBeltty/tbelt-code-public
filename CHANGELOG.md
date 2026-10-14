@@ -4,6 +4,13 @@ Notable changes to tBelt Code, newest first. The format follows [Keep a Changelo
 
 ## [Unreleased]
 
+## [0.2.1-alpha.2.20261014] - 2026-10-14
+
+### Added
+
+- `/btw` asks the model a side question while the agent keeps working. Send context to chat hands the conversation to the agent, which reads it at its next step. In the terminal, `/btw --send` does the same.
+- The app and `dsh terminal` are available in Greek and French. Pick one in Settings, or leave Automatic to follow your system language.
+
 ## [0.2.1-alpha.2.20261013.2] - 2026-10-13
 
 ### Fixed
@@ -286,7 +293,8 @@ Notable changes to tBelt Code, newest first. The format follows [Keep a Changelo
 - Downloads no longer return an older installer.
 - A key that ran out of credit or hit its spending limit is reported as a quota problem instead of an invalid API key.
 
-[Unreleased]: https://github.com/tBeltty/tbelt-code-public/compare/v0.2.1-alpha.2.20261013.2...HEAD
+[Unreleased]: https://github.com/tBeltty/tbelt-code-public/compare/v0.2.1-alpha.2.20261014...HEAD
+[0.2.1-alpha.2.20261014]: https://github.com/tBeltty/tbelt-code-public/releases/tag/v0.2.1-alpha.2.20261014
 [0.2.1-alpha.2.20261013.2]: https://github.com/tBeltty/tbelt-code-public/releases/tag/v0.2.1-alpha.2.20261013.2
 [0.2.1-alpha.2.20261013]: https://github.com/tBeltty/tbelt-code-public/releases/tag/v0.2.1-alpha.2.20261013
 [0.2.1-alpha.2.20261012]: https://github.com/tBeltty/tbelt-code-public/releases/tag/v0.2.1-alpha.2.20261012

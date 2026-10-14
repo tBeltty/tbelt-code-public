@@ -342,6 +342,7 @@
     { "path": "./packages/storage/storage-domain" },
     { "path": "./packages/memory/memory-storage" },
     { "path": "./packages/memory/memory-redact" },
+    { "path": "./packages/interaction/command-btw" },
     { "path": "./packages/memory/command-remember" },
     { "path": "./packages/memory/tool-remember" },
     { "path": "./packages/memory/memory-recall" },

@@ -287,7 +287,7 @@ function bench(options: BenchOptions = {}) {
   contexts.push(ctx)
   const locale = new LocaleRuntime(ctx)
   locale.setLocale('en')
-  ctx.effect(() => locale.register('workspace', { en, es }))
+  ctx.effect(() => locale.register('workspace', { en, es, el: en, fr: en }))
   ctx.provide('locale', locale)
   const requestDraftInitialization = vi.fn<SessionInputResolver['requestDraftInitialization']>(() => 'applied')
   if (options.conversation !== false) ctx.provide('conversation', { input: { requestDraftInitialization } })

@@ -25,7 +25,7 @@ import { OpenInAppPathController } from './open-path.ts'
 import { OpenPathAction, type OpenPathInjected } from './OpenPathAction.tsx'
 import { FileRouteAction } from './FileRouteAction.tsx'
 import { OpenPathEmptyAction } from './OpenPathEmptyAction.tsx'
-import { en, es, NS, type OpenInAppKey } from './locales.ts'
+import { en, es, el, fr, NS, type OpenInAppKey } from './locales.ts'
 
 declare module '@deepseek-ai/dsh-client-ui-slots' {
   interface LocaleNamespaceMap {
@@ -51,7 +51,7 @@ export function apply(ctx: ClientContext): void {
   const controller = new OpenInAppController()
   void controller.load()
   const paths = new OpenInAppPathController(ctx.remote)
-  ctx.effect(() => ctx.locale.register(NS, { en, es }), 'open-in-app: dictionaries')
+  ctx.effect(() => ctx.locale.register(NS, { en, es, el, fr }), 'open-in-app: dictionaries')
   const t = ctx.locale.bind(NS)
   const target = () => {
     if (ctx.layout.panelInfo.getSnapshot().activePanelId !== null) return undefined

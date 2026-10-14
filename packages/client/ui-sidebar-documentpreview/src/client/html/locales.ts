@@ -19,6 +19,22 @@ export const es = {
   failed: 'No se pudo previsualizar este documento HTML.',
 } satisfies Record<keyof typeof en, string>
 
+/** Greek dictionary, checked complete against the English key set. */
+export const el = {
+  title: 'HTML',
+  frame: 'Προεπισκόπηση εγγράφου HTML',
+  loading: 'Απόδοση εγγράφου...',
+  failed: 'Δεν ήταν δυνατή η προεπισκόπηση αυτού του εγγράφου HTML.',
+} satisfies Record<keyof typeof en, string>
+
+/** French dictionary, checked complete against the English key set. */
+export const fr = {
+  title: 'HTML',
+  frame: 'Aperçu du document HTML',
+  loading: 'Rendu du document...',
+  failed: 'Impossible d’afficher l’aperçu de ce document HTML.',
+} satisfies Record<keyof typeof en, string>
+
 declare module '@deepseek-ai/dsh-client-ui-slots' {
   interface LocaleNamespaceMap {
     /** HTML preview selection and status text. */

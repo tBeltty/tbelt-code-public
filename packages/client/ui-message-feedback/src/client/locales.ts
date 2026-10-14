@@ -57,3 +57,51 @@ export const es = {
   'error.generic': 'No se pudieron guardar los comentarios',
   'error.noteTooLarge': 'La descripción es demasiado larga; acórtala y envía de nuevo',
 } satisfies Record<keyof typeof en, string>
+
+/** Greek dictionary, checked complete against the English key set. */
+export const el = {
+  'action.like': 'Καλή απάντηση',
+  'action.likeActive': 'Αφαίρεση βαθμολογίας',
+  'action.dislike': 'Κακή απάντηση',
+  'action.dislikeActive': 'Αφαίρεση βαθμολογίας',
+  'dialog.title': 'Υποβολή σχολίων',
+  'dialog.categories': 'Κατηγορία σχολίων',
+  'dialog.detail': 'Λεπτομέρειες σχολίων',
+  'dialog.hint': 'Προσθέστε λεπτομέρειες για να μας βοηθήσετε να βελτιωθούμε. Η υποβολή σας θα περιλαμβάνει το αρχείο καταγραφής της τρέχουσας συζήτησης.',
+  'category.task-result': 'Αποτέλεσμα εργασίας',
+  'category.instruction-following': 'Κατανόηση και τήρηση οδηγιών',
+  'category.product-interaction': 'Λειτουργίες και αλληλεπίδραση με το προϊόν',
+  'category.service-stability': 'Σταθερότητα και ταχύτητα',
+  'category.resource-cost': 'Χρήση πόρων και κόστος',
+  'category.security-privacy-permission': 'Ασφάλεια, απόρρητο και άδειες',
+  'category.other': 'Άλλο',
+  'toast.recorded': 'Ευχαριστούμε για τα σχόλιά σας',
+  'error.conflict': 'Αυτά τα σχόλια άλλαξαν αλλού· εμφανίζεται η τελευταία κατάσταση',
+  'error.load': 'Δεν ήταν δυνατή η φόρτωση των σχολίων',
+  'error.generic': 'Δεν ήταν δυνατή η αποθήκευση των σχολίων',
+  'error.noteTooLarge': 'Η περιγραφή είναι πολύ μεγάλη· συντομεύστε την και υποβάλετέ την ξανά',
+} satisfies Record<keyof typeof en, string>
+
+/** French dictionary, checked complete against the English key set. */
+export const fr = {
+  'action.like': 'Bonne réponse',
+  'action.likeActive': 'Retirer la note',
+  'action.dislike': 'Mauvaise réponse',
+  'action.dislikeActive': 'Retirer la note',
+  'dialog.title': 'Envoyer un avis',
+  'dialog.categories': 'Catégorie de l’avis',
+  'dialog.detail': 'Détails de l’avis',
+  'dialog.hint': 'Ajoutez des détails pour nous aider à nous améliorer. Votre envoi inclura le journal de la conversation en cours.',
+  'category.task-result': 'Résultat de la tâche',
+  'category.instruction-following': 'Compréhension et respect des consignes',
+  'category.product-interaction': 'Fonctionnalités et interaction avec le produit',
+  'category.service-stability': 'Stabilité et rapidité',
+  'category.resource-cost': 'Consommation de ressources et coût',
+  'category.security-privacy-permission': 'Sécurité, confidentialité et autorisations',
+  'category.other': 'Autre',
+  'toast.recorded': 'Merci pour votre avis',
+  'error.conflict': 'Cet avis a été modifié ailleurs\u00a0; l’état le plus récent est affiché',
+  'error.load': 'Impossible de charger l’avis',
+  'error.generic': 'Impossible d’enregistrer l’avis',
+  'error.noteTooLarge': 'La description est trop longue\u00a0; raccourcissez-la et renvoyez-la',
+} satisfies Record<keyof typeof en, string>

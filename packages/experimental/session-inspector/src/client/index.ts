@@ -3,7 +3,7 @@
 import type { Context } from '@deepseek-ai/cordis'
 import type {} from '@deepseek-ai/dsh-client-locale/client'
 import type {} from '@deepseek-ai/dsh-client-ui-sidebar-right/client'
-import { en, es, NS } from './locales.ts'
+import { en, es, el, fr, NS } from './locales.ts'
 import { registerInspectorTab } from './views/index.ts'
 
 /** Services required to register the localized Session-bound sidebar tab. */
@@ -14,6 +14,6 @@ export const inject = ['slots', 'locale', 'sessions', 'uiSession', 'uiConversati
  * @param ctx - Client plugin context owning the dictionaries and registrations.
  */
 export function apply(ctx: Context): void {
-  ctx.effect(() => ctx.locale.register(NS, { en, es }), 'session-inspector: dictionaries')
+  ctx.effect(() => ctx.locale.register(NS, { en, es, el, fr }), 'session-inspector: dictionaries')
   registerInspectorTab(ctx)
 }

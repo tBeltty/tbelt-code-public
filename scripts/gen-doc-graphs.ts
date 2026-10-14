@@ -508,6 +508,13 @@ const SERVICE_ROLES: ServiceRole[] = [
     note: 'Records one Session-level remark with its category as a log-only feedback/record event on a live Session through the Host unary Remote contract; the /feedback command shares the same producer.',
   },
   {
+    key: 'btw',
+    pkg: 'command-btw',
+    title: 'Side conversation',
+    mode: 'core',
+    note: 'Answers a question from a text copy of the main conversation in a separate tool-less model call, and queues the exchange on the agent as user context on request; the /btw command shares the same service.',
+  },
+  {
     key: 'workspaceRegistry',
     pkg: 'workspace',
     title: 'Workspace entity registry',

@@ -11,6 +11,9 @@ import { readPluginMeta, resolvePluginResource } from '../packages/boot/app-boot
 
 const OUTPUT = 'packages/boot/app-boot/src/official-bundles.generated.ts'
 
+/** Languages every Official bundle must carry explicit display text for. */
+const OFFICIAL_LANGUAGES = ['en', 'es', 'el', 'fr'] as const
+
 /**
  * Read complete metadata without importing or activating any provider code.
  * @param root - Repository root containing the catalog's public packages.
@@ -49,7 +52,7 @@ export function generateOfficialBundleCatalog(root: string, names: readonly stri
       throw new Error(`${packageName}: Official catalog entries must be public DSH bundle packages`)
     }
     const parentURL = pathToFileURL(resolve(root, entry.path)).href
-    for (const language of ['en', 'es']) {
+    for (const language of OFFICIAL_LANGUAGES) {
       const file = resolvePluginResource(`${packageName}/locale/${language}.json`, parentURL)
       const dictionary = JSON.parse(readFileSync(file, 'utf8')) as { meta?: { title?: unknown; description?: unknown } }
       if (typeof dictionary.meta?.title !== 'string' || dictionary.meta.title.trim() === ''
@@ -63,7 +66,7 @@ export function generateOfficialBundleCatalog(root: string, names: readonly stri
       throw new Error(`${packageName}: Official catalog entries require an icon and localized title and description`)
     }
     for (const value of [meta.title, meta.description]) {
-      for (const language of ['en', 'es']) {
+      for (const language of OFFICIAL_LANGUAGES) {
         if (typeof value[language] !== 'string' || value[language].trim() === '') {
           throw new Error(`${packageName}: Official metadata requires ${language} text`)
         }

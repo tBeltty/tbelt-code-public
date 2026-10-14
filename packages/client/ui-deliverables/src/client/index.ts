@@ -39,7 +39,7 @@ import { DeliverablesTail, type DeliverablesInjected } from './Deliverables.tsx'
 import { ReviewTab, type ReviewInjected } from './ReviewTab.tsx'
 import { CHANGES_REVIEW_ID, changesReviewDefinition } from './review-definition.ts'
 import { createReviewStore } from './review-store.ts'
-import { en, es, NS, type DeliverablesKey } from './locales.ts'
+import { en, es, el, fr, NS, type DeliverablesKey } from './locales.ts'
 import {
   deliverablesDefinition, presentedForClosing, producedFileMentions, selectProducedFiles,
 } from './turn-deliverables.ts'
@@ -105,7 +105,7 @@ export function apply(ctx: ClientContext): void {
     }
     return index
   }
-  ctx.effect(() => ctx.locale.register(NS, { en, es }), 'ui-deliverables: dictionaries')
+  ctx.effect(() => ctx.locale.register(NS, { en, es, el, fr }), 'ui-deliverables: dictionaries')
   ctx.slots.inject(
     'conversation.chat.turnTail',
     () => ctx.slots.register({

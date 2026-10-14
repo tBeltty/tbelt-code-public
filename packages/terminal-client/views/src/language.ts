@@ -13,6 +13,8 @@ export const LANGUAGE_AUTOMATIC = '@auto'
 const LANGUAGES: readonly { readonly value: CopyLocale; readonly name: CopyKey }[] = [
   { value: 'en', name: 'language.english' },
   { value: 'es', name: 'language.spanish' },
+  { value: 'el', name: 'language.greek' },
+  { value: 'fr', name: 'language.french' },
 ]
 
 /**
@@ -33,5 +35,6 @@ export function languageItems(saved: string | undefined): PickerItem[] {
  * @returns its native name.
  */
 export function languageName(locale: CopyLocale): string {
-  return t(locale === 'es' ? 'language.spanish' : 'language.english')
+  const language = LANGUAGES.find(candidate => candidate.value === locale)
+  return t(language?.name ?? 'language.english')
 }

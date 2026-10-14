@@ -16,7 +16,7 @@ import type {} from '@deepseek-ai/dsh-client-ui-renderer/client'
 import type {} from '@deepseek-ai/dsh-client-ui-session/client'
 import { createTrajectoryDurationStore } from './duration-store.ts'
 import { createTrajectoryStringWrappingStore } from './string-wrapping-store.ts'
-import { en, es, NS } from './locales.ts'
+import { en, es, el, fr, NS } from './locales.ts'
 import { registerTrajectoryAssistantDefinition } from './trajectory-assistant-definition.ts'
 import { registerTrajectoryCompactionDefinitions } from './trajectory-compaction-definition.ts'
 import { registerTrajectoryMessageDefinitions } from './trajectory-message-definitions.ts'
@@ -59,7 +59,7 @@ export function apply(ctx: Context): void {
     }
     return source
   }
-  ctx.effect(() => ctx.locale.register(NS, { en, es }), 'ui-trajectory: dictionaries')
+  ctx.effect(() => ctx.locale.register(NS, { en, es, el, fr }), 'ui-trajectory: dictionaries')
   // Registration-time text (the view tab label) reads through the bound
   // translate as a thunk, so it follows the active locale without
   // re-registration.

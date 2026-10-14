@@ -220,7 +220,7 @@ function detailViewLabels(dictionary: typeof en | typeof es) {
       empty: 'No delivery record available',
     }
     : {
-      tablist: 'Vistas de detalle de la tarea', rules: 'Reglas', records: 'Registros de entrega',
+      tablist: 'Vistas de detalle de la tarea', rules: 'Reglas', records: 'Registros',
       empty: 'No hay registros de entrega',
     }
 }
@@ -548,7 +548,7 @@ function remoteCatalog() {
   return { ...mounted, list, remove, onDelete }
 }
 
-describe.each([['English', en], ['Chinese', es]] as const)('original Session availability in %s', (_name, dictionary) => {
+describe.each([['English', en], ['Spanish', es]] as const)('original Session availability in %s', (_name, dictionary) => {
   it.each([
     ['Session list pending', { ...sessions, phase: 'pending' as const }, workspaces, 'Loading original session information.', 'Cargando la información de la sesión original.'],
     ['Workspace list pending', sessions, { ...workspaces, phase: 'pending' as const }, 'Loading original session information.', 'Cargando la información de la sesión original.'],
@@ -571,7 +571,7 @@ describe.each([['English', en], ['Chinese', es]] as const)('original Session ava
   })
 })
 
-describe.each([['English', en], ['Chinese', es]] as const)('linked-Session control naming in %s', (_name, dictionary) => {
+describe.each([['English', en], ['Spanish', es]] as const)('linked-Session control naming in %s', (_name, dictionary) => {
   it('contains the visible Linked session label when a catalog title names the Session', () => {
     mount({ records: [ended] }, dictionary, {
       useSessions: select => select(sessionsWithTitles({ [ended.sessionId]: 'Planning chat' })),
@@ -925,7 +925,7 @@ describe('Task manager catalog', () => {
   })
 })
 
-describe.each([['English', en], ['Chinese', es]] as const)('task detail views in %s', (_name, dictionary) => {
+describe.each([['English', en], ['Spanish', es]] as const)('task detail views in %s', (_name, dictionary) => {
   it('opens Rules under the selected task and separates rule fields from saved deliveries', async () => {
     const labels = detailViewLabels(dictionary)
     const h = mount({ records: [{ ...at, lastDelivery: delivery }] }, dictionary)
@@ -1276,7 +1276,7 @@ describe('Task manager details', () => {
     expect(visibleText(detail, dictionary['detail.nextRun'])).toHaveLength(0)
     expect(nextRunTime(detail)).toBeNull()
     expect(row.textContent).not.toContain(dictionary['list.nextPrefix'])
-    expect(detail.textContent).not.toMatch(/execution completed|completed successfully|execution succeeded|执行已完成|执行成功/i)
+    expect(detail.textContent).not.toMatch(/execution completed|completed successfully|execution succeeded/i)
     // The linked-Session strip belongs to Rules, so open it before switching views.
     const context = detailContext(detail)!
     const link = within(context).getByRole('button', { name: dictionary['detail.openSession'] })
@@ -1289,12 +1289,12 @@ describe('Task manager details', () => {
     expect(occurrence?.textContent).toBe(formatScheduleNextRun(delivery.scheduledAt, dictionary['time.locale']))
     // The occurrence names its month in the active locale and never shows the
     // retired zero-padded `MM-DD` pair.
-    expect(occurrence?.textContent ?? '').toMatch(/[A-Za-z]{3,}|月/)
+    expect(occurrence?.textContent ?? '').toMatch(/[A-Za-z]{3,}/)
     expect(occurrence?.textContent ?? '').not.toMatch(/\d{2}-\d{2}/)
     expect(receipt.querySelector('details')).toBeNull()
     expect(within(receipt).queryByRole('button')).toBeNull()
     expect(receipt.querySelectorAll('time')).toHaveLength(1)
-    expect(within(detail).queryByRole('region', { name: /history|历史/i })).toBeNull()
+    expect(within(detail).queryByRole('region', { name: /history|historial/i })).toBeNull()
     expect(detail.querySelector('footer')).toBeNull()
     expect(h.props.onDelete).not.toHaveBeenCalled()
   })
@@ -1529,7 +1529,7 @@ describe('Task manager details', () => {
     expect(document.activeElement).toBe(screen.getByRole('heading', { level: 1 }))
   })
 
-  it('renders Chinese labels and local time without translating stored user data', () => {
+  it('renders Spanish labels and local time without translating stored user data', () => {
     mount({}, es)
     expect(screen.getByRole('heading', { level: 1, name: 'Tareas de automatización' })).toBeDefined()
     expect(screen.getByRole('searchbox', { name: 'Buscar tareas' })).toBeDefined()

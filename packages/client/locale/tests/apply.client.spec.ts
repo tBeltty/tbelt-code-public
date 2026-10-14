@@ -155,7 +155,7 @@ describe('locale apply', () => {
     const { entry, instance, face } = faceOf(b.slots)
     // The inject-time re-sync sealed the init window: the mirror is current.
     expect(instance.getSnapshot().active).toBe('en')
-    expect(instance.getSnapshot().options.map(o => o.id)).toEqual(['en', 'es'])
+    expect(instance.getSnapshot().options.map(o => o.id)).toEqual(['en', 'es', 'el', 'fr'])
     // Copy rides the standard locale seat: the entry declares the namespace.
     expect(entry.locale).toBe(SETTINGS_NS)
     expect(locale.bind(SETTINGS_NS)('language.title')).toBe('Language')
@@ -184,11 +184,13 @@ describe('locale apply', () => {
     expect(instance.getSnapshot().options).toEqual([
       { id: 'en', label: 'English' },
       { id: 'es', label: 'Español' },
+      { id: 'el', label: 'Ελληνικά' },
+      { id: 'fr', label: 'Français' },
       { id: 'ja', label: '日本語' },
     ])
 
     await languagePack.dispose()
-    expect(instance.getSnapshot().options.map(option => option.id)).toEqual(['en', 'es'])
+    expect(instance.getSnapshot().options.map(option => option.id)).toEqual(['en', 'es', 'el', 'fr'])
   })
 
   it('ships Spanish with English fallback for untranslated keys', async () => {

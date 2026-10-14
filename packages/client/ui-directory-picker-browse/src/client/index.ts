@@ -30,8 +30,8 @@ export const inject = ['slots', 'uiWorkspace', 'locale']
  */
 export function apply(ctx: ClientContext): void {
   ctx.effect(() => {
-    // The two dictionaries land as a unit: if the second registration hits a
-    // rival owner of the namespace, the first rolls back before the throw —
+    // The dictionaries land as a unit: if a later registration hits a
+    // rival owner of the namespace, the earlier ones roll back before the throw —
     // a failed activation must not squat the namespace's other locale.
     const disposers: (() => void)[] = []
     const dictionaries: [locale: string, dict: Record<string, string>][] = [
@@ -64,6 +64,36 @@ export function apply(ctx: ClientContext): void {
         'browser.loading': 'Cargando…',
         'browser.truncated': 'Hay demasiadas carpetas para listarlas; solo se muestra el principio.',
         'browser.showHidden': 'Mostrar archivos ocultos',
+      }],
+      ['el', {
+        'browser.title': 'Επιλογή φακέλου χώρου εργασίας',
+        'browser.home': 'Αρχική',
+        'browser.newFolder': 'Νέος φάκελος',
+        'browser.folderName': 'Όνομα φακέλου',
+        'browser.createIn': 'Νέος φάκελος στο «{name}»',
+        'browser.untitledFolder': 'Φάκελος χωρίς όνομα',
+        'browser.create': 'Δημιουργία',
+        'browser.cancel': 'Ακύρωση',
+        'browser.open': 'Άνοιγμα',
+        'browser.editPath': 'Επεξεργασία διαδρομής',
+        'browser.loading': 'Φόρτωση…',
+        'browser.truncated': 'Υπάρχουν πάρα πολλοί φάκελοι για να εμφανιστούν· εμφανίζεται μόνο η αρχή.',
+        'browser.showHidden': 'Εμφάνιση κρυφών αρχείων',
+      }],
+      ['fr', {
+        'browser.title': 'Choisir le dossier de l’espace de travail',
+        'browser.home': 'Accueil',
+        'browser.newFolder': 'Nouveau dossier',
+        'browser.folderName': 'Nom du dossier',
+        'browser.createIn': 'Nouveau dossier dans «\u00a0{name}\u00a0»',
+        'browser.untitledFolder': 'Dossier sans titre',
+        'browser.create': 'Créer',
+        'browser.cancel': 'Annuler',
+        'browser.open': 'Ouvrir',
+        'browser.editPath': 'Modifier le chemin',
+        'browser.loading': 'Chargement…',
+        'browser.truncated': 'Trop de dossiers pour les lister\u00a0; seul le début est affiché.',
+        'browser.showHidden': 'Afficher les fichiers masqués',
       }],
     ]
     try {

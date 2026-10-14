@@ -1,6 +1,6 @@
 /** Locale bundles for the agent-preset hero chip, header label, and management section. */
 
-import { guideEn, guideEs, type PresetGuideKey } from './guide-locales.ts'
+import { guideEn, guideEs, guideEl, guideFr, type PresetGuideKey } from './guide-locales.ts'
 
 /** Locale keys these surfaces render. */
 export type AgentPresetSettingsKey =
@@ -118,6 +118,76 @@ export const es = {
   createPluginChecking: 'Comprobando si el modo creador está disponible',
   createPluginUnavailable: 'No disponible por ahora. Vuelve a abrir este menú para reintentar',
   createPluginMissing: 'El modo creador no está incluido en esta configuración',
+} satisfies Record<keyof typeof en, string>
+
+/** Greek dictionary, checked complete against the English key set. */
+export const el = {
+  ...guideEl,
+  builtInGroup: 'Ενσωματωμένες',
+  customGroup: 'Προσαρμοσμένες',
+  sectionIntro: 'Επιλέξτε τα εργαλεία του πράκτορα και πώς λειτουργεί. Χρησιμοποιήστε την Τυπική λειτουργία για καθημερινές εργασίες ή τη λειτουργία Δημιουργού για να προσθέσετε δυνατότητες στο tBelt Code.',
+  seatHint: 'Επιλέξτε την προεπιλογή πράκτορα για τη νέα εργασία σας',
+  headerHint: 'Η προεπιλογή πράκτορα που επιλέχθηκε όταν ξεκίνησε αυτή η εργασία',
+  nav: 'Προεπιλογές πράκτορα',
+  setDefault: 'Ορισμός ως προεπιλογή για νέες εργασίες',
+  view: 'Προβολή ρυθμίσεων',
+  presetStandardName: 'Τυπική λειτουργία',
+  presetStandardDescription: 'Εργαστείτε με κώδικα, αρχεία και πληροφορίες. Ταιριάζει στις περισσότερες εργασίες, με αναζήτηση, επεξεργασία, εντολές τερματικού και άλλα εργαλεία όταν χρειάζονται.',
+  presetPtcName: 'Λειτουργία PTC',
+  presetPtcDescription: 'Περιλαμβάνει όλες τις δυνατότητες της Τυπικής λειτουργίας. Ταιριάζει καλύτερα σε εργασίες που καλούν εργαλεία κατά παρτίδες και μετά φιλτράρουν, οργανώνουν, αφαιρούν διπλότυπα, μετρούν ή συνοψίζουν τα αποτελέσματα.',
+  presetMinimalName: 'Ελάχιστη λειτουργία',
+  presetMinimalDescription: 'Ο πράκτορας εργάζεται χρησιμοποιώντας μόνο ένα εργαλείο τερματικού. Χρήσιμη για δοκιμές και συγκρίσεις της βασικής του απόδοσης.',
+  presetFastName: 'Γρήγορη λειτουργία',
+  presetFastDescription: 'Ένα σύντομο prompt και λίγα βασικά εργαλεία κρατούν κάθε βήμα μικρό και γρήγορο. Ο πράκτορας ενεργοποιεί την αναζήτηση, το διαδίκτυο, τους υποπράκτορες και άλλα εργαλεία όταν τα χρειάζεται η εργασία.',
+  presetCordisName: 'Λειτουργία Δημιουργού',
+  presetCordisDescription: 'Προσαρμόστε το tBelt Code μέσα από συζήτηση. Αφήστε τον πράκτορα να γράψει πρόσθετα που προσθέτουν λειτουργίες ή διεπαφή, ή να συνδυάσει εργαλεία και prompts για να φτιάξει τη δική σας λειτουργία.',
+  inUse: 'Προεπιλογή',
+  noDescription: 'Χωρίς περιγραφή.',
+  brokenBadge: 'Η φόρτωση απέτυχε',
+  switchRefused: 'Δεν ήταν δυνατή η εναλλαγή σε {name}: {reason}',
+  close: 'Κλείσιμο',
+  creatorDraft: 'Ας με βοηθήσει ο πράκτορας να δημιουργήσω μια προεπιλογή',
+  standardUnavailable: 'Η Τυπική λειτουργία δεν είναι διαθέσιμη. Επαναφέρετέ την ή επιλέξτε άλλη διαθέσιμη λειτουργία.',
+  createPlugin: 'Δημιουργία πρόσθετου από τον πράκτορα',
+  createPluginDescription: 'Μεταβείτε στη λειτουργία Δημιουργού και φτιάξτε το δικό σας πρόσθετο για το tBelt Code',
+  createPluginChecking: 'Έλεγχος αν η λειτουργία Δημιουργού είναι διαθέσιμη',
+  createPluginUnavailable: 'Προσωρινά μη διαθέσιμο. Ανοίξτε ξανά αυτό το μενού για να δοκιμάσετε ξανά',
+  createPluginMissing: 'Η λειτουργία Δημιουργού δεν περιλαμβάνεται σε αυτή τη διαμόρφωση',
+} satisfies Record<keyof typeof en, string>
+
+/** French dictionary, checked complete against the English key set. */
+export const fr = {
+  ...guideFr,
+  builtInGroup: 'Intégrés',
+  customGroup: 'Personnalisés',
+  sectionIntro: 'Choisissez les outils de l’agent et son mode de fonctionnement. Utilisez le mode Standard pour les tâches courantes, ou le mode Créateur pour ajouter des fonctionnalités à tBelt Code.',
+  seatHint: 'Choisissez le préréglage d’agent pour votre nouvelle tâche',
+  headerHint: 'Le préréglage d’agent choisi au démarrage de cette tâche',
+  nav: 'Préréglages d’agent',
+  setDefault: 'Définir comme valeur par défaut des nouvelles tâches',
+  view: 'Voir la configuration',
+  presetStandardName: 'Mode Standard',
+  presetStandardDescription: 'Travaillez avec du code, des fichiers et des informations. Convient à la plupart des tâches, avec la recherche, la modification, les commandes de terminal et d’autres outils disponibles selon les besoins.',
+  presetPtcName: 'Mode PTC',
+  presetPtcDescription: 'Inclut toutes les fonctionnalités du mode Standard. Convient mieux aux tâches qui appellent des outils par lots, puis filtrent, organisent, dédoublonnent, comptent ou résument les résultats.',
+  presetMinimalName: 'Mode Minimal',
+  presetMinimalDescription: 'L’agent travaille avec un seul outil de terminal. Utile pour tester et comparer ses performances de base.',
+  presetFastName: 'Mode Rapide',
+  presetFastDescription: 'Un prompt court et quelques outils essentiels gardent chaque étape petite et rapide. L’agent active la recherche, le web, les sous-agents et d’autres outils quand une tâche le demande.',
+  presetCordisName: 'Mode Créateur',
+  presetCordisDescription: 'Personnalisez tBelt Code en conversant. Laissez l’agent écrire des plugins qui ajoutent des fonctionnalités ou une interface, ou combiner outils et prompts pour créer votre propre mode.',
+  inUse: 'Par défaut',
+  noDescription: 'Aucune description.',
+  brokenBadge: 'Échec du chargement',
+  switchRefused: 'Impossible de passer à {name}\u00a0: {reason}',
+  close: 'Fermer',
+  creatorDraft: 'Laisser l’agent m’aider à créer un préréglage',
+  standardUnavailable: 'Le mode Standard est indisponible. Restaurez-le ou choisissez un autre mode disponible.',
+  createPlugin: 'Laisser l’agent créer un plugin',
+  createPluginDescription: 'Passez en mode Créateur et créez votre propre plugin tBelt Code',
+  createPluginChecking: 'Vérification de la disponibilité du mode Créateur',
+  createPluginUnavailable: 'Temporairement indisponible. Rouvrez ce menu pour réessayer',
+  createPluginMissing: 'Le mode Créateur n’est pas inclus dans cette configuration',
 } satisfies Record<keyof typeof en, string>
 
 // The resolution itself is the shared fold in `dsh-agent-preset-registry/display`,

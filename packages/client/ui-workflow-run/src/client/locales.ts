@@ -47,5 +47,49 @@ export const es = {
   'status.interrupted': 'Interrumpido',
 } satisfies Record<keyof typeof en, string>
 
+/** Greek dictionary, checked complete against the English key set. */
+export const el = {
+  'run.title': '{name}',
+  'run.members.one': '{count} μέλος',
+  'run.members.other': '{count} μέλη',
+  'run.empty': 'Δεν ξεκίνησε κανένα μέλος',
+  'phase.unassigned': 'Χωρίς φάση',
+  'phase.empty': 'Κενό όνομα φάσης',
+  'statusCount.running': 'Σε εκτέλεση {count}',
+  'statusCount.completed': 'Ολοκληρώθηκαν {count}',
+  'statusCount.failed': 'Απέτυχαν {count}',
+  'statusCount.cancelled': 'Ακυρώθηκαν {count}',
+  'statusCount.interrupted': 'Διακόπηκαν {count}',
+  'member.empty': 'Κενό όνομα μέλους',
+  'member.open': 'Άνοιγμα του {name}',
+  'status.running': 'Σε εκτέλεση',
+  'status.completed': 'Ολοκληρώθηκε',
+  'status.failed': 'Απέτυχε',
+  'status.cancelled': 'Ακυρώθηκε',
+  'status.interrupted': 'Διακόπηκε',
+} satisfies Record<keyof typeof en, string>
+
+/** French dictionary, checked complete against the English key set. */
+export const fr = {
+  'run.title': '{name}',
+  'run.members.one': '{count} membre',
+  'run.members.other': '{count} membres',
+  'run.empty': 'Aucun membre démarré',
+  'phase.unassigned': 'Sans phase',
+  'phase.empty': 'Nom de phase vide',
+  'statusCount.running': 'En cours\u00a0: {count}',
+  'statusCount.completed': 'Terminés\u00a0: {count}',
+  'statusCount.failed': 'Échecs\u00a0: {count}',
+  'statusCount.cancelled': 'Annulés\u00a0: {count}',
+  'statusCount.interrupted': 'Interrompus\u00a0: {count}',
+  'member.empty': 'Nom de membre vide',
+  'member.open': 'Ouvrir {name}',
+  'status.running': 'En cours',
+  'status.completed': 'Terminé',
+  'status.failed': 'Échec',
+  'status.cancelled': 'Annulé',
+  'status.interrupted': 'Interrompu',
+} satisfies Record<keyof typeof en, string>
+
 /** Union of this namespace's dictionary keys. */
 export type WorkflowRunKey = keyof typeof en

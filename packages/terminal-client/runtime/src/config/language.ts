@@ -1,5 +1,5 @@
 /**
- * The `/language` screen: choose English, Spanish or the language of the
+ * The `/language` screen: choose a language or follow the language of the
  * terminal. The choice is the `locale.preference` setting the GUI language
  * selector writes, so both surfaces follow one saved language.
  * @module @deepseek-ai/dsh-terminal-client/config/language

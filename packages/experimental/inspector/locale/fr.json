@@ -1,0 +1,6 @@
+{
+  "meta": {
+    "title": "Inspecteur",
+    "description": "Ouvre l’hôte en cours d’exécution et ses clients navigateur dans Chrome DevTools via un point de terminaison loopback qui permet d’exécuter du code et capture le trafic réseau de l’hôte, secrets compris. Pour les développeurs ; Web uniquement ; recharge les pages ouvertes après l’activation."
+  }
+}

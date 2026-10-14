@@ -16,6 +16,24 @@ export const es: Record<keyof typeof en, string> = {
   frameTitle: 'Inspector de NodeJS',
 }
 
+/** Greek labels, checked complete against the English key set. */
+export const el = {
+  title: 'Επιθεωρητής NodeJS',
+  toggle: 'Εναλλαγή επιθεωρητή NodeJS',
+  close: 'Σύμπτυξη',
+  resize: 'Αλλαγή μεγέθους πίνακα επιθεωρητή NodeJS',
+  frameTitle: 'Επιθεωρητής NodeJS',
+}
+
+/** French labels, checked complete against the English key set. */
+export const fr = {
+  title: 'Inspecteur NodeJS',
+  toggle: 'Afficher ou masquer l’inspecteur NodeJS',
+  close: 'Réduire',
+  resize: 'Redimensionner le panneau de l’inspecteur NodeJS',
+  frameTitle: 'Inspecteur NodeJS',
+}
+
 declare module '@deepseek-ai/dsh-client-ui-slots' {
   interface LocaleNamespaceMap {
     /** Shared Inspector frontend copy. */

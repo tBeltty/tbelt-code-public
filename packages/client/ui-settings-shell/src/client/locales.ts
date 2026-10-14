@@ -45,6 +45,42 @@ export const es = {
   invalidNumber: 'Introduce un número, o déjalo en blanco para usar el valor predeterminado.',
 } satisfies Record<keyof typeof en, string>
 
+/** Greek dictionary, checked complete against the English key set. */
+export const el = {
+  title: 'Κέλυφος',
+  description: 'Περιορίστε πόση ώρα μπορεί να τρέχει κάθε εντολή και πόση έξοδο μπορεί να παράγει.',
+  timeoutMs: 'Χρονικό όριο εντολής (ms)',
+  timeoutMsHint: 'Πόση ώρα μπορεί να τρέχει μία εντολή πριν τερματιστεί.',
+  maxOutputBytes: 'Όριο εξόδου ανά ροή (byte)',
+  maxOutputBytesHint: 'Η έξοδος πέρα από αυτό το όριο γράφεται σε προσωρινό αρχείο αντί να χάνεται.',
+  overridden: 'Παρακαμφθέν',
+  reset: 'Επαναφορά στην προεπιλογή',
+  readOnly: 'Αυτή η εγκατάσταση αποθηκεύει τις ρυθμίσεις μόνο για ανάγνωση.',
+  unavailable: 'Αυτό το πρόσθετο δεν έχει φορτωθεί, επομένως δεν μπορεί να ρυθμιστεί αυτή τη στιγμή.',
+  save: 'Αποθήκευση',
+  saving: 'Αποθήκευση…',
+  saveFailed: 'Η εγκατάσταση δεν δέχτηκε αυτές τις τιμές· αφέθηκαν για να τις διορθώσετε.',
+  invalidNumber: 'Εισαγάγετε αριθμό ή αφήστε το κενό για να χρησιμοποιηθεί η προεπιλογή.',
+} satisfies Record<keyof typeof en, string>
+
+/** French dictionary, checked complete against the English key set. */
+export const fr = {
+  title: 'Shell',
+  description: 'Limitez la durée d’exécution de chaque commande et le volume de sortie qu’elle peut produire.',
+  timeoutMs: 'Délai d’expiration des commandes (ms)',
+  timeoutMsHint: 'Durée pendant laquelle une commande peut s’exécuter avant d’être interrompue.',
+  maxOutputBytes: 'Plafond de sortie par flux (octets)',
+  maxOutputBytesHint: 'Au-delà, la sortie est écrite dans un fichier temporaire au lieu d’être perdue.',
+  overridden: 'Remplacé',
+  reset: 'Rétablir la valeur par défaut',
+  readOnly: 'Ce déploiement stocke les paramètres en lecture seule.',
+  unavailable: 'Ce plugin n’est pas chargé\u00a0: il ne peut pas être configuré pour le moment.',
+  save: 'Enregistrer',
+  saving: 'Enregistrement…',
+  saveFailed: 'Le déploiement n’a pas accepté ces valeurs\u00a0; elles ont été laissées pour que vous les corrigiez.',
+  invalidNumber: 'Saisissez un nombre, ou laissez vide pour utiliser la valeur par défaut.',
+} satisfies Record<keyof typeof en, string>
+
 /**
  * The form frame's copy, read from this page's dictionary.
  * @param t - the page's locale reader.

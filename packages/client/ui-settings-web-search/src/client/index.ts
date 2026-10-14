@@ -17,7 +17,7 @@ import type {} from '@deepseek-ai/dsh-api-remotes/client'
 import type { Context as ClientContext } from '@deepseek-ai/cordis'
 import { WebSearchCard } from './WebSearchCard.tsx'
 import { WEB_NS, WebSearchCardController } from './web-search-card-controller.ts'
-import { en, es, type WebSearchSettingsLocaleKey } from './locales.ts'
+import { en, es, el, fr, type WebSearchSettingsLocaleKey } from './locales.ts'
 
 export type { WebSearchCardProps } from './WebSearchCard.tsx'
 export type {
@@ -44,7 +44,7 @@ export const inject = ['slots', 'locale', 'remote', 'remote.credentials', 'remot
  */
 export function apply(ctx: ClientContext): void {
   const t = ctx.locale.bind(NS)
-  ctx.effect(() => ctx.locale.register(NS, { en, es }), 'ui-settings-web-search: dictionaries')
+  ctx.effect(() => ctx.locale.register(NS, { en, es, el, fr }), 'ui-settings-web-search: dictionaries')
   const card = new WebSearchCardController(ctx.configForms.get(WEB_NS), ctx)
   ctx.effect(() => () => { card.dispose() }, 'ui-settings-web-search: form subscription')
   // The credentials the page reports are not part of any settings section, so

@@ -30,7 +30,7 @@ The client activates only inside Desktop, identified by its preload bridge. Plai
 
 The sidebar and Account settings display circular profile images with diameters of 24px and 32px respectively, with the account icon as fallback when the URL is absent or the image fails to load. The sidebar account menu trigger is icon-only: signed in it shows the avatar in a 32 × 32 px button, and before sign-in it shows the ellipsis glyph titled More.
 
-The section registers through settings.section and uses the account Remote namespace. The stream survives carrier reconnects through the shared Remote supervisor. The page renders feature-owned English and Spanish copy and keeps API keys separate from account state.
+The section registers through settings.section and uses the account Remote namespace. The stream survives carrier reconnects through the shared Remote supervisor. The page renders feature-owned English, Spanish, Greek and French copy and keeps API keys separate from account state.
 
 Account operations carry this UI's client identity to the Host: build version, active language, and the current UTC offset in seconds sampled as the operation is issued.
 

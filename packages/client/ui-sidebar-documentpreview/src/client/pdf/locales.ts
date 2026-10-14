@@ -1,4 +1,4 @@
-import { zoomEn, zoomEs } from '../zoom/locales.ts'
+import { zoomEn, zoomEs, zoomEl, zoomFr } from '../zoom/locales.ts'
 
 /** PDF translation keys shared by both dictionaries. */
 export type PdfLocaleKey = keyof typeof en
@@ -29,6 +29,34 @@ export const es = {
   workerFailed: 'El proceso de renderizado del PDF no pudo continuar. Inténtalo de nuevo.',
   unsupported: 'La vista previa de PDF necesita el contenido completo del archivo.',
   retry: 'Reintentar',
+} satisfies Record<keyof typeof en, string>
+
+/** Greek dictionary, checked complete against the English key set. */
+export const el = {
+  ...zoomEl,
+  title: 'PDF',
+  pageImage: 'Σελίδα PDF {page}',
+  loading: 'Απόδοση εγγράφου...',
+  rendering: 'Απόδοση σελίδας…',
+  failed: 'Δεν είναι δυνατή η εμφάνιση του PDF: {message}',
+  password: 'Αυτό το PDF απαιτεί κωδικό πρόσβασης· οι προεπισκοπήσεις με προστασία κωδικού δεν υποστηρίζονται.',
+  workerFailed: 'Η διεργασία απόδοσης PDF δεν μπόρεσε να συνεχίσει. Δοκιμάστε ξανά.',
+  unsupported: 'Η προεπισκόπηση PDF απαιτεί το πλήρες περιεχόμενο του αρχείου.',
+  retry: 'Επανάληψη',
+} satisfies Record<keyof typeof en, string>
+
+/** French dictionary, checked complete against the English key set. */
+export const fr = {
+  ...zoomFr,
+  title: 'PDF',
+  pageImage: 'Page {page} du PDF',
+  loading: 'Rendu du document...',
+  rendering: 'Rendu de la page…',
+  failed: 'Impossible d’afficher le PDF\u00a0: {message}',
+  password: 'Ce PDF nécessite un mot de passe\u00a0; les aperçus protégés par mot de passe ne sont pas pris en charge.',
+  workerFailed: 'Le processus de rendu du PDF n’a pas pu continuer. Veuillez réessayer.',
+  unsupported: 'L’aperçu du PDF nécessite le contenu complet du fichier.',
+  retry: 'Réessayer',
 } satisfies Record<keyof typeof en, string>
 
 declare module '@deepseek-ai/dsh-client-ui-slots' {

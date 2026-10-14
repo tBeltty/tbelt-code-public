@@ -22,3 +22,23 @@ export const es = {
   'panels.label': 'Paneles globales',
   'brand.preview': 'Vista previa',
 } satisfies Record<keyof typeof en, string>
+
+/** Greek dictionary, checked complete against the English key set. */
+export const el = {
+  'session.new': 'Νέα συνεδρία',
+  'session.new.label': 'Νέα συνεδρία',
+  'toggle.open': 'Άνοιγμα πλευρικής γραμμής',
+  'toggle.collapse': 'Σύμπτυξη πλευρικής γραμμής',
+  'panels.label': 'Καθολικοί πίνακες',
+  'brand.preview': 'Προεπισκόπηση',
+} satisfies Record<keyof typeof en, string>
+
+/** French dictionary, checked complete against the English key set. */
+export const fr = {
+  'session.new': 'Nouvelle session',
+  'session.new.label': 'Nouvelle session',
+  'toggle.open': 'Ouvrir la barre latérale',
+  'toggle.collapse': 'Réduire la barre latérale',
+  'panels.label': 'Panneaux globaux',
+  'brand.preview': 'Aperçu',
+} satisfies Record<keyof typeof en, string>

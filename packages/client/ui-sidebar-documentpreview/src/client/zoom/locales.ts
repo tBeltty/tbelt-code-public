@@ -20,5 +20,25 @@ export const zoomEs = {
   zoomValue: '{percent}%',
 } satisfies Record<keyof typeof zoomEn, string>
 
+/** Greek counterpart of {@link zoomEn}. */
+export const zoomEl = {
+  zoomControls: 'Στοιχεία ελέγχου ζουμ',
+  zoomMenu: 'Επιλογή ζουμ',
+  zoomOut: 'Σμίκρυνση',
+  zoomIn: 'Μεγέθυνση',
+  zoomFitWidth: 'Προσαρμογή στο πλάτος',
+  zoomValue: '{percent}%',
+} satisfies Record<keyof typeof zoomEn, string>
+
+/** French counterpart of {@link zoomEn}. */
+export const zoomFr = {
+  zoomControls: 'Commandes de zoom',
+  zoomMenu: 'Choisir le zoom',
+  zoomOut: 'Zoom arrière',
+  zoomIn: 'Zoom avant',
+  zoomFitWidth: 'Ajuster à la largeur',
+  zoomValue: '{percent} %',
+} satisfies Record<keyof typeof zoomEn, string>
+
 /** Shared zoom dictionary keys. */
 export type ZoomLocaleKey = keyof typeof zoomEn

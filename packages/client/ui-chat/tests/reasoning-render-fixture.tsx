@@ -26,8 +26,8 @@ export async function createReasoningRenderFixture(language = 'es') {
   onTestFinished(() => runtime.dispose())
   const locale = new LocaleRuntime(runtime.ctx)
   runtime.ctx.provide('locale', locale)
-  locale.register('common', { en: commonEn, es: commonEs })
-  locale.register(NS, { en, es })
+  locale.register('common', { en: commonEn, es: commonEs, el: commonEn, fr: commonEn })
+  locale.register(NS, { en, es, el: en, fr: en })
   locale.setLocale(language)
   runtime.slots.installLocale(locale)
   const captured: { seats?: RenderSeats; setContent?: (content: ReactNode) => void } = {}

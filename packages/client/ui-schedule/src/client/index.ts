@@ -58,8 +58,8 @@ import { TaskManagerPage, type TaskManagerInjected } from './TaskManagerPage.tsx
 import type { TaskDetailInjected } from './TaskDetail.tsx'
 import { TaskManagerIcon } from './TaskManagerIcon.tsx'
 import { sessionLinkState } from './session-link.ts'
-import { en, es, NS, type ScheduleCatalogKey } from './locales.ts'
-import { en as managerEn, es as managerEs, type TaskManagerKey } from './task-manager-locales.ts'
+import { en, es, el, fr, NS, type ScheduleCatalogKey } from './locales.ts'
+import { en as managerEn, es as managerEs, el as managerEl, fr as managerFr, type TaskManagerKey } from './task-manager-locales.ts'
 
 const MANAGER_NS = 'schedule.manager'
 const PANEL_ID = 'schedules' as MainPanelId
@@ -86,8 +86,8 @@ export const inject = [
  * @param ctx - browser services used by these contributions.
  */
 export function apply(ctx: ClientContext): void {
-  ctx.effect(() => ctx.locale.register(NS, { en, es }), 'ui-schedule: dictionaries')
-  ctx.effect(() => ctx.locale.register(MANAGER_NS, { en: managerEn, es: managerEs }), 'ui-schedule: manager dictionaries')
+  ctx.effect(() => ctx.locale.register(NS, { en, es, el, fr }), 'ui-schedule: dictionaries')
+  ctx.effect(() => ctx.locale.register(MANAGER_NS, { en: managerEn, es: managerEs, el: managerEl, fr: managerFr }), 'ui-schedule: manager dictionaries')
   const t = ctx.locale.bind(MANAGER_NS)
   const manager: CatalogInjected<ScheduleCatalogEntry> = createCatalogSource<ScheduleCatalogEntry>({
     list: () => ctx.remote.schedule.catalog(),

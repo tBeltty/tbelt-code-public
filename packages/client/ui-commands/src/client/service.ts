@@ -383,7 +383,15 @@ export class CommandUiRuntime extends Service implements CommandUiContract {
       token,
       ...(desc.input !== undefined ? { hint: desc.input.hint } : {}),
       ...(desc.input?.attachments === true ? { attachments: true } : {}),
-      submit: (args, _actx, attachments) => this.execute(session, line + args, attachments),
+      submit: (args, _actx, attachments) => {
+        const decoration = this.live.decorations.get(desc.name)
+        if (decoration?.ui.kind === 'action' && decoration.ui.runWithInput !== undefined
+          && attachments.length === 0 && decoration.available(session)) {
+          decoration.ui.runWithInput(session, args.trim())
+          return Promise.resolve({ kind: 'success' })
+        }
+        return this.execute(session, line + args, attachments)
+      },
     }
   }
 

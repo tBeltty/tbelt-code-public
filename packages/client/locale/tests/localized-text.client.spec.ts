@@ -30,7 +30,7 @@ describe('package text resolution', () => {
     expect(locale.resolveText({ en: 'English description' })).toBe('English description')
     expect(locale.resolveText({ en: 'Fallback', es: '' })).toBe('')
     expect(locale.getSnapshot()).toBe(snapshot)
-    expect(snapshot.locales.map(item => item.id)).toEqual(['en', 'es'])
+    expect(snapshot.locales.map(item => item.id)).toEqual(['en', 'es', 'el', 'fr'])
 
     locale.setLocale('en')
     expect(locale.resolveText(title)).toBe('Tools')
@@ -38,27 +38,27 @@ describe('package text resolution', () => {
 
   it('walks registered regional fallbacks using lowercase map keys', () => {
     const { ctx, locale } = make()
-    ctx.effect(() => locale.addLanguage({ id: 'fr', label: 'Français', fallback: 'en' }), 'test: French')
-    ctx.effect(() => locale.addLanguage({ id: 'fr-CA', label: 'Français (Canada)', fallback: 'fr' }), 'test: Canadian French')
-    locale.setLocale('FR-ca')
+    ctx.effect(() => locale.addLanguage({ id: 'it', label: 'Italiano', fallback: 'en' }), 'test: Italian')
+    ctx.effect(() => locale.addLanguage({ id: 'it-CH', label: 'Italiano (Svizzera)', fallback: 'it' }), 'test: Swiss Italian')
+    locale.setLocale('IT-ch')
 
-    expect(locale.resolveText({ en: 'Tools', fr: 'Outils', 'fr-ca': 'Outils Québec' })).toBe('Outils Québec')
-    expect(locale.resolveText({ en: 'Tools', fr: 'Outils' })).toBe('Outils')
+    expect(locale.resolveText({ en: 'Tools', it: 'Strumenti', 'it-ch': 'Strumenti Ticino' })).toBe('Strumenti Ticino')
+    expect(locale.resolveText({ en: 'Tools', it: 'Strumenti' })).toBe('Strumenti')
     expect(locale.resolveText({ en: 'Tools', es: 'Herramientas' })).toBe('Tools')
   })
 
   it('uses English across an unloaded fallback and follows its replacement', () => {
     const { ctx, locale } = make()
-    const removeFrench = locale.addLanguage({ id: 'fr', label: 'Français', fallback: 'en' })
-    ctx.effect(() => removeFrench, 'test: French')
-    ctx.effect(() => locale.addLanguage({ id: 'fr-CA', label: 'Français (Canada)', fallback: 'fr' }), 'test: Canadian French')
-    locale.setLocale('fr-CA')
-    const text = { en: 'Tools', fr: 'Outils' }
+    const removeItalian = locale.addLanguage({ id: 'it', label: 'Italiano', fallback: 'en' })
+    ctx.effect(() => removeItalian, 'test: Italian')
+    ctx.effect(() => locale.addLanguage({ id: 'it-CH', label: 'Italiano (Svizzera)', fallback: 'it' }), 'test: Swiss Italian')
+    locale.setLocale('it-CH')
+    const text = { en: 'Tools', it: 'Strumenti' }
 
-    expect(locale.resolveText(text)).toBe('Outils')
-    removeFrench()
+    expect(locale.resolveText(text)).toBe('Strumenti')
+    removeItalian()
     expect(locale.resolveText(text)).toBe('Tools')
-    ctx.effect(() => locale.addLanguage({ id: 'fr', label: 'Français', fallback: 'en' }), 'test: replacement French')
-    expect(locale.resolveText(text)).toBe('Outils')
+    ctx.effect(() => locale.addLanguage({ id: 'it', label: 'Italiano', fallback: 'en' }), 'test: replacement Italian')
+    expect(locale.resolveText(text)).toBe('Strumenti')
   })
 })

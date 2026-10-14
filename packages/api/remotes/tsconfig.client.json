@@ -97,6 +97,9 @@
       "path": "../../feedback/command-feedback"
     },
     {
+      "path": "../../interaction/command-btw"
+    },
+    {
       "path": "../terminal-controller/tsconfig.client.json"
     },
     {

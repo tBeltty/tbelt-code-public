@@ -1,11 +1,13 @@
 /**
- * Terminal client copy: English and Spanish dictionaries keyed by the same
+ * Terminal client copy: English, Spanish, Greek and French dictionaries keyed by the same
  * locale keys the shared presenters return, plus the terminal's own prompts and messages.
  * @module @deepseek-ai/dsh-terminal-views/copy
  */
 import type { ApprovalChoiceKey, ApprovalNeedKey } from '@deepseek-ai/dsh-presentation-approval'
 import type { ToolTitleKey } from '@deepseek-ai/dsh-presentation-tool-call'
+import { COPY_EL } from './copy-el.ts'
 import { COPY_ES } from './copy-es.ts'
+import { COPY_FR } from './copy-fr.ts'
 import { PANEL_COPY } from './copy-panels.ts'
 
 /** Title of every tool row, one entry per {@link ToolTitleKey}. */
@@ -189,7 +191,7 @@ const CONFIG = {
   'help.plugins': '/plugins             install, turn on or off and remove plugins',
   'help.agents': '/agents              see agent presets, including your Markdown agents',
   'help.permissions': '/permissions         choose how freely the agent may act',
-  'help.language': '/language            choose English or Spanish, or follow the terminal',
+  'help.language': '/language            choose a language, or follow the terminal',
   'help.modelDefault': '/model default       choose the model new sessions start with',
   'screen.busy': 'Another screen is open. Finish it first.',
   'screen.failed': 'The screen stopped: {message}',
@@ -340,6 +342,8 @@ const CONFIG = {
   'language.automaticDetail': 'follow the language of the terminal',
   'language.english': 'English',
   'language.spanish': 'Español',
+  'language.greek': 'Ελληνικά',
+  'language.french': 'Français',
   'language.saved': 'The language is now {name}.',
   'language.automaticSaved': 'The language now follows the terminal.',
   'language.unavailable': 'This installation cannot save a language.',
@@ -353,13 +357,13 @@ const COPY_EN = { ...TOOL_TITLES, ...NEEDS, ...CHOICES, ...APPROVAL, ...TERMINAL
 export type CopyKey = keyof typeof COPY_EN
 
 /** Languages the terminal client is written in. */
-export type CopyLocale = 'en' | 'es'
+export type CopyLocale = 'en' | 'es' | 'el' | 'fr'
 
 /** Values substituted for `{name}` placeholders. */
 export type CopyParams = Readonly<Record<string, string | number>>
 
 /** Dictionaries by language; English is also the fallback of every other one. */
-const DICTIONARIES: Readonly<Record<CopyLocale, Readonly<Record<CopyKey, string>>>> = { en: COPY_EN, es: COPY_ES }
+const DICTIONARIES: Readonly<Record<CopyLocale, Readonly<Record<CopyKey, string>>>> = { en: COPY_EN, es: COPY_ES, el: COPY_EL, fr: COPY_FR }
 
 let active: CopyLocale = 'en'
 

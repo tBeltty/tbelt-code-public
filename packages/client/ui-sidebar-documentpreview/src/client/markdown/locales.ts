@@ -19,6 +19,22 @@ export const es = {
   'footnotes': 'Notas al pie',
 } satisfies Record<keyof typeof en, string>
 
+/** Greek dictionary, checked complete against the English key set. */
+export const el = {
+  'viewer.label': 'Markdown',
+  'code.copy': 'Αντιγραφή',
+  'code.copied': 'Αντιγράφηκε',
+  'footnotes': 'Υποσημειώσεις',
+} satisfies Record<keyof typeof en, string>
+
+/** French dictionary, checked complete against the English key set. */
+export const fr = {
+  'viewer.label': 'Markdown',
+  'code.copy': 'Copier',
+  'code.copied': 'Copié',
+  'footnotes': 'Notes de bas de page',
+} satisfies Record<keyof typeof en, string>
+
 declare module '@deepseek-ai/dsh-client-ui-slots' {
   interface LocaleNamespaceMap {
     /** Markdown document renderer and its code/footnote controls. */

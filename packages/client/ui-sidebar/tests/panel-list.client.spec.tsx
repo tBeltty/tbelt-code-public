@@ -52,9 +52,10 @@ async function bench(collapsed = false) {
       ctx.provide('layout', layout)
       ctx.provide('uiWorkspace', { startSession: vi.fn() } as never)
       ctx.provide('locale', locale)
-      ctx.effect(() => locale.register('common', { es: commonEs, en: commonEn }), 'panel test: common locale')
+      ctx.effect(() => locale.register('common', { es: commonEs, en: commonEn, el: commonEn, fr: commonEn }), 'panel test: common locale')
       ctx.effect(() => locale.register('sidebar-panel-test', {
         es: { alpha: '甲面板' }, en: { alpha: 'Alpha panel' },
+        el: { alpha: 'Alpha panel' }, fr: { alpha: 'Alpha panel' },
       }), 'panel test: panel locale')
       ctx.slots.installLocale(locale)
       ctx.slots.inject('main', () => ctx.slots.register({ name: 'main', key: 'conversation' }, () => (

@@ -9,7 +9,7 @@ import type { CopyLocale } from './copy.ts'
 const LANGUAGE_VARIABLES = ['LC_ALL', 'LC_MESSAGES', 'LANGUAGE', 'LANG'] as const
 
 /** Languages the terminal client is written in. */
-const SUPPORTED: readonly CopyLocale[] = ['en', 'es']
+const SUPPORTED: readonly CopyLocale[] = ['en', 'es', 'el', 'fr']
 
 /**
  * Read a language from a POSIX locale such as `es_ES.UTF-8` or a `LANGUAGE` list such as `es:en`.

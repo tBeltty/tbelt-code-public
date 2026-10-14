@@ -406,6 +406,11 @@
     - id: ui-message-feedback
       name: '@deepseek-ai/dsh-client-ui-message-feedback'
 
+    # Side conversation: the /btw dialog over the btw Remote, with the button that
+    # sends the exchange to the main chat.
+    - id: ui-btw
+      name: '@deepseek-ai/dsh-client-ui-btw'
+
     # Model selection: the /model popupSelect + composer seat over session.models.
     - id: ui-model-selection
       name: '@deepseek-ai/dsh-client-ui-model-selection'

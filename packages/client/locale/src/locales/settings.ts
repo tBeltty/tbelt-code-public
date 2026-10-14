@@ -14,3 +14,15 @@ export const es = {
   'language.title': 'Idioma',
   'language.auto': 'Automático',
 } satisfies Record<SettingsLocaleKey, string>
+
+/** Greek dictionary, checked complete against the English key set. */
+export const el = {
+  'language.title': 'Γλώσσα',
+  'language.auto': 'Αυτόματα',
+} satisfies Record<SettingsLocaleKey, string>
+
+/** French dictionary, checked complete against the English key set. */
+export const fr = {
+  'language.title': 'Langue',
+  'language.auto': 'Automatique',
+} satisfies Record<SettingsLocaleKey, string>

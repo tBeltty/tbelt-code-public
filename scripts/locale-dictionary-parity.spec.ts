@@ -1,6 +1,6 @@
 /**
  * Gate for the invariant `FALLBACK_LOCALE` rests on: every shipped dictionary
- * declares the same keys in `es` and `en`.
+ * declares the same keys in `es`, `el`, `fr` and `en`.
  *
  * The locale runtime resolves a key through the active locale, then through
  * the single fallback locale (`en`), then surfaces the key itself. With
@@ -14,9 +14,9 @@
  * worse than no gate. It sweeps every workspace package (not just
  * `packages/client`), reads dictionaries wherever they are declared —
  * `locales.ts`, a `locales/` directory, or inline in the plugin body — and
- * pairs `es`/`en` across sibling files as well as within one module. A `es`
- * dictionary whose `en` counterpart cannot be found anywhere is an error, not
- * a skip.
+ * pairs each translated dictionary with `en` across sibling files as well as
+ * within one module. A translated dictionary whose `en` counterpart cannot be
+ * found anywhere is an error, not a skip.
  */
 
 import type { Dirent } from 'node:fs'
@@ -27,6 +27,12 @@ import ts from 'typescript'
 import { describe, expect, it } from 'vitest'
 
 const root = fileURLToPath(new URL('..', import.meta.url))
+
+/** Locale tags that carry a shipped dictionary, with the PascalCase suffix each uses in export names. */
+const LOCALE_SUFFIXES = { en: 'En', es: 'Es', el: 'El', fr: 'Fr' } as const
+type DictionaryLocale = keyof typeof LOCALE_SUFFIXES
+const DICTIONARY_LOCALES = Object.keys(LOCALE_SUFFIXES) as DictionaryLocale[]
+const TRANSLATED_LOCALES = DICTIONARY_LOCALES.filter(locale => locale !== 'en')
 
 /** Repo-relative path with `/` separators, so messages and suffix tests match on every OS. */
 function relative(file: string): string {
@@ -98,13 +104,13 @@ function dictionariesIn(file: string): Dictionary[] {
   // before parsing — the silent narrowing this gate exists to prevent. A bare
   // `\b(es|en)\b` misses `esSettings`/`accessEs`, because `\b` does not hold
   // between `h` and an uppercase letter.
-  if (!/\b(es|en)\b|\b(es|en)[A-Z]|(Es|En)\b/.test(text)) return []
+  if (!/\b(es|en|el|fr)\b|\b(es|en|el|fr)[A-Z]|(Es|En|El|Fr)\b/.test(text)) return []
   const source = ts.createSourceFile(file, text, ts.ScriptTarget.ESNext, true)
   const found: Dictionary[] = []
   const rel = relative(file)
 
   // Module-scope variable declarations, keyed by name. A 3-arg
-  // `register(NS, 'es'|'en', dict)` whose third argument is an identifier —
+  // `register(NS, tag, dict)` whose third argument is an identifier —
   // e.g. a local dictionary variable rather than an inline literal — resolves
   // through here so the gate still verifies its symmetry.
   const moduleConsts = new Map<string, ts.Expression>()
@@ -129,7 +135,7 @@ function dictionariesIn(file: string): Dictionary[] {
     }
   }
 
-  // A 3-arg `register(ns, 'es'|'en', dict)` call whose dictionary argument we
+  // A 3-arg `register(ns, tag, dict)` call whose dictionary argument we
   // cannot turn into an object literal. We refuse instead of skipping: a
   // registration we cannot measure is exactly the silent narrowing this gate
   // exists to catch.
@@ -150,7 +156,7 @@ function dictionariesIn(file: string): Dictionary[] {
       if (name === 'register' && node.arguments.length >= 3) {
         const [ns, tag, dict] = node.arguments
         if (ns === undefined || tag === undefined || !ts.isStringLiteral(tag)) return
-        if (tag.text !== 'es' && tag.text !== 'en') return
+        if (!isDictionaryLocale(tag.text)) return
         const raw = unwrap(dict)
         const literal = raw !== undefined && ts.isIdentifier(raw)
           ? (() => {
@@ -182,7 +188,7 @@ function dictionariesIn(file: string): Dictionary[] {
         const literal = unwrap(dict)
         if (tag === undefined || !ts.isStringLiteral(tag)) continue
         if (literal === undefined || !ts.isObjectLiteralExpression(literal)) continue
-        if (tag.text !== 'es' && tag.text !== 'en') continue
+        if (!isDictionaryLocale(tag.text)) continue
         found.push({ file: rel, name: `${tag.text}@inline:${site}`, keys: keysOf(literal) })
       }
     }
@@ -214,6 +220,11 @@ function unwrap(node: ts.Expression | undefined): ts.Expression | undefined {
   return current
 }
 
+/** Whether a registration tag names a shipped dictionary locale. */
+function isDictionaryLocale(tag: string): tag is DictionaryLocale {
+  return (DICTIONARY_LOCALES as readonly string[]).includes(tag)
+}
+
 /**
  * The locale a dictionary name declares, and the namespace-ish remainder that
  * identifies which pair it belongs to. `es`/`en`, `esSettings`/`enSettings`,
@@ -224,9 +235,9 @@ function unwrap(node: ts.Expression | undefined): ts.Expression | undefined {
  * @param name - export name or synthetic inline name.
  * @returns locale plus pair key, or undefined when the name names no locale.
  */
-function localeOf(name: string): { locale: 'es' | 'en'; pair: string } | undefined {
-  for (const locale of ['es', 'en'] as const) {
-    const other = locale === 'es' ? 'Es' : 'En'
+function localeOf(name: string): { locale: DictionaryLocale; pair: string } | undefined {
+  for (const locale of DICTIONARY_LOCALES) {
+    const other = LOCALE_SUFFIXES[locale]
     if (name === locale) return { locale, pair: '' }
     // Synthetic names for inline shapes carry their own pair key after the
     // first ':' (the enclosing array's line, or the namespace expression).
@@ -240,7 +251,7 @@ function localeOf(name: string): { locale: 'es' | 'en'; pair: string } | undefin
 }
 
 describe('shipped locale dictionaries', () => {
-  it('declares exactly the same keys in es and en, so no key falls back and none is orphaned', () => {
+  it('declares exactly the same keys in es, el, fr and en, so no key falls back and none is orphaned', () => {
     const files = sourceFiles()
     // Guard the discovery itself: an empty or narrowed sweep would pass every
     // assertion below while checking nothing.
@@ -256,9 +267,9 @@ describe('shipped locale dictionaries', () => {
       if (dicts.length > 0) perFile.set(relative(file), dicts)
     }
 
-    const groups = new Map<string, Map<'es' | 'en', Dictionary>>()
-    const place = (key: string, locale: 'es' | 'en', dict: Dictionary): void => {
-      const slot = groups.get(key) ?? new Map<'es' | 'en', Dictionary>()
+    const groups = new Map<string, Map<DictionaryLocale, Dictionary>>()
+    const place = (key: string, locale: DictionaryLocale, dict: Dictionary): void => {
+      const slot = groups.get(key) ?? new Map<DictionaryLocale, Dictionary>()
       if (slot.has(locale)) {
         throw new Error(`two ${locale} dictionaries claim pair ${key}: ${slot.get(locale)?.file} and ${dict.file}`)
       }
@@ -286,23 +297,30 @@ describe('shipped locale dictionaries', () => {
     const problems: string[] = []
     let comparedPairs = 0
     for (const [key, slot] of [...groups].sort()) {
-      const es = slot.get('es')
       const en = slot.get('en')
-      if (es === undefined || en === undefined) {
-        const present = es ?? en
+      const translated = TRANSLATED_LOCALES.flatMap(locale => slot.get(locale) ?? [])
+      if (en === undefined || translated.length === 0) {
+        const present = en ?? translated[0]
         problems.push(`${present?.file} declares ${present?.name} with no counterpart for pair ${key}`)
         continue
       }
-      comparedPairs++
-      const esOnly = es.keys.filter(k => !en.keys.includes(k))
-      const enOnly = en.keys.filter(k => !es.keys.includes(k))
-      if (esOnly.length > 0) problems.push(`${es.file} ${es.name} has keys absent from ${en.name}: ${esOnly.join(', ')}`)
-      if (enOnly.length > 0) problems.push(`${en.file} ${en.name} has keys absent from ${es.name}: ${enOnly.join(', ')}`)
+      for (const locale of TRANSLATED_LOCALES) {
+        const dict = slot.get(locale)
+        if (dict === undefined) {
+          problems.push(`${en.file} ${en.name} has no ${locale} dictionary for pair ${key}`)
+          continue
+        }
+        comparedPairs++
+        const only = dict.keys.filter(k => !en.keys.includes(k))
+        const missing = en.keys.filter(k => !dict.keys.includes(k))
+        if (only.length > 0) problems.push(`${dict.file} ${dict.name} has keys absent from ${en.name}: ${only.join(', ')}`)
+        if (missing.length > 0) problems.push(`${en.file} ${en.name} has keys absent from ${dict.name}: ${missing.join(', ')}`)
+      }
     }
 
     // The shipped dictionary count only grows; a collapse means discovery or
     // pairing broke, which would hide real asymmetry.
-    expect(comparedPairs).toBeGreaterThan(25)
+    expect(comparedPairs).toBeGreaterThan(75)
     expect(problems).toEqual([])
   })
 })

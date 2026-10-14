@@ -16,13 +16,14 @@ Download the app from [code.tbelt.online](https://code.tbelt.online). It can ins
 - Sandboxed commands with per-session access: Read Only, Workspace Write or Full. Destructive shell and git commands need confirmation, and permission rules can apply to a single agent preset.
 - Your own agents as Markdown files in `~/.dsh/presets`, with instructions and per-tool permissions in the front matter.
 - A checkpoint before every edit, restored with `/undo`.
+- Side questions with `/btw` while the agent keeps working, and one action to send what you learned to the chat.
 - Sessions in git worktrees, so several agents edit one repository in parallel. A worktree row shows its branch.
 - Line comments in the change review, sent to the agent as notes.
 - Quote text from an assistant message into your next message.
 - Long pasted text becomes a file attachment with a preview, and one click puts it back as text.
 - Images over 30 MB attach as files, with an upload percentage, instead of being refused.
 - Plans with inline comments and versions, reviewed before you approve.
-- The app and `dsh terminal` are available in English and Spanish, and follow your system language until you pick one.
+- The app and `dsh terminal` are available in English, Spanish, Greek and French, and follow your system language until you pick one.
 - A light theme next to the dark one, or follow the system setting.
 - Choose the font for text, code and the terminal.
 - An Artifacts page listing the files each turn delivered or changed.

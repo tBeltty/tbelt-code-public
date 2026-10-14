@@ -29,3 +29,27 @@ export const es = {
   'row.inspect': 'Inspeccionar',
   'menu.userOnly': 'solo usuario',
 } satisfies Record<keyof typeof en, string>
+
+/** Greek dictionary, checked complete against the English key set. */
+export const el = {
+  'row.title': 'Δεξιότητα',
+  'row.running': 'Φόρτωση δεξιότητας',
+  'row.preparing': 'Προετοιμασία φόρτωσης δεξιότητας',
+  'row.failed': 'Η φόρτωση της δεξιότητας απέτυχε',
+  'row.stopped': 'Η φόρτωση της δεξιότητας σταμάτησε',
+  'row.instructions': 'Οδηγίες',
+  'row.inspect': 'Επιθεώρηση',
+  'menu.userOnly': 'μόνο για χρήστη',
+} satisfies Record<keyof typeof en, string>
+
+/** French dictionary, checked complete against the English key set. */
+export const fr = {
+  'row.title': 'Compétence',
+  'row.running': 'Chargement de la compétence',
+  'row.preparing': 'Préparation du chargement d’une compétence',
+  'row.failed': 'Échec du chargement de la compétence',
+  'row.stopped': 'Chargement de la compétence arrêté',
+  'row.instructions': 'Instructions',
+  'row.inspect': 'Inspecter',
+  'menu.userOnly': 'réservé à l’utilisateur',
+} satisfies Record<keyof typeof en, string>

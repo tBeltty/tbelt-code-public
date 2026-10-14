@@ -25,6 +25,7 @@ Each package README and its subsystem reference own the exhaustive contracts.
 | Package | Role | ctx key |
 |---|---|---|
 | [`commands/`](commands/README.md) | Lets users type slash commands that run directly against an agent without a model round trip | `ctx.commands` |
+| [`command-btw/`](command-btw/README.md) | Lets users ask a side question while the agent works and send the exchange to it as context | `ctx.btw` |
 | [`user-approval/`](user-approval/README.md) | Asks composed answerers for one-shot allow/reject decisions and fails closed without one | `ctx.approval` |
 | [`permission-presets/`](permission-presets/README.md) | Bundles sandbox mode with an approval policy into one user-facing Permissions selector | `ctx.permissionPresets` |
 | [`user-questions/`](user-questions/README.md) | Defines the validated question schema and scoped answerer waterfall an agent pauses on | `ctx.userQuestions` |

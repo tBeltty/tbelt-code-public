@@ -164,7 +164,7 @@ export function createElectronBuilderConfig(
       category: 'public.app-category.developer-tools',
       extendInfo: {
         // macOS matches the application locale against this bundle, not Electron Framework resources.
-        CFBundleLocalizations: ['en', 'es'],
+        CFBundleLocalizations: ['en', 'es', 'el', 'fr'],
         NSMicrophoneUsageDescription: `${PRODUCT_NAME} uses your microphone to transcribe speech into message drafts.`,
       },
       // `-` ad-hoc signs an unsigned release so Apple Silicon will launch it.

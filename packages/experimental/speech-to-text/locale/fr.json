@@ -1,0 +1,6 @@
+{
+  "meta": {
+    "title": "Reconnaissance vocale",
+    "description": "Gère la transcription vocale et permet de choisir un service de reconnaissance."
+  }
+}

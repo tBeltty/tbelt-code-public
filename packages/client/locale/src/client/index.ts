@@ -20,9 +20,9 @@ import {
   LOCALE_ID_PATTERN, LOCALE_IDS, LOCALE_PREFERENCE_FIELD, LOCALE_SETTINGS_NAMESPACE,
   type BuiltInLocaleId, type LocaleId, type LocaleSettings,
 } from '../locale-settings.ts'
-import { en, es, type CommonKey } from '../locales/index.ts'
+import { en, es, el, fr, type CommonKey } from '../locales/index.ts'
 import {
-  en as settingsEn, es as settingsEs, type SettingsLocaleKey,
+  en as settingsEn, es as settingsEs, el as settingsEl, fr as settingsFr, type SettingsLocaleKey,
 } from '../locales/settings.ts'
 import type { LanguageRowInjected } from './LanguageRow.tsx'
 import { LanguageRow } from './LanguageRow.tsx'
@@ -117,6 +117,8 @@ export const SETTINGS_NS = 'settings.locale'
 const BUILT_IN_LOCALE_METADATA = {
   en: { label: 'English' },
   es: { label: 'Español', fallback: 'en' },
+  el: { label: 'Ελληνικά', fallback: 'en' },
+  fr: { label: 'Français', fallback: 'en' },
 } as const satisfies Record<BuiltInLocaleId, Omit<LocaleDefinition, 'id'>>
 const BUILT_IN_LOCALES: readonly LocaleDefinition[] = Object.freeze(
   LOCALE_IDS.map(id => Object.freeze({ id, ...BUILT_IN_LOCALE_METADATA[id] })),
@@ -591,8 +593,8 @@ export async function apply(ctx: ClientContext): Promise<void> {
   }
   const host = ctx.configForms.get<LocaleSettings>(LOCALE_SETTINGS_NAMESPACE)
   const locale = new LocaleRuntime(ctx, host, bootstrap)
-  locale.register(COMMON_NS, { en, es })
-  locale.register(SETTINGS_NS, { en: settingsEn, es: settingsEs })
+  locale.register(COMMON_NS, { en, es, el, fr })
+  locale.register(SETTINGS_NS, { en: settingsEn, es: settingsEs, el: settingsEl, fr: settingsFr })
   ctx.provide('locale', locale)
   if (bridge !== undefined) {
     ctx.on('locale/change', (snapshot) => { bridge.onChange(snapshot.active) })

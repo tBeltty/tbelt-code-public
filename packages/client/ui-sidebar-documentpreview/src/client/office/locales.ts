@@ -40,3 +40,41 @@ export const es = {
   busy: 'La vista previa de Office está ocupada. Inténtalo de nuevo en unos instantes.',
   changed: 'El archivo cambió mientras se leía. Vuelve a abrir la vista previa.',
 } satisfies Record<keyof typeof en, string>
+
+/** Greek dictionary, checked complete against the English key set. */
+export const el = {
+  title: 'Έγγραφο Office',
+  loading: 'Απόδοση εγγράφου...',
+  retry: 'Επανάληψη',
+  viewMissingFonts: 'Γραμματοσειρές που λείπουν: {count}. Κάντε κλικ για προβολή.',
+  missingFontsTitle: 'Γραμματοσειρές που λείπουν',
+  missingFontsDescription: 'Αυτές οι γραμματοσειρές δεν είναι διαθέσιμες για αυτή την προεπισκόπηση. Το κείμενο και η διάταξη μπορεί να διαφέρουν από το αρχικό έγγραφο.',
+  missingFontsCount: 'Γραμματοσειρές: {count}',
+  closeDetails: 'Κλείσιμο λεπτομερειών γραμματοσειρών',
+  unavailable: 'Οι προεπισκοπήσεις Office δεν είναι διαθέσιμες. Ενεργοποιήστε την υπηρεσία προεπισκόπησης εγγράφων στον υπολογιστή όπου εκτελείται το tBelt Code.',
+  invalid: 'Αυτό το αρχείο Office δεν μπορεί να προβληθεί. Μπορεί να είναι κατεστραμμένο, προστατευμένο με κωδικό ή να έχει λάθος επέκταση.',
+  tooLarge: 'Το αρχείο Office ή το PDF που προέκυψε από τη μετατροπή υπερβαίνει το όριο μεγέθους της προεπισκόπησης. Μειώστε το μέγεθος του αρχείου ή προσαρμόστε τη ρύθμιση της προεπισκόπησης.',
+  failed: 'Η μετατροπή Office δεν παρήγαγε χρησιμοποιήσιμο PDF. Ελέγξτε το αρχείο και δοκιμάστε ξανά.',
+  timeout: 'Η μετατροπή Office έληξε. Δοκιμάστε ξανά.',
+  busy: 'Η προεπισκόπηση Office είναι απασχολημένη. Δοκιμάστε ξανά σε λίγο.',
+  changed: 'Το αρχείο άλλαξε κατά την ανάγνωση. Ανοίξτε ξανά την προεπισκόπηση.',
+} satisfies Record<keyof typeof en, string>
+
+/** French dictionary, checked complete against the English key set. */
+export const fr = {
+  title: 'Document Office',
+  loading: 'Rendu du document...',
+  retry: 'Réessayer',
+  viewMissingFonts: 'Polices manquantes\u00a0: {count}. Cliquez pour les voir.',
+  missingFontsTitle: 'Polices manquantes',
+  missingFontsDescription: 'Ces polices ne sont pas disponibles pour cet aperçu. Le texte et la mise en page peuvent différer du document d’origine.',
+  missingFontsCount: 'Polices\u00a0: {count}',
+  closeDetails: 'Fermer les détails des polices',
+  unavailable: 'Les aperçus Office sont indisponibles. Activez le service d’aperçu de documents sur l’ordinateur qui exécute tBelt Code.',
+  invalid: 'Impossible d’afficher l’aperçu de ce fichier Office. Il est peut-être endommagé, protégé par mot de passe ou porte une mauvaise extension.',
+  tooLarge: 'Le fichier Office ou le PDF converti dépasse la taille limite de l’aperçu. Réduisez la taille du fichier ou ajustez la configuration de l’aperçu.',
+  failed: 'La conversion Office n’a pas produit de PDF utilisable. Vérifiez le fichier et réessayez.',
+  timeout: 'La conversion Office a expiré. Réessayez.',
+  busy: 'L’aperçu Office est occupé. Réessayez dans un instant.',
+  changed: 'Le fichier a changé pendant sa lecture. Rouvrez l’aperçu.',
+} satisfies Record<keyof typeof en, string>

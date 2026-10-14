@@ -107,7 +107,7 @@ async function bench() {
   const locale = new LocaleRuntime(runtime.ctx)
   runtime.ctx.provide('locale', locale)
   runtime.slots.installLocale(locale)
-  runtime.ctx.effect(() => locale.register('settings.account', { en, es }), 'spec: account dictionaries')
+  runtime.ctx.effect(() => locale.register('settings.account', { en, es, el: en, fr: en }), 'spec: account dictionaries')
   await runtime.declare({
     'shell.overlay': { kind: 'list', scope: 'root' },
     'settings.section': { kind: 'list', scope: 'root' },

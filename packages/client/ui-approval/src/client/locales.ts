@@ -40,3 +40,41 @@ export const es = {
   allowSession: 'Permitir durante esta sesión',
   allowMenu: 'Más formas de permitir',
 } satisfies Record<keyof typeof en, string>
+
+/** Greek dictionary, checked complete against the English key set. */
+export const el = {
+  waiting: 'Αναμονή έγκρισης',
+  'detail.aria': 'Λεπτομέρειες έγκρισης',
+  'need.shell': 'Χρειάζομαι άδεια για να εκτελέσω μια εντολή',
+  'need.edit': 'Χρειάζομαι άδεια για να αλλάξω αρχεία στο έργο σας',
+  'need.read': 'Χρειάζομαι άδεια για να διαβάσω τα αρχεία σας ή μια ιστοσελίδα',
+  'need.search': 'Χρειάζομαι άδεια για να κάνω αναζήτηση στο έργο σας ή στο διαδίκτυο',
+  'need.code': 'Χρειάζομαι άδεια για να εκτελέσω ένα πρόγραμμα',
+  'need.generic': 'Χρειάζομαι άδεια για να κάνω μια ενέργεια',
+  because: 'Αιτία: {reason}',
+  technical: 'Τεχνικές λεπτομέρειες',
+  'technical.tool': 'Εργαλείο: {toolName}',
+  reject: 'Απόρριψη',
+  allowOnce: 'Να επιτραπεί μία φορά',
+  allowSession: 'Να επιτραπεί για αυτή τη συνεδρία',
+  allowMenu: 'Περισσότεροι τρόποι να επιτραπεί',
+} satisfies Record<keyof typeof en, string>
+
+/** French dictionary, checked complete against the English key set. */
+export const fr = {
+  waiting: 'En attente d’approbation',
+  'detail.aria': 'Détails de l’approbation',
+  'need.shell': 'J’ai besoin de votre autorisation pour exécuter une commande',
+  'need.edit': 'J’ai besoin de votre autorisation pour modifier des fichiers de votre projet',
+  'need.read': 'J’ai besoin de votre autorisation pour lire vos fichiers ou une page web',
+  'need.search': 'J’ai besoin de votre autorisation pour effectuer une recherche dans votre projet ou sur le web',
+  'need.code': 'J’ai besoin de votre autorisation pour exécuter un programme',
+  'need.generic': 'J’ai besoin de votre autorisation pour effectuer une action',
+  because: 'Raison\u00a0: {reason}',
+  technical: 'Détails techniques',
+  'technical.tool': 'Outil\u00a0: {toolName}',
+  reject: 'Refuser',
+  allowOnce: 'Autoriser une fois',
+  allowSession: 'Autoriser pour cette session',
+  allowMenu: 'Autres façons d’autoriser',
+} satisfies Record<keyof typeof en, string>

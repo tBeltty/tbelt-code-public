@@ -31,6 +31,8 @@ function fixture(): string {
     write(root, `${dir}/icon.svg`, '<svg xmlns="http://www.w3.org/2000/svg"/>')
     write(root, `${dir}/locale/en.json`, { meta: { title: 'Native agent', description: 'Delegate a task.' } })
     write(root, `${dir}/locale/es.json`, { meta: { title: 'Agente nativo', description: 'Delega una tarea.' } })
+    write(root, `${dir}/locale/el.json`, { meta: { title: 'Εγγενής πράκτορας', description: 'Αναθέτει μια εργασία.' } })
+    write(root, `${dir}/locale/fr.json`, { meta: { title: 'Agent natif', description: 'Délègue une tâche.' } })
   }
   write(root, output, '')
   return root
@@ -49,7 +51,8 @@ describe('Official bundle catalog generation', () => {
     const entries = generateOfficialBundleCatalog(fixture())
     expect(entries.map(entry => entry.packageName)).toEqual(ON_DEMAND_BUNDLES)
     expect(entries[0]?.meta).toEqual({
-      title: { en: 'Native agent', es: 'Agente nativo' }, description: { en: 'Delegate a task.', es: 'Delega una tarea.' },
+      title: { en: 'Native agent', es: 'Agente nativo', el: 'Εγγενής πράκτορας', fr: 'Agent natif' },
+      description: { en: 'Delegate a task.', es: 'Delega una tarea.', el: 'Αναθέτει μια εργασία.', fr: 'Délègue une tâche.' },
       icon: `data:image/svg+xml;base64,${Buffer.from('<svg xmlns="http://www.w3.org/2000/svg"/>').toString('base64')}`,
     })
     expect(renderOfficialBundleCatalog(entries)).not.toContain('1.2.3')
@@ -79,14 +82,14 @@ describe('Official bundle catalog generation', () => {
     expect(() => generateOfficialBundleCatalog(root, [ON_DEMAND_BUNDLES[0]!, ON_DEMAND_BUNDLES[0]!])).toThrow('distinct package names')
   })
 
-  it.each(['icon', 'en', 'es'])('rejects missing %s metadata', (resource) => {
+  it.each(['icon', 'en', 'es', 'el', 'fr'])('rejects missing %s metadata', (resource) => {
     const root = fixture()
     const dir = directory(ON_DEMAND_BUNDLES[0]!)
     rmSync(join(root, dir, resource === 'icon' ? 'icon.svg' : `locale/${resource}.json`))
     expect(() => generateOfficialBundleCatalog(root)).toThrow()
   })
 
-  it.each(['en', 'es'])('requires explicit %s fields instead of metadata fallback text', (language) => {
+  it.each(['en', 'es', 'el', 'fr'])('requires explicit %s fields instead of metadata fallback text', (language) => {
     const root = fixture()
     write(root, `${directory(ON_DEMAND_BUNDLES[0]!)}/locale/${language}.json`, { meta: { description: 'Only a description.' } })
     expect(() => generateOfficialBundleCatalog(root)).toThrow(`explicit ${language} title and description`)

@@ -1,0 +1,6 @@
+{
+  "meta": {
+    "title": "Outils de développement",
+    "description": "Inspecte et débogue les données brutes de la session, les messages de conversation regroupés et le backend NodeJS."
+  }
+}

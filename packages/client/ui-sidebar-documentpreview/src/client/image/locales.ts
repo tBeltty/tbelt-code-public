@@ -1,4 +1,4 @@
-import { zoomEn, zoomEs } from '../zoom/locales.ts'
+import { zoomEn, zoomEs, zoomEl, zoomFr } from '../zoom/locales.ts'
 
 /** Image renderer dictionary keys. */
 export type ImagePreviewKey = keyof typeof en
@@ -21,6 +21,26 @@ export const es = {
   loading: 'Renderizando documento...',
   failed: 'No se pudo mostrar esta imagen.',
   unsupported: 'La vista previa de imágenes necesita el contenido completo del archivo.',
+} satisfies Record<keyof typeof en, string>
+
+/** Greek dictionary, checked complete against the English key set. */
+export const el = {
+  ...zoomEl,
+  title: 'Εικόνα',
+  preview: 'Προεπισκόπηση εικόνας: {name}',
+  loading: 'Απόδοση εγγράφου...',
+  failed: 'Δεν ήταν δυνατή η εμφάνιση αυτής της εικόνας.',
+  unsupported: 'Η προεπισκόπηση εικόνας απαιτεί το πλήρες περιεχόμενο του αρχείου.',
+} satisfies Record<keyof typeof en, string>
+
+/** French dictionary, checked complete against the English key set. */
+export const fr = {
+  ...zoomFr,
+  title: 'Image',
+  preview: 'Aperçu de l’image\u00a0: {name}',
+  loading: 'Rendu du document...',
+  failed: 'Impossible d’afficher cette image.',
+  unsupported: 'L’aperçu de l’image nécessite le contenu complet du fichier.',
 } satisfies Record<keyof typeof en, string>
 
 declare module '@deepseek-ai/dsh-client-ui-slots' {

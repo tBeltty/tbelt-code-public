@@ -7,23 +7,62 @@
  * @module dsh-llm-pi-ai/login
  */
 
+import { randomUUID } from 'node:crypto'
 import type { AuthEvent, AuthPrompt, AuthType, Provider } from '@earendil-works/pi-ai'
 import type { Context } from '@deepseek-ai/cordis'
 import type { AuthorizationMethod, AuthorizationPrompt, AuthorizationSession } from '@deepseek-ai/dsh-authorization'
-import { isCredentialKeySegment } from '@deepseek-ai/dsh-credentials'
+import { credentialKey, isCredentialKeySegment } from '@deepseek-ai/dsh-credentials'
+import type { CredentialRecord } from '@deepseek-ai/dsh-credentials'
 import { catalogProvider, catalogProviderIds } from './catalog.ts'
 import { recordKeyFor } from './auth.ts'
 import type { PiAiAuthInjection } from './adapter.ts'
 import { createModels } from './models.ts'
 
 /**
- * Catalog providers whose OAuth login this adapter does not offer. pi-ai's Sign
- * in with ChatGPT (`openai`) identifies the installation to OpenAI with a
- * stable UUID that the app supplies through `LoginOptions.getDeviceId`, and it
- * refuses to start without one. The harness keeps no installation ID meant for
- * a third-party account sign-in, so the route signs in with an API key.
+ * Catalog providers whose OAuth login this adapter does not offer: Anthropic's
+ * terms do not allow a Claude subscription to authorize a third-party client,
+ * so the route signs in with an API key.
  */
-const UNSERVED_OAUTH: ReadonlySet<string> = new Set(['openai'])
+const UNSERVED_OAUTH: ReadonlySet<string> = new Set(['anthropic'])
+
+/**
+ * Where this installation's stable ID is stored. pi-ai's Sign in with ChatGPT
+ * (`openai`) sends it to OpenAI to identify this installation as the agent
+ * host. It is a record of its own and not the anonymous telemetry ID, so
+ * deleting one never changes what the other reports.
+ */
+const INSTALLATION_KEY = credentialKey('llm-pi-ai-installation', 'default')
+
+const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+
+/**
+ * The installation ID a stored record carries.
+ * @param record - the stored record, if any.
+ * @returns the UUID, or `undefined` when the record is absent or holds anything else.
+ */
+function storedInstallationId(record: CredentialRecord | undefined): string | undefined {
+  if (record?.kind !== 'grant') return undefined
+  const { payload } = record
+  if (typeof payload !== 'object' || payload === null || Array.isArray(payload)) return undefined
+  const id = 'id' in payload ? payload.id : undefined
+  return typeof id === 'string' && UUID_PATTERN.test(id) ? id : undefined
+}
+
+/**
+ * Read this installation's ID, minting and storing it on first use.
+ * @param ctx - the plugin context carrying `ctx.credentials`.
+ * @returns the same UUID on every later call, for as long as the record exists.
+ */
+async function installationId(ctx: Context): Promise<string> {
+  let id: string = randomUUID()
+  await ctx.credentials.modifyRecord(INSTALLATION_KEY, (current) => {
+    const existing = storedInstallationId(current)
+    if (existing === undefined) return Promise.resolve({ kind: 'grant' as const, payload: { id } })
+    id = existing
+    return Promise.resolve(current)
+  })
+  return id
+}
 
 /**
  * The login methods one catalog provider offers.
@@ -159,13 +198,16 @@ export function registerPiAiFlows(ctx: Context, auth: PiAiAuthInjection): void {
         // Total over the two ids declared above, and the seam only ever hands
         // back one a flow declared.
         const type: AuthType = session.method === 'oauth' ? 'oauth' : 'api_key'
+        // pi-ai reads the ID synchronously and only for the logins that send
+        // it, so the stored value is resolved before the login starts.
+        const deviceId = await installationId(ctx)
         // pi-ai persists what the login returns through that same store, which
         // is what makes it the single writer of this record.
         await models.login(providerId, type, {
           signal: session.signal,
           notify: (event) => { relay(event, session) },
           prompt: prompt => session.prompt(restate(prompt)),
-        })
+        }, { getDeviceId: () => deviceId })
       },
     })
   }

@@ -24,6 +24,9 @@ async function bench(isLoopback = true, mock = RemoteMock.create().load(remoteDe
   locale.setLocale('es')
   ctx.provide('locale', locale)
   const remote = new TestRemote(ctx, {
+    authorization: {
+      flows: vi.fn(() => Promise.resolve({ ok: true, value: [] })),
+    },
     credentials: {
       describe: vi.fn(() => Promise.resolve({ ok: true, value: {} })),
       set: vi.fn(),
@@ -62,7 +65,7 @@ function declare(slots: SlotRegistry): () => void {
 describe('ui-settings-models apply', () => {
   it('declares the services it uses', () => {
     expect(inject).toEqual([
-      'slots', 'locale', 'remote', 'remote.credentials', 'remote.llm', 'remote.settings', 'remote.session',
+      'slots', 'locale', 'remote', 'remote.authorization', 'remote.credentials', 'remote.llm', 'remote.settings', 'remote.session',
       'configForms', 'settingsSchema',
     ])
   })

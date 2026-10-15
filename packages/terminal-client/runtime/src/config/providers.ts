@@ -14,7 +14,9 @@ import {
 import type { DiscoveredModel, ProviderDirectoryEntry, ProviderTemplate } from '@deepseek-ai/dsh-presentation-settings'
 import { CUSTOM_PROVIDER, keyProblemText, providerItems, t } from '@deepseek-ai/dsh-terminal-views'
 import type { PickerItem } from '@deepseek-ai/dsh-terminal-views'
-import type { CredentialInfoPort, RemotePort, SettingsNamespacePort, SettingsOpPort } from '../ports.ts'
+import type {
+  CredentialInfoPort, RemotePort, SettingsNamespacePort, SettingsOpPort, SignInAttemptPort, SignInFlowPort,
+} from '../ports.ts'
 import { confirm, remoteDone, remoteValue } from './ui.ts'
 import type { FlowUi } from './ui.ts'
 import { writeSettings } from './write.ts'
@@ -27,6 +29,19 @@ const PROBE_ROUTE = '\u0000probe'
 
 /** Providers that sign in with a vendor account; the terminal offers key-based providers only. */
 const ACCOUNT_ROUTES: ReadonlySet<string> = new Set(['deepseek-account'])
+
+/** Delay between two reads of a running sign-in. */
+const SIGN_IN_POLL_MS = 1000
+
+/** The browser sign-in a provider offers. */
+interface SignInOffer {
+  /** Flow key the Host runs. */
+  readonly key: string
+  /** Method id that opens the provider's account page. */
+  readonly method: string
+  /** Name the action carries. */
+  readonly label: string
+}
 
 /** One provider as the screen lists it. */
 export interface ProviderRowFacts {
@@ -41,6 +56,8 @@ export interface ProviderRowFacts {
   /** Whether the profile names a reference at all; a profile that names none needs no stored key. */
   readonly needsKey: boolean
   readonly key: CredentialInfoPort | undefined
+  /** The browser sign-in the provider offers, if any. */
+  readonly signIn: SignInOffer | undefined
 }
 
 /**
@@ -99,11 +116,13 @@ interface Context {
 /** Read the providers, their settings and the state of their keys. */
 async function load({ remote, ui }: Context): Promise<ProviderSnapshot | undefined> {
   const failed = (message: string): string => t('picker.loadFailed', { message })
-  const [registered, configurable, settings, catalog] = await Promise.all([
+  const [registered, configurable, settings, catalog, flows] = await Promise.all([
     remoteValue(ui, failed, () => remote.llm.listProviders()),
     remoteValue(ui, failed, () => remote.llm.listConfigurableProviders()),
     remoteValue(ui, failed, () => remote.settings.describe()),
     remote.session.modelCatalog().catch(() => undefined),
+    // A Host without sign-in flows only means the screen offers keys alone.
+    remote.authorization.flows().catch(() => undefined),
   ])
   if (registered === undefined || configurable === undefined || settings === undefined) return undefined
   const entries = joinProviderDirectory(registered, configurable).filter(entry => !ACCOUNT_ROUTES.has(entry.provider))
@@ -120,6 +139,7 @@ async function load({ remote, ui }: Context): Promise<ProviderSnapshot | undefin
       keyRef: providerKeyRef(profile, entry.provider),
       needsKey: named,
       key: undefined,
+      signIn: signInOffer(flows?.ok === true ? flows.value : [], entry),
     }
   })
   const refs = [...new Set(rows.filter(row => row.needsKey).map(row => row.keyRef))]
@@ -130,6 +150,14 @@ async function load({ remote, ui }: Context): Promise<ProviderSnapshot | undefin
     custom: settings.namespaces.find(candidate => candidate.ns === CUSTOM_NS),
     hasModels: catalog?.ok === true && catalog.value.groups.some(group => group.models.length > 0),
   }
+}
+
+/** The browser sign-in a catalog provider offers: the flow keyed by its route, through its `oauth` method. */
+function signInOffer(flows: readonly SignInFlowPort[], entry: ProviderDirectoryEntry): SignInOffer | undefined {
+  if (entry.settingsNs !== CUSTOM_NS) return undefined
+  const flow = flows.find(candidate => candidate.key === `llm-pi-ai/${entry.provider}`)
+  const method = flow?.methods.find(candidate => candidate.id === 'oauth')
+  return flow === undefined || method === undefined ? undefined : { key: flow.key, method: method.id, label: method.label }
 }
 
 /** A model-discovery answer: the models, or the line that explains why there are none. */
@@ -250,6 +278,80 @@ async function setup(context: Context, snapshot: ProviderSnapshot, row: Provider
   ui.info(t('providers.added', { name, count: chosen.length }))
 }
 
+/* v8 ignore next 3 -- closed-union default only defends future source widening */
+function assertNever(value: never): never {
+  throw new Error(`unexpected sign-in status ${String(value)}`)
+}
+
+/** Wait for the given time. */
+function pause(ms: number): Promise<void> {
+  return new Promise((resolve) => { setTimeout(resolve, ms) })
+}
+
+/** Ask the question a running sign-in waits on; undefined when the person left it. */
+async function answerPrompt(ui: FlowUi, prompt: NonNullable<SignInAttemptPort['prompt']>): Promise<string | undefined> {
+  if (prompt.kind === 'select') {
+    const items = prompt.options.map(option => ({ value: option.id, label: option.label }))
+    return (await ui.pick(prompt.message, items))?.value
+  }
+  return await ui.ask(prompt.message, { secret: prompt.kind === 'secret', hint: t('providers.signInHint') })
+}
+
+/**
+ * Run the provider's browser sign-in and relay what it asks. The question the
+ * flow waits on doubles as the "I am done in the browser" prompt: an empty
+ * answer only reads the progress again.
+ * @returns whether the credential was stored.
+ */
+async function signIn({ remote, ui }: Context, offer: SignInOffer): Promise<boolean> {
+  const failed = (message: string): string => t('providers.signInFailed', { message })
+  const started = await remoteValue(ui, failed, () => remote.authorization.begin(offer.key, offer.method))
+  if (started === undefined) return false
+  ui.info(t('providers.signInStarting'))
+  let shown: string | undefined
+  let asked: string | undefined
+  for (;;) {
+    const view = await remoteValue(ui, failed, () => remote.authorization.read(offer.key, started.id))
+    if (view === undefined) return false
+    if (view.notice !== undefined && view.notice.message !== shown) {
+      shown = view.notice.message
+      ui.info(view.notice.message)
+      if (view.notice.url !== undefined) ui.show([t('providers.signInOpen'), view.notice.url])
+      if (view.notice.code !== undefined) ui.info(t('providers.signInCode', { code: view.notice.code }))
+    }
+    switch (view.status) {
+      case 'authorized':
+        ui.info(t('providers.signInDone'))
+        return true
+      case 'failed':
+        ui.warn(failed(view.failure ?? ''))
+        return false
+      case 'cancelled':
+        ui.info(t('providers.cancelled'))
+        return false
+      case 'running':
+        break
+      /* v8 ignore next 2 -- closed union: a new status must be handled above */
+      default:
+        return assertNever(view.status)
+    }
+    if (view.prompt === undefined) {
+      await pause(SIGN_IN_POLL_MS)
+      continue
+    }
+    const answer = await answerPrompt(ui, view.prompt)
+    if (answer === undefined) {
+      await remote.authorization.cancel(offer.key)
+      ui.info(t('providers.cancelled'))
+      return false
+    }
+    if (answer !== '' && asked !== view.prompt.id) {
+      asked = view.prompt.id
+      await remote.authorization.answer(offer.key, started.id, view.prompt.id, answer)
+    }
+  }
+}
+
 /** Choose again which models a configured provider offers. */
 async function chooseAgain(context: Context, row: ProviderRowFacts): Promise<void> {
   const { ui } = context
@@ -313,6 +415,7 @@ async function removeProvider(context: Context, row: ProviderRowFacts): Promise<
 function actionItems(row: ProviderRowFacts): PickerItem[] {
   if (row.namespace === undefined) return []
   return [
+    ...row.signIn === undefined ? [] : [{ value: 'signIn', label: row.signIn.label }],
     { value: 'setup', label: t('providers.action.setup') },
     { value: 'keyless', label: t('providers.action.keyless') },
     ...row.configured ? [{ value: 'models', label: t('providers.action.models') }] : [],
@@ -332,6 +435,10 @@ async function act(context: Context, snapshot: ProviderSnapshot, row: ProviderRo
   }
   const action = await ui.pick(row.entry.displayName, items)
   switch (action?.value) {
+    case 'signIn':
+      // The stored sign-in serves the provider's catalog, so the rest is the keyless setup.
+      if (await signIn(context, row.signIn as SignInOffer)) await setup(context, snapshot, row, false)
+      return
     case 'setup':
       await setup(context, snapshot, row, true)
       return

@@ -7,9 +7,10 @@
  * @module @deepseek-ai/dsh-client-ui-btw/client/BtwDialog
  */
 
-import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import type { KeyboardEvent } from 'react'
-import { Button, IconWarningOutlineRegular, Modal, Toast } from '@deepseek-ai/dsh-client-ui-primitives'
+import { Button, IconWarningOutlineRegular, MarkdownText, Modal, Toast } from '@deepseek-ai/dsh-client-ui-primitives'
+import type { MarkdownLabels } from '@deepseek-ai/dsh-client-ui-primitives'
 import type { BtwDialogProps } from './slots.ts'
 import css from './BtwDialog.module.css'
 
@@ -29,6 +30,15 @@ export function BtwDialog({
   useDialog, edit, ask, send, clear, dismiss, dismissFailure, dismissToast, t,
 }: BtwDialogProps) {
   const state = useDialog(s => s)
+  // Stable per locale revision: MarkdownText discards its render cache when the identity changes.
+  const labels = useMemo<MarkdownLabels>(() => ({
+    code: {
+      copyLabel: t('copy'),
+      copiedLabel: t('copied'),
+      toolbarLabels: { codeLabel: t('codeBlock.title'), wrapLabel: t('codeBlock.wrap'), unwrapLabel: t('codeBlock.unwrap') },
+    },
+    footnotes: t('markdown.footnotes'),
+  }), [t])
   // The toasts center over the composer card this entry renders inside of.
   const probeRef = useRef<HTMLSpanElement>(null)
   const [card, setCard] = useState<HTMLElement | null>(null)
@@ -100,10 +110,10 @@ export function BtwDialog({
                 <span className={css.who}>{t('thread.you')}</span>
                 {turn.question}
               </p>
-              <p className={css.answer}>
+              <div className={css.answer}>
                 <span className={css.who}>{t('thread.assistant')}</span>
-                {turn.answer}
-              </p>
+                <MarkdownText text={turn.answer} labels={labels} variant="compact" />
+              </div>
               {index < state.sentTurns && <span className={css.sent}>{t('thread.sent')}</span>}
             </div>
           ))}

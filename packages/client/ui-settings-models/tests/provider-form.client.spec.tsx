@@ -132,6 +132,9 @@ function scriptedFace(options: {
       describe: vi.fn(() => Promise.resolve(remoteOk({ writable: true, namespaces: [namespace] }))),
       mutate,
     },
+    authorization: {
+      flows: vi.fn(() => Promise.resolve(remoteOk([]))),
+    },
     credentials: {
       describe: vi.fn((refs: string[]) => Promise.resolve(remoteOk(
         Object.fromEntries(refs.map(ref => [ref, { configured: false, writable: true }])),
@@ -158,7 +161,10 @@ function ctxWith(face: object): PageContext {
   const existing = contexts.get(face)
   if (existing !== undefined) return existing
   const ctx = Object.assign(new Context(), { remote: { ...face,
-    session: { initializeDefaultModel: async () => ({ ok: true, value: undefined }), setDefaultModel: async () => ({ ok: true, value: undefined }) },
+    session: {
+      initializeDefaultModel: async () => ({ ok: true, value: undefined }),
+      setDefaultModel: async () => ({ ok: true, value: undefined }),
+    },
   } })
   contexts.set(face, ctx)
   return ctx

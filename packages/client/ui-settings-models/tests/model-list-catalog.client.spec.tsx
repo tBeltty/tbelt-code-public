@@ -16,6 +16,11 @@ function operations(discoverModels: ModelsOperations['discoverModels']): ModelsO
     removeCredential: vi.fn(),
     writeSettings: vi.fn(),
     setDefaultModel: vi.fn(),
+    signInFlows: vi.fn(),
+    beginSignIn: vi.fn(),
+    readSignIn: vi.fn(),
+    answerSignIn: vi.fn(),
+    cancelSignIn: vi.fn(),
   }
 }
 

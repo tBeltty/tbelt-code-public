@@ -8,13 +8,16 @@
  * default model only where the caller asks for it.
  */
 
-import { useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import type { ReactNode } from 'react'
-import type { LlmDiscoveredModel, SettingsNamespaceView } from '@deepseek-ai/dsh-api-remotes/client'
+import type {
+  AuthorizationFlowView, LlmDiscoveredModel, SettingsNamespaceView,
+} from '@deepseek-ai/dsh-api-remotes/client'
 import { setupOps } from '@deepseek-ai/dsh-presentation-settings'
 import { Button, SecretKeyInput } from '@deepseek-ai/dsh-client-ui-primitives'
 import { apiKeyFailure } from './apiKey.ts'
 import { keyLabels } from './key-labels.ts'
+import { ProviderSignIn } from './ProviderSignIn.tsx'
 import { refFor } from './ProviderEditor.tsx'
 import type { ModelsOperations } from './operations.ts'
 import type { SettingsSchemaOperations } from './schema-operations.ts'
@@ -77,6 +80,8 @@ export function OnboardingProviderSetup(props: OnboardingProviderSetupProps): Re
   const [query, setQuery] = useState('')
   const [saving, setSaving] = useState(false)
   const [failure, setFailure] = useState<string | undefined>(undefined)
+  const [flows, setFlows] = useState<readonly AuthorizationFlowView[]>([])
+  const [signedIn, setSignedIn] = useState(false)
   // The model ids the profile write already stored; a retry after a refused
   // credential skips that write, whose revision is no longer current.
   const writtenFor = useRef<string | undefined>(undefined)
@@ -86,9 +91,33 @@ export function OnboardingProviderSetup(props: OnboardingProviderSetupProps): Re
 
   useEffect(() => { onBusyChange?.(saving) }, [saving, onBusyChange])
 
+  // A provider whose subscription can authorize this client offers a browser
+  // sign-in beside the key field; the flow is keyed by the provider route.
+  useEffect(() => {
+    let current = true
+    void operations.signInFlows().then((offered) => { if (current) setFlows(offered) })
+    return () => { current = false }
+  }, [operations])
+  const flow = flows.find(candidate => candidate.key === `llm-pi-ai/${provider}`)
+  const method = flow?.methods.find(candidate => candidate.id === 'oauth')
+  const onSignedIn = useCallback(() => { setSignedIn(true) }, [])
+  // The stored sign-in serves the models until a key is typed, which replaces it.
+  const useSignIn = signedIn && key.length === 0
+
   useEffect(() => {
     setPicked(new Set())
     setQuery('')
+    if (useSignIn) {
+      // The provider's own catalog answers without a key or a network call.
+      let current = true
+      void operations.discoverModels(namespace.ns, { provider }).then((answer) => {
+        if (!current) return
+        setCheck(answer.kind === 'found'
+          ? { kind: 'found', models: answer.models }
+          : { kind: 'rejected', message: answer.message })
+      })
+      return () => { current = false }
+    }
     if (key.length === 0 || formatFailure !== undefined) {
       setCheck({ kind: 'idle' })
       return
@@ -112,7 +141,7 @@ export function OnboardingProviderSetup(props: OnboardingProviderSetupProps): Re
       current = false
       clearTimeout(timer)
     }
-  }, [formatFailure, key, namespace.ns, operations, provider, t])
+  }, [formatFailure, key, namespace.ns, operations, provider, t, useSignIn])
 
   const models = check.kind === 'found' ? check.models : []
   const needle = query.trim().toLowerCase()
@@ -137,7 +166,7 @@ export function OnboardingProviderSetup(props: OnboardingProviderSetupProps): Re
     setSaving(true)
     setFailure(undefined)
     try {
-      const keyRef = refFor(schema, namespace, settingsPath, provider)
+      const keyRef = useSignIn ? undefined : refFor(schema, namespace, settingsPath, provider)
       const chosenKey = chosen.map(model => model.id).join('\n')
       if (writtenFor.current !== chosenKey) {
         const ops = setupOps(settingsPath, schema.getPath(namespace.user, settingsPath), keyRef, chosen)
@@ -148,10 +177,12 @@ export function OnboardingProviderSetup(props: OnboardingProviderSetupProps): Re
         }
         writtenFor.current = chosenKey
       }
-      const keyFailure = await operations.storeCredential(keyRef, key)
-      if (keyFailure !== undefined) {
-        setFailure(keyFailure)
-        return
+      if (keyRef !== undefined) {
+        const keyFailure = await operations.storeCredential(keyRef, key)
+        if (keyFailure !== undefined) {
+          setFailure(keyFailure)
+          return
+        }
       }
       // The provider is usable once its key is stored; a refused default only
       // leaves the composer's picker to choose, so it does not hold the step.
@@ -184,6 +215,14 @@ export function OnboardingProviderSetup(props: OnboardingProviderSetupProps): Re
               ? <p className={styles['error']} role="alert">{check.message}</p>
               : null}
       </div>
+      {flow === undefined || method === undefined ? null : (
+        <details className={styles['field']}>
+          <summary>{t('signInAdvanced')}</summary>
+          <span className={styles['fieldLabel']}>{t('signInAuth')}</span>
+          <ProviderSignIn flow={flow} method={method} operations={operations} t={t} disabled={disabled}
+            onSignedIn={onSignedIn} />
+        </details>
+      )}
       {check.kind === 'found'
         ? (
           <section className={onboardingStyles['modelPicker']} aria-label={t('onboardingModelsTitle')}>

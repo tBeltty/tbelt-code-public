@@ -405,3 +405,144 @@ describe('/providers custom provider', () => {
 })
 
 void vi
+
+describe('/providers browser sign-in', () => {
+  const flow = { key: 'llm-pi-ai/acme', label: 'Acme', methods: [{ id: 'oauth', label: 'Sign in with Acme' }, { id: 'api-key', label: 'Key' }] }
+  const running = (extra: object = {}) => ({ ok: true, value: { id: 'a1', status: 'running', ...extra } }) as never
+  const done = (status: string, extra: object = {}) => ({ ok: true, value: { id: 'a1', status, ...extra } }) as never
+
+  function signInRig(reads: unknown[], answers: unknown[] = []) {
+    const base = rig({ catalog: emptyCatalog })
+    base.n.authorization.flows.mockResolvedValue({ ok: true, value: [flow] } as never)
+    base.n.authorization.begin.mockResolvedValue({ ok: true, value: { id: 'a1', status: 'running' } } as never)
+    for (const read of reads) base.n.authorization.read.mockResolvedValueOnce(read as never)
+    base.n.llm.discoverModels.mockResolvedValue({ ok: true, value: [{ id: 'm1' }] } as never)
+    const ui = scriptedUi(['acme', 'signIn', ...answers, ['m1']])
+    return { ...base, ...ui }
+  }
+
+  it('offers the sign-in first, only when the provider has an oauth flow', async () => {
+    const withFlow = signInRig([done('authorized')])
+    await runProviders(withFlow.remote, withFlow.ui)
+    expect(withFlow.log.find(entry => entry.items?.some(item => item.value === 'signIn'))!.items!.map(item => item.value))
+      .toEqual(['signIn', 'setup', 'keyless'])
+    expect(withFlow.log.find(entry => entry.items?.some(item => item.value === 'signIn'))!.items![0]!.label).toBe('Sign in with Acme')
+    const without = rig()
+    without.n.authorization.flows.mockResolvedValue({ ok: true, value: [{ ...flow, methods: [flow.methods[1]!] }] } as never)
+    const plain = scriptedUi(['acme', undefined])
+    await runProviders(without.remote, plain.ui)
+    expect(plain.log.at(-1)!.items!.map(item => item.value)).toEqual(['setup', 'keyless'])
+    const other = rig()
+    other.n.authorization.flows.mockResolvedValue({ ok: true, value: [{ ...flow, key: 'llm-pi-ai/other' }] } as never)
+    const none = scriptedUi(['acme', undefined])
+    await runProviders(other.remote, none.ui)
+    expect(none.log.at(-1)!.items!.map(item => item.value)).toEqual(['setup', 'keyless'])
+  })
+
+  it('offers no sign-in for a provider another adapter family owns', async () => {
+    const { n, remote } = rig({
+      configurable: [listed('acme', 'Acme', { settingsNs: 'llm-deepseek', settingsPath: ['profiles', 'acme'] })],
+      namespaces: [ns({ ns: 'llm-deepseek' })],
+    })
+    n.authorization.flows.mockResolvedValue({ ok: true, value: [flow] } as never)
+    const { ui, log } = scriptedUi(['acme', undefined])
+    await runProviders(remote, ui)
+    expect(log.at(-1)!.items!.map(item => item.value)).toEqual(['setup', 'keyless'])
+  })
+
+  it('offers no sign-in when the Host lists no flows or refuses to', async () => {
+    for (const reply of [{ ok: false, error: { code: 'x', message: 'no' } }, undefined]) {
+      const { n, remote } = rig()
+      if (reply === undefined) n.authorization.flows.mockRejectedValue(new Error('gone'))
+      else n.authorization.flows.mockResolvedValue(reply as never)
+      const { ui, log } = scriptedUi(['acme', undefined])
+      await runProviders(remote, ui)
+      expect(log.at(-1)!.items!.map(item => item.value)).toEqual(['setup', 'keyless'])
+    }
+  })
+
+  it('shows the page and code, then stores the models without a key once the Host reports authorized', async () => {
+    const t = signInRig([running({ notice: { message: 'Continue in your browser', url: 'https://auth.example/s', code: 'AB-12' } }), done('authorized')])
+    vi.useFakeTimers()
+    try {
+      const finished = runProviders(t.remote, t.ui)
+      await vi.advanceTimersByTimeAsync(1500)
+      await finished
+    } finally {
+      vi.useRealTimers()
+    }
+    expect(t.n.authorization.begin).toHaveBeenCalledWith('llm-pi-ai/acme', 'oauth')
+    expect(flat(t.log, 'info')).toContain('Continue in your browser')
+    expect(flat(t.log, 'show')[0]).toContain('https://auth.example/s')
+    expect(flat(t.log, 'info')).toContain('Code: AB-12')
+    expect(t.n.credentials.set).not.toHaveBeenCalled()
+    expect(t.n.llm.discoverModels).toHaveBeenCalledWith('llm-pi-ai', { provider: 'acme' })
+    expect(t.n.settings.mutate).toHaveBeenCalledWith('llm-pi-ai', [{
+      op: 'set', path: ['providers', 'acme'], value: { models: [{ id: 'm1' }] },
+    }], 3)
+  })
+
+  it('prints a notice that carries only a message, and a repeated notice once', async () => {
+    const t = signInRig([
+      running({ notice: { message: 'Waiting for ChatGPT' }, prompt: { id: 'p1', kind: 'text', message: 'Paste' } }),
+      done('authorized', { notice: { message: 'Waiting for ChatGPT' } }),
+    ], [''])
+    await runProviders(t.remote, t.ui)
+    expect(flat(t.log, 'info').filter(line => line === 'Waiting for ChatGPT')).toHaveLength(1)
+    expect(t.log.some(entry => entry.kind === 'show')).toBe(false)
+  })
+
+  it('forwards a pasted address once, ignores an empty Enter, and masks a secret', async () => {
+    const t = signInRig([
+      running({ prompt: { id: 'p1', kind: 'text', message: 'Paste the address' } }),
+      running({ prompt: { id: 'p1', kind: 'text', message: 'Paste the address' } }),
+      running({ prompt: { id: 'p2', kind: 'secret', message: 'Token' } }),
+      done('authorized'),
+    ], ['', 'http://127.0.0.1:1455/cb', 'sk-1'])
+    await runProviders(t.remote, t.ui)
+    expect(t.n.authorization.answer).toHaveBeenCalledTimes(2)
+    expect(t.n.authorization.answer).toHaveBeenCalledWith('llm-pi-ai/acme', 'a1', 'p1', 'http://127.0.0.1:1455/cb')
+    expect(t.n.authorization.answer).toHaveBeenCalledWith('llm-pi-ai/acme', 'a1', 'p2', 'sk-1')
+    const asks = t.log.filter(entry => entry.kind === 'ask')
+    expect(asks.map(entry => entry.options?.secret)).toEqual([false, false, true])
+  })
+
+  it('answers a choice with the option id and does not answer the same question twice', async () => {
+    const ask = { id: 'p1', kind: 'select', message: 'Account', options: [{ id: 'personal', label: 'Personal' }] }
+    const t = signInRig([running({ prompt: ask }), running({ prompt: ask }), done('authorized')], ['personal', 'personal'])
+    await runProviders(t.remote, t.ui)
+    expect(t.n.authorization.answer).toHaveBeenCalledTimes(1)
+    expect(t.n.authorization.answer).toHaveBeenCalledWith('llm-pi-ai/acme', 'a1', 'p1', 'personal')
+  })
+
+  it('cancels the sign-in when the person leaves the question', async () => {
+    const t = signInRig([running({ prompt: { id: 'p1', kind: 'text', message: 'Paste' } })], [undefined])
+    await runProviders(t.remote, t.ui)
+    expect(t.n.authorization.cancel).toHaveBeenCalledWith('llm-pi-ai/acme')
+    expect(t.n.settings.mutate).not.toHaveBeenCalled()
+  })
+
+  it('stops with the reason when the sign-in fails, is cancelled by the Host, or cannot be read', async () => {
+    const failed = signInRig([done('failed', { failure: 'closed' })])
+    await runProviders(failed.remote, failed.ui)
+    expect(flat(failed.log, 'warn')[0]).toContain('closed')
+    const blank = signInRig([done('failed')])
+    await runProviders(blank.remote, blank.ui)
+    expect(flat(blank.log, 'warn')[0]).toContain('Sign-in failed')
+    const cancelled = signInRig([done('cancelled')])
+    await runProviders(cancelled.remote, cancelled.ui)
+    expect(flat(cancelled.log, 'info').at(-1)).toContain('ancel')
+    const unreadable = signInRig([{ ok: false, error: { code: 'x', message: 'host went away' } }])
+    await runProviders(unreadable.remote, unreadable.ui)
+    expect(flat(unreadable.log, 'warn')[0]).toContain('host went away')
+    for (const t of [failed, blank, cancelled, unreadable]) expect(t.n.settings.mutate).not.toHaveBeenCalled()
+  })
+
+  it('reports a refusal to start', async () => {
+    const t = signInRig([])
+    t.n.authorization.begin.mockResolvedValue({ ok: false, error: { code: 'x', message: 'already running' } } as never)
+    await runProviders(t.remote, t.ui)
+    expect(flat(t.log, 'warn')[0]).toContain('already running')
+    expect(t.n.authorization.read).not.toHaveBeenCalled()
+  })
+})

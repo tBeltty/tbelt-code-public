@@ -270,6 +270,44 @@ export interface CredentialsRemotePort {
   unset(ref: string): Promise<RemoteResultPort<unknown>>
 }
 
+/** A sign-in flow the Host offers. */
+export interface SignInFlowPort {
+  /** Credential record the flow writes, `<scope>/<id>`. */
+  readonly key: string
+  /** Name of what is being signed in to. */
+  readonly label: string
+  readonly methods: readonly { readonly id: string; readonly label: string }[]
+}
+
+/** A question a running sign-in waits on. */
+export type SignInPromptPort = {
+  readonly id: string
+  readonly message: string
+} & ({
+  readonly kind: 'text' | 'secret'
+} | {
+  readonly kind: 'select'
+  readonly options: readonly { readonly id: string; readonly label: string }[]
+})
+
+/** Progress of one sign-in attempt. */
+export interface SignInAttemptPort {
+  readonly id: string
+  readonly status: 'running' | 'authorized' | 'cancelled' | 'failed'
+  readonly notice?: { readonly message: string; readonly url?: string | undefined; readonly code?: string | undefined } | undefined
+  readonly prompt?: SignInPromptPort | undefined
+  readonly failure?: string | undefined
+}
+
+/** The `authorization` Remote namespace. */
+export interface AuthorizationRemotePort {
+  flows(): Promise<RemoteResultPort<readonly SignInFlowPort[]>>
+  begin(key: string, method?: string): Promise<RemoteResultPort<SignInAttemptPort>>
+  read(key: string, id: string): Promise<RemoteResultPort<SignInAttemptPort | undefined>>
+  answer(key: string, id: string, promptId: string, answer: string | null): Promise<RemoteResultPort<boolean>>
+  cancel(key: string): Promise<RemoteResultPort<unknown>>
+}
+
 /** One settings namespace as the Host describes it, without secret values. */
 export interface SettingsNamespacePort {
   readonly ns: string
@@ -405,6 +443,7 @@ export interface PermissionPresetsRemotePort {
 export interface RemotePort {
   readonly session: SessionRemotePort
   readonly llm: LlmRemotePort
+  readonly authorization: AuthorizationRemotePort
   readonly credentials: CredentialsRemotePort
   readonly settings: SettingsRemotePort
   readonly web: WebRemotePort

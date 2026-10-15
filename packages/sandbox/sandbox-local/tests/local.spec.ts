@@ -84,6 +84,18 @@ describe('profile dialects', () => {
     ])
   })
 
+  it('bwrap workspace-write re-binds an AppImage mount under /tmp read-only after the ephemeral /tmp', () => {
+    expect(bwrapProfileArgs(WW, '/tmp/.mount_app')).toEqual([
+      '--ro-bind', '/', '/', '--dev', '/dev', '--unshare-pid', '--proc', '/proc', '--die-with-parent',
+      '--tmpfs', '/tmp', '--ro-bind', '/tmp/.mount_app', '/tmp/.mount_app', '--bind', '/ws', '/ws',
+    ])
+  })
+
+  it('bwrap ignores an app directory outside /tmp and any app directory in read-only mode', () => {
+    expect(bwrapProfileArgs(WW, '/opt/app')).toEqual(bwrapProfileArgs(WW))
+    expect(bwrapProfileArgs(RO, '/tmp/.mount_app')).toEqual(bwrapProfileArgs(RO))
+  })
+
   it('bwrap workspace-write binds every extra writable root after the workspace root', () => {
     expect(bwrapProfileArgs({ ...WW, extraWritableRoots: ['/repo/.git/objects', '/repo/.git/worktrees/a'] })).toEqual([
       '--ro-bind', '/', '/', '--dev', '/dev', '--unshare-pid', '--proc', '/proc', '--die-with-parent',

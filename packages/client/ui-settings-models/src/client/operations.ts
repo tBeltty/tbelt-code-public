@@ -7,7 +7,7 @@
 
 import type { Context as ClientContext } from '@deepseek-ai/cordis'
 import type {
-  CredentialInfo, LlmDiscoveredModel, LlmModelDiscoveryRequest,
+  AuthorizationAttemptView, AuthorizationFlowView, CredentialInfo, LlmDiscoveredModel, LlmModelDiscoveryRequest,
   SettingsNamespaceView, SettingsPathOpView,
 } from '@deepseek-ai/dsh-api-remotes/client'
 
@@ -32,6 +32,13 @@ export type ModelDiscoveryOutcome =
    * adapter's error code when it gave one (`INVALID_CREDENTIAL`, `QUOTA`).
    */
   | { readonly kind: 'refused'; readonly message: string; readonly code?: string }
+
+/** What starting one browser sign-in answered. */
+export type SignInStartOutcome =
+  /** The attempt is running; poll it by its id. */
+  | { readonly kind: 'started'; readonly attempt: AuthorizationAttemptView }
+  /** The Host refused, with its own diagnostic. */
+  | { readonly kind: 'refused'; readonly message: string }
 
 /** The Host operations the Models page and its cards invoke. */
 export interface ModelsOperations {
@@ -84,12 +91,44 @@ export interface ModelsOperations {
    * @returns the refusal message, or undefined once saved.
    */
   setDefaultModel(provider: string, model: string): Promise<string | undefined>
+  /**
+   * List the browser sign-ins the installed providers offer.
+   * @returns one flow per provider that can sign in; empty when the Host refused.
+   */
+  signInFlows(): Promise<readonly AuthorizationFlowView[]>
+  /**
+   * Start one browser sign-in.
+   * @param key - flow key from {@link signInFlows}.
+   * @param method - method id the flow offers.
+   * @returns the running attempt, or the refusal.
+   */
+  beginSignIn(key: string, method: string): Promise<SignInStartOutcome>
+  /**
+   * Read one sign-in attempt's progress.
+   * @param key - flow key.
+   * @param id - attempt id from {@link beginSignIn}.
+   * @returns the state, or undefined once the attempt was replaced or the read was refused.
+   */
+  readSignIn(key: string, id: string): Promise<AuthorizationAttemptView | undefined>
+  /**
+   * Answer the question a sign-in is waiting on.
+   * @param key - flow key.
+   * @param id - attempt id.
+   * @param promptId - id of the question.
+   * @param answer - the typed text or chosen option id; null declines.
+   */
+  answerSignIn(key: string, id: string, promptId: string, answer: string | null): Promise<void>
+  /**
+   * Withdraw the running sign-in for a flow.
+   * @param key - flow key.
+   */
+  cancelSignIn(key: string): Promise<void>
 }
 
 /**
  * Bind the page's Host operations to the plugin's own Remote namespaces.
- * @param ctx - the page plugin's context, which declares `remote.credentials`,
- * `remote.llm`, and `remote.settings` in its own `inject`.
+ * @param ctx - the page plugin's context, which declares `remote.authorization`,
+ * `remote.credentials`, `remote.llm`, and `remote.settings` in its own `inject`.
  * @returns the callbacks the section and its cards are injected with.
  */
 export function createModelsOperations(ctx: ClientContext): ModelsOperations {
@@ -123,6 +162,26 @@ export function createModelsOperations(ctx: ClientContext): ModelsOperations {
     setDefaultModel: async (provider, model) => {
       const response = await ctx.remote.session.setDefaultModel({ provider, model })
       return response.ok ? undefined : response.error.message
+    },
+    signInFlows: async () => {
+      const response = await ctx.remote.authorization.flows()
+      return response.ok ? response.value : []
+    },
+    beginSignIn: async (key, method) => {
+      const response = await ctx.remote.authorization.begin(key, method)
+      return response.ok
+        ? { kind: 'started', attempt: response.value }
+        : { kind: 'refused', message: response.error.message }
+    },
+    readSignIn: async (key, id) => {
+      const response = await ctx.remote.authorization.read(key, id)
+      return response.ok ? response.value : undefined
+    },
+    answerSignIn: async (key, id, promptId, answer) => {
+      await ctx.remote.authorization.answer(key, id, promptId, answer)
+    },
+    cancelSignIn: async (key) => {
+      await ctx.remote.authorization.cancel(key)
     },
   }
 }

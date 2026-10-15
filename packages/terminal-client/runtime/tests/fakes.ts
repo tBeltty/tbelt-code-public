@@ -290,6 +290,13 @@ export function fakeNamespaces() {
       listConfigurableProviders: vi.fn((): ReturnType<RemotePort['llm']['listConfigurableProviders']> => ok([])),
       discoverModels: vi.fn((_ns: string, _request: object): ReturnType<RemotePort['llm']['discoverModels']> => ok([])),
     },
+    authorization: {
+      flows: vi.fn((): ReturnType<RemotePort['authorization']['flows']> => ok([])),
+      begin: vi.fn((_key: string, _method?: string): ReturnType<RemotePort['authorization']['begin']> => ok({ id: 'attempt', status: 'running' })),
+      read: vi.fn((_key: string, _id: string): ReturnType<RemotePort['authorization']['read']> => ok({ id: 'attempt', status: 'authorized' })),
+      answer: vi.fn((_key: string, _id: string, _promptId: string, _answer: string | null): ReturnType<RemotePort['authorization']['answer']> => ok(true)),
+      cancel: vi.fn((_key: string): ReturnType<RemotePort['authorization']['cancel']> => ok({})),
+    },
     credentials: {
       describe: vi.fn((_refs?: readonly string[]): ReturnType<RemotePort['credentials']['describe']> => ok({})),
       set: vi.fn((_ref: string, _value: string): ReturnType<RemotePort['credentials']['set']> => ok({})),

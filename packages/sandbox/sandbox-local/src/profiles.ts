@@ -11,12 +11,15 @@ import type { SandboxPolicy } from '@deepseek-ai/dsh-sandbox'
 /**
  * Build the bwrap profile arguments for one file-effect policy.
  * @param policy - file-effect policy to express as bwrap mounts.
+ * @param appDir - mount directory of a running AppImage (`APPDIR`). When it is under `/tmp`,
+ *   `workspace-write` re-binds it read-only after the ephemeral `/tmp` so the app binary stays executable.
  * @returns profile arguments before the trailing separator and command argv.
  */
-export function bwrapProfileArgs(policy: SandboxPolicy): string[] {
+export function bwrapProfileArgs(policy: SandboxPolicy, appDir?: string): string[] {
   const args = ['--ro-bind', '/', '/', '--dev', '/dev', '--unshare-pid', '--proc', '/proc', '--die-with-parent']
   if (policy.mode === 'workspace-write') {
     args.push('--tmpfs', '/tmp')
+    if (appDir !== undefined && appDir.startsWith('/tmp/')) args.push('--ro-bind', appDir, appDir)
     for (const root of [policy.workspaceRoot, ...policy.extraWritableRoots ?? []]) args.push('--bind', root, root)
   }
   return args

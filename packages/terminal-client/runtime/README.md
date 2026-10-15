@@ -47,7 +47,7 @@ The session id printed at start and at exit is the part after `session-`, so the
 | `/rename <title>` | Name this session |
 | `/model` | Choose the model for the next message |
 | `/model default` | Choose the model new sessions start with |
-| `/providers` | Add, configure or remove a model provider, replace or remove its API key, choose its models |
+| `/providers` | Add, configure or remove a model provider, replace or remove its API key or sign in through the browser, choose its models |
 | `/web-search` | Choose the web search provider and store its key |
 | `/settings` | Edit agent loop, shell, subagent and other plain settings, or open the settings file |
 | `/plugins` | Turn bundles and single plugins on or off, install or remove a bundle |
@@ -189,7 +189,7 @@ These limits tell you what `dsh terminal` does not do yet and what it needs from
 - **Plan comments are not anchored** — the terminal answers a plan question with a note, not with comments on a selection of the plan.
 - **Settings lists and records are edited in the file** — `/settings` edits plain values and opens the settings file in your editor for lists, records and per-model tables.
 - **Plugin install cannot be cancelled** — `/plugins` waits for `installBundle` to answer; browsing registries, cancelling an install and the plugin inventory are GUI-only.
-- **No provider account sign-in** — `/providers` offers key-based and local providers only, so no vendor account login is offered, in line with the model-agnostic policy.
+- **Sign-in is a provider action, not a default** — `/providers` offers a browser sign-in for a provider only when its flow exists, beside the API key; no provider is preselected.
 - **No attach to a running Host** — the client always runs in the Host process it starts; attaching over loopback would reuse the same client with a token-based carrier.
 - **Partial escape sequences are not buffered** — a terminal that splits one key's bytes over two reads types the pieces as text.
 - **The desktop installer does not yet install `tbelt`** — the npm package installs it; the desktop command shim is part of the distribution phase.

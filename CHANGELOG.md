@@ -4,6 +4,17 @@ Notable changes to tBelt Code, newest first. The format follows [Keep a Changelo
 
 ## [Unreleased]
 
+## [0.2.1-alpha.2.20261015] - 2026-10-15
+
+### Added
+
+- Sign in to a provider with your browser instead of an API key. ChatGPT is available for OpenAI, in the app and in `dsh terminal`.
+
+### Fixed
+
+- Workflow subagents run when tBelt Code is installed as an AppImage on Linux.
+- Answers in the `/btw` side question dialog show formatting, such as bold text, code and headings, instead of raw Markdown symbols.
+
 ## [0.2.1-alpha.2.20261014.4] - 2026-10-14
 
 ### Fixed
@@ -313,7 +324,8 @@ Notable changes to tBelt Code, newest first. The format follows [Keep a Changelo
 - Downloads no longer return an older installer.
 - A key that ran out of credit or hit its spending limit is reported as a quota problem instead of an invalid API key.
 
-[Unreleased]: https://github.com/tBeltty/tbelt-code-public/compare/v0.2.1-alpha.2.20261014.4...HEAD
+[Unreleased]: https://github.com/tBeltty/tbelt-code-public/compare/v0.2.1-alpha.2.20261015...HEAD
+[0.2.1-alpha.2.20261015]: https://github.com/tBeltty/tbelt-code-public/releases/tag/v0.2.1-alpha.2.20261015
 [0.2.1-alpha.2.20261014.4]: https://github.com/tBeltty/tbelt-code-public/releases/tag/v0.2.1-alpha.2.20261014.4
 [0.2.1-alpha.2.20261014.3]: https://github.com/tBeltty/tbelt-code-public/releases/tag/v0.2.1-alpha.2.20261014.3
 [0.2.1-alpha.2.20261014.2]: https://github.com/tBeltty/tbelt-code-public/releases/tag/v0.2.1-alpha.2.20261014.2

@@ -59,6 +59,14 @@ describe('BtwDialog', () => {
     expect(ui.getByRole('button', { name: es['action.clear'] }).hasAttribute('disabled')).toBe(true)
   })
 
+  it('renders the answer as Markdown', () => {
+    const ui = mount({ turns: [{ question: 'q', answer: 'Use **bold** and `code`.' }] })
+    const log = ui.getByRole('log', { name: es['thread.label'] })
+    expect(log.querySelector('strong')?.textContent).toBe('bold')
+    expect(log.querySelector('code')?.textContent).toBe('code')
+    expect(log.textContent).not.toContain('**')
+  })
+
   it('lists exchanges, marks the delivered ones, and shows the pending question', () => {
     const ui = mount({
       turns: [{ question: 'first?', answer: 'one' }, { question: 'second?', answer: 'two' }],

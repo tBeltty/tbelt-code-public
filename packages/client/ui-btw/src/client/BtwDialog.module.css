@@ -44,6 +44,7 @@
 }
 
 .answer {
+  white-space: normal;
   padding: 10px 14px;
   border: 0.5px solid var(--dsw-alias-border-l4);
   border-radius: var(--dsw-radius-lg);

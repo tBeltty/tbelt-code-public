@@ -13,6 +13,7 @@ Download the app from [code.tbelt.online](https://code.tbelt.online). It can ins
 ## Features
 
 - Any provider: hosted APIs with your own key, or local models through Ollama or LM Studio.
+- Browser sign-in for providers that support it, such as ChatGPT for OpenAI, in the app and in `dsh terminal`.
 - Sandboxed commands with per-session access: Read Only, Workspace Write or Full. Destructive shell and git commands need confirmation, and permission rules can apply to a single agent preset.
 - Your own agents as Markdown files in `~/.dsh/presets`, with instructions and per-tool permissions in the front matter.
 - A checkpoint before every edit, restored with `/undo`.

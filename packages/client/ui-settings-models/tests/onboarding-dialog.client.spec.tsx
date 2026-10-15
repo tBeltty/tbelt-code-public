@@ -92,6 +92,10 @@ function harness(options: {
   writeFailure?: RemoteError
   credentialFailure?: string
   defaultModelFailure?: string
+  /** Sign-in flows the Host offers; none by default. */
+  signInFlows?: readonly { key: string; label: string; methods: { id: string; label: string }[] }[]
+  /** Successive answers to reading a running sign-in. */
+  signInReads?: readonly Record<string, unknown>[]
 } = {}) {
   if (document.getElementById('root') === null) {
     const appRoot = document.createElement('div')
@@ -102,7 +106,17 @@ function harness(options: {
   // Mutable so a test can flip this after the initial render, the way an
   // external credential/settings invalidation would.
   let usable = options.usableProvider ?? false
+  const reads = [...options.signInReads ?? []]
   const face = {
+    authorization: {
+      flows: vi.fn(() => Promise.resolve(remoteOk(options.signInFlows ?? []))),
+      begin: vi.fn((key: string, _method: string) => Promise.resolve(
+        remoteOk({ id: 'attempt-1', key, status: 'running' as const }),
+      )),
+      read: vi.fn((_key: string, _id: string) => Promise.resolve(remoteOk(reads.length > 1 ? reads.shift() : reads[0]))),
+      answer: vi.fn(() => Promise.resolve(remoteOk(true))),
+      cancel: vi.fn(() => Promise.resolve(remoteOk(undefined))),
+    },
     llm: {
       listProviders: () => options.providersFailure !== undefined
         ? Promise.resolve(remoteFail(options.providersFailure))
@@ -176,6 +190,7 @@ function harness(options: {
     controller, complete, openSection, props,
     mutate: face.settings.mutate, set: face.credentials.set,
     discover: face.llm.discoverModels, setDefaultModel: face.session.setDefaultModel,
+    authorization: face.authorization,
     makeUsable: () => { usable = true },
   }
 }
@@ -260,6 +275,120 @@ describe('ProviderOnboardingDialog', () => {
       value: { apiKeyEnv: 'ACME_API_KEY', models: [{ id: 'acme-small' }] },
     }], 0)
     expect(h.set).toHaveBeenCalledWith('ACME_API_KEY', 'sk-acme')
+  })
+
+  describe('browser sign-in', () => {
+    const flow = {
+      key: 'llm-pi-ai/acme',
+      label: 'Acme',
+      methods: [{ id: 'oauth', label: 'Sign in with Acme' }, { id: 'api-key', label: 'Acme API key' }],
+    }
+
+    it('offers no sign-in for a provider without a flow', async () => {
+      const h = harness({ catalog: [{ provider: 'acme', displayName: 'Acme Models' }] })
+      render(<ProviderOnboardingDialog {...h.props} />)
+      fireEvent.click(await screen.findByRole('button', { name: 'Acme Models' }))
+      await screen.findByLabelText(en.keyInput)
+      expect(screen.queryByRole('button', { name: 'Sign in with Acme' })).toBeNull()
+    })
+
+    it('signs in through the browser, lists the catalog models and stores the profile without a key', async () => {
+      const h = harness({
+        catalog: [{ provider: 'acme', displayName: 'Acme Models' }],
+        discovery: remoteOk([{ id: 'acme-large' }, { id: 'acme-small' }]),
+        signInFlows: [flow],
+        signInReads: [
+          {
+            id: 'attempt-1', key: flow.key, status: 'running',
+            notice: { message: 'Continue in your browser', url: 'https://auth.example/start', code: 'AB-12' },
+            prompt: { id: 'p1', kind: 'text', message: 'Paste the address' },
+          },
+          { id: 'attempt-1', key: flow.key, status: 'authorized' },
+        ],
+      })
+      render(<ProviderOnboardingDialog {...h.props} />)
+      fireEvent.click(await screen.findByRole('button', { name: 'Acme Models' }))
+      fireEvent.click(await screen.findByRole('button', { name: 'Sign in with Acme' }))
+      expect(h.authorization.begin).toHaveBeenCalledWith(flow.key, 'oauth')
+
+      expect(await screen.findByText('Continue in your browser', {}, { timeout: 3000 })).toBeTruthy()
+      expect(screen.getByText('Code: AB-12')).toBeTruthy()
+      expect(screen.getByRole('link', { name: en.signInOpenPage }).getAttribute('href')).toBe('https://auth.example/start')
+      fireEvent.change(screen.getByLabelText('Paste the address'), { target: { value: ' http://127.0.0.1:1455/cb ' } })
+      fireEvent.click(screen.getByRole('button', { name: en.signInContinue }))
+      await waitFor(() => {
+        expect(h.authorization.answer).toHaveBeenCalledWith(flow.key, 'attempt-1', 'p1', 'http://127.0.0.1:1455/cb')
+      })
+
+      const small = await screen.findByRole('checkbox', { name: 'acme-small' }, { timeout: 3000 })
+      expect(h.discover).toHaveBeenCalledWith('llm-pi-ai', { provider: 'acme' })
+      fireEvent.click(small)
+      fireEvent.click(screen.getByRole('button', { name: en.onboardingStart }))
+      await waitFor(() => { expect(h.setDefaultModel).toHaveBeenCalledWith({ provider: 'acme', model: 'acme-small' }) })
+      expect(h.mutate).toHaveBeenCalledWith('llm-pi-ai', [{
+        op: 'set',
+        path: ['providers', 'acme'],
+        value: { models: [{ id: 'acme-small' }] },
+      }], 0)
+      expect(h.set).not.toHaveBeenCalled()
+    })
+
+    it('shows why the catalog could not be read after a sign-in', async () => {
+      const h = harness({
+        catalog: [{ provider: 'acme', displayName: 'Acme Models' }],
+        discovery: { ok: false, error: new RemoteError('llm/model-discovery-rejected', 'catalog is down', { settingsNs: 'llm-pi-ai' }) },
+        signInFlows: [flow],
+        signInReads: [{ id: 'attempt-1', key: flow.key, status: 'authorized' }],
+      })
+      render(<ProviderOnboardingDialog {...h.props} />)
+      fireEvent.click(await screen.findByRole('button', { name: 'Acme Models' }))
+      fireEvent.click(await screen.findByRole('button', { name: 'Sign in with Acme' }))
+      expect(await screen.findByText('catalog is down', {}, { timeout: 3000 })).toBeTruthy()
+    })
+
+    it('ignores a catalog answer that arrives after a key replaced the sign-in', async () => {
+      const slow = Promise.withResolvers<ReturnType<typeof remoteOk<{ id: string }[]>>>()
+      const h = harness({
+        catalog: [{ provider: 'acme', displayName: 'Acme Models' }],
+        signInFlows: [flow],
+        signInReads: [{ id: 'attempt-1', key: flow.key, status: 'authorized' }],
+      })
+      h.discover.mockReturnValueOnce(slow.promise)
+      render(<ProviderOnboardingDialog {...h.props} />)
+      fireEvent.click(await screen.findByRole('button', { name: 'Acme Models' }))
+      fireEvent.click(await screen.findByRole('button', { name: 'Sign in with Acme' }))
+      await waitFor(() => { expect(h.discover).toHaveBeenCalledTimes(1) }, { timeout: 3000 })
+      fireEvent.change(await screen.findByLabelText(en.keyInput), { target: { value: 'sk-typed' } })
+      await act(async () => { slow.resolve(remoteOk([{ id: 'stale-model' }])) })
+      expect(screen.queryByRole('checkbox', { name: 'stale-model' })).toBeNull()
+    })
+
+    it('reports a refused or failed sign-in and lets the person try again', async () => {
+      const h = harness({
+        catalog: [{ provider: 'acme', displayName: 'Acme Models' }],
+        signInFlows: [flow],
+        signInReads: [{ id: 'attempt-1', key: flow.key, status: 'failed', failure: 'The browser was closed' }],
+      })
+      render(<ProviderOnboardingDialog {...h.props} />)
+      fireEvent.click(await screen.findByRole('button', { name: 'Acme Models' }))
+      fireEvent.click(await screen.findByRole('button', { name: 'Sign in with Acme' }))
+      expect(await screen.findByText('The browser was closed', {}, { timeout: 3000 })).toBeTruthy()
+      expect(screen.getByRole('button', { name: en.signInRetry })).toBeTruthy()
+    })
+
+    it('withdraws a running sign-in when the person cancels it', async () => {
+      const h = harness({
+        catalog: [{ provider: 'acme', displayName: 'Acme Models' }],
+        signInFlows: [flow],
+        signInReads: [{ id: 'attempt-1', key: flow.key, status: 'running' }],
+      })
+      render(<ProviderOnboardingDialog {...h.props} />)
+      fireEvent.click(await screen.findByRole('button', { name: 'Acme Models' }))
+      fireEvent.click(await screen.findByRole('button', { name: 'Sign in with Acme' }))
+      fireEvent.click(await screen.findByRole('button', { name: en.signInCancel }))
+      await waitFor(() => { expect(h.authorization.cancel).toHaveBeenCalledWith(flow.key) })
+      expect(await screen.findByRole('button', { name: 'Sign in with Acme' })).toBeTruthy()
+    })
   })
 
   it.each([

@@ -115,6 +115,24 @@ describe('pi-ai login flows', () => {
     expect(login).toHaveBeenLastCalledWith('anthropic', 'api_key', expect.anything(), expect.anything())
   })
 
+  it('signs in from a context scoped to the authorization and credentials seams', async () => {
+    const dir = await mkdtemp(join(tmpdir(), 'dsh-pi-login-'))
+    dirs.push(dir)
+    const ctx = new Context()
+    await ctx.plugin(LocalCredentialProvider, { path: join(dir, '.credentials.yaml'), watch: false })
+    await ctx.plugin(AuthorizationService)
+    await ctx.plugin({
+      name: 'scoped-flows',
+      apply: (parent: Context) => {
+        parent.inject(['authorization', 'credentials'], (scoped) => {
+          registerPiAiFlows(scoped, { credentials: credentialStoreFrom(scoped), authContext: authContextFrom(scoped) })
+        })
+      },
+    })
+    await attempt(ctx, () => Promise.resolve())
+    expect(login).toHaveBeenCalled()
+  })
+
   it('gives Sign in with ChatGPT the same stored installation ID on every login', async () => {
     const ctx = await harness()
     const ids: string[] = []

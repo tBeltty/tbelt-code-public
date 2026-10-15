@@ -164,7 +164,7 @@ function restate(prompt: AuthPrompt): AuthorizationPrompt {
  * Registration is unconditional on configuration: a provider has to be signed
  * into before a route for it is worth adding, so the flow exists from the
  * moment the plugin mounts rather than appearing once a profile does.
- * @param ctx - the plugin context carrying `ctx.authorization`.
+ * @param ctx - the plugin context carrying `ctx.authorization` and `ctx.credentials`.
  * @param auth - the injectables every collection here is built with.
  */
 export function registerPiAiFlows(ctx: Context, auth: PiAiAuthInjection): void {

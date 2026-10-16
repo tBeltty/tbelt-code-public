@@ -70,9 +70,10 @@ code { font-family: var(--font-mono); font-size: 0.875em; }
 /* Hero: copy on the left, a session drawn in the app's own components on the right */
 .hero {
   display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.05fr); gap: clamp(32px, 6vw, 88px); align-items: center;
-  max-width: var(--measure); margin: 0 auto; padding: clamp(32px, 7vw, 96px) var(--gutter) clamp(64px, 9vw, 128px);
+  max-width: var(--measure); margin: 0 auto; padding: clamp(24px, 5vh, 64px) var(--gutter) clamp(32px, 7vh, 96px);
+  min-height: calc(100svh - 87px);
 }
-.hero-logo { width: 72px; height: auto; margin-bottom: 32px; filter: drop-shadow(0 8px 28px rgba(0, 122, 205, 0.4)); }
+.hero-logo { width: 72px; height: auto; margin-bottom: clamp(16px, 3vh, 32px); filter: drop-shadow(0 8px 28px rgba(0, 122, 205, 0.4)); }
 h1 { font-size: clamp(36px, 5.2vw, 60px); font-weight: 500; line-height: 1.06; letter-spacing: -0.025em; max-width: 13ch; }
 .lead { margin-top: 24px; max-width: 46ch; color: var(--text-secondary); font-size: clamp(17px, 1.6vw, 19px); }
 .actions { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 36px; }
@@ -167,6 +168,7 @@ h2 { font-size: clamp(26px, 3vw, 34px); font-weight: 500; letter-spacing: -0.015
 
 @media (max-width: 960px) {
   .hero, .start { grid-template-columns: 1fr; }
+  .hero { min-height: 0; }
   .start-copy { display: contents; }
   .start h2 { order: 1; }
   .start .lead { order: 2; }

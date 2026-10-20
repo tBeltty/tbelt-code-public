@@ -104,7 +104,7 @@ The service is built on one separation and three commitments:
 - **Explicit authority.** Every service method takes the exact live calling `Agent`; only the Lead spawns, reassigns, or interrupts.
 - **Bounds that fail loud.** Every limit is a validated deployment value, and exhaustion reports a typed error instead of reusing an id or name.
 
-The Agent Teams Agent Note owns the identity, mailbox, task, and shared-checkout decisions.
+The Agent Teams Agent Note owns the roster, mailbox, task, and shared-checkout decisions. The runtime-context identity decision owns model-facing identity.
 
 ### Source map
 
@@ -160,7 +160,7 @@ Read these pages when the package-level contract is not enough. They move from t
 
 - Agent Teams subsystem — durable Team types and the `ctx.agentTeams` service API.
 - [tool-agent-team package](../tool-agent-team/README.md) — the tools that let the model create, message, and coordinate teammates.
-- Agent Teams Agent Note — identity, mailbox, task, and shared-checkout decisions.
+- Agent Teams Agent Note — roster, mailbox, task, and shared-checkout decisions.
 - Experimental package reference — placement, publication, and dependency isolation.
 
 -----

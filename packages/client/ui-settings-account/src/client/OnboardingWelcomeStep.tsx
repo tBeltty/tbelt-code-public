@@ -3,8 +3,8 @@ import type { RefObject } from 'react'
 import { Button } from '@deepseek-ai/dsh-client-ui-primitives'
 import type { DesktopOnboardingProps } from './onboarding-contract.ts'
 import { OnboardingIllustration } from './OnboardingIllustration.tsx'
-import art from './assets/onboarding-welcome.png'
-import artDark from './assets/onboarding-welcome-dark.png'
+import art from './assets/onboarding-welcome.webp'
+import artDark from './assets/onboarding-welcome-dark.webp'
 import css from './DesktopOnboarding.module.css'
 
 /** @param props - localized content, focus target and navigation. @returns the welcome step. */

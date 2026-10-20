@@ -1,7 +1,7 @@
 {
   "name": "@deepseek-ai/dsh-repo-map",
   "description": "Pure repo-map building blocks: gitignore-aware directory traversal and Tree-sitter-backed per-file symbol extraction (classes, functions, interfaces, imports)",
-  "version": "0.2.1-alpha.2",
+  "version": "0.2.1-rc.2",
   "publishConfig": {
     "access": "public"
   },

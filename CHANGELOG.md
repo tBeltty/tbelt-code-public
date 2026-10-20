@@ -4,6 +4,16 @@ Notable changes to tBelt Code, newest first. The format follows [Keep a Changelo
 
 ## [Unreleased]
 
+## [0.2.1-rc.2.20261020] - 2026-10-20
+
+### Added
+
+- Keys, tokens and passwords you paste into a message are hidden until you click the eye icon next to them.
+
+### Fixed
+
+- A turn cut short when tBelt Code closed unexpectedly now says so, and warns that its unfinished tool calls may not have completed.
+
 ## [0.2.1-alpha.2.20261015.2] - 2026-10-15
 
 ### Fixed
@@ -330,7 +340,8 @@ Notable changes to tBelt Code, newest first. The format follows [Keep a Changelo
 - Downloads no longer return an older installer.
 - A key that ran out of credit or hit its spending limit is reported as a quota problem instead of an invalid API key.
 
-[Unreleased]: https://github.com/tBeltty/tbelt-code-public/compare/v0.2.1-alpha.2.20261015.2...HEAD
+[Unreleased]: https://github.com/tBeltty/tbelt-code-public/compare/v0.2.1-rc.2.20261020...HEAD
+[0.2.1-rc.2.20261020]: https://github.com/tBeltty/tbelt-code-public/releases/tag/v0.2.1-rc.2.20261020
 [0.2.1-alpha.2.20261015.2]: https://github.com/tBeltty/tbelt-code-public/releases/tag/v0.2.1-alpha.2.20261015.2
 [0.2.1-alpha.2.20261015]: https://github.com/tBeltty/tbelt-code-public/releases/tag/v0.2.1-alpha.2.20261015
 [0.2.1-alpha.2.20261014.4]: https://github.com/tBeltty/tbelt-code-public/releases/tag/v0.2.1-alpha.2.20261014.4

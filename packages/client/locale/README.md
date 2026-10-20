@@ -69,7 +69,7 @@ An external id is a non-empty ASCII BCP 47-style tag. Its fallback must already 
 
 ### What the Host half does
 
-The Host persists the preference through the settings service on loopback pages. The Client deliberately withholds that settings scope on non-loopback pages, so their locale selection remains process-local even though Connection authenticates every API method.
+Every authenticated browser persists the preference through the Host settings service under the shared [settings scope policy](../ui-settings/README.md).
 
 -----
 

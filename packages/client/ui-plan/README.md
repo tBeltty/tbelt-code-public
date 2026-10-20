@@ -81,6 +81,8 @@ Plan comments live in one snapshot store created by `apply` and shared through t
 
 The framework-bound `usePlans(turn)` exposes only submitted-plan data for that Turn. Chat indexes membership on Node updates and orders this collection when read; card rendering neither scans the transcript nor subscribes to other Turns or Node kinds.
 
+Submitted-plan cards follow the file-card family for their radius and icon-tile material.
+
 </details>
 
 -----

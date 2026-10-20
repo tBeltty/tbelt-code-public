@@ -1,7 +1,7 @@
 {
   "name": "@deepseek-ai/dsh-destructive-command-policy",
   "description": "Pure classifier deciding whether a shell command string is destructive enough to require explicit user confirmation before running",
-  "version": "0.2.1-alpha.2",
+  "version": "0.2.1-rc.2",
   "publishConfig": {
     "access": "public"
   },

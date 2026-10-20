@@ -46,6 +46,13 @@ export const en = {
   'connection.connected': 'Connected',
   'connection.reconnect': 'Disconnected, reconnect now',
   'connection.restart': 'Reconnecting, reconnect now',
+  'hostRelease.title': 'Service version changed',
+  'hostRelease.description': 'The service version changed. This page paused live updates; reload to load the new version.',
+  'hostRelease.service': 'Service',
+  'hostRelease.page': 'Page',
+  'hostRelease.unknown': 'Unknown',
+  'hostRelease.reload': 'Reload to load the new version',
+  'hostRelease.later': 'Not now',
 } satisfies Record<string, string>
 
 /** Spanish dictionary, checked complete against the English key set. */
@@ -91,6 +98,13 @@ export const es = {
   'connection.connected': 'Conectado',
   'connection.reconnect': 'Desconectado, reconectar ahora',
   'connection.restart': 'Reconectando, reconectar ahora',
+  'hostRelease.title': 'Versión del servicio cambiada',
+  'hostRelease.description': 'La versión del servicio cambió. Esta página pausó las actualizaciones en vivo; recarga para cargar la nueva versión.',
+  'hostRelease.service': 'Servicio',
+  'hostRelease.page': 'Página',
+  'hostRelease.unknown': 'Desconocida',
+  'hostRelease.reload': 'Recargar para cargar la nueva versión',
+  'hostRelease.later': 'Ahora no',
 } satisfies Record<keyof typeof en, string>
 
 /** Greek dictionary, checked complete against the English key set. */
@@ -136,6 +150,13 @@ export const el = {
   'connection.connected': 'Συνδέθηκε',
   'connection.reconnect': 'Αποσυνδέθηκε, επανασύνδεση τώρα',
   'connection.restart': 'Επανασύνδεση, επανασύνδεση τώρα',
+  'hostRelease.title': 'Η έκδοση της υπηρεσίας άλλαξε',
+  'hostRelease.description': 'Η έκδοση της υπηρεσίας άλλαξε. Αυτή η σελίδα σταμάτησε τις ζωντανές ενημερώσεις· ανανεώστε για να φορτώσετε τη νέα έκδοση.',
+  'hostRelease.service': 'Υπηρεσία',
+  'hostRelease.page': 'Σελίδα',
+  'hostRelease.unknown': 'Άγνωστη',
+  'hostRelease.reload': 'Ανανέωση για φόρτωση της νέας έκδοσης',
+  'hostRelease.later': 'Όχι τώρα',
 } satisfies Record<keyof typeof en, string>
 
 /** French dictionary, checked complete against the English key set. */
@@ -181,4 +202,11 @@ export const fr = {
   'connection.connected': 'Connecté',
   'connection.reconnect': 'Déconnecté, se reconnecter maintenant',
   'connection.restart': 'Reconnexion, se reconnecter maintenant',
+  'hostRelease.title': 'Version du service modifiée',
+  'hostRelease.description': 'La version du service a changé. Cette page a suspendu les mises à jour en direct ; rechargez pour charger la nouvelle version.',
+  'hostRelease.service': 'Service',
+  'hostRelease.page': 'Page',
+  'hostRelease.unknown': 'Inconnue',
+  'hostRelease.reload': 'Recharger pour charger la nouvelle version',
+  'hostRelease.later': 'Pas maintenant',
 } satisfies Record<keyof typeof en, string>

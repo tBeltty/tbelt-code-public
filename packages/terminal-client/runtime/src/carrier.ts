@@ -6,12 +6,14 @@
  * @module @deepseek-ai/dsh-terminal-client/carrier
  */
 
+import type { PeerScope } from '@deepseek-ai/dsh-typert-protocol'
+
 /** Origin that request URLs resolve against; the Host fetch handler reads only the path. */
 const CARRIER_ORIGIN = 'http://terminal.invalid'
 
 /** The Host half of unary calls: `connection.createSharedFetchHandler('/api')`. */
 export interface HostFetchHandler {
-  fetch(request: Request): Promise<Response>
+  fetch(request: Request, peer: PeerScope): Promise<Response>
 }
 
 /** The Host half of streams: `typertGateway.wireStream`. */
@@ -20,7 +22,7 @@ export interface HostWireStream {
     endpoint: string,
     payload: unknown,
     uplink: AsyncIterable<unknown>,
-    peer: undefined,
+    peer: PeerScope,
     signal: AbortSignal,
   ) => Promise<AsyncIterable<unknown>>
   readonly failure: (error: unknown) => {
@@ -70,15 +72,16 @@ async function* silentUplink(signal: AbortSignal): AsyncGenerator<never> {
  * Connect a client to the Host in the same process.
  * @param handler - the Host's shared API fetch handler.
  * @param wire - the Host Gateway's stream adapter.
+ * @param peer - the Host Peer every call speaks for; this process serves only its own client, so the browser Peer.
  * @returns hooks for `__DSH_TRANSPORT__` and `__DSH_FILE_UPLOAD__`.
  */
-export function createInProcessTransport(handler: HostFetchHandler, wire: HostWireStream): InProcessTransport {
+export function createInProcessTransport(handler: HostFetchHandler, wire: HostWireStream, peer: PeerScope): InProcessTransport {
   return {
-    fetch: (input, init) => handler.fetch(new Request(new URL(String(input), CARRIER_ORIGIN), init)),
+    fetch: (input, init) => handler.fetch(new Request(new URL(String(input), CARRIER_ORIGIN), init), peer),
     async *openStream(endpoint, payload, signal, uplink) {
       signal.throwIfAborted()
       try {
-        const source = await wire.open(endpoint, payload, uplink ?? silentUplink(signal), undefined, signal)
+        const source = await wire.open(endpoint, payload, uplink ?? silentUplink(signal), peer, signal)
         for await (const value of source) {
           signal.throwIfAborted()
           yield value

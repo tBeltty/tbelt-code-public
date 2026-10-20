@@ -10,6 +10,7 @@ import { es } from '../src/client/locales.ts'
 afterEach(() => {
   cleanup()
   vi.restoreAllMocks()
+  vi.unstubAllGlobals()
   vi.useRealTimers()
 })
 
@@ -282,8 +283,11 @@ describe('JobListAction observation', () => {
     expect(writeText).toHaveBeenCalledWith('pnpm run build')
   })
 
-  it('portals the open list below its trigger and keeps it open on pointer presses inside', () => {
-    vi.spyOn(HTMLDivElement.prototype, 'getBoundingClientRect').mockReturnValue({ left: 344, bottom: 40 } as DOMRect)
+  it('anchors the portaled list in viewport coordinates and follows resize and ancestor scroll', () => {
+    vi.stubGlobal('innerWidth', 700)
+    vi.stubGlobal('innerHeight', 600)
+    vi.spyOn(HTMLElement.prototype, 'offsetWidth', 'get').mockReturnValue(440)
+    vi.spyOn(HTMLElement.prototype, 'offsetHeight', 'get').mockReturnValue(120)
     const { container } = render(<JobListAction {...props([outputJob()])} />)
     openList()
     const menu = screen.getByRole('list', { name: es['list.aria'] })

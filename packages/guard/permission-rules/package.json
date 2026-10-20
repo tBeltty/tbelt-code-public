@@ -1,7 +1,7 @@
 {
   "name": "@deepseek-ai/dsh-permission-rules",
   "description": "Validated, hot-reloadable permission-rule table (per-tool and per-command-argument-pattern deny/ask/allow rules), stored through the settings service and enforced on every tool call via ctx.tools.guard() and tools/pre-execute",
-  "version": "0.2.1-alpha.2",
+  "version": "0.2.1-rc.2",
   "publishConfig": {
     "access": "public"
   },

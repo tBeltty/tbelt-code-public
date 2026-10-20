@@ -1,7 +1,7 @@
 {
   "name": "@deepseek-ai/dsh-terminal-app",
   "description": "The dsh terminal bundle: the web bundle's Host without its web server or browser plugins, plus the terminal client",
-  "version": "0.2.1-alpha.2",
+  "version": "0.2.1-rc.2",
   "publishConfig": {
     "access": "public"
   },

@@ -1,6 +1,9 @@
 import { describe, expect, it, vi } from 'vitest'
 import { createInProcessTransport } from '../src/carrier.ts'
 import type { HostWireStream } from '../src/carrier.ts'
+import type { PeerScope } from '@deepseek-ai/dsh-typert-protocol'
+
+const peer = { id: 'terminal-peer' } as PeerScope
 
 function wire(open: HostWireStream['open']): HostWireStream {
   return {
@@ -16,7 +19,7 @@ async function* items(...values: unknown[]): AsyncGenerator {
 describe('in-process carrier', () => {
   it('sends a relative request to the Host handler and returns its response', async () => {
     const fetch = vi.fn((request: Request) => Promise.resolve(new Response(`${request.method} ${new URL(request.url).pathname}`)))
-    const transport = createInProcessTransport({ fetch }, wire(() => Promise.resolve(items())))
+    const transport = createInProcessTransport({ fetch }, wire(() => Promise.resolve(items())), peer)
     const response = await transport.fetch('/api/session/list', { method: 'POST', body: '{}' })
     expect(await response.text()).toBe('POST /api/session/list')
     expect(new URL(fetch.mock.calls[0]![0].url).origin).toBe('http://terminal.invalid')
@@ -28,13 +31,13 @@ describe('in-process carrier', () => {
     const transport = createInProcessTransport({ fetch: () => Promise.resolve(new Response()) }, wire((...args) => {
       opened.push(args)
       return Promise.resolve(items(1, 2))
-    }))
+    }), peer)
     const uplink = items('up')
     const controller = new AbortController()
     const received: unknown[] = []
     for await (const value of transport.openStream('session/follow', { id: 1 }, controller.signal, uplink)) received.push(value)
     expect(received).toEqual([1, 2])
-    expect(opened[0]!.slice(0, 4)).toEqual(['session/follow', { id: 1 }, uplink, undefined])
+    expect(opened[0]!.slice(0, 4)).toEqual(['session/follow', { id: 1 }, uplink, peer])
   })
 
   it('gives a stream the client sends nothing on an uplink that ends when the stream is aborted', async () => {
@@ -42,7 +45,7 @@ describe('in-process carrier', () => {
     const transport = createInProcessTransport({ fetch: () => Promise.resolve(new Response()) }, wire((_e, _p, up) => {
       uplink = up
       return Promise.resolve(items())
-    }))
+    }), peer)
     const waiting = new AbortController()
     for await (const value of transport.openStream('a/b', {}, waiting.signal)) expect(value).toBeUndefined()
     const pending = uplink![Symbol.asyncIterator]().next()
@@ -56,7 +59,7 @@ describe('in-process carrier', () => {
   })
 
   it('reports a Host failure with the marker the Gateway client recognizes', async () => {
-    const transport = createInProcessTransport({ fetch: () => Promise.resolve(new Response()) }, wire(() => Promise.reject(new Error('no such endpoint'))))
+    const transport = createInProcessTransport({ fetch: () => Promise.resolve(new Response()) }, wire(() => Promise.reject(new Error('no such endpoint'))), peer)
     const error = await (async () => {
       for await (const value of transport.openStream('x/y', {}, new AbortController().signal)) expect(value).toBeUndefined()
     })().catch((caught: unknown) => caught)
@@ -75,7 +78,7 @@ describe('in-process carrier', () => {
       throw new Error('never reported')
     }
     const open: HostWireStream['open'] = () => Promise.resolve(failing())
-    const transport = createInProcessTransport({ fetch: () => Promise.resolve(new Response()) }, wire(open))
+    const transport = createInProcessTransport({ fetch: () => Promise.resolve(new Response()) }, wire(open), peer)
     const run = async (): Promise<void> => {
       for await (const value of transport.openStream('x/y', {}, controller.signal)) expect(value).toBeUndefined()
     }

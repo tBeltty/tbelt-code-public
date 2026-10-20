@@ -3,8 +3,8 @@ import type { RefObject } from 'react'
 import { Button } from '@deepseek-ai/dsh-client-ui-primitives'
 import type { DesktopOnboardingProps } from './onboarding-contract.ts'
 import { OnboardingIllustration } from './OnboardingIllustration.tsx'
-import art from './assets/onboarding-recharge.png'
-import artDark from './assets/onboarding-recharge-dark.png'
+import art from './assets/onboarding-recharge.webp'
+import artDark from './assets/onboarding-recharge-dark.webp'
 import css from './DesktopOnboarding.module.css'
 
 /** @param props - credit facts, localized content and recharge/navigation actions. @returns the credit step. */

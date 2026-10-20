@@ -446,20 +446,6 @@ describe('edge joins', () => {
     expect(store.store.getSnapshot()).toMatchObject({ status: 'error', error: 'settings down' })
   })
 
-  it('reports a terminally unavailable settings mirror precisely', async () => {
-    const { ctx } = api()
-    const store = new ModelsSettingsStore(
-      ctx,
-      settingsSchema,
-      new SettingsDescribeMirror(ctx, 'memory'),
-    )
-    await store.load()
-    expect(store.store.getSnapshot()).toMatchObject({
-      status: 'error',
-      error: 'settings are unavailable in this browser',
-    })
-  })
-
   it('reuses a held settings view after its refresh fails', async () => {
     let settingsCall = 0
     const { ctx, mirror } = api({

@@ -156,6 +156,9 @@
 - id: ui-btw
   disabled: true
 
+- id: ui-secret-mask
+  disabled: true
+
 - id: ui-message-feedback
   disabled: true
 

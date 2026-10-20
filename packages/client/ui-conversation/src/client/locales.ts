@@ -388,6 +388,9 @@ export const en = {
   // aligned with these English values.
   'terminal.sendInput': '(send input)',
   'terminal.session': 'Terminal {sessionId}',
+  'hero.preview': 'Preview',
+  'row.imageSize': '{width}x{height}px, {bytes} bytes',
+  'row.imageSizeDownscaled': '{width}x{height}px (downscaled from {originalWidth}x{originalHeight}px), {bytes} bytes',
 } satisfies Record<string, string>
 
 /** Spanish dictionary, checked complete against the English key set. */
@@ -766,6 +769,9 @@ export const es = {
   'terminal.expandRest': '… {n} líneas más',
   'terminal.sendInput': '(enviar entrada)',
   'terminal.session': 'Terminal {sessionId}',
+  'hero.preview': 'Vista previa',
+  'row.imageSize': '{width}x{height}px, {bytes} bytes',
+  'row.imageSizeDownscaled': '{width}x{height}px (reducida desde {originalWidth}x{originalHeight}px), {bytes} bytes',
 } satisfies Record<keyof typeof en, string>
 
 /** Greek dictionary, checked complete against the English key set. */
@@ -1076,6 +1082,8 @@ export const el = {
   'row.input': 'ΕΙΣ',
   'row.output': 'ΕΞ',
   'row.inspect': 'Επιθεώρηση',
+  'row.imageSize': '{width}x{height}px, {bytes} byte',
+  'row.imageSizeDownscaled': '{width}x{height}px (σμικρύνθηκε από {originalWidth}x{originalHeight}px), {bytes} byte',
   'tool.title.search': 'Αναζήτηση',
   'tool.title.read': 'Ανάγνωση',
   'tool.title.bash': 'Bash',
@@ -1144,6 +1152,7 @@ export const el = {
   'terminal.expandRest': '… άλλες {n} γραμμές',
   'terminal.sendInput': '(αποστολή εισόδου)',
   'terminal.session': 'Τερματικό {sessionId}',
+  'hero.preview': 'Προεπισκόπηση',
 } satisfies Record<keyof typeof en, string>
 
 /** French dictionary, checked complete against the English key set. */
@@ -1454,6 +1463,8 @@ export const fr = {
   'row.input': 'ENTRÉE',
   'row.output': 'SORTIE',
   'row.inspect': 'Inspecter',
+  'row.imageSize': '{width}x{height} px, {bytes} octets',
+  'row.imageSizeDownscaled': '{width}x{height} px (réduite depuis {originalWidth}x{originalHeight} px), {bytes} octets',
   'tool.title.search': 'Rechercher',
   'tool.title.read': 'Lire',
   'tool.title.bash': 'Bash',
@@ -1522,4 +1533,5 @@ export const fr = {
   'terminal.expandRest': '… {n} lignes de plus',
   'terminal.sendInput': '(envoyer une entrée)',
   'terminal.session': 'Terminal {sessionId}',
+  'hero.preview': 'Aperçu',
 } satisfies Record<keyof typeof en, string>

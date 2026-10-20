@@ -300,7 +300,6 @@ describe('terminalCardModel', () => {
     ['a non-boolean background flag', running('bash', { ...bash, run_in_background: 'x' })],
     ['a blank description', running('bash', { ...bash, description: ' ' })],
     ['a numeric description', running('bash', { ...bash, description: 1 })],
-    ['a background command', running('bash', { ...bash, run_in_background: true })],
     ['terminal_send without a session', running('terminal_send', { text: 'q' })],
     ['terminal_send with numeric text', running('terminal_send', { sessionId: 't', text: 1 })],
     ['terminal_send with a numeric submit', running('terminal_send', { sessionId: 't', text: 'q', submit: 1 })],
@@ -310,5 +309,10 @@ describe('terminalCardModel', () => {
     ['a settled command without text', settled('bash', bash, undefined)],
   ])('has no card for %s', (_label, block: ToolCallBlock) => {
     expect(terminalCardModel(block)).toBeNull()
+  })
+
+  it('draws a running background command as a card without exit status', () => {
+    const model = terminalCardModel(running('bash', { ...bash, run_in_background: true }))
+    expect(model?.card).toMatchObject({ background: true, running: true, exitCode: undefined, signal: undefined })
   })
 })

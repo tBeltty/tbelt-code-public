@@ -1,7 +1,7 @@
 {
   "name": "@deepseek-ai/dsh-client-ui-btw",
   "description": "The Web side-conversation surface: the /btw dialog for asking questions while the agent keeps working, with a button that sends the exchange to the main chat",
-  "version": "0.2.1-alpha.2",
+  "version": "0.2.1-rc.2",
   "publishConfig": {
     "access": "public"
   },

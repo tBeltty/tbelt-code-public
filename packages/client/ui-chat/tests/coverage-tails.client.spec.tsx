@@ -6,12 +6,12 @@ import { makeTranslate } from '@deepseek-ai/dsh-client-test-runtime'
 import { es as commonEs } from '@deepseek-ai/dsh-client-locale/src/locales/es.ts'
 import { AssistantMarkdown, type AssistantMarkdownProps } from '../src/client/chat/AssistantMarkdown.tsx'
 import { useDetailedPresentation } from './presentation-fixture.client.ts'
+import { unusedImageLoader } from './reasoning-component-fixture.tsx'
 import { useDisclosure } from '../src/client/chat/use-disclosure.ts'
 import { useSearchableHidden } from '../src/client/chat/searchable-hidden.ts'
 import { es } from '../src/client/locale.ts'
 
 const t: AssistantMarkdownProps['t'] = makeTranslate(es, commonEs)
-const renderMessageImages: AssistantMarkdownProps['renderMessageImages'] = () => null
 
 afterEach(cleanup)
 
@@ -27,7 +27,7 @@ describe('tails', () => {
           { kind: 'other', block: { type: 'mystery' } },
         ]}
         streaming
-        renderMessageImages={renderMessageImages}
+        loadImage={unusedImageLoader}
       />,
     )
     expect(view.getByText('Razonamiento')).toBeTruthy()
@@ -40,7 +40,7 @@ describe('tails', () => {
         blocks={[{ kind: 'text', text: 'partial words' }]}
         streaming={false}
         interrupted
-        renderMessageImages={renderMessageImages}
+        loadImage={unusedImageLoader}
       />,
     )
     expect(stopped.getByText('Detenido')).toBeTruthy()
@@ -55,14 +55,14 @@ describe('tails', () => {
         t={t}
         blocks={[{ kind: 'tool-call', callId: 'c', name: 'todo_write', argsRaw: '{}' }]}
         streaming={false}
-        renderMessageImages={renderMessageImages}
+        loadImage={unusedImageLoader}
       />,
     )
     expect(empty.container.firstChild).toBeNull()
     const blank = render(
       <AssistantMarkdown renderSlot={() => null} useDisclosure={useDisclosure} useGroupAction={useSearchableHidden}
         usePresentation={useDetailedPresentation}
-        t={t} blocks={[]} streaming={false} renderMessageImages={renderMessageImages} />,
+        t={t} blocks={[]} streaming={false} loadImage={unusedImageLoader} />,
     )
     expect(blank.container.firstChild).toBeNull()
   })

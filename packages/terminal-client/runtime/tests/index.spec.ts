@@ -29,7 +29,7 @@ function fakeContext(provideExit = true): Fake {
   const handler = { fetch: vi.fn() }
   const wire = { open: vi.fn() }
   const services: Record<string, unknown> = {
-    connection: { createSharedFetchHandler: (path: string) => (path === '/api' ? handler : undefined) },
+    connection: { createSharedFetchHandler: (path: string) => (path === '/api' ? handler : undefined), browserPeer: { id: 'terminal-peer' } },
     typertGateway: { wireStream: wire },
     ...provideExit ? { appExit: (code: number) => exits.push(code) } : {},
   }
@@ -88,7 +88,7 @@ describe('terminal-client plugin', () => {
     vi.stubEnv('NO_COLOR', '1')
     apply(fake.ctx, config({ resume: '3f9a', continueLatest: false }))
     await settle()
-    expect(hoisted.transport).toHaveBeenCalledWith(fake.handler, fake.wire)
+    expect(hoisted.transport).toHaveBeenCalledWith(fake.handler, fake.wire, { id: 'terminal-peer' })
     expect(hoisted.boot).toHaveBeenCalledWith(undefined, 'sources')
     const [services, env, request] = hoisted.run.mock.calls[0]!
     expect(services).toBe(started.services)

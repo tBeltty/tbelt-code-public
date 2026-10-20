@@ -94,6 +94,13 @@ describe('llm-pi-ai real dormant composition', () => {
 
     // The shipped posture: the adapter exists, no route does.
     expect(ctx.llm.listProviders()).toEqual([])
+    const directory = ctx.llm.listConfigurableProviders()
+    expect(directory.find(entry => entry.provider === 'azure')).toMatchObject({
+      nativeAuth: { env: ['AZURE_OPENAI_API_KEY'], oauth: false },
+      baseURLEnv: ['AZURE_OPENAI_BASE_URL', 'AZURE_OPENAI_RESOURCE_NAME'],
+    })
+    expect(directory.find(entry => entry.provider === 'radius')?.defaultBaseURL).toBe('https://radius.pi.dev/v1')
+    expect(directory.find(entry => entry.provider === 'opencode')?.defaultBaseURL).toBeUndefined()
 
     // Exactly what the web Models page leaves on disk.
     await writeFile(settingsPath, [
@@ -114,15 +121,14 @@ describe('llm-pi-ai real dormant composition', () => {
     expect(server.headers[0]?.authorization).toBe('Bearer key-from-store')
   })
 
-  it('offers OpenAI sign-in by API key only, while other subscription logins stay', async () => {
+  it('offers OpenAI sign-in by browser and by API key', async () => {
     const { ctx } = await loadComposition()
     const methods = (provider: string): string[] | undefined => ctx.authorization.list()
       .find(entry => entry.key === LlmPiAi.recordKeyFor(provider))?.methods.map(method => method.id)
 
-    // pi-ai's Sign in with ChatGPT needs an installation ID the harness does
-    // not supply, so the route offers only its key login.
-    expect(methods('openai')).toEqual(['api-key'])
-    expect(methods('anthropic')).toEqual(['oauth', 'api-key'])
+    // The route supplies the installation ID pi-ai's Sign in with ChatGPT needs.
+    expect(methods('openai')).toEqual(['oauth', 'api-key'])
+    expect(methods('anthropic')).toEqual(['api-key'])
   })
 
   it('uses settings-only route headers for model discovery', async () => {

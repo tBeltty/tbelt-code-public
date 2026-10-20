@@ -1,7 +1,7 @@
 {
   "name": "@deepseek-ai/dsh-command-clear",
   "description": "Human-facing /clear command that resets a session's context via the shadow/replace surface mechanism",
-  "version": "0.2.1-alpha.2",
+  "version": "0.2.1-rc.2",
   "publishConfig": {
     "access": "public"
   },

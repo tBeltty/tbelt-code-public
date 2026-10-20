@@ -1,7 +1,7 @@
 /** Locale-owned terminal card copy for the Web client. @module */
 import type { TerminalBlockLabels, TerminalBlockProps } from '@deepseek-ai/dsh-client-ui-primitives'
 import type { TranslateNS } from '@deepseek-ai/dsh-client-ui-slots'
-import type { TerminalCardModel } from '@deepseek-ai/dsh-presentation-tool-card'
+import { terminalFailed, type TerminalCardModel } from '@deepseek-ai/dsh-presentation-tool-card'
 
 /**
  * Build the TerminalBlock display copy from the conversation locale seat —
@@ -31,7 +31,7 @@ export function terminalBlockLabels(t: TranslateNS<'conversation'>): TerminalBlo
 }
 
 interface LocalizedTerminalCardModel {
-  readonly card: Pick<TerminalBlockProps, 'command' | 'cwd' | 'output' | 'exitCode' | 'signal' | 'running'>
+  readonly card: Pick<TerminalBlockProps, 'command' | 'cwd' | 'output' | 'exitCode' | 'signal' | 'running' | 'background'>
   readonly description: string | undefined
 }
 
@@ -59,4 +59,18 @@ export function localizeTerminalCardModel(
     },
     description: t('terminal.session', { sessionId: model.copy.sessionId }),
   }
+}
+
+/**
+ * Localize a settled foreground command's exit status without inventing a code.
+ * @param model - terminal card, absent for generic execution errors.
+ * @param t - conversation locale.
+ * @returns the capsule label, or null for running, background, or successful calls.
+ */
+export function terminalExitLabel(model: TerminalCardModel | null | undefined, t: TranslateNS<'conversation'>): string | null {
+  if (model == null || model.card.background === true || !terminalFailed(model)) return null
+  const { exitCode, signal } = model.card
+  if (signal !== undefined) return t('terminal.signal', { signal })
+  if (exitCode == null) return t('terminal.noExitCode')
+  return t('terminal.exitCode', { code: exitCode })
 }

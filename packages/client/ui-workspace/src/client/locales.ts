@@ -79,6 +79,9 @@ export const en = {
   'menu.unarchiveSession': 'Unarchive session',
   'menu.pinSession': 'Pin session',
   'menu.unpinSession': 'Unpin session',
+  'menu.sessionId': 'Copy Session ID',
+  'toast.sessionIdCopied': 'Session ID copied',
+  'toast.sessionIdCopyFailed': 'Copy failed. Try again.',
   'row.archived': 'Archived',
   'row.pinned': 'Pinned',
   'toast.archivedNotOpenable': 'Archived sessions cannot be opened. Unarchive it to view.',
@@ -271,6 +274,9 @@ export const es = {
   'time.months': '{n} m',
   'time.years': '{n} a',
   'time.ago': 'hace {t}',
+  'menu.sessionId': 'Copiar ID de sesión',
+  'toast.sessionIdCopied': 'ID de sesión copiado',
+  'toast.sessionIdCopyFailed': 'No se pudo copiar. Inténtalo de nuevo.',
 } satisfies Record<keyof typeof en, string>
 
 /** Greek dictionary, checked complete against the English key set. */
@@ -404,6 +410,9 @@ export const el = {
   'time.months': '{n}μ.',
   'time.years': '{n}έ.',
   'time.ago': 'πριν από {t}',
+  'menu.sessionId': 'Αντιγραφή αναγνωριστικού συνεδρίας',
+  'toast.sessionIdCopied': 'Το αναγνωριστικό συνεδρίας αντιγράφηκε',
+  'toast.sessionIdCopyFailed': 'Η αντιγραφή απέτυχε. Δοκιμάστε ξανά.',
 } satisfies Record<keyof typeof en, string>
 
 /** French dictionary, checked complete against the English key set. */
@@ -537,4 +546,7 @@ export const fr = {
   'time.months': '{n} mois',
   'time.years': '{n} a',
   'time.ago': 'il y a {t}',
+  'menu.sessionId': 'Copier l’ID de session',
+  'toast.sessionIdCopied': 'ID de session copié',
+  'toast.sessionIdCopyFailed': 'Échec de la copie. Réessayez.',
 } satisfies Record<keyof typeof en, string>

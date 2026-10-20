@@ -17,6 +17,7 @@ import { SESSION_FORMAT_VERSION } from '@deepseek-ai/dsh-session/types'
 import { describe, expect, onTestFinished, type Mock, type TestAPI, vi } from 'vitest'
 import { createInProcessTransport } from '../src/carrier.ts'
 import type { InProcessTransport } from '../src/carrier.ts'
+import type { PeerScope } from '@deepseek-ai/dsh-typert-protocol'
 import type { ApprovalOutcomePort, ClientServicesPort, SessionBindingPort } from '../src/ports.ts'
 import { assistantEvent, userEvent } from './fakes.ts'
 
@@ -78,14 +79,16 @@ function terminalCarrier(mock: RemoteMock): InProcessTransport {
     onTestFinished(() => fiber.dispose())
     const connection = ctx.get('connection') as HostConnectionHandle
     connection.rpc.intercept('/api', () => true, (endpoint, payload, signal) => mock.rpc.call('/api', endpoint, payload, signal))
-    return connection.createSharedFetchHandler('/api')
+    return { handler: connection.createSharedFetchHandler('/api'), peer: connection.browserPeer }
   })()
   return createInProcessTransport(
-    { fetch: async request => (await mounted).fetch(request) },
+    // The real Connection supplies the browser Peer once mounted; the carrier argument only has to be a Peer for the type.
+    { fetch: async (request) => { const host = await mounted; return await host.handler.fetch(request, host.peer) } },
     {
       open: (endpoint, payload, uplink, _peer, signal) => Promise.resolve(mock.rpc.open!('/api', endpoint, payload, signal, uplink)),
       failure: error => ({ code: 'internal', message: error instanceof Error ? error.message : String(error), details: {} }),
     },
+    { id: 'terminal-test' } as PeerScope,
   )
 }
 

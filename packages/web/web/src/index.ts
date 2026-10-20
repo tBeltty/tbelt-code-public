@@ -61,8 +61,8 @@ interface Selection<P> {
 /**
  * Config for the web seam. `searchProvider` / `fetchProvider` pin which provider
  * wins for each capability; both are optional (a single registered usable
- * provider auto-selects). `searchProvider` is volatile, so a settings surface
- * changes it for the next search without a remount. Operational overrides such
+ * provider auto-selects). Both are volatile, so a settings surface
+ * changes them for the next operation without a remount. Operational overrides such
  * as environment variables must feed these same fields rather than introduce a
  * hidden priority chain.
  */
@@ -70,7 +70,7 @@ export interface WebRuntimeConfig {
   /** Explicit search provider id. Omitted = auto-select when exactly one usable. */
   readonly searchProvider?: Volatile<string | undefined>
   /** Explicit fetch provider id. Omitted = auto-select when exactly one usable. */
-  readonly fetchProvider?: string
+  readonly fetchProvider?: Volatile<string | undefined>
 }
 
 /**
@@ -93,18 +93,24 @@ export class WebRuntime extends TypertRemoteService {
    */
   static Config = z.object({
     searchProvider: z.string().volatile(),
-    fetchProvider: z.string(),
+    fetchProvider: z.string().volatile(),
   })
 
   private searchProviders = new Map<string, WebSearchProvider>()
   private fetchProviders = new Map<string, WebFetchProvider>()
   private readonly searchProviderConfig: Volatile<string | undefined> | undefined
-  private readonly fetchProviderId: string | undefined
+  private readonly fetchProviderConfig: Volatile<string | undefined> | undefined
 
   constructor(ctx: Context, config: WebRuntimeConfig = {}) {
     super(ctx, 'web')
     this.searchProviderConfig = config.searchProvider
-    this.fetchProviderId = config.fetchProvider ?? process.env.DSH_WEB_FETCH_PROVIDER
+    this.fetchProviderConfig = config.fetchProvider
+  }
+
+  /** The pinned fetch provider id in force for the next fetch. */
+  private fetchProviderId(): string | undefined {
+    const configured = this.fetchProviderConfig?.get()
+    return configured !== undefined && configured.length > 0 ? configured : process.env.DSH_WEB_FETCH_PROVIDER
   }
 
   /** The pinned search provider id in force for the next search. */
@@ -177,10 +183,11 @@ export class WebRuntime extends TypertRemoteService {
    * @returns the retrieval outcome; non-2xx responses resolve descriptively.
    */
   async fetch(request: WebFetchRequest, signal?: AbortSignal): Promise<WebFetchResult> {
+    const configuredId = this.fetchProviderId()
     const provider = resolveProvider({
       kind: 'fetch',
       providers: this.fetchProviders,
-      ...this.fetchProviderId !== undefined ? { configuredId: this.fetchProviderId } : {},
+      ...configuredId !== undefined ? { configuredId } : {},
     })
     return provider.fetch(request, signal)
   }

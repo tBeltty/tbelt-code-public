@@ -77,14 +77,14 @@ it('drops unsupported prefill and hide parameters while preserving form options'
 })
 
 it.each([[0, 600], [800, 0], [-1, 600]])('keeps the device description without unavailable screen dimensions (%s, %s)', (width, height) => {
-  const url = new URL(contactUrl(ContactConfig({}), {
+  const url = new URL(contactUrl(ContactConfig({ contactFormUrl: form }), {
     uid: null, version: undefined, deviceInfo: 'platform=darwin', width, height, pixelRatio: 1,
   }))
   expect(url.searchParams.get('prefill_device_info')).toBe('platform=darwin')
 })
 
 it('rounds physical screen dimensions in the device description', () => {
-  const url = new URL(contactUrl(ContactConfig({}), {
+  const url = new URL(contactUrl(ContactConfig({ contactFormUrl: form }), {
     uid: null, version: undefined, deviceInfo: '', width: 801, height: 601, pixelRatio: 1.25,
   }))
   expect(url.searchParams.get('prefill_device_info')).toBe('screen_resolution=1001x751')

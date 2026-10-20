@@ -11,8 +11,7 @@ describe('Official on-demand catalog', () => {
       expect(entry.meta.icon).toMatch(/^data:image\/svg\+xml;base64,/)
       for (const text of [entry.meta.title, entry.meta.description]) {
         if (typeof text === 'string') throw new Error('Official metadata requires both shipped languages')
-        expect(text.en).toMatch(/\S/)
-        expect(text.zh).toMatch(/\S/)
+        for (const language of ['el', 'en', 'es', 'fr'] as const) expect(text[language]).toMatch(/\S/)
       }
       expect(entry).not.toHaveProperty('version')
     }

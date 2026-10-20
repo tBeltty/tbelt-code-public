@@ -12,6 +12,9 @@ import { QuoteDock } from '../src/client/quote/QuoteChip.tsx'
 import { isQuoteShortcut, QuoteSelectionAction } from '../src/client/quote/QuoteSelectionAction.tsx'
 import type { QuoteShortcut } from '../src/client/contract/slots.ts'
 import { PendingSteeringBubble } from '../src/client/chat/MessageItem.tsx'
+import type { ChatNodeViewProps, UserContentInput } from '../src/client/contract/slots.ts'
+import { unusedImageLoader } from './reasoning-component-fixture.tsx'
+import { createUserContentFixture } from './user-content-component-fixture.tsx'
 
 const t = makeTranslate(en, commonEn)
 const SID = 'quote-session' as SessionId
@@ -50,9 +53,14 @@ describe('quote message text', () => {
 
 describe('sent quote chips', () => {
   it('shows each leading quote as a chip before the typed text', () => {
+    const renderUserContent = createUserContentFixture()
+    const renderFactorySlot: ChatNodeViewProps['renderFactorySlot'] = (name, input) => {
+      if (name !== 'conversation.chat.user.content') throw new Error(`Unexpected user Factory: ${name}`)
+      return renderUserContent(input as UserContentInput, () => null, t)
+    }
     render(
       <PendingSteeringBubble content={[{ type: 'text', text: '> Le quitó el llanto.\n\nSuena a contraste binario' }]}
-        renderMessageImages={() => null} t={t} />,
+        loadImage={unusedImageLoader} renderFactorySlot={renderFactorySlot} t={t} />,
     )
     const chip = document.querySelector('[data-message-quote]')
     expect(chip?.textContent).toBe('Le quitó el llanto.')

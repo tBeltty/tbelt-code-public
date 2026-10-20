@@ -72,7 +72,7 @@ export function apply(ctx: Context, config: Config): void {
   }
   const connection = ctx.get('connection') as HostConnectionHandle
   const gateway = ctx.get('typertGateway') as TypertGateway
-  const transport = createInProcessTransport(connection.createSharedFetchHandler(API_PATH), gateway.wireStream)
+  const transport = createInProcessTransport(connection.createSharedFetchHandler(API_PATH), gateway.wireStream, connection.browserPeer)
 
   let run: TerminalRun | undefined
   let tree: ClientTree | undefined

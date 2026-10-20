@@ -61,7 +61,7 @@ export const en = {
     'Includes all Standard mode capabilities. Better suited to tasks that call tools in batches and then filter, organize, deduplicate, count, or summarize the results.',
   presetMinimalName: 'Minimal mode',
   presetMinimalDescription:
-    'The agent works using only a terminal tool. Useful for testing and comparing its basic performance.',
+    'The agent uses a terminal and image reading, with context compaction. Useful for testing and comparing its basic performance.',
   presetFastName: 'Fast mode',
   presetFastDescription:
     'A short prompt and a few core tools keep each step small and quick. The agent turns on search, web, subagents and other tools when a task needs them.',
@@ -108,7 +108,7 @@ export const es = {
   presetPtcName: 'Modo PTC',
   presetPtcDescription: 'Incluye todas las capacidades del modo estándar. Se adapta mejor a las tareas que llaman a herramientas por lotes y luego filtran, organizan, deduplican, cuentan o resumen los resultados.',
   presetMinimalName: 'Modo mínimo',
-  presetMinimalDescription: 'El agente trabaja solo con una herramienta de terminal. Útil para probar y comparar su rendimiento básico.',
+  presetMinimalDescription: 'El agente usa una terminal y la lectura de imágenes, con compactación de contexto. Útil para probar y comparar su rendimiento básico.',
   presetFastName: 'Modo rápido',
   presetFastDescription:
     'Un prompt corto y pocas herramientas básicas mantienen cada paso pequeño y veloz. El agente activa la búsqueda, la web, los subagentes y otras herramientas cuando una tarea las necesita.',
@@ -187,7 +187,7 @@ export const fr = {
   presetPtcName: 'Mode PTC',
   presetPtcDescription: 'Inclut toutes les fonctionnalités du mode Standard. Convient mieux aux tâches qui appellent des outils par lots, puis filtrent, organisent, dédoublonnent, comptent ou résument les résultats.',
   presetMinimalName: 'Mode Minimal',
-  presetMinimalDescription: 'L’agent travaille avec un seul outil de terminal. Utile pour tester et comparer ses performances de base.',
+  presetMinimalDescription: 'L’agent utilise un terminal et la lecture d’images, avec compactage du contexte. Utile pour tester et comparer ses performances de base.',
   presetFastName: 'Mode Rapide',
   presetFastDescription: 'Un prompt court et quelques outils essentiels gardent chaque étape petite et rapide. L’agent active la recherche, le web, les sous-agents et d’autres outils quand une tâche le demande.',
   presetAuditManualName: 'Mode Audit manuel',

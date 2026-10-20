@@ -325,6 +325,10 @@ export function fakeNamespaces() {
       list: vi.fn((): ReturnType<RemotePort['agentPresets']['list']> => ok({ presets: [] })),
       read: vi.fn((_id: string): ReturnType<RemotePort['agentPresets']['read']> => ok({ content: '' })),
       select: vi.fn((_session: string, _preset: string): ReturnType<RemotePort['agentPresets']['select']> => ok({})),
+      listFiles: vi.fn((): ReturnType<RemotePort['agentPresets']['listFiles']> => ok({ files: [] })),
+      readFile: vi.fn((id: string): ReturnType<RemotePort['agentPresets']['readFile']> => ok({ id, text: '' })),
+      writeFile: vi.fn((id: string, _text: string): ReturnType<RemotePort['agentPresets']['writeFile']> => ok({ id })),
+      deleteFile: vi.fn((_id: string): ReturnType<RemotePort['agentPresets']['deleteFile']> => ok({})),
     },
     permissionPresets: {
       catalog: vi.fn((): ReturnType<RemotePort['permissionPresets']['catalog']> => ok({ options: [], defaultOptions: [], defaultPreset: 'default' })),
@@ -500,6 +504,7 @@ export function scriptedUi(answers: readonly unknown[]) {
     pick: (title, items) => { log.push({ kind: 'pick', text: title, items }); return Promise.resolve(resolveItem(next(), items)) },
     pickMany: (title, items) => { log.push({ kind: 'pickMany', text: title, items }); return Promise.resolve(next() as string[] | undefined) },
     ask: (label, options) => { log.push({ kind: 'ask', text: label, options }); return Promise.resolve(next() as string | undefined) },
+    edit: (label, options) => { log.push({ kind: 'edit', text: label, options }); return Promise.resolve(next() as string | undefined) },
     info: (text) => { log.push({ kind: 'info', text }) },
     show: (lines) => { log.push({ kind: 'show', text: lines.join('\n') }) },
     warn: (text) => { log.push({ kind: 'warn', text }) },

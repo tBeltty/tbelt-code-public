@@ -418,3 +418,43 @@ it('reads the declaration a preset id currently has', async () => {
   expect(ctx.agentPresets.definitionOf('standard')).toEqual(contribution('standard'))
   expect(ctx.agentPresets.definitionOf('missing')).toBeUndefined()
 })
+
+describe('agent file store', () => {
+  it('routes file operations to the attached store and rejects them once it detaches', async () => {
+    const ctx = await setup()
+    await expect(ctx.agentPresets.listAgentFiles()).resolves.toEqual({ files: [] })
+    await expect(ctx.agentPresets.writeAgentFile('a', 'x')).rejects.toMatchObject({ code: 'agent-preset/invalid' })
+    const texts = new Map([['a', 'Body']])
+    const detach = ctx.agentPresets.attachAgentFiles({
+      list: async () => [...texts.keys()].map(id => ({ id })),
+      read: async id => texts.get(id),
+      write: async (id, text) => {
+        texts.set(id, text)
+        return { id }
+      },
+      remove: async (id) => { texts.delete(id) },
+    })
+    await expect(ctx.agentPresets.listAgentFiles()).resolves.toEqual({ files: [{ id: 'a' }] })
+    await expect(ctx.agentPresets.readAgentFile('a')).resolves.toEqual({ id: 'a', text: 'Body' })
+    await expect(ctx.agentPresets.readAgentFile('zz')).rejects.toMatchObject({ code: 'agent-preset/not-found' })
+    await expect(ctx.agentPresets.writeAgentFile('b', 'B')).resolves.toEqual({ id: 'b' })
+    await ctx.agentPresets.deleteAgentFile('b')
+    expect(texts.has('b')).toBe(false)
+    detach()
+    await expect(ctx.agentPresets.listAgentFiles()).resolves.toEqual({ files: [] })
+  })
+
+  it('reports a refused write as agent-preset/invalid carrying the store reason', async () => {
+    const ctx = await setup()
+    ctx.agentPresets.attachAgentFiles({
+      list: async () => [],
+      read: async () => undefined,
+      write: async () => { throw new Error('refused by store') },
+      remove: async () => {},
+    })
+    await expect(ctx.agentPresets.writeAgentFile('a', 'x')).rejects.toMatchObject({
+      code: 'agent-preset/invalid',
+      details: { reason: 'refused by store' },
+    })
+  })
+})

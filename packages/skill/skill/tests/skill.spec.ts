@@ -1270,3 +1270,58 @@ describe('SkillRegistry scoped layers', () => {
     await preset.dispose()
   })
 })
+
+describe('SkillRegistry scope restriction', () => {
+  it('shows a restricted scope and its agents only the named skills, through list and get', async () => {
+    const ctx = new Context()
+    await ctx.plugin(SkillRegistry)
+    registerProvider(ctx, new MemoryProvider([
+      memorySkill('global-skill', 'Global', 100),
+      memorySkill('other-skill', 'Other', 100),
+    ]))
+    const restrictedKey = { preset: 'restricted' }
+    const restricted = createScope(ctx, restrictedKey)
+    const openKey = { preset: 'open' }
+    const open = createScope(ctx, openKey)
+    scopedSkills(restricted.ctx).register({ name: 'preset-skill', description: 'Preset', source: 'preset', content: 'Preset body.' })
+    const restore = scopedSkills(ctx).restrictScope(restrictedKey, ['global-skill', 'preset-skill'])
+    const agentKey = {}
+    bindScopeParent(agentKey, restrictedKey)
+
+    const visible = (await ctx.skills.list({ scope: agentKey })).map(skill => skill.name).sort()
+    expect(visible).toEqual(['global-skill', 'preset-skill'])
+    expect(await ctx.skills.get('other-skill', { scope: agentKey })).toBeUndefined()
+    expect((await ctx.skills.get('preset-skill', { scope: agentKey }))?.content).toBe('Preset body.')
+    expect((await ctx.skills.list({ scope: openKey })).map(skill => skill.name)).toContain('other-skill')
+    expect((await ctx.skills.list()).map(skill => skill.name)).toContain('other-skill')
+
+    restore()
+    expect((await ctx.skills.list({ scope: agentKey })).map(skill => skill.name)).toContain('other-skill')
+    await restricted.dispose()
+    await open.dispose()
+  })
+
+  it('lets the nearest restricted scope in a chain decide, and an empty list hides every skill', async () => {
+    const ctx = new Context()
+    await ctx.plugin(SkillRegistry)
+    registerProvider(ctx, new MemoryProvider([
+      memorySkill('global-skill', 'Global', 100),
+      memorySkill('other-skill', 'Other', 100),
+    ]))
+    const outerKey = {}
+    const innerKey = {}
+    bindScopeParent(innerKey, outerKey)
+    const agentKey = {}
+    bindScopeParent(agentKey, innerKey)
+    const skills = scopedSkills(ctx)
+    skills.restrictScope(outerKey, ['global-skill', 'other-skill'])
+    expect((await ctx.skills.list({ scope: agentKey })).map(skill => skill.name).sort()).toEqual(['global-skill', 'other-skill'])
+
+    const restoreInner = skills.restrictScope(innerKey, ['other-skill'])
+    expect((await ctx.skills.list({ scope: agentKey })).map(skill => skill.name)).toEqual(['other-skill'])
+
+    restoreInner()
+    skills.restrictScope(innerKey, [])
+    expect(await ctx.skills.list({ scope: agentKey })).toEqual([])
+  })
+})

@@ -39,6 +39,24 @@ export type AgentPresetSettingsKey =
   | 'createPluginChecking'
   | 'createPluginUnavailable'
   | 'createPluginMissing'
+  | 'agentFilesTitle'
+  | 'agentFilesIntro'
+  | 'agentFilesEmpty'
+  | 'agentLoaded'
+  | 'agentNotLoaded'
+  | 'newAgent'
+  | 'editAgent'
+  | 'agentIdLabel'
+  | 'agentIdHint'
+  | 'agentIdInvalid'
+  | 'agentIdTaken'
+  | 'agentTextLabel'
+  | 'agentTemplate'
+  | 'agentSave'
+  | 'agentCancel'
+  | 'agentDelete'
+  | 'agentDeleteConfirm'
+  | 'agentSavedNotLoaded'
 
 /** English copy. */
 export const en = {
@@ -74,6 +92,24 @@ export const en = {
     'Customize tBelt Code through conversation. Let the agent write plugins that add features or UI, or combine tools and prompts to create your own mode.',
 
   inUse: 'Default',
+  agentFilesTitle: 'Your agents',
+  agentFilesIntro: 'Agents you write yourself. Each one appears in the list above once it loads.',
+  agentFilesEmpty: 'No agents yet.',
+  agentLoaded: 'Loaded',
+  agentNotLoaded: 'Not loaded',
+  newAgent: 'New agent',
+  editAgent: 'Edit agent',
+  agentIdLabel: 'Identifier',
+  agentIdHint: 'Lowercase letters, digits and hyphens. It names the agent in the list.',
+  agentIdInvalid: 'Use lowercase letters, digits and hyphens.',
+  agentIdTaken: 'An agent with this identifier already exists.',
+  agentTextLabel: 'Definition',
+  agentTemplate: '---\ndescription: What this agent is for\n---\n\nWrite the instructions the agent follows.',
+  agentSave: 'Save',
+  agentCancel: 'Cancel',
+  agentDelete: 'Delete',
+  agentDeleteConfirm: 'Confirm delete',
+  agentSavedNotLoaded: 'Saved, but this agent does not load.',
 
   noDescription: 'No description.',
   brokenBadge: 'Failed to load',
@@ -119,6 +155,24 @@ export const es = {
   presetCordisName: 'Modo creador',
   presetCordisDescription: 'Personaliza tBelt Code conversando. Deja que el agente escriba plugins que añadan funciones o interfaz, o combine herramientas y prompts para crear tu propio modo.',
   inUse: 'Predeterminado',
+  agentFilesTitle: 'Tus agentes',
+  agentFilesIntro: 'Agentes que escribes tú. Cada uno aparece en la lista de arriba cuando se carga.',
+  agentFilesEmpty: 'Todavía no hay agentes.',
+  agentLoaded: 'Cargado',
+  agentNotLoaded: 'No cargado',
+  newAgent: 'Nuevo agente',
+  editAgent: 'Editar agente',
+  agentIdLabel: 'Identificador',
+  agentIdHint: 'Letras minúsculas, números y guiones. Da nombre al agente en la lista.',
+  agentIdInvalid: 'Usa letras minúsculas, números y guiones.',
+  agentIdTaken: 'Ya existe un agente con este identificador.',
+  agentTextLabel: 'Definición',
+  agentTemplate: '---\ndescription: Para qué sirve este agente\n---\n\nEscribe las instrucciones que sigue el agente.',
+  agentSave: 'Guardar',
+  agentCancel: 'Cancelar',
+  agentDelete: 'Eliminar',
+  agentDeleteConfirm: 'Confirmar eliminación',
+  agentSavedNotLoaded: 'Guardado, pero este agente no se carga.',
   noDescription: 'Sin descripción.',
   brokenBadge: 'No se pudo cargar',
   switchRefused: 'No se pudo cambiar a {name}: {reason}',
@@ -158,6 +212,24 @@ export const el = {
   presetCordisName: 'Λειτουργία Δημιουργού',
   presetCordisDescription: 'Προσαρμόστε το tBelt Code μέσα από συζήτηση. Αφήστε τον πράκτορα να γράψει πρόσθετα που προσθέτουν λειτουργίες ή διεπαφή, ή να συνδυάσει εργαλεία και prompts για να φτιάξει τη δική σας λειτουργία.',
   inUse: 'Προεπιλογή',
+  agentFilesTitle: 'Οι πράκτορές σου',
+  agentFilesIntro: 'Πράκτορες που γράφεις εσύ. Ο καθένας εμφανίζεται στη λίστα παραπάνω όταν φορτωθεί.',
+  agentFilesEmpty: 'Δεν υπάρχουν ακόμη πράκτορες.',
+  agentLoaded: 'Φορτώθηκε',
+  agentNotLoaded: 'Δεν φορτώθηκε',
+  newAgent: 'Νέος πράκτορας',
+  editAgent: 'Επεξεργασία πράκτορα',
+  agentIdLabel: 'Αναγνωριστικό',
+  agentIdHint: 'Πεζά γράμματα, αριθμοί και παύλες. Δίνει όνομα στον πράκτορα στη λίστα.',
+  agentIdInvalid: 'Χρησιμοποίησε πεζά γράμματα, αριθμούς και παύλες.',
+  agentIdTaken: 'Υπάρχει ήδη πράκτορας με αυτό το αναγνωριστικό.',
+  agentTextLabel: 'Ορισμός',
+  agentTemplate: '---\ndescription: Σε τι χρησιμεύει αυτός ο πράκτορας\n---\n\nΓράψε τις οδηγίες που ακολουθεί ο πράκτορας.',
+  agentSave: 'Αποθήκευση',
+  agentCancel: 'Ακύρωση',
+  agentDelete: 'Διαγραφή',
+  agentDeleteConfirm: 'Επιβεβαίωση διαγραφής',
+  agentSavedNotLoaded: 'Αποθηκεύτηκε, αλλά ο πράκτορας δεν φορτώνεται.',
   noDescription: 'Χωρίς περιγραφή.',
   brokenBadge: 'Η φόρτωση απέτυχε',
   switchRefused: 'Δεν ήταν δυνατή η εναλλαγή σε {name}: {reason}',
@@ -197,6 +269,24 @@ export const fr = {
   presetCordisName: 'Mode Créateur',
   presetCordisDescription: 'Personnalisez tBelt Code en conversant. Laissez l’agent écrire des plugins qui ajoutent des fonctionnalités ou une interface, ou combiner outils et prompts pour créer votre propre mode.',
   inUse: 'Par défaut',
+  agentFilesTitle: 'Vos agents',
+  agentFilesIntro: 'Les agents que vous écrivez vous-même. Chacun apparaît dans la liste ci-dessus une fois chargé.',
+  agentFilesEmpty: 'Aucun agent pour l’instant.',
+  agentLoaded: 'Chargé',
+  agentNotLoaded: 'Non chargé',
+  newAgent: 'Nouvel agent',
+  editAgent: 'Modifier l’agent',
+  agentIdLabel: 'Identifiant',
+  agentIdHint: 'Lettres minuscules, chiffres et tirets. Il nomme l’agent dans la liste.',
+  agentIdInvalid: 'Utilisez des lettres minuscules, des chiffres et des tirets.',
+  agentIdTaken: 'Un agent porte déjà cet identifiant.',
+  agentTextLabel: 'Définition',
+  agentTemplate: '---\ndescription: À quoi sert cet agent\n---\n\nÉcrivez les instructions que suit l’agent.',
+  agentSave: 'Enregistrer',
+  agentCancel: 'Annuler',
+  agentDelete: 'Supprimer',
+  agentDeleteConfirm: 'Confirmer la suppression',
+  agentSavedNotLoaded: 'Enregistré, mais cet agent ne se charge pas.',
   noDescription: 'Aucune description.',
   brokenBadge: 'Échec du chargement',
   switchRefused: 'Impossible de passer à {name}\u00a0: {reason}',

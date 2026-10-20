@@ -364,6 +364,8 @@ export class SkillRegistry extends Service {
     () => { this.invalidateCache() },
   )
   private readonly collectCache = new Map<string, Map<string, IndexedCandidate>>()
+  /** Visible skill names per restricted scope; the nearest restricted scope of a chain decides. */
+  private readonly restrictions = new WeakMap<ScopeKey, ReadonlySet<string>>()
   private revision = 0
   private nextProviderOrder = 0
   /** Stable identities for cache keys; scope keys are opaque identity-compared objects. */
@@ -457,6 +459,25 @@ export class SkillRegistry extends Service {
       },
       { label: 'skills.register()' },
     )
+  }
+
+  /**
+   * Limit the skills that a scope's agents see, through `list()` and `get()`, to the named skills. The
+   * restriction applies to global and overlay skills alike, and the nearest restricted scope in a
+   * viewer's chain decides. Scoped agents of an unrestricted chain are unaffected.
+   * @param scope - scope key whose viewing agents are restricted; the scope's own agents and descendants read it.
+   * @param names - skill names that stay visible; an empty list hides every skill.
+   * @returns the disposer that removes this restriction and invalidates catalog caches.
+   */
+  restrictScope(scope: ScopeKey, names: readonly string[]): () => void {
+    const visible = new Set(names)
+    this.restrictions.set(scope, visible)
+    this.invalidateCache()
+    return () => {
+      if (this.restrictions.get(scope) !== visible) return
+      this.restrictions.delete(scope)
+      this.invalidateCache()
+    }
   }
 
   /**
@@ -561,7 +582,26 @@ export class SkillRegistry extends Service {
       if (!collected.cacheable) cacheable = false
       for (const entry of collected.entries) merged.set(entry.candidate.name, entry)
     }
+    const visible = this.visibleNamesOf(options.scope)
+    if (visible !== undefined) {
+      for (const name of [...merged.keys()]) {
+        if (!visible.has(name)) merged.delete(name)
+      }
+    }
     return { entries: merged, cacheable }
+  }
+
+  /**
+   * Names a viewing scope may see, from the nearest restricted scope in its chain.
+   * @param scope - viewing scope; `undefined` reads the global view, which is never restricted.
+   * @returns the visible names, or undefined when no scope in the chain restricts them.
+   */
+  private visibleNamesOf(scope: ScopeKey | undefined): ReadonlySet<string> | undefined {
+    for (const key of scopeChainOf(scope)) {
+      const visible = this.restrictions.get(key)
+      if (visible !== undefined) return visible
+    }
+    return undefined
   }
 
   private async collectLayer(layer: SkillLayer, options: SkillLookupOptions): Promise<LayerCollectResult> {

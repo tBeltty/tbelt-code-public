@@ -142,6 +142,11 @@ export interface SubagentStartRequest {
    * parent context.
    */
   readonly agentPreset?: string
+  /**
+   * Run one task and end: the child accepts no follow-up input and is not resumed after its completion.
+   * A local child records a one-shot descriptor; an external run already has this behavior.
+   */
+  readonly oneShot?: boolean
   /** Optional short display label persisted with a session-backed child. */
   readonly label?: string
   /** Content delivered as the child's user message. */

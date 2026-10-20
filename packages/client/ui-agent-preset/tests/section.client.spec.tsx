@@ -16,9 +16,10 @@ function view(partial: Partial<AgentPresetSectionState> = {}, startCreatorDraft?
   const developerTools = createSnapshotStore(enabled)
   const store = createSnapshotStore<AgentPresetSectionState>({ status: 'ready', error: null,
     saving: false, rows: [{ id: 'standard', isDefault: true }, { id: 'mine', name: 'Mine', isDefault: false }],
-    view: null, ...partial })
+    view: null, files: [], editor: null, ...partial })
   const actions = { load: vi.fn(async () => {}), view: vi.fn(async () => {}), closeView: vi.fn(), makeDefault: vi.fn(async () => {}),
-    close: vi.fn() }
+    close: vi.fn(), newAgent: vi.fn(), editAgent: vi.fn(async () => {}), updateAgent: vi.fn(), saveAgent: vi.fn(async () => {}),
+    deleteAgent: vi.fn(async () => {}), closeAgent: vi.fn() }
   const props: AgentPresetSectionProps = { ...actions,
     ...(startCreatorDraft === undefined ? {} : { startCreatorDraft }),
     usePanelInfo: unusedHook, useSessions: unusedHook, useSessionStatus: unusedHook, useSessionRetainInfo: unusedHook,
@@ -302,4 +303,32 @@ it('renders descriptions and allows selection without resize observation', () =>
   expect(screen.getByText('Preset description')).toBeTruthy()
   fireEvent.click(screen.getByRole('button', { name: `${en.setDefault}: Mine` }))
   expect(actions.makeDefault).toHaveBeenCalledWith('mine')
+})
+
+it('lists agent files with their load status and opens the editor from the list', () => {
+  const actions = view({ files: [{ id: 'mine' }, { id: 'broken', error: 'base preset "x" is not declared' }] })
+  expect(screen.getByText(en.agentLoaded)).toBeTruthy()
+  expect(screen.getByText(en.agentNotLoaded)).toBeTruthy()
+  expect(screen.getByText('base preset "x" is not declared')).toBeTruthy()
+  fireEvent.click(screen.getByRole('button', { name: en.newAgent }))
+  expect(actions.newAgent).toHaveBeenCalledOnce()
+  fireEvent.click(screen.getByRole('button', { name: `${en.editAgent}: mine` }))
+  expect(actions.editAgent).toHaveBeenCalledWith('mine')
+})
+
+it('renders the open editor, fixing the identifier of an existing agent', () => {
+  const actions = view({ editor: { creating: false, id: 'mine', text: 'Body', error: 'refused', notLoaded: 'no base',
+    saving: false, confirmingDelete: false } })
+  const id = screen.getByLabelText(new RegExp(en.agentIdLabel)) as HTMLInputElement
+  expect(id.readOnly).toBe(true)
+  const text = screen.getByLabelText(new RegExp(en.agentTextLabel)) as HTMLTextAreaElement
+  expect(text.value).toBe('Body')
+  fireEvent.change(text, { target: { value: 'Changed' } })
+  expect(actions.updateAgent).toHaveBeenCalledWith({ text: 'Changed' })
+  expect(screen.getByText('refused')).toBeTruthy()
+  expect(screen.getByText(new RegExp(en.agentSavedNotLoaded))).toBeTruthy()
+  fireEvent.click(screen.getByRole('button', { name: en.agentDelete }))
+  expect(actions.deleteAgent).toHaveBeenCalledOnce()
+  fireEvent.click(screen.getByRole('button', { name: en.agentSave }))
+  expect(actions.saveAgent).toHaveBeenCalledOnce()
 })

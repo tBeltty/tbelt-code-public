@@ -249,6 +249,28 @@ export function snapshotSubagentDescriptor(
 }
 
 /**
+ * Validate and detach a one-shot descriptor input.
+ * @param input - the run's provider and its optional creation label.
+ * @returns the versioned, detached one-shot descriptor payload.
+ * @throws when a field is not losslessly JSON-serializable.
+ */
+export function snapshotOneShotSubagentDescriptor(
+  input: { readonly provider: string; readonly label?: string | undefined },
+): OneShotSubagentDescriptorData {
+  const candidate: OneShotSubagentDescriptorData = {
+    version: SUBAGENT_DESCRIPTOR_VERSION,
+    mode: 'one-shot',
+    provider: input.provider,
+    ...input.label !== undefined ? { label: input.label } : {},
+  }
+  const snapshot = snapshotJsonValue(candidate)
+  if (snapshot === undefined) {
+    throw new Error('subagent descriptor is not losslessly JSON-serializable')
+  }
+  return snapshot
+}
+
+/**
  * Fold a persisted child log to its supported descriptor. The first
  * `subagent/descriptor` event is authoritative — the establishing provider
  * appends exactly one, so a later same-type event cannot rewrite the declared

@@ -77,7 +77,7 @@ function parkParent(ctx: Context, parent: Agent): void {
   ctx.on('agent/pre-step', async ({ agent }, next) => agent === parent ? { kind: 'reject' } : next())
 }
 
-function startSpec(parent: Agent, agentPreset?: string, provider = 'separate') {
+function startSpec(parent: Agent, agentPreset?: string, provider = 'separate', oneShot = false) {
   return {
     provider,
     label: 'preset work',
@@ -86,6 +86,7 @@ function startSpec(parent: Agent, agentPreset?: string, provider = 'separate') {
       parent,
       prompt: [{ type: 'text' as const, text: 'work' }],
       ...(agentPreset === undefined ? {} : { agentPreset }),
+      ...(oneShot ? { oneShot: true } : {}),
     },
     signal: new AbortController().signal,
   }
@@ -324,5 +325,39 @@ describe('continuable child presets', () => {
     })
     expect(ctx.agents.get(started.childId)).toBeUndefined()
     expect(adapter.requests).toHaveLength(1)
+  })
+})
+
+describe('one-shot child presets', () => {
+  it('records a one-shot descriptor and refuses input once its run has ended', async () => {
+    const { ctx, parent } = await setup()
+    parkParent(ctx, parent)
+    const started = await ctx.subagents.startActivation(startSpec(parent, 'reviewing', 'separate', true))
+    const stored = await settled(ctx, started.childId)
+
+    const own = stored.events.slice(stored.inheritedEventCount)
+    expect(own.find(event => event.type === 'subagent/descriptor')?.data).toEqual({
+      version: SUBAGENT_DESCRIPTOR_VERSION,
+      mode: 'one-shot',
+      provider: 'separate',
+      label: 'preset work',
+    })
+    await expect(continueChild(ctx, parent, started.childId)).rejects.toMatchObject({ code: 'NOT_RESUMABLE' })
+  })
+
+  it('refuses input sent while the one-shot child is still running', async () => {
+    const { ctx, parent } = await setup()
+    parkParent(ctx, parent)
+    let release!: () => void
+    const gate = new Promise<void>((resolve) => { release = resolve })
+    ctx.on('agent/pre-step', async ({ agent }, next) => {
+      if (agent.session.header.parentSession === parent.id) await gate
+      return next()
+    })
+    const started = await ctx.subagents.startActivation(startSpec(parent, 'reviewing', 'separate', true))
+
+    await expect(continueChild(ctx, parent, started.childId)).rejects.toMatchObject({ code: 'NOT_CONTINUABLE' })
+    release()
+    await settled(ctx, started.childId)
   })
 })

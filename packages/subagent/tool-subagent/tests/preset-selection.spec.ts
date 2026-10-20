@@ -48,6 +48,9 @@ async function setup(config: Omit<tool.Config, 'provider'>, providerConfig: Part
 
 const args = { description: 'review task', prompt: 'Review this change.' }
 
+/** Facts of a provider that composes independent children. */
+const spawnFacts = { capabilities: { agentPreset: true }, inheritsParentContext: false }
+
 describe('spawn preset selection', () => {
   it('advertises configured ids and forwards a model selection without child composition overrides', async () => {
     const { ctx, onStart } = await setup({
@@ -107,8 +110,8 @@ describe('spawn preset selection', () => {
 
   it('rejects forced selection at the model JSON resolver', () => {
     const selection = new SubagentPresetSelection({ allowedAgentPresets: ['writer'] })
-    expect(() => selection.resolve({ agent_preset: 'unlisted' })).toThrow(/must be one of/)
-    expect(() => selection.resolve({ agent_preset: 1 })).toThrow(/must be one of/)
+    expect(() => selection.resolve({ agent_preset: 'unlisted' }, spawnFacts)).toThrow(/must be one of/)
+    expect(() => selection.resolve({ agent_preset: 1 }, spawnFacts)).toThrow(/must be one of/)
   })
 
   it('requires the preset service when selection is configured', async () => {
@@ -128,7 +131,7 @@ describe('spawn preset selection', () => {
     })
     const selection = new SubagentPresetSelection({ allowedAgentPresets: ['reviewer'] })
     await selection.validate(ctx)
-    expect(selection.description).toContain('reviewer: Review with unavailable tools.')
+    expect(selection.descriptionFor(spawnFacts)).toContain('reviewer: Review with unavailable tools.')
     await expect(ctx.agents.create({
       sessionId: SessionId('broken-preset'),
       setup: async (agentCtx) => { await ctx.agentPresets.mount(agentCtx, 'reviewer') },
@@ -207,7 +210,7 @@ describe('spawn preset selection', () => {
     await ctx.agentPresets.register({ id: 'reviewer', plugins: [] })
     const selection = new SubagentPresetSelection({ allowedAgentPresets: ['reviewer'] })
     await selection.validate(ctx)
-    expect(selection.description).not.toContain('Available presets:')
+    expect(selection.descriptionFor(spawnFacts)).not.toContain('Available presets:')
   })
 
 })

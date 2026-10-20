@@ -2,7 +2,7 @@ import { describe, expect, it, vi } from 'vitest'
 import { AgentPresetSectionController } from '../src/client/section-store.ts'
 import { createSnapshotStore } from '@deepseek-ai/dsh-client-store'
 import type { ConfigFormSnapshot } from '@deepseek-ai/dsh-client-ui-settings/client'
-import type { AgentPresetRow } from '@deepseek-ai/dsh-agent-preset-registry/types'
+import type { AgentFileEntry, AgentPresetRow } from '@deepseek-ai/dsh-agent-preset-registry/types'
 import { en } from '../src/client/locales.ts'
 
 function fixture() {
@@ -14,6 +14,10 @@ function fixture() {
       ok: true, value: { presets: [{ id: 'standard', isDefault: true }] },
     })),
     read: vi.fn(async (id: string) => ({ ok: true as const, value: { agentPreset: id, name: 'Standard', content: '- name: fs\n' } })),
+    listFiles: vi.fn(async () => ({ ok: true as const, value: { files: [] as AgentFileEntry[] } })),
+    readFile: vi.fn(async (id: string) => ({ ok: true as const, value: { id, text: `---\ndescription: ${id}\n---\nBody.` } })),
+    writeFile: vi.fn(async (id: string, _text: string) => ({ ok: true as const, value: { id } as AgentFileEntry })),
+    deleteFile: vi.fn(async (_id: string) => ({ ok: true as const, value: undefined })),
   }, settings: {
     update: vi.fn(async (_ns: string, _patch: { selectedDefault: string }, _revision?: number) => ({ ok: true as const, value: {} })),
   } }
@@ -205,5 +209,87 @@ describe('Coding Tools default reconciliation', () => {
     expect(f.remote.settings.update).toHaveBeenCalledOnce()
     expect(f.state()).toMatchObject({ saving: false, error: 'Revision changed' })
     expect(f.state().rows.find(row => row.isDefault)?.id).toBe('minimal')
+  })
+})
+
+describe('agent file editor', () => {
+  it('opens a new agent on the template and refuses an identifier that is invalid or taken, without writing', async () => {
+    const { controller, remote, state } = fixture()
+    remote.agentPresets.listFiles.mockResolvedValueOnce({ ok: true, value: { files: [{ id: 'mine' }] } })
+    await controller.load()
+    expect(state().files).toEqual([{ id: 'mine' }])
+    controller.newAgent()
+    expect(state().editor).toMatchObject({ creating: true, id: '', text: en.agentTemplate })
+    controller.updateAgent({ id: 'Bad Name' })
+    await controller.saveAgent()
+    expect(state().editor?.error).toBe(en.agentIdInvalid)
+    controller.updateAgent({ id: 'mine' })
+    await controller.saveAgent()
+    expect(state().editor?.error).toBe(en.agentIdTaken)
+    expect(remote.agentPresets.writeFile).not.toHaveBeenCalled()
+  })
+
+  it('edits an existing agent with its identifier fixed, saves it, and closes once it loads', async () => {
+    const { controller, remote, state } = fixture()
+    await controller.editAgent('mine')
+    expect(remote.agentPresets.readFile).toHaveBeenCalledWith('mine')
+    expect(state().editor).toMatchObject({ creating: false, id: 'mine', text: '---\ndescription: mine\n---\nBody.' })
+    controller.updateAgent({ id: 'other', text: 'changed' })
+    expect(state().editor).toMatchObject({ id: 'mine', text: 'changed' })
+    await controller.saveAgent()
+    expect(remote.agentPresets.writeFile).toHaveBeenCalledWith('mine', 'changed')
+    expect(state().editor).toBeNull()
+  })
+
+  it('keeps a saved agent open with the reason when it does not load', async () => {
+    const { controller, remote, state } = fixture()
+    remote.agentPresets.writeFile.mockResolvedValueOnce({ ok: true, value: { id: 'mine', error: 'base preset "x" is not declared' } } as never)
+    controller.newAgent()
+    controller.updateAgent({ id: 'mine' })
+    await controller.saveAgent()
+    expect(state().editor).toMatchObject({ creating: false, notLoaded: 'base preset "x" is not declared', saving: false, error: null })
+  })
+
+  it('keeps a refused or failed save in the editor with the reason', async () => {
+    const { controller, remote, state } = fixture()
+    await controller.editAgent('mine')
+    remote.agentPresets.writeFile.mockResolvedValueOnce({ ok: false, error: { message: 'unknown front matter key "tools"' } } as never)
+    await controller.saveAgent()
+    expect(state().editor).toMatchObject({ saving: false, error: 'unknown front matter key "tools"' })
+    remote.agentPresets.writeFile.mockRejectedValueOnce(new Error('disk full'))
+    await controller.saveAgent()
+    expect(state().editor).toMatchObject({ saving: false, error: 'disk full' })
+  })
+
+  it('removes an agent only on a second confirmation, and never removes a new one', async () => {
+    const { controller, remote, state } = fixture()
+    controller.newAgent()
+    await controller.deleteAgent()
+    expect(remote.agentPresets.deleteFile).not.toHaveBeenCalled()
+    await controller.editAgent('mine')
+    await controller.deleteAgent()
+    expect(remote.agentPresets.deleteFile).not.toHaveBeenCalled()
+    expect(state().editor?.confirmingDelete).toBe(true)
+    await controller.deleteAgent()
+    expect(remote.agentPresets.deleteFile).toHaveBeenCalledWith('mine')
+    expect(state().editor).toBeNull()
+  })
+
+  it('keeps a refused removal open and closes the editor without saving', async () => {
+    const { controller, remote, state } = fixture()
+    await controller.editAgent('mine')
+    remote.agentPresets.deleteFile.mockResolvedValueOnce({ ok: false, error: { message: 'busy' } } as never)
+    await controller.deleteAgent()
+    await controller.deleteAgent()
+    expect(state().editor).toMatchObject({ saving: false, error: 'busy' })
+    controller.closeAgent()
+    expect(state().editor).toBeNull()
+  })
+
+  it('reports a failed folder read in the section error', async () => {
+    const { controller, remote, state } = fixture()
+    remote.agentPresets.listFiles.mockRejectedValueOnce(new Error('folder unreadable'))
+    await controller.load()
+    expect(state().error).toBe('folder unreadable')
   })
 })

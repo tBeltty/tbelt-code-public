@@ -702,6 +702,14 @@ export class TerminalSession {
         this.#prompt = { state: createPrompt(label, options), settle: resolve }
         this.#render()
       }),
+      edit: (label, options) => new Promise((resolve) => {
+        if (this.#closed) {
+          resolve(undefined)
+          return
+        }
+        this.#prompt = { state: createPrompt(label, { hint: options.hint, initial: options.initial, multiline: true }), settle: resolve }
+        this.#render()
+      }),
       info: (text) => { this.#info(text) },
       show: (lines) => { this.#show(lines) },
       warn: (text) => { this.#warn(text) },

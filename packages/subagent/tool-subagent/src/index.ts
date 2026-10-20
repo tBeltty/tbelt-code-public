@@ -24,14 +24,21 @@ import {
 import type { SubagentProvider } from '@deepseek-ai/dsh-subagent'
 import {
   assertAllowedModelSelection,
+  assertDeclaredRouteAllowed,
   hasConfiguredLlmSelection,
   hasDelegationModelRequest,
   preflightChildLlmRoute,
+  presetRouteOptions,
   requestedAgentOptions,
 } from './model-selection.ts'
 import type { DelegationModelRequest, ModelSelectionPolicy } from './model-selection.ts'
 import { registerListSubagentModels } from './list-models.ts'
-import { SubagentPresetSelection, type PresetSelectionConfig, type PresetSelectionRequest } from './preset-selection.ts'
+import {
+  SubagentPresetSelection,
+  type AgentFileChoice,
+  type PresetSelectionConfig,
+  type PresetSelectionRequest,
+} from './preset-selection.ts'
 import type {} from './model-selection-settings.ts'
 import {
   recordSubagentModelSelection,
@@ -137,6 +144,21 @@ function providerWording(inheritsConversation: boolean): { description: string; 
 }
 
 /**
+ * Agent-file presets of the registry visible to a tool composition, read at each choice.
+ * @param ctx - Context whose agent-preset service, when present, declares the files.
+ * @returns one choice per agent-file preset, sorted by id.
+ */
+function agentFileChoicesOf(ctx: Context): AgentFileChoice[] {
+  const presets = ctx.get('agentPresets')
+  if (presets === undefined) return []
+  return presets.agentFileDefinitions().map(definition => ({
+    id: definition.id,
+    ...definition.description === undefined ? {} : { description: definition.description },
+    oneShot: definition.oneShot === true,
+  }))
+}
+
+/**
  * Install one delegation-tool composition.
  * Standing preset choices are validated for each Agent before its tool is installed.
  * @param ctx - Context that owns the registrations.
@@ -149,7 +171,7 @@ export async function apply(ctx: Context, config: Config, session?: Session): Pr
       throw new Error(`tool-subagent: ${field} is no longer supported; configure persona and tool plugins in an Agent Preset and select it with agentPreset (spawn only)`)
     }
   }
-  const presets = new SubagentPresetSelection(config)
+  const presets = new SubagentPresetSelection(config, () => agentFileChoicesOf(ctx))
   if (presets.configured && ctx.get('agentPresets') === undefined) {
     throw new Error('tool-subagent: agent preset selection requires the agent-presets service')
   }
@@ -200,6 +222,7 @@ export async function apply(ctx: Context, config: Config, session?: Session): Pr
       assertSubagentProviderConfiguration(subagentProvider)
       const wording = providerWording(subagentProvider.inheritsParentContext)
       const providerRouteDefaults = subagentProvider.agentRouteDefaults
+      const agentChoices = presets.choicesFor(subagentProvider)
       const selectionDescription = providerRouteDefaults !== undefined
         ? ' Child LLM selection is optional. Omit `provider`, `model`, and `reasoning_effort` to use configured child defaults and this provider\'s route defaults. Supply `provider` and `model` together after using `list_subagent_models` to inspect advertised routes and efforts. Changing the effective route without naming an effort uses the selected model\'s default effort.'
         : ' Child LLM selection is optional. Omit `provider`, `model`, and `reasoning_effort` to use configured child defaults and inherit compatible missing values from the parent Agent. Supply `provider` and `model` together after using `list_subagent_models` to inspect advertised routes and efforts. Changing the effective route without naming an effort uses the selected model\'s default effort.'
@@ -232,11 +255,11 @@ export async function apply(ctx: Context, config: Config, session?: Session): Pr
             required: true,
             description: wording.promptDescription,
           },
-          ...presets.choices === undefined ? {} : {
+          ...agentChoices === undefined ? {} : {
             agent_preset: {
               type: 'string' as const,
-              enum: [...presets.choices],
-              description: presets.description,
+              enum: [...agentChoices],
+              description: presets.descriptionFor(subagentProvider),
             },
           },
           ...modelSelectionEnabled ? {
@@ -280,14 +303,30 @@ export async function apply(ctx: Context, config: Config, session?: Session): Pr
             throw new Error('subagent tool requires a calling agent (exec.agent was undefined)')
           }
 
-          const agentPreset = presets.resolve(args as PresetSelectionRequest)
+          const agentPreset = presets.resolve(args as PresetSelectionRequest, subagentProvider)
+          const declared = agentPreset === undefined
+            ? undefined
+            : runtimeCtx.get('agentPresets')?.definitionOf(agentPreset)
+          const declaredRoute = declared?.agentRoute
+          if (declaredRoute !== undefined) {
+            if (!subagentProvider.capabilities.agentOptions) {
+              throw new Error(
+                `tool-subagent: agent preset "${agentPreset}" declares a model route, which provider "${subagentProvider.name}" cannot apply`,
+              )
+            }
+            // A user's agent file authorizes its own route; the allowlist covers other declared routes.
+            if (declared?.origin !== 'agent-file') assertDeclaredRouteAllowed(modelSelectionPolicy, declaredRoute)
+          }
           const modelRequest = args as DelegationModelRequest
           const parentOptions = parentAgentOptionsForDelegation(parent)
           const requiresRoutePreflight = hasDelegationModelRequest(modelRequest)
             || hasConfiguredLlmSelection(config.agentOptions)
-          const configuredChildAgentOptions = requiresRoutePreflight && providerRouteDefaults !== undefined
-            ? { ...providerRouteDefaults, ...config.agentOptions }
-            : config.agentOptions
+            || declaredRoute !== undefined
+          const configuredChildAgentOptions = declaredRoute !== undefined
+            ? presetRouteOptions(config.agentOptions, declaredRoute)
+            : requiresRoutePreflight && providerRouteDefaults !== undefined
+              ? { ...providerRouteDefaults, ...config.agentOptions }
+              : config.agentOptions
           const requestedChildAgentOptions = requestedAgentOptions(
             parentOptions,
             configuredChildAgentOptions,
@@ -323,6 +362,7 @@ export async function apply(ctx: Context, config: Config, session?: Session): Pr
             prompt: [{ type: 'text', text: args.prompt }] as ContentBlock[],
             parent,
             ...agentPreset === undefined ? {} : { agentPreset },
+            ...declared?.oneShot === true ? { oneShot: true } : {},
             ...requestedChildAgentOptions !== undefined ? { agentOptions: requestedChildAgentOptions } : {},
             ...maxDepth !== undefined ? { maxDepth } : {},
           }
@@ -352,6 +392,14 @@ export async function apply(ctx: Context, config: Config, session?: Session): Pr
     // Register listeners before checking presence so no synchronous change is missed.
     runtimeCtx.on('subagent/provider-added', (subagentProvider) => {
       if (subagentProvider.name === config.provider && mounted === undefined) mount(subagentProvider)
+    })
+    // Agent files register and unregister while the tool is mounted; rebuild the definition so its choices stay current.
+    runtimeCtx.on('agent-preset/change', () => {
+      if (mounted === undefined) return
+      const { subagentProvider, disposeTool } = mounted
+      mounted = undefined
+      disposeTool()
+      mount(subagentProvider)
     })
     runtimeCtx.on('subagent/provider-removed', (name) => {
       if (name !== config.provider || mounted === undefined) return

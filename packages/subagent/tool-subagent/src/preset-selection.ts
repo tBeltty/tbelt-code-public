@@ -1,14 +1,31 @@
 /** Deployment-owned preset choices for one delegation tool. */
 import type { Context } from '@deepseek-ai/cordis'
 import type {} from '@deepseek-ai/dsh-agent-preset-registry'
-import type { SubagentProvider } from '@deepseek-ai/dsh-subagent'
+import type { SubagentCapabilities, SubagentProvider } from '@deepseek-ai/dsh-subagent'
 
 /** Optional default and model-selectable preset ids for a spawn tool. */
 export interface PresetSelectionConfig {
   /** Default independent preset; omission inherits the parent when the model makes no selection. */
   agentPreset?: string
-  /** Non-empty allowlist exposing agent_preset to the model; omission disables model selection. */
+  /**
+   * Explicit allowlist exposing agent_preset to the model, in addition to user agent files; omission
+   * exposes only the agent files.
+   */
   allowedAgentPresets?: string[] | undefined
+}
+
+/** One preset declared by a user agent file, offered to the model without configuration. */
+export interface AgentFileChoice {
+  readonly id: string
+  readonly description?: string | undefined
+  /** Agent files run one task, so their children accept no follow-up messages. */
+  readonly oneShot: boolean
+}
+
+/** Provider facts that decide whether a child may take an independent preset. */
+export interface PresetProviderFacts {
+  readonly capabilities: Pick<SubagentCapabilities, 'agentPreset'>
+  readonly inheritsParentContext: boolean
 }
 
 /** Untrusted preset selection from model/tool JSON. */
@@ -16,11 +33,20 @@ export interface PresetSelectionRequest {
   readonly agent_preset?: unknown
 }
 
-/** Validates configured references and resolves model input against the allowlist. */
-export class SubagentPresetSelection {
-  private descriptions: string[] = []
+const ONE_TASK_NOTE = ' Runs one task and accepts no follow-up messages.'
 
-  constructor(private readonly config: PresetSelectionConfig) {
+/** Validates configured references and resolves model input against the choices a provider admits. */
+export class SubagentPresetSelection {
+  private readonly explicitDescriptions = new Map<string, string>()
+
+  /**
+   * @param config - deployment default and explicit allowlist.
+   * @param agentFiles - current agent-file presets; read at each choice, so a change is seen by the next mount.
+   */
+  constructor(
+    private readonly config: PresetSelectionConfig,
+    private readonly agentFiles: () => readonly AgentFileChoice[] = () => [],
+  ) {
     const { agentPreset, allowedAgentPresets } = config
     if (allowedAgentPresets === undefined) return
     if (new Set(allowedAgentPresets).size !== allowedAgentPresets.length) {
@@ -36,18 +62,34 @@ export class SubagentPresetSelection {
     return this.config.agentPreset !== undefined || this.config.allowedAgentPresets !== undefined
   }
 
-  /** Preset ids advertised in the model parameter. */
-  get choices(): readonly string[] | undefined {
-    return this.config.allowedAgentPresets
+  /**
+   * Preset ids the model may pass for a child of one provider: the explicit allowlist plus agent files,
+   * which only a provider that composes independent children admits.
+   * @param provider - provider that will start the child.
+   * @returns the ids, or undefined when the model may select no preset.
+   */
+  choicesFor(provider: PresetProviderFacts): readonly string[] | undefined {
+    const explicit = this.config.allowedAgentPresets
+    const files = this.admitsAgentFiles(provider) ? this.agentFiles().map(file => file.id) : []
+    if (explicit === undefined && files.length === 0) return undefined
+    return [...new Set([...explicit ?? [], ...files])]
   }
 
-  /** Model-visible selection guidance and configured preset descriptions. */
-  get description(): string {
+  /**
+   * Model-visible selection guidance with the descriptions of the offered presets.
+   * @param provider - provider that will start the child.
+   * @returns the agent_preset parameter description.
+   */
+  descriptionFor(provider: PresetProviderFacts): string {
     const fallback = this.config.agentPreset === undefined
       ? 'Omit to inherit the parent agent\'s current preset.'
       : `Omit to use ${this.config.agentPreset}.`
+    const described = (this.choicesFor(provider) ?? []).flatMap((id) => {
+      const text = this.descriptionOf(id)
+      return text === undefined ? [] : [`${id}: ${text}`]
+    })
     return `Agent preset for this child. ${fallback}`
-      + (this.descriptions.length === 0 ? '' : ` Available presets: ${this.descriptions.join('; ')}`)
+      + (described.length === 0 ? '' : ` Available presets: ${described.join('; ')}`)
   }
 
   /**
@@ -61,14 +103,14 @@ export class SubagentPresetSelection {
       ...this.config.agentPreset === undefined ? [] : [this.config.agentPreset],
       ...this.config.allowedAgentPresets ?? [],
     ])
-    const descriptions: string[] = []
+    this.explicitDescriptions.clear()
     for (const id of ids) {
       const preset = await presets.readDocument(id)
-      if (this.choices?.includes(id) && preset.description !== undefined) {
-        descriptions.push(`${id}: ${preset.description}`)
+      if (this.config.allowedAgentPresets?.includes(id) && preset.description !== undefined) {
+        const oneShot = presets.definitionOf(id)?.oneShot === true
+        this.explicitDescriptions.set(id, `${preset.description}${oneShot ? ONE_TASK_NOTE : ''}`)
       }
     }
-    this.descriptions = descriptions
   }
 
   /**
@@ -84,15 +126,30 @@ export class SubagentPresetSelection {
   /**
    * Validate model input and apply the deployment default.
    * @param request - Model-supplied tool arguments.
+   * @param provider - provider that will start the child.
    * @returns Selected preset id, or omission to inherit the parent.
    */
-  resolve(request: PresetSelectionRequest): string | undefined {
+  resolve(request: PresetSelectionRequest, provider: PresetProviderFacts): string | undefined {
     const id = request.agent_preset
     if (id === undefined) return this.config.agentPreset
-    if (this.choices === undefined) throw new Error('agent_preset selection is disabled for this tool instance')
-    if (typeof id !== 'string' || !this.choices.includes(id)) {
-      throw new Error(`agent_preset must be one of: ${this.choices.join(', ')}`)
+    const choices = this.choicesFor(provider)
+    if (choices === undefined) throw new Error('agent_preset selection is disabled for this tool instance')
+    if (typeof id !== 'string' || !choices.includes(id)) {
+      throw new Error(`agent_preset must be one of: ${choices.join(', ')}`)
     }
     return id
+  }
+
+  private admitsAgentFiles(provider: PresetProviderFacts): boolean {
+    return provider.capabilities.agentPreset && !provider.inheritsParentContext
+  }
+
+  private descriptionOf(id: string): string | undefined {
+    const file = this.agentFiles().find(candidate => candidate.id === id)
+    if (file !== undefined) {
+      const text = `${file.description ?? ''}${file.oneShot ? ONE_TASK_NOTE : ''}`.trim()
+      return text === '' ? undefined : text
+    }
+    return this.explicitDescriptions.get(id)
   }
 }

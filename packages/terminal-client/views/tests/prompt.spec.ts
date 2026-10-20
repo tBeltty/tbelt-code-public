@@ -55,3 +55,26 @@ describe('prompt rendering', () => {
     expect(frame.lines).toHaveLength(3 + 0)
   })
 })
+
+describe('multi-line prompt', () => {
+  it('keeps line breaks of the starting text and sends the answer as typed', () => {
+    const open = createPrompt('Definition', { initial: '---\nname: x\n---\n', multiline: true })
+    expect(open.input.text).toBe('---\nname: x\n---\n')
+    expect(open.input.cursor).toBe(open.input.text.length)
+    const sent = reducePrompt(open, key('enter'))
+    expect(sent.effect).toEqual({ type: 'submit', text: '---\nname: x\n---\n' })
+  })
+
+  it('starts a line with Shift+Enter or a trailing backslash, and sends on Enter', () => {
+    const open = createPrompt('Definition', { multiline: true })
+    const typed = type(open, text('one'), key('newline'), text('two'), text('\\'), key('enter'), text('three'))
+    expect(typed.input.text).toBe('one\ntwo\nthree')
+    expect(reducePrompt(typed, key('enter')).effect).toEqual({ type: 'submit', text: 'one\ntwo\nthree' })
+  })
+
+  it('cancels on Escape and renders the multi-line key hint', () => {
+    const open = createPrompt('Definition', { multiline: true, initial: 'a' })
+    expect(reducePrompt(open, key('escape')).effect).toEqual({ type: 'cancel' })
+    expect(stripAnsi(renderPrompt(style, open, 80).lines.join('\n'))).toContain('Shift+Enter')
+  })
+})

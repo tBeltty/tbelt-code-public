@@ -3,6 +3,7 @@
 import { ReasoningEffortId } from '@deepseek-ai/dsh-llm'
 import type { LlmRuntime } from '@deepseek-ai/dsh-llm'
 import type { AgentOptions } from '@deepseek-ai/dsh-agent'
+import type { PresetAgentRoute } from '@deepseek-ai/dsh-agent-preset-registry'
 import z from '@deepseek-ai/schemastery'
 
 /** One exact child LLM route authorized by a user setting. */
@@ -150,6 +151,40 @@ export function assertAllowedModelSelection(
   }
   if (policy.routes.some(route => route.provider === provider && route.model === model)) return
   throw new Error(`child LLM route "${provider}/${model}" is not allowed for this Session`)
+}
+
+/**
+ * Layer a route declared by the selected preset over the tool-instance child defaults. The route is one
+ * unit: a configured effort never carries over to a declared route that names no effort.
+ * @param configured - Tool-instance child defaults.
+ * @param route - Route declared by the preset.
+ * @returns Child Agent options that name the declared route and keep the other configured defaults.
+ */
+export function presetRouteOptions(configured: AgentOptions | undefined, route: PresetAgentRoute): AgentOptions {
+  const { provider: _provider, model: _model, reasoningEffort: _reasoningEffort, ...rest } = configured ?? {}
+  return {
+    ...rest,
+    provider: route.provider,
+    model: route.model,
+    ...route.reasoningEffort === undefined ? {} : { reasoningEffort: ReasoningEffortId(route.reasoningEffort) },
+  }
+}
+
+/**
+ * Check a route declared by the selected preset against the Session's model-route allowlist. The
+ * allowlist covers declared routes as well as model-facing choices; without an active allowlist the
+ * user's agent file is the authorization.
+ * @param policy - Selection authority captured for this Session; undefined when model-route settings are off.
+ * @param route - Route declared by the preset.
+ * @throws When an active allowlist does not contain the declared route.
+ */
+export function assertDeclaredRouteAllowed(policy: ModelSelectionPolicy | undefined, route: PresetAgentRoute): void {
+  if (policy === undefined) return
+  if (policy.routes.some(allowed => allowed.provider === route.provider && allowed.model === route.model)) return
+  throw new Error(
+    `agent preset route "${route.provider}/${route.model}" is not allowed for this Session; `
+    + 'add it to the subagent model routes in settings',
+  )
 }
 
 /**

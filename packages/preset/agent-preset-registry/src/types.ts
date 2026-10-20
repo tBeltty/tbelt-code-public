@@ -24,6 +24,37 @@ export interface AgentPresetRoster {
   readonly presets: readonly AgentPresetRow[]
 }
 
+/** One agent file of the authoring folder and why it did not load, when it did not. */
+export interface AgentFileEntry {
+  /** Preset id the file registers; the file name without `.md`. */
+  readonly id: string
+  /** Why the file is not a loaded preset; absent when it loaded. */
+  readonly error?: string
+}
+
+/** The agent files of the authoring folder, in name order; empty when no folder is configured. */
+export interface AgentFileRoster {
+  readonly files: readonly AgentFileEntry[]
+}
+
+/** One agent file's source text, front matter included. */
+export interface AgentFileDocument {
+  readonly id: string
+  readonly text: string
+}
+
+/** Reads and writes the agent files of the one folder agents are authored in. */
+export interface AgentFileStore {
+  /** Every agent file in the folder, with its load status. */
+  list(): Promise<readonly AgentFileEntry[]>
+  /** One file's text, or undefined when the folder holds no such file. */
+  read(id: string): Promise<string | undefined>
+  /** Validate and replace one file, then reload the folder; rejects with the reason when the text is invalid. */
+  write(id: string, text: string): Promise<AgentFileEntry>
+  /** Remove one file and unload its preset. */
+  remove(id: string): Promise<void>
+}
+
 /** One preset's declared composition, rendered for reading. */
 export interface AgentPresetDocument {
   /** The preset the composition belongs to. */
@@ -67,6 +98,12 @@ declare module '@deepseek-ai/cordis' {
      * @param agentPreset - the preset recorded by the committed selection.
      */
     'agent-preset/selected'(sessionId: SessionId, agentPreset: string): void
+    /**
+     * An agent-file preset was registered or removed. Delegation tools rebuild the choices they offer
+     * from `agentFileDefinitions()`.
+     * @mode emit
+     */
+    'agent-preset/change'(): void
   }
 }
 

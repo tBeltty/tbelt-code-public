@@ -4,6 +4,18 @@ Notable changes to tBelt Code, newest first. The format follows [Keep a Changelo
 
 ## [Unreleased]
 
+## [0.2.1-rc.2.20261020.4] - 2026-10-20
+
+### Added
+
+- Agents can choose their own provider, model, reasoning effort and skills in their definition file.
+- Agent files load and reload without a restart, and each one is offered to delegation tools.
+- Agents can be created, edited and deleted in Settings and in the terminal.
+
+### Changed
+
+- Child agents from agent files run one task and end after their final answer.
+
 ## [0.2.1-rc.2.20261020.3] - 2026-10-20
 
 ### Fixed
@@ -352,7 +364,8 @@ Notable changes to tBelt Code, newest first. The format follows [Keep a Changelo
 - Downloads no longer return an older installer.
 - A key that ran out of credit or hit its spending limit is reported as a quota problem instead of an invalid API key.
 
-[Unreleased]: https://github.com/tBeltty/tbelt-code-public/compare/v0.2.1-rc.2.20261020.3...HEAD
+[Unreleased]: https://github.com/tBeltty/tbelt-code-public/compare/v0.2.1-rc.2.20261020.4...HEAD
+[0.2.1-rc.2.20261020.4]: https://github.com/tBeltty/tbelt-code-public/releases/tag/v0.2.1-rc.2.20261020.4
 [0.2.1-rc.2.20261020.3]: https://github.com/tBeltty/tbelt-code-public/releases/tag/v0.2.1-rc.2.20261020.3
 [0.2.1-rc.2.20261020.2]: https://github.com/tBeltty/tbelt-code-public/releases/tag/v0.2.1-rc.2.20261020.2
 [0.2.1-rc.2.20261020]: https://github.com/tBeltty/tbelt-code-public/releases/tag/v0.2.1-rc.2.20261020

@@ -78,6 +78,8 @@ export type ActivationResource =
   | {
     readonly kind: 'local'
     readonly handle: AgentHandle
+    /** Whether the child runs one task: it accepts no input after its start and cannot be resumed. */
+    readonly oneShot: boolean
     readonly outputStart: SessionLogOffset
     readonly structured: StructuredAttachment | undefined
     /** Latest live failure not superseded by a later committed turn ending. */

@@ -81,6 +81,8 @@ The package is built on one separation: the registry owns merging, winning resol
 
 The registry is host+per-scope layered, the shape the tools registry established: a registration is filed into the layer of its calling context's scope — host rows and repository plugins land in the global layer, a plugin mounted by an agent preset's standing composition lands in that preset's layer. A read merges the global layer with the viewing scope's chain; the nearest layer wins a duplicate name outright, and within one layer duplicates resolve by rank, provider registration order, then provider-local order.
 
+`restrictScope(scope, names)` limits what the agents of one scope see: `list` and `get` through that scope's chain return only the named skills, whichever layer they come from. The nearest restricted scope in a chain decides. Agent presets set it from their `skills` list.
+
 ### Source map
 
 | File | Role |

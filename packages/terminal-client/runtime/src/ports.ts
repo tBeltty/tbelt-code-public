@@ -416,11 +416,21 @@ export interface AgentPresetPort {
   readonly broken?: string | undefined
 }
 
+/** One agent file of the authoring folder and why it did not load, when it did not. */
+export interface AgentFilePort {
+  readonly id: string
+  readonly error?: string | undefined
+}
+
 /** The `agentPresets` Remote namespace. */
 export interface AgentPresetsRemotePort {
   list(): Promise<RemoteResultPort<{ readonly presets: readonly AgentPresetPort[] }>>
   read(agentPreset: string): Promise<RemoteResultPort<{ readonly content: string }>>
   select(sessionId: string, agentPreset: string): Promise<RemoteResultPort<unknown>>
+  listFiles(): Promise<RemoteResultPort<{ readonly files: readonly AgentFilePort[] }>>
+  readFile(agentPreset: string): Promise<RemoteResultPort<{ readonly id: string; readonly text: string }>>
+  writeFile(agentPreset: string, text: string): Promise<RemoteResultPort<AgentFilePort>>
+  deleteFile(agentPreset: string): Promise<RemoteResultPort<unknown>>
 }
 
 /** One permission preset a session can run under. */

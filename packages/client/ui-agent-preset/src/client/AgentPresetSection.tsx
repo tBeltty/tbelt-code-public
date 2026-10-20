@@ -27,6 +27,18 @@ export interface AgentPresetSectionInjected {
   /** Close the read-only viewer. */
   closeView: () => void
   makeDefault: (id: string) => Promise<void>
+  /** Open the editor on a new agent file. */
+  newAgent: () => void
+  /** Open the editor on one agent file of the authoring folder. */
+  editAgent: (id: string) => Promise<void>
+  /** Replace fields of the open agent file editor. */
+  updateAgent: (patch: { readonly id?: string; readonly text?: string }) => void
+  /** Validate, write and reload the open agent file. */
+  saveAgent: () => Promise<void>
+  /** Remove the open agent file after confirmation. */
+  deleteAgent: () => Promise<void>
+  /** Close the agent file editor without saving. */
+  closeAgent: () => void
 }
 /** Props assembled by the settings renderer. */
 export type AgentPresetSectionProps = PropsRuntime<'settings.section'> & PropsLocale<'settings.agentPreset'> & InjectFace<AgentPresetSectionInjected>
@@ -63,6 +75,7 @@ function CardDescription({ text }: { text: string }): ReactNode {
  */
 export function AgentPresetSection({
   useAgentPresetSection, load, view, closeView, makeDefault, startCreatorDraft,
+  newAgent, editAgent, updateAgent, saveAgent, deleteAgent, closeAgent,
   close: closeSettings, useDeveloperTools, t,
 }: AgentPresetSectionProps) {
   const state = useAgentPresetSection(value => value)
@@ -73,10 +86,16 @@ export function AgentPresetSection({
   } | null>(null)
   const viewTrigger = useRef<HTMLButtonElement | null>(null)
   const closeViewOnUnmount = useRef(closeView)
+  const closeAgentOnUnmount = useRef(closeAgent)
   useEffect(() => { void load() }, [load])
   useLayoutEffect(() => { closeViewOnUnmount.current = closeView }, [closeView])
-  useEffect(() => () => { closeViewOnUnmount.current() }, [])
+  useLayoutEffect(() => { closeAgentOnUnmount.current = closeAgent }, [closeAgent])
+  useEffect(() => () => {
+    closeViewOnUnmount.current()
+    closeAgentOnUnmount.current()
+  }, [])
   const closeViewer = () => { closeView(); viewTrigger.current?.focus() }
+  const editor = state.editor
   const viewed = state.view
   const viewedRow = viewed === null ? undefined : state.rows.find(row => row.id === viewed.id)
   const viewedTitle = viewed === null ? '' : viewedRow === undefined ? viewed.title : presetDisplayText(viewedRow, t).name
@@ -159,7 +178,54 @@ export function AgentPresetSection({
         {entry}
       </section>
     })}
+    <section className={css.group}>
+      <h3 className={css.groupHead}>{t('agentFilesTitle')}</h3>
+      <p className={css.intro}>{t('agentFilesIntro')}</p>
+      {state.files.length === 0 ? null : <ul className={css.fileList}>
+        {state.files.map(file => <li key={file.id} data-agent-file-id={file.id} className={css.fileRow}>
+          <span className={css.fileIdentity}>
+            <code className={css.cardId} title={file.id}>{file.id}</code>
+            <Tag tone="outline">{file.error === undefined ? t('agentLoaded') : t('agentNotLoaded')}</Tag>
+          </span>
+          {file.error === undefined ? null : <span className={css.cardBrokenReason} role="alert">{file.error}</span>}
+          <Button variant="ghost" aria-label={`${t('editAgent')}: ${file.id}`} onClick={() => { void editAgent(file.id) }}>
+            {t('editAgent')}
+          </Button>
+        </li>)}
+      </ul>}
+      <button type="button" className={css.creatorButton} disabled={state.saving} onClick={newAgent}>
+        <IconPlusOutlineRegular size={14} />
+        {t('newAgent')}
+      </button>
+    </section>
     {guide === null ? null : <PresetGuideDialog guide={guide.content} initialPage={guide.page} t={t} onClose={() => { setGuide(null) }} />}
+    <Modal open={editor !== null} onClose={closeAgent} closeLabel={t('agentCancel')}
+      title={editor === null ? '' : t(editor.creating ? 'newAgent' : 'editAgent')} className={css.dialog as string}
+      footer={editor === null ? null : <div className={css.editorActions}>
+        {editor.creating ? null : <Button variant="outline" disabled={editor.saving} onClick={() => { void deleteAgent() }}>
+          {t(editor.confirmingDelete ? 'agentDeleteConfirm' : 'agentDelete')}
+        </Button>}
+        <Button variant="outline" onClick={closeAgent}>{t('agentCancel')}</Button>
+        <Button variant="primary" disabled={editor.saving} onClick={() => { void saveAgent() }}>{t('agentSave')}</Button>
+      </div>}>
+      {editor === null ? null : <div className={css.editor}>
+        <label className={css.editorField}>
+          <span>{t('agentIdLabel')}</span>
+          <input className={css.editorInput} value={editor.id} readOnly={!editor.creating} disabled={editor.saving}
+            aria-describedby="agent-file-id-hint" onChange={(event) => { updateAgent({ id: event.currentTarget.value }) }} />
+          <span id="agent-file-id-hint" className={css.intro}>{t('agentIdHint')}</span>
+        </label>
+        <label className={css.editorField}>
+          <span>{t('agentTextLabel')}</span>
+          <textarea className={css.editorText} value={editor.text} disabled={editor.saving} spellCheck={false}
+            onChange={(event) => { updateAgent({ text: event.currentTarget.value }) }} />
+        </label>
+        {editor.notLoaded === null ? null : <p className={css.error} role="status">
+          {t('agentSavedNotLoaded')} {editor.notLoaded}
+        </p>}
+        {editor.error === null ? null : <p className={css.error} role="alert">{editor.error}</p>}
+      </div>}
+    </Modal>
     <Modal open={viewed !== null} onClose={closeViewer} closeLabel={t('close')}
       onKeyDownCapture={(event) => {
         if (event.key === 'Escape') {

@@ -32,6 +32,13 @@ export interface FlowUi {
    * @returns the trimmed answer, possibly empty, or undefined when the person left the question.
    */
   ask(label: string, options?: PromptOptions): Promise<string | undefined>
+  /**
+   * Ask the person to write text over several lines, such as a file body.
+   * @param label - what is being asked.
+   * @param options - hint and the text the answer starts with.
+   * @returns the text as written, or undefined when the person left the question.
+   */
+  edit(label: string, options: { readonly hint?: string; readonly initial: string }): Promise<string | undefined>
   /** Print a dim line. */
   info(text: string): void
   /** Print lines as they are, without dimming them. */

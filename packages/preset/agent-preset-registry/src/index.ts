@@ -8,8 +8,9 @@ import { dump } from 'js-yaml'
 import type { Agent } from '@deepseek-ai/dsh-agent'
 // Type-only: the optional `settings` service this registry keeps off the generated pages.
 import type {} from '@deepseek-ai/dsh-settings'
+import type {} from '@deepseek-ai/dsh-skill'
 import type {} from '@deepseek-ai/dsh-tools'
-import type { AgentPresetDocument, AgentPresetRoster } from './types.ts'
+import type { AgentFileDocument, AgentFileEntry, AgentFileRoster, AgentFileStore, AgentPresetDocument, AgentPresetRoster } from './types.ts'
 import { entryListProblem, type PresetDefinition } from './definition.ts'
 import type { AgentPreset, Config } from './preset.ts'
 import { agentPresetProjectionDefinition } from './session.ts'
@@ -17,10 +18,11 @@ import { auditRows, leakedServices, mountPreset, serviceForMount, type PresetMou
 import { activeCompositionModules, definitionComposition, mountedCompositionRows, type AgentPresetComposition, type AgentPresetInspection } from './composition-inventory.ts'
 
 export { agentPresetProjectionDefinition } from './session.ts'
-export { entryListProblem, type PresetDefinition } from './definition.ts'
+export { entryListProblem, type PresetAgentRoute, type PresetDefinition } from './definition.ts'
 export { auditRows, leakedServices, type PresetMount, type RowAudit } from './mount.ts'
 export type { AgentPresetInspection } from './composition-inventory.ts'
 export type { AgentPreset, Config } from './preset.ts'
+export type { AgentFileDocument, AgentFileEntry, AgentFileRoster, AgentFileStore } from './types.ts'
 
 declare module '@deepseek-ai/cordis' {
   interface Context {
@@ -60,6 +62,7 @@ export class AgentPresetRegistry extends TypertRemoteService {
   private readonly generations = new Map<ScopeKey, Generation>()
   private readonly bindings = new WeakMap<ScopeKey, Binding>()
   private readonly switches = new Map<string, Promise<unknown>>()
+  private agentFiles: AgentFileStore | undefined
 
   constructor(ctx: Context, public config: Config) {
     super(ctx, 'agentPresets')
@@ -84,11 +87,13 @@ export class AgentPresetRegistry extends TypertRemoteService {
     if (this.definitions.has(definition.id)) throw new Error(`Duplicate agent preset: ${definition.id}`)
     const record: Definition = { config: definition, context, ready: Promise.resolve() }
     this.definitions.set(definition.id, record)
+    if (definition.origin === 'agent-file') this.emitAgentFileChange()
     let disposed = false
     const unregister = async (): Promise<void> => {
       if (disposed) return
       disposed = true
       this.definitions.delete(definition.id)
+      if (definition.origin === 'agent-file') this.emitAgentFileChange()
       await record.ready
       if (record.generation !== undefined) {
         record.generation.retired = true
@@ -107,6 +112,12 @@ export class AgentPresetRegistry extends TypertRemoteService {
       const problem = entryListProblem(record.config.plugins)
       if (problem !== undefined) throw new Error(problem)
       const context = scope.ctx.extend({ baseUrl: record.context.baseUrl })
+      const { skills: visibleSkills } = record.config
+      if (visibleSkills !== undefined) {
+        const skills = context.get('skills')
+        if (skills === undefined) throw new Error('declares skills, but the skills service is not available')
+        context.effect(() => skills.restrictScope(key, visibleSkills), 'agent-preset.skills')
+      }
       const mount = await mountPreset(context, record.config.id, record.config.plugins)
       const generation: Generation = { scope, key, mount, users: 0, retired: false }
       context.effect(() => {
@@ -194,6 +205,22 @@ export class AgentPresetRegistry extends TypertRemoteService {
    */
   definitionOf(id: string): PresetDefinition | undefined { return this.definitions.get(id)?.config }
 
+  /**
+   * Definitions declared from user agent files, sorted by id, including any whose activation failed.
+   * @returns the current agent-file definitions.
+   */
+  agentFileDefinitions(): PresetDefinition[] {
+    return [...this.definitions.values()]
+      .map(record => record.config)
+      .filter(config => config.origin === 'agent-file')
+      .sort((a, b) => (a.id < b.id ? -1 : a.id > b.id ? 1 : 0))
+  }
+
+  private emitAgentFileChange(): void {
+    try { this.owner.emit('agent-preset/change') }
+    catch (error) { this.owner.logger.warn(`Agent file observer: ${String(error)}`) }
+  }
+
   /** Read the selection roster.
    * @returns Current presets, each marked when it is the default.
    */
@@ -233,6 +260,68 @@ export class AgentPresetRegistry extends TypertRemoteService {
     return Promise.resolve({
       agentPreset: id, content, ...(name === undefined ? {} : { name }), ...(description === undefined ? {} : { description }),
     })
+  }
+
+  /** Attach the folder agent files are authored in. Attaching again replaces the store.
+   * @param store Reader and writer of the folder's agent files.
+   * @returns Detach callback; it clears the store only while this store is still attached.
+   */
+  attachAgentFiles(store: AgentFileStore): () => void {
+    this.agentFiles = store
+    return () => {
+      if (this.agentFiles === store) this.agentFiles = undefined
+    }
+  }
+
+  /** List the agent files of the authoring folder, with why each one did not load.
+   * @returns Every file in name order; empty when no folder is configured.
+   */
+  @Remote('listFiles')
+  async listAgentFiles(): Promise<AgentFileRoster> {
+    return { files: this.agentFiles === undefined ? [] : await this.agentFiles.list() }
+  }
+
+  /** Read one agent file's source text.
+   * @param agentPreset Preset id, which is the file name without `.md`.
+   * @returns The file's text.
+   */
+  @Remote('readFile')
+  async readAgentFile(agentPreset: string): Promise<AgentFileDocument> {
+    const text = await this.requireAgentFiles(agentPreset).read(agentPreset)
+    if (text === undefined) {
+      throw new RemoteError('agent-preset/not-found', `No agent file named ${agentPreset}`, { agentPreset, available: [] })
+    }
+    return { id: agentPreset, text }
+  }
+
+  /** Validate, write and reload one agent file. A file that is valid but cannot load, such as one naming a
+   * base preset that is absent, is saved and reports its reason.
+   * @param agentPreset Preset id, which is the file name without `.md`.
+   * @param text Complete file text, front matter included.
+   * @returns The file's load status after the reload.
+   */
+  @Remote('writeFile')
+  async writeAgentFile(agentPreset: string, text: string): Promise<AgentFileEntry> {
+    const store = this.requireAgentFiles(agentPreset)
+    try {
+      return await store.write(agentPreset, text)
+    } catch (error) {
+      const reason = error instanceof Error ? error.message : String(error)
+      throw new RemoteError('agent-preset/invalid', reason, { agentPreset, reason })
+    }
+  }
+
+  /** Remove one agent file and unload its preset.
+   * @param agentPreset Preset id, which is the file name without `.md`.
+   */
+  @Remote('deleteFile')
+  async deleteAgentFile(agentPreset: string): Promise<void> {
+    await this.requireAgentFiles(agentPreset).remove(agentPreset)
+  }
+
+  private requireAgentFiles(agentPreset: string): AgentFileStore {
+    if (this.agentFiles !== undefined) return this.agentFiles
+    throw new RemoteError('agent-preset/invalid', 'No folder holds agent files', { agentPreset, reason: 'no agent folder is configured' })
   }
 
   private async retain(id?: string): Promise<Generation> {

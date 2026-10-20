@@ -75,10 +75,13 @@ You review changes. Do not edit files.
 | Front matter | Default | Meaning |
 |---|---|---|
 | `extends` | plugin `extends` | Preset whose plugins the agent starts from; it must be declared before the plugin loads |
+| `provider`, `model` | delegation tool's route | LLM route that children of this agent run on. Set both together; an unknown route fails the delegation that starts the child |
+| `reasoning_effort` | adapter default | Reasoning effort on that route; requires `provider` and `model` |
+| `skills` | every skill | Names of the skills children of this agent may see, through the skill registry; `[]` hides them all |
 | `name`, `description`, `order` | unset | Roster fields |
 | `permission` | none | Tool names (globs) mapped to `allow`, `ask` or `deny`, or to command patterns with those outcomes; `*` as a pattern matches every call of the tool. Later entries win |
 
-A non-empty body replaces the prefix of the base preset’s persona row, or adds one. Unknown front matter keys, such as `model`, make the plugin skip the file with a warning naming it; sessions pick their own model. Permission entries become `permission-rules` rules limited to this preset. A directory that does not exist contributes no agents, and edits apply after a restart.
+A non-empty body replaces the prefix of the base preset’s persona row, or adds one. Each child of an agent runs one task: it accepts no follow-up messages, and its completion notice is its final answer. Unknown front matter keys, such as `tools`, make the plugin skip the file with a warning naming it. The route of an agent file is authorized by the file itself, and each agent file is offered to delegation tools as an `agent_preset` choice without configuration. A skill name that no layer provides is ignored. Permission entries become `permission-rules` rules limited to this preset. A directory that does not exist contributes no agents. The first directory is the authoring folder: the Settings editor creates, replaces and removes `<id>.md` there, and each change reloads the folder before the write returns. The plugin rescans `dirs` every `pollIntervalMs` (default 2000), so an added, edited or removed file applies at the next scan without a restart; a running child keeps the composition it started with. A file that extends another agent file is reloaded when that file changes. A file that fails keeps one warning and loads when its text or its base changes.
 
 <a id="understand-the-implementation"></a>
 ## Understand the implementation

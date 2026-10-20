@@ -20,6 +20,8 @@ export interface PromptState {
   readonly hint?: string | undefined
   /** Show typed characters as `*`, for keys. */
   readonly secret: boolean
+  /** Keeps line breaks in the answer; Enter still sends, Shift+Enter or a trailing backslash starts a line. */
+  readonly multiline: boolean
   readonly input: ComposerState
 }
 
@@ -40,6 +42,8 @@ export interface PromptOptions {
   readonly secret?: boolean | undefined
   /** Text the answer starts with. */
   readonly initial?: string | undefined
+  /** Keep line breaks in the answer, for text such as a file body. */
+  readonly multiline?: boolean | undefined
 }
 
 /**
@@ -49,17 +53,20 @@ export interface PromptOptions {
  * @returns the initial state, with the cursor after the starting text.
  */
 export function createPrompt(label: string, options: PromptOptions = {}): PromptState {
-  const initial = (options.initial ?? '').replace(/[\r\n]+/gu, ' ')
+  const given = options.initial ?? ''
+  const initial = options.multiline === true ? given : given.replace(/[\r\n]+/gu, ' ')
   return {
     label,
     hint: options.hint,
     secret: options.secret === true,
+    multiline: options.multiline === true,
     input: { ...EMPTY_COMPOSER, text: initial, cursor: initial.length },
   }
 }
 
-/** Keys that mean something only to a multi-line composer. */
+/** Keys a one-line answer ignores; a multi-line answer also takes Shift+Enter and the cursor keys. */
 const IGNORED = new Set(['up', 'down', 'tab', 'newline', 'clear-screen'])
+const IGNORED_MULTILINE = new Set(['tab', 'clear-screen'])
 
 /**
  * Apply one key.
@@ -70,13 +77,19 @@ const IGNORED = new Set(['up', 'down', 'tab', 'newline', 'clear-screen'])
  */
 export function reducePrompt(state: PromptState, key: Key): PromptStep {
   if (key.type === 'key') {
-    if (key.name === 'enter') return { state, effect: { type: 'submit', text: state.input.text.trim() } }
+    if (key.name === 'enter') {
+      if (!state.multiline) return { state, effect: { type: 'submit', text: state.input.text.trim() } }
+      // A trailing backslash continues the answer on a new line, as in the composer.
+      if (!state.input.text.slice(0, state.input.cursor).endsWith('\\')) {
+        return { state, effect: { type: 'submit', text: state.input.text } }
+      }
+    }
     if (key.name === 'escape' || key.name === 'interrupt' || (key.name === 'eof' && state.input.text === '')) {
       return { state, effect: { type: 'cancel' } }
     }
-    if (IGNORED.has(key.name)) return { state }
+    if ((state.multiline ? IGNORED_MULTILINE : IGNORED).has(key.name)) return { state }
   }
-  const single: Key = key.type === 'key' ? key : { type: key.type, text: key.text.replace(/[\r\n]+/gu, '') }
+  const single: Key = key.type === 'key' || state.multiline ? key : { type: key.type, text: key.text.replace(/[\r\n]+/gu, '') }
   return { state: { ...state, input: reduceComposer(state.input, single).state } }
 }
 
@@ -96,7 +109,7 @@ export function renderPrompt(style: Style, state: PromptState, columns: number):
   const shown = state.secret ? { ...state.input, text: '*'.repeat(state.input.text.length) } : state.input
   const answer = renderComposer(shown, { columns, prompt: '› ', placeholder: '', dim: style.dim })
   return {
-    lines: [...header, ...answer.lines, style.dim(truncate(`  ${t('prompt.keys')}`, columns))],
+    lines: [...header, ...answer.lines, style.dim(truncate(`  ${t(state.multiline ? 'prompt.keysMultiline' : 'prompt.keys')}`, columns))],
     cursor: { row: answer.cursor.row + header.length, column: answer.cursor.column },
   }
 }

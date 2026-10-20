@@ -259,6 +259,12 @@ export function apply(ctx: ClientContext): void {
     closeView: () => { section.closeView() },
     ...creatorDraft === undefined ? {} : { startCreatorDraft: creatorDraft },
     makeDefault: (id: string) => section.makeDefault(id, captureBlankSessionSync()),
+    newAgent: () => { section.newAgent() },
+    editAgent: (id: string) => section.editAgent(id),
+    updateAgent: (patch) => { section.updateAgent(patch) },
+    saveAgent: () => section.saveAgent(),
+    deleteAgent: () => section.deleteAgent(),
+    closeAgent: () => { section.closeAgent() },
   })
 
   // Ordered after Models: choosing a model is routine, and composing an

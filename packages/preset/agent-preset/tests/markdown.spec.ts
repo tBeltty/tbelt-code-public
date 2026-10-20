@@ -2,9 +2,9 @@ import { mkdir, mkdtemp, rm, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { Context, Service } from '@deepseek-ai/cordis'
-import type { PresetDefinition } from '@deepseek-ai/dsh-agent-preset-registry'
+import type { AgentFileStore, PresetDefinition } from '@deepseek-ai/dsh-agent-preset-registry'
 import type { PermissionRule } from '@deepseek-ai/dsh-permission-rules'
-import { afterEach, describe, expect, it } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 import AgentPreset from '../src/index.ts'
 import { harness } from '../../agent-preset-registry/tests/harness.ts'
 import AgentPresetMarkdown, { composeAgent, parseAgentFile } from '../src/markdown.ts'
@@ -20,6 +20,20 @@ describe('parseAgentFile', () => {
     expect(parseAgentFile('a', '---\r\nname: A\r\n---\r\nBody\r\n')).toMatchObject({ name: 'A', prompt: 'Body' })
     expect(parseAgentFile('a', '---\n---\nBody')).toMatchObject({ prompt: 'Body' })
     expect(parseAgentFile('a', '---\n\n\n---').prompt).toBe('')
+  })
+
+  it('reads the route and keeps the effort optional', () => {
+    expect(parseAgentFile('a', '---\nprovider: alpha\nmodel: fast\nreasoning_effort: low\n---\nB').route)
+      .toEqual({ provider: 'alpha', model: 'fast', reasoningEffort: 'low' })
+    const plain = parseAgentFile('a', '---\nprovider: alpha\nmodel: fast\n---')
+    expect(plain.route).toEqual({ provider: 'alpha', model: 'fast' })
+    expect(parseAgentFile('a', 'Body').route).toBeUndefined()
+  })
+
+  it('reads the skill list, where an empty list hides every skill', () => {
+    expect(parseAgentFile('a', '---\nskills:\n  - fetch\n  - pdf-tools\n---').skills).toEqual(['fetch', 'pdf-tools'])
+    expect(parseAgentFile('a', '---\nskills: []\n---').skills).toEqual([])
+    expect(parseAgentFile('a', 'Body').skills).toBeUndefined()
   })
 
   it('turns permission entries into rules scoped to the agent, later entries winning', () => {
@@ -42,7 +56,14 @@ describe('parseAgentFile', () => {
 
   it.each([
     ['Bad_Id', '', 'not a valid agent id'],
-    ['a', '---\nmodel: x\n---', 'unknown front matter key "model"'],
+    ['a', '---\ntools: x\n---', 'unknown front matter key "tools"'],
+    ['a', '---\nskills: fetch\n---', 'skills must be a list of skill names'],
+    ['a', '---\nskills:\n  - Bad_Name\n---', 'skills entry "Bad_Name" is not a skill name'],
+    ['a', '---\nprovider: alpha\n---', 'provider and model must be set together'],
+    ['a', '---\nmodel: fast\n---', 'provider and model must be set together'],
+    ['a', '---\nreasoning_effort: low\n---', 'reasoning_effort requires provider and model'],
+    ['a', '---\nprovider: alpha\nmodel: fast\nreasoning_effort: 3\n---', 'reasoning_effort must be a non-empty string'],
+    ['a', '---\nprovider: ""\nmodel: fast\n---', 'provider must be a non-empty string'],
     ['a', '---\n- x\n---', 'front matter must be a YAML map'],
     ['a', '---\nname: 3\n---', 'name must be a non-empty string'],
     ['a', '---\ndescription: " "\n---', 'description must be a non-empty string'],
@@ -61,7 +82,7 @@ describe('composeAgent', () => {
   const file = (prompt: string) => parseAgentFile('reviewer', prompt === '' ? '---\nname: Reviewer\norder: 1\ndescription: D\n---' : `---\nname: Reviewer\norder: 1\ndescription: D\n---\n${prompt}`)
 
   it('keeps the base plugins when the file has no prompt', () => {
-    expect(composeAgent(file(''), base)).toEqual({ id: 'reviewer', name: 'Reviewer', description: 'D', order: 1, plugins: [{ name: 'tool' }] })
+    expect(composeAgent(file(''), base)).toEqual({ id: 'reviewer', name: 'Reviewer', description: 'D', order: 1, oneShot: true, origin: 'agent-file', plugins: [{ name: 'tool' }] })
   })
 
   it('adds a persona row when the base has none', () => {
@@ -71,10 +92,28 @@ describe('composeAgent', () => {
     ])
   })
 
+  it('carries the route into the preset definition', () => {
+    const routed = parseAgentFile('reviewer', '---\nprovider: alpha\nmodel: fast\n---\nBe brief.')
+    expect(composeAgent(routed, base)).toEqual({
+      id: 'reviewer',
+      agentRoute: { provider: 'alpha', model: 'fast' },
+      oneShot: true,
+      origin: 'agent-file',
+      plugins: [{ name: 'tool' }, { id: 'persona', name: '@deepseek-ai/dsh-persona', config: { prefix: 'Be brief.' } }],
+    })
+  })
+
+  it('carries the skill list into the preset definition', () => {
+    expect(composeAgent(parseAgentFile('reviewer', '---\nskills: [fetch]\n---'), base)).toMatchObject({ skills: ['fetch'] })
+    expect(composeAgent(file(''), base)).not.toHaveProperty('skills')
+  })
+
   it('replaces only the prefix of the base persona row', () => {
     const withPersona: PresetDefinition = { id: 'minimal', plugins: [{ id: 'p', name: '@deepseek-ai/dsh-persona', config: { prefix: 'old', complete: true } }, { name: 'tool' }] }
     expect(composeAgent(parseAgentFile('x', 'New.'), withPersona)).toEqual({
       id: 'x',
+      oneShot: true,
+      origin: 'agent-file',
       plugins: [{ id: 'p', name: '@deepseek-ai/dsh-persona', config: { prefix: 'New.', complete: true } }, { name: 'tool' }],
     })
     const bare: PresetDefinition = { id: 'minimal', plugins: [{ name: '@deepseek-ai/dsh-persona' }] }
@@ -92,7 +131,10 @@ describe('AgentPresetMarkdown plugin', () => {
     root = undefined
   })
 
-  async function boot(files: Record<string, string>, config: { dirs?: string[]; extends?: string } = { extends: 'standard' }) {
+  async function boot(
+    files: Record<string, string>,
+    config: { dirs?: string[]; extends?: string; pollIntervalMs?: number } = { extends: 'standard' },
+  ) {
     root = await mkdtemp(join(tmpdir(), 'dsh-agent-markdown-'))
     await mkdir(join(root, 'agents'))
     await writeFile(join(root, 'agents', 'ignored.txt'), 'not markdown')
@@ -102,13 +144,21 @@ describe('AgentPresetMarkdown plugin', () => {
     const disposed: string[] = []
     const contributed: (readonly PermissionRule[])[] = []
     const warnings: string[] = []
+    const attached: AgentFileStore[] = []
     ctx = new Context()
     ctx.provide('agentPresets', {
+      attachAgentFiles: (store: AgentFileStore) => {
+        attached.push(store)
+        return () => {}
+      },
       definitionOf: (id: string) => registered.get(id),
       register: async (definition: PresetDefinition) => {
         if (registered.has(definition.id)) throw new Error(`Duplicate agent preset: ${definition.id}`)
         registered.set(definition.id, definition)
-        return async () => { disposed.push(definition.id) }
+        return async () => {
+          registered.delete(definition.id)
+          disposed.push(definition.id)
+        }
       },
     })
     ctx.provide('permissionRules', {
@@ -119,8 +169,8 @@ describe('AgentPresetMarkdown plugin', () => {
       },
     })
     ctx.logger.warn = (message: unknown) => { warnings.push(String(message)) }
-    await ctx.plugin(AgentPresetMarkdown, { dirs: [join(root, 'agents')], ...config })
-    return { registered, disposed, contributed, warnings }
+    await ctx.plugin(AgentPresetMarkdown, { dirs: [join(root, 'agents')], pollIntervalMs: 2_000, ...config })
+    return { registered, disposed, contributed, warnings, files: attached[0] as AgentFileStore }
   }
 
   it('registers one preset per file and contributes its rules, and releases both on dispose', async () => {
@@ -139,14 +189,14 @@ describe('AgentPresetMarkdown plugin', () => {
   it('skips a file that fails, naming it, and keeps the others', async () => {
     const seen = await boot({
       'good.md': 'Good.',
-      'bad.md': '---\nmodel: x\n---',
+      'bad.md': '---\ntools: x\n---',
       'Bad_Name.md': 'x',
       'orphan.md': '---\nextends: missing\n---',
       'standard.md': 'clashes with the base id',
     })
     expect([...seen.registered.keys()]).toEqual(['standard', 'good'])
     expect(seen.warnings).toHaveLength(4)
-    expect(seen.warnings.join('\n')).toMatch(/bad\.md skipped: unknown front matter key "model"/)
+    expect(seen.warnings.join('\n')).toMatch(/bad\.md skipped: unknown front matter key "tools"/)
     expect(seen.warnings.join('\n')).toMatch(/base preset "missing" is not declared/)
     expect(seen.warnings.join('\n')).toMatch(/Duplicate agent preset: standard/)
   })
@@ -159,10 +209,80 @@ describe('AgentPresetMarkdown plugin', () => {
   it('treats a missing directory as empty and rejects relative ones', async () => {
     const seen = await boot({}, { dirs: [join(tmpdir(), 'dsh-agent-markdown-missing-dir')], extends: 'standard' })
     expect(seen.registered.size).toBe(1)
-    const relative = new AgentPresetMarkdown(new Context(), { dirs: ['relative'] })
+    const relative = new AgentPresetMarkdown(new Context(), { dirs: ['relative'], pollIntervalMs: 2_000 })
     await expect(relative[Service.init]().next()).rejects.toThrow('must be an absolute path')
-    const file = new AgentPresetMarkdown(new Context(), { dirs: [join(root as string, 'agents', 'ignored.txt')] })
+    const file = new AgentPresetMarkdown(new Context(), { dirs: [join(root as string, 'agents', 'ignored.txt')], pollIntervalMs: 2_000 })
     await expect(file[Service.init]().next()).rejects.toThrow('ENOTDIR')
+  })
+
+  it('writes, lists, reads and removes agent files through the attached store, reloading each change', async () => {
+    const seen = await boot({})
+    const files = seen.files
+    expect(await files.list()).toEqual([])
+    expect(await files.write('fresh', '---\ndescription: Fresh\n---\nBe quick.')).toEqual({ id: 'fresh' })
+    expect(seen.registered.get('fresh')?.description).toBe('Fresh')
+    expect(await files.read('fresh')).toBe('---\ndescription: Fresh\n---\nBe quick.')
+    expect(await files.list()).toEqual([{ id: 'fresh' }])
+    await files.remove('fresh')
+    expect(seen.registered.has('fresh')).toBe(false)
+    expect(await files.read('fresh')).toBeUndefined()
+  })
+
+  it('rejects an invalid or unsafe agent file without writing it', async () => {
+    const seen = await boot({})
+    const files = seen.files
+    await expect(files.write('bad', '---\ntools: x\n---')).rejects.toThrow('unknown front matter key "tools"')
+    await expect(files.write('../escape', 'x')).rejects.toThrow('not a valid agent id')
+    await expect(files.read('../escape')).rejects.toThrow('not a valid agent id')
+    await expect(files.remove('../escape')).rejects.toThrow('not a valid agent id')
+    expect(await files.list()).toEqual([])
+  })
+
+  it('saves a file whose base is absent and reports why it does not load', async () => {
+    const seen = await boot({})
+    const files = seen.files
+    const error = 'base preset "missing" is not declared before this plugin'
+    expect(await files.write('orphan', '---\nextends: missing\n---\nX')).toEqual({ id: 'orphan', error })
+    expect(await files.list()).toEqual([{ id: 'orphan', error }])
+  })
+
+  it('applies an added, edited and removed file while the plugin runs', async () => {
+    const seen = await boot({ 'reviewer.md': '---\npermission:\n  edit: deny\n---\nReview.' }, { extends: 'standard', pollIntervalMs: 100 })
+    const agents = join(root as string, 'agents')
+    await writeFile(join(agents, 'plain.md'), 'Plain.')
+    await vi.waitFor(() => { expect(seen.registered.has('plain')).toBe(true) })
+    await writeFile(join(agents, 'reviewer.md'), '---\ndescription: Changed\n---\nReview again.')
+    await vi.waitFor(() => { expect(seen.registered.get('reviewer')?.description).toBe('Changed') })
+    expect(seen.disposed).toEqual(expect.arrayContaining(['reviewer', 'rules:reviewer']))
+    await rm(join(agents, 'plain.md'))
+    await vi.waitFor(() => { expect(seen.registered.has('plain')).toBe(false) })
+    expect(seen.disposed).toContain('plain')
+    expect(seen.warnings).toEqual([])
+  })
+
+  it('reloads a file that extends an edited file, so it takes the edited base', async () => {
+    const seen = await boot({
+      'base.md': '---\nextends: standard\n---\nFirst.',
+      'child.md': '---\nextends: base\n---',
+    }, { extends: 'standard', pollIntervalMs: 100 })
+    await writeFile(join(root as string, 'agents', 'base.md'), '---\nextends: standard\n---\nSecond.')
+    await vi.waitFor(() => { expect(seen.registered.get('child')?.plugins).toEqual([
+      { name: 'tool' },
+      { id: 'persona', name: '@deepseek-ai/dsh-persona', config: { prefix: 'Second.' } },
+    ]) })
+    expect(seen.warnings).toEqual([])
+  })
+
+  it('warns once about a file whose base is missing, then loads it when the base appears', async () => {
+    const seen = await boot({}, { extends: 'standard', pollIntervalMs: 100 })
+    const agents = join(root as string, 'agents')
+    await writeFile(join(agents, 'late.md'), '---\nextends: missing\n---\nLate.')
+    await vi.waitFor(() => { expect(seen.warnings).toHaveLength(1) })
+    await new Promise(resolve => setTimeout(resolve, 400))
+    expect(seen.warnings).toHaveLength(1)
+    await writeFile(join(agents, 'missing.md'), 'Missing.')
+    await vi.waitFor(() => { expect(seen.registered.has('late')).toBe(true) })
+    expect(seen.warnings).toHaveLength(1)
   })
 })
 

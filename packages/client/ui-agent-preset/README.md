@@ -33,6 +33,8 @@ Known shipped presets offer mode details and usage examples in a read-only dialo
 
 **Let the agent create a plugin** in the Plugins page's **Add plugin** arrow menu enters the same Creator flow as Settings. It submits no message and preserves unsent drafts. While the roster loads or Creator is unavailable, the menu item is disabled with an explanation. Both entries show a Toast with the reason if the Host refuses the preset switch.
 
+Settings also lists the agent files of the authoring folder under “Your agents”, each with whether it loaded and, when it did not, why. “New agent” and “Edit agent” open an editor on the file's complete text, front matter included. Saving validates the text on the Host and reloads the folder, so a saved agent appears in the roster at once; a file that saves but cannot load, such as one naming an absent base preset, stays open with its reason. Removing an agent takes a second click. The identifier of an existing agent cannot change, because it is also the file name.
+
 Entering Creator selects `cordis` for the receiving blank Session without changing the new-task default or Coding Tools setting. If no workspace or blank Session is bound yet, the choice waits for that binding. After the choice is applied, the Creator Session keeps its preset; a later newly created Session uses the configured default, such as Standard.
 
 <a id="understand-the-implementation"></a>
@@ -67,7 +69,7 @@ Selection changes affect only later tasks; existing plugins and prompts remain u
 
 <a id="known-limitations-and-deferred-work"></a>
 
-- Web creates and edits no preset: the configuration viewer is read-only, and a bundle installed through Creator mode declares a new preset or overrides a shipped one by row id, replacing its complete child list.
+- Web edits agent files as raw text, with no structured form for the front matter. The configuration viewer stays read-only for shipped presets, and a bundle installed through Creator mode declares a new preset or overrides a shipped one by row id, replacing its complete child list.
 
 <a id="dev-note"></a>
 ### Dev Note

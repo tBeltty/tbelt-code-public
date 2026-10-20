@@ -26,7 +26,7 @@ import {
 import type { ChildComposition, DelegatedPolicyOverrides } from './child-agent.ts'
 import { createAgentMessage, withContinuableReturnGuidance, createSettlementMessage } from './continuation-messages.ts'
 import { assertSubagentMaxDepth } from './depth.ts'
-import { foldSubagentDescriptor, snapshotSubagentDescriptor } from './descriptor.ts'
+import { foldSubagentDescriptor, snapshotOneShotSubagentDescriptor, snapshotSubagentDescriptor } from './descriptor.ts'
 import type { SubagentDescriptorData } from './descriptor.ts'
 import { establishCatalogChild, establishExternalCatalogChild } from './catalog.ts'
 import { SubagentError } from './error.ts'
@@ -391,14 +391,17 @@ export class SubagentManager {
     const agentProvider = agentOptions.provider
     const agentModel = agentOptions.model
     const agentReasoningEffort = agentOptions.reasoningEffort
-    const descriptor = snapshotSubagentDescriptor({
-      mode: 'continuable',
-      provider: spec.provider,
-      label: spec.label,
-      ...agentProvider !== undefined ? { agentProvider } : {},
-      ...agentModel !== undefined ? { agentModel } : {},
-      ...agentReasoningEffort !== undefined ? { agentReasoningEffort } : {},
-    })
+    const oneShot = request.oneShot === true
+    const descriptor: SubagentDescriptorData = oneShot
+      ? snapshotOneShotSubagentDescriptor({ provider: spec.provider, label: spec.label })
+      : snapshotSubagentDescriptor({
+        mode: 'continuable',
+        provider: spec.provider,
+        label: spec.label,
+        ...agentProvider !== undefined ? { agentProvider } : {},
+        ...agentModel !== undefined ? { agentModel } : {},
+        ...agentReasoningEffort !== undefined ? { agentReasoningEffort } : {},
+      })
     // Capture before the first await: a later parent switch belongs to the
     // parent's future, not to this child.
     const delegatedPolicies = captureDelegatedPolicyOverrides(parent)
@@ -458,7 +461,7 @@ export class SubagentManager {
         const childHeader = child.session.header
         return await this.submitMaterialized(
           activation,
-          spec.delivery !== 'caller' && isAdjacentAgentSendMessageTool(this.ctx.get('tools')?.get('send_message', child))
+          spec.delivery !== 'caller' && !oneShot && isAdjacentAgentSendMessageTool(this.ctx.get('tools')?.get('send_message', child))
             ? withContinuableReturnGuidance(parent.id, request.prompt)
             : request.prompt,
           { source: { kind: 'user' }, signal: spec.signal, delivery: 'queue' },
@@ -921,7 +924,15 @@ export class SubagentManager {
           setup,
         })
 
-      resource = { kind: 'local', handle, outputStart: handle.agent.session.seq, structured, failureAt: undefined, poke: Promise.withResolvers<void>() }
+      resource = {
+        kind: 'local',
+        handle,
+        outputStart: handle.agent.session.seq,
+        structured,
+        failureAt: undefined,
+        poke: Promise.withResolvers<void>(),
+        oneShot: create?.descriptor.mode === 'one-shot',
+      }
     }
     const observer = this.host.observeActivation(provider, childId, parent)
 
@@ -1254,7 +1265,9 @@ export class SubagentManager {
       const live = await this.locks.run(childId, async () => {
         const activation = this.resident.get(childId)
         if (activation === undefined) return this.coldResume(parent, childId, content, options)
-        requireLocalActivation(activation)
+        if (requireLocalActivation(activation).oneShot) {
+          throw new SubagentError(`subagent "${childId}" runs one task and does not accept follow-up input`, 'NOT_CONTINUABLE')
+        }
         const disposal = activation.closing
         /* v8 ignore next 3 -- the send-versus-dispose cutoff needs a delivery to
          * observe the transaction inside the same critical section that opened it. */

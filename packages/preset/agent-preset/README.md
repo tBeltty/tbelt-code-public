@@ -49,6 +49,8 @@ The package also ships the `skills/` directory that creator mode mounts through 
 
 The `audit-skills/` directory holds the `auditor-executor-protocol` skill that the `audit` and `audit-autonomous` presets mount, and `presets/audit-autonomous.md` is the agent file that derives `audit-autonomous` from `audit-manual`. `audit-manual` runs Guided: the persona tells the agent to end each message with a handoff the owner pastes. Neither preset is the default; the user picks one. The run mode is the `Run mode:` sentence in each persona.
 
+The `presets/roles/` directory holds the `inspector`, `coder` and `tester` agent files that extend `standard`; the Web profile's `subagent_inspector`, `subagent_coder` and `subagent_tester` tools select them with `agentPreset`. `inspector` denies `write`, `edit`, `bash` and `pwsh`.
+
 Edit `agent-experience` in [skills/agent-experience/SKILL.md](skills/agent-experience/SKILL.md). The repository discovery path, `.agents/skills/agent-experience/SKILL.md`, is a relative symbolic link to this file; the published package contains the regular file.
 
 <a id="agent-definition-files"></a>

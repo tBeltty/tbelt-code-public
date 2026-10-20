@@ -122,47 +122,34 @@
                   provider: fork
                   toolName: subagent_fork
                   backgroundMode: continuable
-              # Three named delegation roles over the same spawn backend, distinguished
-              # by real config, not persona text alone: Inspector cannot write or run
-              # shell commands and cannot delegate further; Coder is the unrestricted
-              # implementation role; Tester keeps the full toolset but runs one-shot
-              # with a depth of one. `toolFilter` is tool-name scoped, not path-scoped,
-              # so the test-vs-source distinction stays in each row's persona text.
+              # Three named delegation roles over the same spawn backend, each with its
+              # own Agent Preset (packages/preset/agent-preset/presets/roles): Inspector
+              # cannot write or run shell commands and cannot delegate further; Coder is
+              # the unrestricted implementation role; Tester keeps the full toolset but
+              # runs one-shot with a depth of one.
               - id: tool-subagent-inspector
                 name: '@deepseek-ai/dsh-tool-subagent'
                 config:
                   provider: spawn
                   toolName: subagent_inspector
+                  agentPreset: inspector
                   backgroundMode: continuable
                   maxDepth: 0
-                  persona: >-
-                    You are the Inspector: investigate and analyze without modifying the
-                    workspace. Read files, search the codebase, and report findings and
-                    recommendations. Never write, edit, or run shell commands, and never
-                    delegate to another subagent.
-                  toolFilter:
-                    deny: [write, edit, bash, pwsh]
               - id: tool-subagent-coder
                 name: '@deepseek-ai/dsh-tool-subagent'
                 config:
                   provider: spawn
                   toolName: subagent_coder
+                  agentPreset: coder
                   backgroundMode: continuable
-                  persona: >-
-                    You are the Coder: implement the requested change. Use the full
-                    tool set to read, write, edit, and run commands as the task needs.
               - id: tool-subagent-tester
                 name: '@deepseek-ai/dsh-tool-subagent'
                 config:
                   provider: spawn
                   toolName: subagent_tester
+                  agentPreset: tester
                   backgroundMode: one-shot
                   maxDepth: 1
-                  persona: >-
-                    You are the Tester: verify the requested work. Write and run tests,
-                    reproduce reported bugs, and report pass/fail results with evidence.
-                    Do not implement unrelated features; scope changes to what
-                    verification requires.
               - id: workflow-ptc
                 name: '@deepseek-ai/dsh-workflow-ptc'
                 config:

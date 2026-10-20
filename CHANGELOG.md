@@ -4,6 +4,12 @@ Notable changes to tBelt Code, newest first. The format follows [Keep a Changelo
 
 ## [Unreleased]
 
+## [0.2.1-rc.2.20261020.2] - 2026-10-20
+
+### Fixed
+
+- OpenCode now lists its free DeepSeek V4.1 Flash model.
+
 ## [0.2.1-rc.2.20261020] - 2026-10-20
 
 ### Added
@@ -340,7 +346,8 @@ Notable changes to tBelt Code, newest first. The format follows [Keep a Changelo
 - Downloads no longer return an older installer.
 - A key that ran out of credit or hit its spending limit is reported as a quota problem instead of an invalid API key.
 
-[Unreleased]: https://github.com/tBeltty/tbelt-code-public/compare/v0.2.1-rc.2.20261020...HEAD
+[Unreleased]: https://github.com/tBeltty/tbelt-code-public/compare/v0.2.1-rc.2.20261020.2...HEAD
+[0.2.1-rc.2.20261020.2]: https://github.com/tBeltty/tbelt-code-public/releases/tag/v0.2.1-rc.2.20261020.2
 [0.2.1-rc.2.20261020]: https://github.com/tBeltty/tbelt-code-public/releases/tag/v0.2.1-rc.2.20261020
 [0.2.1-alpha.2.20261015.2]: https://github.com/tBeltty/tbelt-code-public/releases/tag/v0.2.1-alpha.2.20261015.2
 [0.2.1-alpha.2.20261015]: https://github.com/tBeltty/tbelt-code-public/releases/tag/v0.2.1-alpha.2.20261015

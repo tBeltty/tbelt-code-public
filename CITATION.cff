@@ -1,0 +1,12 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it as below."
+title: "tbelt-code: Desktop Coding Agent Interface with Native OS Execution Sandboxes"
+type: software
+authors:
+  - family-names: Correa
+    given-names: Jhonatan
+    orcid: "https://orcid.org/0009-0006-7779-8729"
+    affiliation: "tBelt"
+version: "0.2.1-rc.2.20261020.4"
+license: AGPL-3.0-only
+repository-code: "https://github.com/tBeltty/tbelt-code-public"

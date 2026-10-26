@@ -1,6 +1,7 @@
 {
   "meta": {
     "title": "Terminaux persistants",
-    "description": "Maintient les processus shell actifs entre les appels d’outils."
+    "description": "Maintient les processus shell actifs entre les appels d’outils.",
+    "detail": "docs/DETAIL.md"
   }
 }

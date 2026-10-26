@@ -1,7 +1,7 @@
 {
   "name": "@deepseek-ai/dsh-web-search-brave",
   "description": "Brave Search-backed search provider for the tBelt Code web capability seam (ctx.web)",
-  "version": "0.2.1-rc.2",
+  "version": "0.2.1-rc.3",
   "publishConfig": {
     "access": "public"
   },

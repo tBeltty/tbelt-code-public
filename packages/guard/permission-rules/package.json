@@ -1,7 +1,7 @@
 {
   "name": "@deepseek-ai/dsh-permission-rules",
   "description": "Validated, hot-reloadable permission-rule table (per-tool and per-command-argument-pattern deny/ask/allow rules), stored through the settings service and enforced on every tool call via ctx.tools.guard() and tools/pre-execute",
-  "version": "0.2.1-rc.2",
+  "version": "0.2.1-rc.3",
   "publishConfig": {
     "access": "public"
   },
@@ -58,6 +58,7 @@
     "@deepseek-ai/dsh-subprocess-local": "workspace:*",
     "@deepseek-ai/dsh-shell-env": "workspace:*",
     "@deepseek-ai/dsh-tool-bash": "workspace:*",
+    "@deepseek-ai/dsh-tool-testkit": "workspace:*",
     "@deepseek-ai/cordis-plugin-loader": "workspace:^",
     "@types/picomatch": "^3.0.2"
   }

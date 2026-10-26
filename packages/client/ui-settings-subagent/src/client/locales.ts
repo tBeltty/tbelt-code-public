@@ -60,7 +60,16 @@ export const en = {
   subagentModelSelectionOff: 'Subagents use configured defaults or inherit the parent agent\'s model. Saved model choices are retained.',
 } satisfies Record<string, string>
 
-/** Spanish dictionary, checked complete against the English key set. */
+/**
+ * The form frame's copy, read from this page's dictionary.
+ * @param t - the page's locale reader.
+ * @returns the labels the shared settings form renders.
+ */
+export function formLabels(t: (key: SubagentSettingsLocaleKey) => string): SettingsFormLabels {
+  return { unavailable: t('unavailable'), readOnly: t('readOnly'), saveFailed: t('saveFailed'), save: t('save'), saving: t('saving') }
+}
+
+/** Spanish dictionary, checked against the English keys. */
 export const es = {
   overridden: 'Modificado',
   reset: 'Restablecer el valor predeterminado',
@@ -138,7 +147,7 @@ export const el = {
   subagentModelSelectionOff: 'Οι υποπράκτορες χρησιμοποιούν τις ρυθμισμένες προεπιλογές ή κληρονομούν το μοντέλο του γονικού πράκτορα. Οι αποθηκευμένες επιλογές μοντέλων διατηρούνται.',
 } satisfies Record<keyof typeof en, string>
 
-/** French dictionary, checked complete against the English key set. */
+/** French dictionary, checked against the English keys. */
 export const fr = {
   overridden: 'Remplacé',
   reset: 'Rétablir la valeur par défaut',
@@ -176,12 +185,3 @@ export const fr = {
   subagentModelSelectionConflict: 'Les paramètres ont changé ailleurs. Abandonnez votre brouillon et réessayez.',
   subagentModelSelectionOff: 'Les sous-agents utilisent les valeurs par défaut configurées ou héritent du modèle de l’agent parent. Les choix de modèles enregistrés sont conservés.',
 } satisfies Record<keyof typeof en, string>
-
-/**
- * The form frame's copy, read from this page's dictionary.
- * @param t - the page's locale reader.
- * @returns the labels the shared settings form renders.
- */
-export function formLabels(t: (key: SubagentSettingsLocaleKey) => string): SettingsFormLabels {
-  return { unavailable: t('unavailable'), readOnly: t('readOnly'), saveFailed: t('saveFailed'), save: t('save'), saving: t('saving') }
-}

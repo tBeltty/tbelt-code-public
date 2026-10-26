@@ -68,7 +68,7 @@ export const frequencyEn = {
   'relative.overdue': '{value} {unit} overdue',
 } satisfies Record<string, string>
 
-/** Spanish counterpart of {@link frequencyEn}. */
+/** Spanish dictionary, checked against the English keys. */
 export const frequencyEs = {
   'time.locale': 'es',
   'time.utcPrefix': 'UTC',
@@ -124,7 +124,7 @@ export const frequencyEs = {
   'relative.now': 'Vence ahora',
   'relative.future': 'en {value} {unit}',
   'relative.overdue': '{value} {unit} de retraso',
-} satisfies Record<keyof typeof frequencyEn, string>
+} satisfies typeof frequencyEn
 
 /** Greek counterpart of {@link frequencyEn}. */
 export const frequencyEl = {
@@ -184,7 +184,7 @@ export const frequencyEl = {
   'relative.overdue': 'Καθυστέρηση {value} {unit}',
 } satisfies Record<keyof typeof frequencyEn, string>
 
-/** French counterpart of {@link frequencyEn}. */
+/** French dictionary, checked against the English keys. */
 export const frequencyFr = {
   'time.locale': 'fr',
   'time.utcPrefix': 'UTC',
@@ -240,4 +240,4 @@ export const frequencyFr = {
   'relative.now': 'Échéance maintenant',
   'relative.future': 'dans {value} {unit}',
   'relative.overdue': '{value} {unit} de retard',
-} satisfies Record<keyof typeof frequencyEn, string>
+} satisfies typeof frequencyEn

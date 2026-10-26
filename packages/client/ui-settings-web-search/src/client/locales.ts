@@ -41,7 +41,24 @@ export const en = {
   saveFailed: 'The deployment did not accept these values; they were left for you to correct.',
 } satisfies Record<string, string>
 
-/** Spanish dictionary, checked complete against the English key set. */
+/** Locale key naming each shipped provider; another id renders as itself. */
+export const PROVIDER_NAMES: Readonly<Record<string, WebSearchSettingsLocaleKey>> = {
+  exa: 'providerExa',
+  perplexity: 'providerPerplexity',
+  brave: 'providerBrave',
+  tavily: 'providerTavily',
+}
+
+/**
+ * The form frame's copy, read from this page's dictionary.
+ * @param t - the page's locale reader.
+ * @returns the labels the shared settings form renders.
+ */
+export function formLabels(t: (key: WebSearchSettingsLocaleKey) => string): SettingsFormLabels {
+  return { unavailable: t('unavailable'), readOnly: t('readOnly'), saveFailed: t('saveFailed'), save: t('save'), saving: t('saving') }
+}
+
+/** Spanish dictionary, checked against the English keys. */
 export const es = {
   title: 'Búsqueda web',
   description: 'Elige el proveedor de búsqueda que usa el agente para obtener información actual.',
@@ -101,7 +118,7 @@ export const el = {
   saveFailed: 'Η εγκατάσταση δεν δέχτηκε αυτές τις τιμές· αφέθηκαν για να τις διορθώσετε.',
 } satisfies Record<keyof typeof en, string>
 
-/** French dictionary, checked complete against the English key set. */
+/** French dictionary, checked against the English keys. */
 export const fr = {
   title: 'Recherche web',
   description: 'Choisissez le fournisseur de recherche que l’agent utilise pour obtenir des informations récentes.',
@@ -130,20 +147,3 @@ export const fr = {
   saving: 'Enregistrement…',
   saveFailed: 'Le déploiement n’a pas accepté ces valeurs\u00a0; elles ont été laissées pour que vous les corrigiez.',
 } satisfies Record<keyof typeof en, string>
-
-/** Locale key naming each shipped provider; another id renders as itself. */
-export const PROVIDER_NAMES: Readonly<Record<string, WebSearchSettingsLocaleKey>> = {
-  exa: 'providerExa',
-  perplexity: 'providerPerplexity',
-  brave: 'providerBrave',
-  tavily: 'providerTavily',
-}
-
-/**
- * The form frame's copy, read from this page's dictionary.
- * @param t - the page's locale reader.
- * @returns the labels the shared settings form renders.
- */
-export function formLabels(t: (key: WebSearchSettingsLocaleKey) => string): SettingsFormLabels {
-  return { unavailable: t('unavailable'), readOnly: t('readOnly'), saveFailed: t('saveFailed'), save: t('save'), saving: t('saving') }
-}

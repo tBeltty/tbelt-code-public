@@ -1,6 +1,7 @@
 {
   "meta": {
-    "title": "Git Worktrees",
-    "description": "Επιτρέπει στον πράκτορα να δημιουργήσει νέο κλάδο και worktree του Git και να συνεχίσει εκεί."
+    "title": "Git worktrees",
+    "description": "Επιτρέπει στον πράκτορα να δημιουργήσει νέο κλάδο και worktree του Git και να συνεχίσει εκεί.",
+    "detail": "docs/DETAIL.md"
   }
 }

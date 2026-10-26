@@ -22,7 +22,7 @@ export const en = {
   changed: 'The file changed while being read. Reopen the preview.',
 } satisfies Record<string, string>
 
-/** Spanish dictionary, checked complete against the English key set. */
+/** Spanish dictionary, checked against the English keys. */
 export const es = {
   title: 'Documento de Office',
   loading: 'Renderizando documento...',
@@ -60,7 +60,7 @@ export const el = {
   changed: 'Το αρχείο άλλαξε κατά την ανάγνωση. Ανοίξτε ξανά την προεπισκόπηση.',
 } satisfies Record<keyof typeof en, string>
 
-/** French dictionary, checked complete against the English key set. */
+/** French dictionary, checked against the English keys. */
 export const fr = {
   title: 'Document Office',
   loading: 'Rendu du document...',

@@ -1,6 +1,6 @@
 {
   "meta": {
-    "title": "Utilisation du navigateur (Playwright)",
+    "title": "Utilisation du navigateur (dramaturge)",
     "description": "Permet au modèle de naviguer sur des pages web et de les manipuler via Playwright MCP dans un Chromium lancé."
   }
 }

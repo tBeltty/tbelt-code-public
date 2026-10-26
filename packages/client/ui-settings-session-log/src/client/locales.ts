@@ -4,9 +4,9 @@ export const en = {
   description: 'Help improve DeepSeek models and products.',
   saved: 'Preference saved',
   failed: 'Could not save preference',
-}
+} satisfies Record<string, string>
 
-/** Spanish dictionary, checked complete against the English key set. */
+/** Spanish dictionary, checked against the English keys. */
 export const es = {
   title: 'Subir el registro de sesión al usar la API oficial del modelo',
   description: 'Ayuda a mejorar los modelos y productos de DeepSeek.',
@@ -22,7 +22,7 @@ export const el = {
   failed: 'Δεν ήταν δυνατή η αποθήκευση της προτίμησης',
 } satisfies Record<keyof typeof en, string>
 
-/** French dictionary, checked complete against the English key set. */
+/** French dictionary, checked against the English keys. */
 export const fr = {
   title: 'Téléverser le journal de session lors de l’utilisation de l’API officielle du modèle',
   description: 'Aidez à améliorer les modèles et les produits DeepSeek.',

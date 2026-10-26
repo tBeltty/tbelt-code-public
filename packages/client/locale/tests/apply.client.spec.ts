@@ -176,7 +176,7 @@ describe('locale apply', () => {
     const languagePack = b.ctx.plugin({
       inject: ['locale'],
       apply: packCtx => packCtx.effect(
-        () => packCtx.locale.addLanguage({ id: 'ja', label: '日本語', fallback: 'en' }),
+        () => packCtx.locale.addLanguage({ id: 'it', label: 'Italiano', fallback: 'en' }),
         'test language pack registration',
       ),
     })
@@ -186,7 +186,7 @@ describe('locale apply', () => {
       { id: 'es', label: 'Español' },
       { id: 'el', label: 'Ελληνικά' },
       { id: 'fr', label: 'Français' },
-      { id: 'ja', label: '日本語' },
+      { id: 'it', label: 'Italiano' },
     ])
 
     await languagePack.dispose()

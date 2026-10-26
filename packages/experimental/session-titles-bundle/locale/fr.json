@@ -1,6 +1,7 @@
 {
   "meta": {
     "title": "Titres qui suivent la conversation",
-    "description": "Actualise les titres de session à mesure que de nouveaux messages de l’utilisateur arrivent."
+    "description": "Actualise les titres de session à mesure que de nouveaux messages de l’utilisateur arrivent.",
+    "detail": "docs/DETAIL.md"
   }
 }

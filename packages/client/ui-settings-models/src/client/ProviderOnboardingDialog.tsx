@@ -14,7 +14,7 @@ import type { ReactNode } from 'react'
 import type { SnapshotStore } from '@deepseek-ai/dsh-client-store'
 import type { InjectFace, PropsRuntime } from '@deepseek-ai/dsh-client-ui-slots'
 import type { ModelsSettingsState, ModelsSettingsStore } from './store.ts'
-import { onboardingReadiness, protocolChoices } from './store.ts'
+import { onboardingReadiness, protocolChoices, reasoningLevelChoices } from './store.ts'
 import type { ModelsOperations } from './operations.ts'
 import type { SettingsSchemaOperations } from './schema-operations.ts'
 import { CustomProviderCard } from './CustomProviderCard.tsx'
@@ -133,6 +133,7 @@ export function ProviderOnboardingDialog(props: ProviderOnboardingDialogProps): 
   }
 
   const protocols = protocolChoices(state.namespaces.get('llm-pi-ai'), schema)
+  const reasoningLevels = reasoningLevelChoices(state.namespaces.get('llm-pi-ai'), schema)
   const namespace = state.namespaces.get('llm-pi-ai')
 
   if (customOpen && namespace !== undefined) {
@@ -142,6 +143,7 @@ export function ProviderOnboardingDialog(props: ProviderOnboardingDialogProps): 
           <CustomProviderCard
             taken={state.rows.map(row => row.entry.provider)}
             protocols={protocols}
+            reasoningLevels={reasoningLevels}
             revision={namespace.revision}
             operations={operations}
             t={t}

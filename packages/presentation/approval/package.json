@@ -1,7 +1,7 @@
 {
   "name": "@deepseek-ai/dsh-presentation-approval",
   "description": "Plain-language approval prompt, decisions and session grants shared by the GUI and terminal clients",
-  "version": "0.2.1-rc.2",
+  "version": "0.2.1-rc.3",
   "publishConfig": {
     "access": "public"
   },

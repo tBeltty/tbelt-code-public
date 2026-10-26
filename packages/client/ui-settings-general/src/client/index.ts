@@ -9,6 +9,8 @@
  * Export discipline: packages/client/AGENTS.md.
  */
 import type { Context as ClientContext } from '@deepseek-ai/cordis'
+// Type-only: pulls the remoteAccess service merge (ctx.remoteAccess).
+import type {} from '@deepseek-ai/dsh-api-remote-access/client'
 // Type-only: pulls the ctx.remote merge and its fixed Host facts.
 import type {} from '@deepseek-ai/dsh-api-remotes/client'
 import type { ConnectionHandle } from '@deepseek-ai/dsh-client-connection/client'
@@ -24,6 +26,7 @@ import type {} from '@deepseek-ai/dsh-client-ui-settings/client'
 import type {} from '@deepseek-ai/dsh-client-locale/client'
 import type {} from '@deepseek-ai/dsh-client-ui-renderer/client'
 import type {} from '@deepseek-ai/dsh-client-ui-session/client'
+import type {} from '@deepseek-ai/dsh-client-product-analytics/client'
 import type {
   SettingsOnboardingStep, SettingsRootInjected, SettingsSectionRow,
 } from './shell-contract.ts'
@@ -71,7 +74,7 @@ const NS = 'settings'
  * ui-settings' apply, whose activation order relative to this one is NOT
  * constrained; registrations depend on their slots through `slots.inject()`.
  */
-export const inject = ['slots', 'locale', 'connection', 'remote', 'remote.settings', 'configForms', 'shortcuts', 'modules']
+export const inject = ['slots', 'locale', 'connection', 'remote', 'remote.settings', 'configForms', 'shortcuts', 'modules', 'remoteAccess']
 
 /**
  * Register the `settings` dictionaries, the chrome content, and the General
@@ -83,7 +86,15 @@ export function apply(ctx: ClientContext): void {
     name: 'settings.general.item', id: 'developer-tools', order: 15, locale: NS,
     inject: (): DeveloperToolsRowInjected => ({
       hooks: { developerTools: ctx.configForms.developerTools.enabled },
-      setEnabled: enabled => ctx.configForms.developerTools.setEnabled(enabled),
+      setEnabled: async (enabled) => {
+        const settings = ctx.configForms.get<{ enabled: boolean }>('ui-settings')
+        const previous = settings.getSnapshot().value?.enabled
+        const timestamp = Date.now()
+        await ctx.configForms.developerTools.setEnabled(enabled)
+        if (previous !== undefined && previous !== enabled && settings.getSnapshot().value?.enabled === enabled) {
+          ctx.get('productAnalytics')?.track('code_work_view_toggle', { is_enabled: enabled }, timestamp)
+        }
+      },
     }),
   }, DeveloperToolsRow))
   // Version information follows the core preferences.
@@ -191,53 +202,55 @@ export function apply(ctx: ClientContext): void {
       },
     },
   })
-  ctx.slots.inject('sidebar.settings', () => {
-    const shellHandle = createSettingsShellStore()
-    const shellInstance = shellHandle.create()
-    const shellStore: typeof shellHandle = { ...shellHandle, create: () => shellInstance }
-    const disposeCommand = ctx.shortcuts.register({
-      id: 'settings.open' as ShortcutCommandId, label: () => t('shortcut.open'), aliases: ['settings', 'preferences'],
-      defaults: {
-        'desktop:macos': { code: 'Comma', modifiers: ['primary'] },
-        'desktop:windows': { code: 'Comma', modifiers: ['primary'] },
-        'desktop:linux': { code: 'Comma', modifiers: ['primary'] },
-        'web:macos': { code: 'Comma', modifiers: ['primary', 'alt'] },
-        'web:windows': { code: 'Comma', modifiers: ['primary', 'alt'] },
-      },
-      regions: ['page', 'editable', 'terminal'], modals: ['settings'],
-      resolve: ({ modal }) => {
-        if (modal !== null && modal !== 'settings') return { status: 'blocked', reason: 'modal' }
-        return { status: 'handled', run: () => {
-          if (modal === 'settings') closeTopModal(document)
-          else shellInstance.actions.open()
-        } }
-      },
-    })
+  // The settings shell reads this host's configuration, so it follows access to its description.
+  ctx.remoteAccess.whenAccess('settings/describe', () =>
+    ctx.slots.inject('sidebar.settings', () => {
+      const shellHandle = createSettingsShellStore()
+      const shellInstance = shellHandle.create()
+      const shellStore: typeof shellHandle = { ...shellHandle, create: () => shellInstance }
+      const disposeCommand = ctx.shortcuts.register({
+        id: 'settings.open' as ShortcutCommandId, label: () => t('shortcut.open'), aliases: ['settings', 'preferences'],
+        defaults: {
+          'desktop:macos': { code: 'Comma', modifiers: ['primary'] },
+          'desktop:windows': { code: 'Comma', modifiers: ['primary'] },
+          'desktop:linux': { code: 'Comma', modifiers: ['primary'] },
+          'web:macos': { code: 'Comma', modifiers: ['primary', 'alt'] },
+          'web:windows': { code: 'Comma', modifiers: ['primary', 'alt'] },
+        },
+        regions: ['page', 'editable', 'terminal'], modals: ['settings'],
+        resolve: ({ modal }) => {
+          if (modal !== null && modal !== 'settings') return { status: 'blocked', reason: 'modal' }
+          return { status: 'handled', run: () => {
+            if (modal === 'settings') closeTopModal(document)
+            else shellInstance.actions.open()
+          } }
+        },
+      })
 
-    const disposeSlot = ctx.slots.register({
-      name: 'sidebar.settings',
-      locale: NS,
-      store: shellStore,
-      children: {
-        'settings.launcher': { kind: 'single', scope: 'root' },
-        'settings.trigger': { kind: 'single', scope: 'root' },
-        'settings.header': { kind: 'single', scope: 'root' },
-        'settings.action': { kind: 'list', scope: 'root' },
-        'settings.close': { kind: 'single', scope: 'root' },
-        'settings.section': { kind: 'list', scope: 'root' },
-        'settings.onboarding': { kind: 'list', scope: 'root' },
-      },
-      inject: shellInjected,
-    }, SettingsRoot)
-    const disposeNavigation = ctx.reflect.provide('settingsNavigation', {
-      openSection: (id: string) => { shellInstance.actions.openSection(id) },
-    })
-    return () => {
-      void disposeNavigation()
-      disposeCommand()
-      disposeSlot()
-    }
-  })
+      const disposeSlot = ctx.slots.register({
+        name: 'sidebar.settings',
+        locale: NS,
+        store: shellStore,
+        children: {
+          'settings.launcher': { kind: 'single', scope: 'root' },
+          'settings.trigger': { kind: 'single', scope: 'root' },
+          'settings.header': { kind: 'single', scope: 'root' },
+          'settings.action': { kind: 'list', scope: 'root' },
+          'settings.close': { kind: 'single', scope: 'root' },
+          'settings.section': { kind: 'list', scope: 'root' },
+          'settings.onboarding': { kind: 'list', scope: 'root' },
+        },
+        inject: shellInjected,
+      }, SettingsRoot)
+      const disposeNavigation = ctx.reflect.provide('settingsNavigation', {
+        openSection: (id: string) => { shellInstance.actions.openSection(id) },
+      })
+      return () => {
+        void disposeNavigation()
+        disposeCommand()
+        disposeSlot()
+      }
+    }))
 
   ctx.slots.inject('settings.trigger', () =>
     ctx.slots.register({ name: 'settings.trigger', locale: NS }, TriggerContent))

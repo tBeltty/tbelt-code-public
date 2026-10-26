@@ -31,7 +31,7 @@ import type {} from './slot-contract.ts'
 import { CustomProviderCard } from './CustomProviderCard.tsx'
 import { LOCAL_PROVIDER_TEMPLATES } from './provider-templates.ts'
 import type { ProviderTemplate } from './provider-templates.ts'
-import { deriveKeyRef, protocolChoices, providerUsable } from './store.ts'
+import { deriveKeyRef, protocolChoices, providerUsable, reasoningLevelChoices } from './store.ts'
 import type { ModelsSettingsStore, ProviderRow } from './store.ts'
 import type { ModelsOperations } from './operations.ts'
 import type { SettingsSchemaOperations } from './schema-operations.ts'
@@ -389,6 +389,7 @@ function Loaded({ injected, renderSlot }: { injected: ModelsSectionFace; renderS
   // there is nothing to declare and the mode is not offered.
   const piAi = state.namespaces.get('llm-pi-ai')
   const protocols = protocolChoices(piAi, schema)
+  const reasoningLevels = reasoningLevelChoices(piAi, schema)
   // Each mode is offered while its namespace is mounted and enabled while it
   // has something to offer; the card shows the chosen mode where both are
   // offered, else the only one there is. A mode's panel is mounted while it is
@@ -715,6 +716,7 @@ function Loaded({ injected, renderSlot }: { injected: ModelsSectionFace; renderS
                       key={customTemplate?.id ?? 'blank'}
                       taken={state.rows.map(row => row.entry.provider)}
                       protocols={protocols}
+                      reasoningLevels={reasoningLevels}
                       revision={piAi.revision}
                       operations={operations}
                       t={t}

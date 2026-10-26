@@ -43,7 +43,6 @@ import type { Agent, PreStepDecision } from '@deepseek-ai/dsh-agent'
 import { createUserMessage, LlmError } from '@deepseek-ai/dsh-llm'
 import type { UserMessage } from '@deepseek-ai/dsh-llm'
 import type { Session } from '@deepseek-ai/dsh-session'
-import type {} from '@deepseek-ai/dsh-session-projection'
 import type {} from '@deepseek-ai/dsh-token-meter'
 import type { ToolExecution, ToolExecutionResult, ToolExecutionToken } from '@deepseek-ai/dsh-tools'
 import { walkRepoFiles } from './walk.ts'
@@ -140,7 +139,7 @@ interface ProjectionTouch {
  * and `agent/pre-step`.
  */
 export class RepoMap extends Service {
-  static inject = ['sessionProjections', 'subprocess', 'tokenMeter']
+  static inject = ['agents', 'subprocess', 'tokenMeter']
   static Config: z<Config> = z.object({
     rootDir: z.string(),
     repoMapContextFraction: z.number().min(0).max(1).default(DEFAULT_REPO_MAP_CONTEXT_FRACTION),
@@ -299,10 +298,7 @@ export class RepoMap extends Service {
   }
 
   private stepIsOpen(session: Session): boolean {
-    const boundary = this.ctx.sessionProjections.stateOf(session, 'turnBoundary')
-    if (boundary === undefined) {
-      throw new RepoMapError('repo-map requires the turnBoundary session projection', 'REPO_MAP_MISSING_PROJECTION')
-    }
+    const boundary = this.ctx.agents.turnBoundaryOf(session)
     return boundary.openTurnStartSeq !== null
       && boundary.lastStepBoundary !== null
       && boundary.lastStepBoundary.kind === 'start'

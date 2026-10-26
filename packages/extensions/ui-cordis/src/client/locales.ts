@@ -67,7 +67,7 @@ export const en = {
   'body.copied': 'Copied',
 } satisfies Record<string, string>
 
-/** Spanish dictionary, checked complete against the English key set. */
+/** Spanish dictionary, checked against the English keys. */
 export const es = {
   'row.defineTitle': 'Registrar plugin de Cordis',
   'a11y.preparing': 'Preparando una llamada a la herramienta de Cordis',
@@ -177,7 +177,7 @@ export const el = {
   'body.copied': 'Αντιγράφηκε',
 } satisfies Record<keyof typeof en, string>
 
-/** French dictionary, checked complete against the English key set. */
+/** French dictionary, checked against the English keys. */
 export const fr = {
   'row.defineTitle': 'Enregistrer un plugin Cordis',
   'a11y.preparing': 'Préparation d’un appel d’outil Cordis',

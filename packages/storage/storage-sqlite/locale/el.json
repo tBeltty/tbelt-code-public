@@ -1,0 +1,6 @@
+{
+  "meta": {
+    "title": "Αποθήκευση SQLite",
+    "description": "Αποθηκεύει δεδομένα κλειδιού-τιμής του Harness σε SQLite."
+  }
+}

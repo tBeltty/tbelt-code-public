@@ -1,0 +1,6 @@
+{
+  "meta": {
+    "title": "Backend υποπράκτορα tBelt Code SDK",
+    "description": "Εκτελεί το Harness σε υποδιεργασία μέσω του SDK TypeScript και JSON-RPC στην τυπική είσοδο και έξοδο."
+  }
+}

@@ -113,8 +113,9 @@ function optionsOf(
 export function apply(ctx: ClientContext): void {
   const command = ctx.get('commandUi') as CommandUiContract
   const sessions = ctx.sessions
+  const accessDictionaries = { en: accessEn, es: accessEs, el: accessEl, fr: accessFr }
   ctx.effect(
-    () => ctx.locale.register(PERMISSION_ACCESS_NS, { en: accessEn, es: accessEs, el: accessEl, fr: accessFr }),
+    () => ctx.locale.register(PERMISSION_ACCESS_NS, accessDictionaries),
     'ui-permission: current-session dictionaries',
   )
   const t = ctx.locale.bind(PERMISSION_ACCESS_NS)

@@ -14,7 +14,6 @@ import { dirname, join, relative, sep } from 'node:path'
 import type { Context } from '@deepseek-ai/cordis'
 import type { Agent } from '@deepseek-ai/dsh-agent'
 import type { FsTarget } from '@deepseek-ai/dsh-fs'
-import type {} from '@deepseek-ai/dsh-session-projection'
 import {
   buildCheckpointTree,
   commitCheckpointTree,
@@ -39,12 +38,12 @@ interface GitSafetyNetActor {
 }
 
 /**
- * The turn to stamp a checkpoint with: `agent.session`'s `turnBoundary` projection `lastTurn`
- * when both an agent and the (optional) `sessionProjections` registry are available, else `0`
+ * The turn to stamp a checkpoint with: `agent.session`'s turn-boundary `lastTurn`
+ * when both an agent and the (optional) `agents` registry are available, else `0`
  * ("no attributable turn" — matches `@deepseek-ai/dsh-agent`'s `TurnBoundaryProjection` own
  * documented capability-absence contract, and is what an edit with no agent, or a composition
- * with no `@deepseek-ai/dsh-agent-loop` mounted, always reports).
- * @param ctx - context checkpointing may read the optional `sessionProjections` registry from.
+ * with no `@deepseek-ai/dsh-agent` mounted, always reports).
+ * @param ctx - context checkpointing may read the optional `agents` registry from.
  * @param actor - the `fs/edit-intent` waterfall's opaque actor argument.
  */
 function resolveTurn(ctx: Context, actor: object | undefined): number {
@@ -53,7 +52,7 @@ function resolveTurn(ctx: Context, actor: object | undefined): number {
   // oxlint-disable-next-line typescript/no-unnecessary-type-assertion -- The analyzers disagree on this weak type.
   const agent = (actor as GitSafetyNetActor | undefined)?.agent
   if (agent === undefined) return 0
-  return ctx.get('sessionProjections')?.stateOf(agent.session, 'turnBoundary')?.lastTurn ?? 0
+  return ctx.get('agents')?.turnBoundaryOf(agent.session).lastTurn ?? 0
 }
 
 /** Cordis plugin name used by loader diagnostics. */

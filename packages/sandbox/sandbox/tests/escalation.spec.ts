@@ -89,6 +89,8 @@ describe('approveEscalation', () => {
       displayReason: {
         en: 'Allow this operation with workspace-write permissions: the user asked to write in the workspace',
         es: 'Permitir esta operación con permisos workspace-write: the user asked to write in the workspace',
+        el: 'Να επιτραπεί αυτή η λειτουργία με δικαιώματα workspace-write: the user asked to write in the workspace',
+        fr: 'Autoriser cette opération avec les permissions workspace-write : the user asked to write in the workspace',
       },
     })
   })

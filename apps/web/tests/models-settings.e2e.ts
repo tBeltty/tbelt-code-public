@@ -20,7 +20,7 @@ import { readFile } from 'node:fs/promises'
 import { fileURLToPath } from 'node:url'
 import { join } from 'node:path'
 import type { Browser, Page, Request, Route } from 'playwright'
-import { chromium } from 'playwright'
+import { chromium, webkit } from 'playwright'
 import { afterAll, beforeAll, describe, expect, it, onTestFailed, vi } from 'vitest'
 import {
   assertFixtureInventory, captureStableAria, compareOrRefreshGolden,
@@ -232,14 +232,14 @@ describe('web e2e: Models settings page configures a dormant provider', () => {
     expect(tripwire.pageErrors).toEqual([])
   }, 60_000)
 
-  it('filters the discovered model catalog and clears hidden selections', async () => {
+  it('filters the discovered model catalog and deselects only visible candidates', async () => {
     onTestFailed(() => saveFailureShot(page, 'web-e2e-models-picker'))
     const settingsDialog = page.getByRole('dialog', { name: 'Settings' })
     await settingsDialog.getByRole('button', { name: 'Edit minimax-cn' }).click()
     await settingsDialog.getByText('Customized settings').click()
     await settingsDialog.getByRole('button', { name: 'Fetch available models' }).click()
 
-    const picker = page.getByRole('dialog', { name: 'Choose models to add' })
+    const picker = page.getByRole('dialog', { name: 'Choose models' })
     await picker.waitFor({ timeout: 10_000 })
     const boxes = picker.getByRole('checkbox')
     const count = await boxes.count()
@@ -259,12 +259,13 @@ describe('web e2e: Models settings page configures a dormant provider', () => {
     await search.fill('')
     await expect.poll(async () => boxes.count()).toBe(count)
     const restored = await boxes.evaluateAll(nodes => nodes.map(node => (node as HTMLInputElement).checked))
-    expect(restored).toEqual(Array.from({ length: count }, () => false))
+    expect(restored.filter(checked => !checked)).toHaveLength(1)
+    expect(await picker.getByRole('checkbox', { name: 'MiniMax-M2.7-highspeed', exact: true }).isChecked()).toBe(false)
     await picker.getByRole('button', { name: 'Select all' }).waitFor()
     await picker.getByRole('button', { name: 'Select all' }).click()
     const snapshot = await captureStableAria(
       page,
-      '[role="dialog"][aria-label="Choose models to add"]',
+      '[role="dialog"][aria-label="Choose models"]',
       scaffold.workspaceCwd,
     )
     await compareOrRefreshGolden(MODEL_PICKER_EXPECTED, snapshot, MODE)
@@ -299,6 +300,8 @@ describe('web e2e: Models settings page configures a dormant provider', () => {
     await custom.getByRole('button', { name: 'Add model', exact: true }).click()
     await custom.getByLabel('Model ID 1').fill('acme-large')
     await custom.getByRole('button', { name: 'Model options 1' }).click()
+    expect(await custom.getByLabel('Context window 1').getAttribute('placeholder')).toBe('1M')
+    expect(await custom.getByLabel('Max output tokens 1').getAttribute('placeholder')).toBe('128K')
     expect(await custom.getByRole('group', { name: 'Input types 1' }).getByRole('checkbox', { name: 'Image' }).isChecked()).toBe(false)
     await custom.getByRole('group', { name: 'Input types 1' }).getByRole('checkbox', { name: 'Image' }).check()
     await custom.getByRole('button', { name: 'Create provider', exact: true }).click()
@@ -309,6 +312,7 @@ describe('web e2e: Models settings page configures a dormant provider', () => {
     expect(document).toContain('acme-gateway:')
     expect(document).toContain('reasoningEfforts:')
     await expect(scaffold.ctx.llm.resolveModelInfo('acme-gateway', 'acme-large')).resolves.toMatchObject({
+      context: { contextWindow: 1_000_000 },
       inputModalities: ['text', 'image'],
       reasoning: { efforts: [{ id: 'off', name: 'Off' }, { id: 'low', name: 'Low' }, { id: 'high', name: 'High' }] },
     })
@@ -355,7 +359,7 @@ describe('web e2e: Models settings page configures a dormant provider', () => {
     await dialog.getByText('Acme 网关', { exact: true }).first().waitFor({ timeout: 10_000 })
     // The status line names the route as the refreshed directory reports it;
     // the target captured when the card opened still carries the old name.
-    await dialog.getByText('已保存 Acme 网关 (acme-gateway)。', { exact: true }).waitFor({ timeout: 10_000 })
+    await dialog.getByText('Saved Acme 网关 (acme-gateway).', { exact: true }).waitFor({ timeout: 10_000 })
     const document = await readFile(join(scaffold.harnessHome, 'profiles', 'scaffold', 'cordis.patch.yml'), 'utf8')
     expect(document).toContain('api: anthropic-messages')
     expect(document).toContain('displayName: Acme 网关')
@@ -371,7 +375,7 @@ describe('web e2e: Models settings page configures a dormant provider', () => {
   it('saves image-only input and reopens the same selection', async () => {
     onTestFailed(() => saveFailureShot(page, 'web-e2e-models-input-types'))
     const dialog = page.getByRole('dialog', { name: 'Settings' })
-    await dialog.getByRole('button', { name: '编辑 Acme 网关 (acme-gateway)' }).click()
+    await dialog.getByRole('button', { name: 'Edit Acme 网关 (acme-gateway)' }).click()
     await dialog.getByText('Customized settings').click()
     await dialog.getByRole('button', { name: 'Model options 1' }).click()
     expect(await dialog.getByRole('group', { name: 'Input types 1' }).getByRole('checkbox', { name: 'Image' }).isChecked()).toBe(false)
@@ -426,8 +430,8 @@ describe('web e2e: Models settings page configures a dormant provider', () => {
       for (const read of obsolete) read.release()
       await Promise.all(oldResponses.map(async (response) => { await (await response).finished() }))
       await page.evaluate(() => new Promise<void>(resolve => requestAnimationFrame(() => { requestAnimationFrame(() => { resolve() }) })))
-      const saved = dialog.getByText('已保存 Acme 网关 (acme-gateway)。', { exact: true })
-      const edit = dialog.getByRole('button', { name: '编辑 Acme 网关 (acme-gateway)' })
+      const saved = dialog.getByText('Saved Acme 网关 (acme-gateway).', { exact: true })
+      const edit = dialog.getByRole('button', { name: 'Edit Acme 网关 (acme-gateway)' })
       expect(await saved.count()).toBe(0)
       expect(await edit.isDisabled()).toBe(true)
       await compareOrRefreshGolden(join(SNAPSHOT_DIR, 'refreshing.expected.md'),
@@ -494,11 +498,11 @@ describe('web e2e: Models settings page configures a dormant provider', () => {
 
       await dialog.getByRole('button', { name: 'Delete model 1' }).click()
       await dialog.getByRole('button', { name: 'Fetch available models' }).click()
-      const picker = page.getByRole('dialog', { name: 'Choose models to add' })
+      const picker = page.getByRole('dialog', { name: 'Choose models' })
       await picker.getByRole('button', { name: 'Deselect all' }).click()
       await picker.getByRole('searchbox', { name: 'Search models' }).fill('gpt-6-astra')
       await picker.getByRole('checkbox', { name: 'gpt-6-astra', exact: true }).check()
-      await picker.getByRole('button', { name: 'Add selected' }).click()
+      await picker.getByRole('button', { name: 'Update list' }).click()
       await dialog.getByRole('button', { name: 'Model options 1' }).click()
       expect(await image.isChecked()).toBe(true)
       await dialog.getByRole('button', { name: 'Save', exact: true }).click()
@@ -507,10 +511,140 @@ describe('web e2e: Models settings page configures a dormant provider', () => {
     } finally {
       await scaffold.ctx.settings.mutate('llm-pi-ai', [{ op: 'unset', path: ['providers', 'openai'] }])
       await edit.waitFor({ state: 'detached' })
-      await page.getByRole('dialog', { name: 'Choose models to add' }).waitFor({ state: 'detached' })
+      await page.getByRole('dialog', { name: 'Choose models' }).waitFor({ state: 'detached' })
     }
     expect(tripwire.pageErrors).toEqual([])
   }, 60_000)
+
+  it('saves model drag order, discards canceled moves, and preserves the other provider', async () => {
+    onTestFailed(() => saveFailureShot(page, 'web-e2e-models-order'))
+    const dialog = page.getByRole('dialog', { name: 'Settings' })
+    const edit = dialog.getByRole('button', { name: 'Edit Acme 网关 (acme-gateway)' })
+    const settings = () => scaffold.ctx.settings.describe({ redactSecrets: true }).find(row => row.ns === 'llm-pi-ai')?.value
+    await edit.click()
+    await dialog.getByText('Customized settings').click()
+    for (const [position, id] of [[2, 'order-second'], [3, 'order-third']] as const) {
+      await dialog.getByRole('button', { name: 'Add model', exact: true }).click()
+      await dialog.getByLabel(`Model ID ${String(position)}`, { exact: true }).fill(id)
+      await dialog.getByLabel(`Display name ${String(position)}`, { exact: true }).fill(id)
+    }
+    await dialog.getByRole('button', { name: 'Save', exact: true }).click()
+    await dialog.getByText('Saved Acme 网关 (acme-gateway).', { exact: true }).waitFor()
+    const before = structuredClone(settings())
+    const path = join(scaffold.harnessHome, 'profiles', 'scaffold', 'cordis.patch.yml')
+    const document = await readFile(path, 'utf8')
+
+    for (const save of [false, true]) {
+      await edit.click()
+      await dialog.getByText('Customized settings').click()
+      // Keep the last insertion gap inside the scrollport before native dragging starts.
+      await dialog.getByRole('button', { name: 'Add model', exact: true }).scrollIntoViewIfNeeded()
+      const source = dialog.getByRole('button', { name: 'Reorder model 1', exact: true })
+      const target = dialog.getByRole('button', { name: `Reorder model ${save ? '3' : '2'}`, exact: true })
+      await source.hover()
+      const from = await source.boundingBox()
+      if (from === null) throw new Error('Model drag handle is not visible')
+      await page.mouse.down()
+      await page.mouse.move(from.x + from.width / 2, from.y + from.height / 2 + 10, { steps: 3 })
+      // Native dragging needs an initial motion; the second hover follows any scroll at the dialog edge.
+      await target.hover()
+      const targetBox = await target.boundingBox()
+      if (targetBox === null) throw new Error('Model drop target is not visible')
+      await target.hover({ position: { x: targetBox.width / 2, y: targetBox.height * 0.75 } })
+      const insertion = await target.evaluate((button) => {
+        const rect = button.closest('[data-row-key]')!.getBoundingClientRect()
+        return { x: rect.left + 20, y: rect.bottom + 4 }
+      })
+      await page.mouse.move(insertion.x, insertion.y, { steps: 3 })
+      await page.mouse.up()
+      await page.locator('body > div[inert][aria-hidden="true"]:has(button[aria-label^="Reorder model "])').waitFor({ state: 'detached' })
+      await expect.poll(() => dialog.getByLabel(`Model ID ${save ? '3' : '2'}`, { exact: true }).inputValue()).toBe('acme-large')
+      await expect.poll(() => dialog.locator('[data-row-key]').evaluateAll(rows => rows.flatMap(row => row.getAnimations()).length)).toBe(0)
+      expect(await readFile(path, 'utf8')).toBe(document)
+      await dialog.getByRole('button', { name: save ? 'Save' : 'Cancel', exact: true }).click()
+      await dialog.getByLabel('Model ID 1', { exact: true }).waitFor({ state: 'detached' })
+      if (!save) expect(settings()).toEqual(before)
+    }
+
+    await dialog.getByText('Saved Acme 网关 (acme-gateway).', { exact: true }).waitFor()
+    expect(settings()).toMatchObject({ providers: {
+      'acme-gateway': { models: [
+        { id: 'order-second', name: 'order-second' },
+        { id: 'order-third', name: 'order-third' },
+        { id: 'acme-large', input: ['image'], reasoningEfforts: { off: null, low: 'low', high: 'deep' } },
+      ] },
+      'minimax-cn': { apiKeyEnv: 'MINIMAX_CN_API_KEY', baseURL: 'https://gateway.minimax.example/v1' },
+    } })
+    await edit.click()
+    await dialog.getByText('Customized settings').click()
+    expect(await Promise.all([1, 2, 3].map(position =>
+      dialog.getByLabel(`Model ID ${String(position)}`, { exact: true }).inputValue(),
+    ))).toEqual(['order-second', 'order-third', 'acme-large'])
+    const viewport = page.viewportSize()
+    if (viewport === null) throw new Error('Model ordering checks require an explicit viewport')
+    try {
+      await page.setViewportSize({ width: 390, height: 844 })
+      for (const name of ['Reorder model 1', 'Model options 1', 'Delete model 1']) {
+        const box = await dialog.getByRole('button', { name, exact: true }).boundingBox()
+        expect(box).not.toBeNull()
+        if (box === null) throw new Error(`Model control is not visible: ${name}`)
+        expect(box.x).toBeGreaterThanOrEqual(0)
+        expect(box.x + box.width).toBeLessThanOrEqual(390)
+      }
+    } finally {
+      await page.setViewportSize(viewport)
+    }
+    await dialog.getByRole('button', { name: 'Cancel', exact: true }).click()
+    expect(tripwire.pageErrors).toEqual([])
+  })
+
+  it.each([{ name: 'Chromium', engine: chromium }, { name: 'WebKit', engine: webkit }])(
+    'keeps keyboard reorder focus and visibility in $name', async ({ engine }) => {
+      const keyboardBrowser = await engine.launch()
+      try {
+        const keyboardPage = await keyboardBrowser.newPage({ viewport: { width: 1680, height: 1000 }, locale: EN_BROWSER_LOCALE })
+        await keyboardPage.goto(scaffold.authenticatedUrl)
+        await openSettings(keyboardPage)
+        await keyboardPage.getByRole('button', { name: 'Models', exact: true }).click()
+        const dialog = keyboardPage.getByRole('dialog', { name: 'Settings' })
+        await dialog.getByRole('button', { name: 'Edit Acme 网关 (acme-gateway)' }).click()
+        await dialog.getByText('Customized settings').click()
+        const initialFirst = await dialog.getByLabel('Model ID 1', { exact: true }).inputValue()
+        for (let position = 4; position <= 9; position++) {
+          await dialog.getByRole('button', { name: 'Add model', exact: true }).click()
+          await dialog.getByLabel(`Model ID ${String(position)}`, { exact: true }).fill(`keyboard-${String(position)}`)
+        }
+        const source = await dialog.getByRole('button', { name: 'Reorder model 1', exact: true }).elementHandle()
+        if (source === null) throw new Error('Keyboard reorder handle is missing')
+        await source.focus()
+        for (let position = 2; position <= 9; position++) {
+          await keyboardPage.keyboard.press('ArrowDown')
+          await expect.poll(() => source.evaluate(button => document.activeElement === button)).toBe(true)
+          expect(await source.getAttribute('aria-label')).toBe(`Reorder model ${String(position)}`)
+          await expect.poll(() => source.evaluate(button => button.closest('[data-row-key]')!.getAnimations().length)).toBe(0)
+          expect(await source.evaluate((button) => {
+            const rect = button.getBoundingClientRect()
+            let top = 0
+            let bottom = innerHeight
+            for (let parent = button.parentElement; parent !== null; parent = parent.parentElement) {
+              if (getComputedStyle(parent).overflowY === 'visible') continue
+              const clip = parent.getBoundingClientRect()
+              top = Math.max(top, clip.top)
+              bottom = Math.min(bottom, clip.bottom)
+            }
+            return rect.top >= top && rect.bottom <= bottom
+          })).toBe(true)
+        }
+        expect(await dialog.getByLabel('Model ID 9', { exact: true }).inputValue()).toBe(initialFirst)
+        await keyboardPage.keyboard.press('ArrowUp')
+        await expect.poll(() => source.evaluate(button => document.activeElement === button)).toBe(true)
+        expect(await source.getAttribute('aria-label')).toBe('Reorder model 8')
+        await dialog.getByRole('button', { name: 'Cancel', exact: true }).click()
+      } finally {
+        await keyboardBrowser.close()
+      }
+    }, 60_000,
+  )
 
   it('confirms an identified provider deletion before removing its profile and key', async () => {
     onTestFailed(() => saveFailureShot(page, 'web-e2e-models-delete'))

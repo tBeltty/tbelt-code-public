@@ -1,7 +1,7 @@
 {
   "name": "@deepseek-ai/dsh-terminal-views",
   "description": "Pure terminal views: transcript, tool lines, composer, approval prompt and session choice for the terminal client",
-  "version": "0.2.1-rc.2",
+  "version": "0.2.1-rc.3",
   "publishConfig": {
     "access": "public"
   },

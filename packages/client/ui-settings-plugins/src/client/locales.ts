@@ -12,7 +12,7 @@ export const en = {
   empty: 'This deployment exposes no plugin views.',
 } satisfies Record<string, string>
 
-/** Spanish dictionary, checked complete against the English key set. */
+/** Spanish dictionary, checked against the English keys. */
 export const es = {
   nav: 'Inspector del sistema',
   title: 'Inspector del sistema',
@@ -30,7 +30,7 @@ export const el = {
   empty: 'Αυτή η εγκατάσταση δεν εκθέτει προβολές πρόσθετων.',
 } satisfies Record<keyof typeof en, string>
 
-/** French dictionary, checked complete against the English key set. */
+/** French dictionary, checked against the English keys. */
 export const fr = {
   nav: 'Inspecteur du système',
   title: 'Inspecteur du système',

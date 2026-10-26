@@ -28,7 +28,10 @@ export const en = {
   'hover.more': '{count} more',
 } satisfies Record<string, string>
 
-/** Spanish dictionary, checked complete against the English key set. */
+/** Key domain of the Schedule catalog namespace. */
+export type ScheduleCatalogKey = keyof typeof en
+
+/** Spanish dictionary, checked against the English keys. */
 export const es = {
   'trigger.label': 'Recordatorios',
   'list.loading': 'Cargando recordatorios…',
@@ -70,7 +73,7 @@ export const el = {
   'hover.more': '{count} ακόμη',
 } satisfies Record<keyof typeof en, string>
 
-/** French dictionary, checked complete against the English key set. */
+/** French dictionary, checked against the English keys. */
 export const fr = {
   'trigger.label': 'Rappels',
   'list.loading': 'Chargement des rappels…',
@@ -90,6 +93,3 @@ export const fr = {
   'mark.aria': '{count} tâches planifiées',
   'hover.more': '{count} de plus',
 } satisfies Record<keyof typeof en, string>
-
-/** Key domain of the Schedule catalog namespace. */
-export type ScheduleCatalogKey = keyof typeof en

@@ -47,6 +47,7 @@ describe('image registration', () => {
       entries.push(options)
       return () => { bodies.delete(options.key); entries.splice(entries.indexOf(options), 1) }
     })
+    ctx.provide('fileDrag', { actions: fileDrag, read: () => undefined })
     ctx.provide('documentPreviews', registry)
     ctx.provide('slots', { inject: (_key: string, callback: () => () => void) => callback(), register } as never)
     ctx.provide('locale', {
@@ -83,3 +84,5 @@ describe('image registration', () => {
     expect(dictionaries.size).toBe(0)
   })
 })
+
+const fileDrag = { prepare: vi.fn(async () => ({ start: () => true, release: () => {} })), reportFailure: vi.fn() }

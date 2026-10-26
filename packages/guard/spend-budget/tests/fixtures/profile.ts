@@ -21,6 +21,7 @@ import * as StorageDomain from '@deepseek-ai/dsh-storage-domain'
 import * as StorageJson from '@deepseek-ai/dsh-storage-json'
 import SystemPrompt from '@deepseek-ai/dsh-system-prompt'
 import ToolRuntime from '@deepseek-ai/dsh-tools'
+import * as NativeToolExecutor from '@deepseek-ai/dsh-tool-executor-native'
 import SpendBudget from '../../src/index.ts'
 
 /** Rows every spend composition mounts; `{{storageRoot}}` is replaced at boot. */
@@ -49,6 +50,8 @@ const BASE_ROWS = `
       name: cordis:system-prompt
     - id: tools
       name: cordis:tools
+    - id: tool-executor-native
+      name: cordis:tool-executor-native
     - id: agent
       name: cordis:agent
     - id: agent-loop
@@ -104,6 +107,7 @@ export function createSpendProfile(
         'session-projection': SessionProjectionRegistry,
         'system-prompt': SystemPrompt,
         'tools': ToolRuntime,
+        'tool-executor-native': NativeToolExecutor,
         'agent': AgentRegistry,
         'agent-loop': AgentLoop,
         'spend-budget': SpendBudget,

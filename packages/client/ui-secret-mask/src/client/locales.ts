@@ -21,11 +21,11 @@ declare module '@deepseek-ai/dsh-client-ui-slots' {
   }
 }
 
-/** Spanish dictionary, checked complete against the English key set. */
+/** Spanish dictionary, checked against the English keys. */
 export const es = {
   'secret.reveal': 'Mostrar secreto',
   'secret.hide': 'Ocultar secreto',
-} satisfies Record<SecretMaskKey, string>
+} satisfies Record<keyof typeof en, string>
 
 /** Greek dictionary, checked complete against the English key set. */
 export const el = {
@@ -33,8 +33,8 @@ export const el = {
   'secret.hide': 'Απόκρυψη μυστικού',
 } satisfies Record<SecretMaskKey, string>
 
-/** French dictionary, checked complete against the English key set. */
+/** French dictionary, checked against the English keys. */
 export const fr = {
   'secret.reveal': 'Afficher le secret',
   'secret.hide': 'Masquer le secret',
-} satisfies Record<SecretMaskKey, string>
+} satisfies Record<keyof typeof en, string>

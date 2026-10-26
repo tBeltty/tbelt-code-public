@@ -18,7 +18,7 @@ export const en = {
   'menu.userOnly': 'user-only',
 } satisfies Record<string, string>
 
-/** Spanish dictionary, checked complete against the English key set. */
+/** Spanish dictionary, checked against the English keys. */
 export const es = {
   'row.title': 'Skill',
   'row.running': 'Cargando skill',
@@ -42,7 +42,7 @@ export const el = {
   'menu.userOnly': 'μόνο για χρήστη',
 } satisfies Record<keyof typeof en, string>
 
-/** French dictionary, checked complete against the English key set. */
+/** French dictionary, checked against the English keys. */
 export const fr = {
   'row.title': 'Compétence',
   'row.running': 'Chargement de la compétence',

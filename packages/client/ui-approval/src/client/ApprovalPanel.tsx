@@ -7,16 +7,22 @@ import css from './ApprovalPanel.module.css'
 
 /**
  * Render one pending approval and its optional Tool-owned detail.
- * @param props - selector-matched request and standard Slot props.
+ * @param props Selector-matched request and standard Slot props.
  * @returns The approval composer takeover.
  */
 export function ApprovalPanel(props: ApprovalComposerProps) {
   const approval = props.matched
-  const detail = approval.callId === undefined
-    ? null
-    : props.renderSlot('conversation.approval.detail', { callId: approval.callId })
   const reason = approval.displayReason === undefined ? approval.reason : props.resolveReason(approval.displayReason)
-  return <ApprovalFlow key={approval.key} pending={approval} reason={reason} detail={detail} t={props.t} />
+  // The shared card owns the detail child slot; this takeover draws its own body around it.
+  return props.renderFactorySlot('conversation.approval.card', {
+    requestKey: approval.key,
+    title: reason ?? approval.toolName,
+    ...(approval.callId === undefined ? {} : { callId: approval.callId }),
+    canAnswer: () => approval.answerable,
+    onAllow: () => approval.answer('allowed-once'),
+    onReject: () => approval.answer('rejected'),
+    renderBody: detail => <ApprovalFlow key={approval.key} pending={approval} reason={reason} detail={detail} t={props.t} />,
+  })
 }
 
 function ApprovalFlow({ pending, reason, detail, t }: {

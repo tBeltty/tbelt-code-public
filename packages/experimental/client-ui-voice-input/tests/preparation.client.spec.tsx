@@ -10,7 +10,7 @@ import { PreparationCard, VoicePreparation } from '../src/client/PreparationCard
 import type { VoiceInputProps } from '../src/client/VoiceInput.tsx'
 import type { SpeechReadiness } from '../src/client/readiness.ts'
 import { Recording } from '../src/client/audio.ts'
-import { es } from '../src/client/locales.ts'
+import { en, es, el, fr } from '../src/client/locales.ts'
 
 afterEach(() => { cleanup(); vi.useRealTimers() })
 const id = 'local' as SpeechProviderId, t = makeTranslate(es, commonEs)
@@ -30,7 +30,7 @@ it('collapses by default, expands all steps, and shows details only for the acti
   expect(screen.queryByRole('list')).toBeNull()
   expect(screen.getByText('Esperando 5 segundos')).toBeTruthy()
   expect(screen.queryByRole('progressbar')).toBeNull()
-  fireEvent.click(screen.getByRole('button', { name: /Verificar los archivos del modelo/ }))
+  fireEvent.click(screen.getByRole('button', { name: /Verificar archivos de modelo/ }))
   expect(screen.getAllByRole('listitem')).toHaveLength(5)
   expect(b.container.querySelectorAll('[data-step-state="complete"] [data-state="done"]')).toHaveLength(3)
   expect(b.container.querySelectorAll('[data-step-state="pending"] [data-state="idle"]')).toHaveLength(1)
@@ -50,7 +50,7 @@ it('uses measured byte progress in both the collapsed summary and expanded activ
   const b = fixture(state)
   expect(screen.getByRole('status').textContent).toContain('638.0 / 936.0 MB, 68%')
   expect(screen.getByRole('progressbar').getAttribute('value')).toBe('638000000')
-  fireEvent.click(screen.getByRole('button', { name: /Preparar el modelo de reconocimiento/ }))
+  fireEvent.click(screen.getByRole('button', { name: /Preparar modelo de reconocimiento/ }))
   expect(screen.getByRole('progressbar').getAttribute('max')).toBe('936000000')
   expect(screen.getByText('model.pt')).toBeTruthy()
   fireEvent.click(screen.getByRole('button', { name: es.cancelPrepare }))
@@ -59,7 +59,7 @@ it('uses measured byte progress in both the collapsed summary and expanded activ
 it('keeps unknown download totals indeterminate and disables commands while disconnected', () => {
   const b = fixture({ phase: 'downloading', resource: 'model.pt', completedBytes: 638_000_000 })
   expect(screen.queryByRole('progressbar')).toBeNull()
-  expect(screen.getByRole('status').textContent).toBe('638.0 MB descargados')
+  expect(screen.getByRole('status').textContent).toBe('Descargado 638.0 MB')
   b.rerender(<PreparationCard {...b.props} connected={false} />)
   fireEvent.click(screen.getByRole('button', { name: es.cancelPrepare }))
   expect(b.cancelPreparation).not.toHaveBeenCalled()
@@ -74,10 +74,10 @@ it('starts preparation and offers retry without showing progress for completed o
   await waitFor(() => { expect(screen.getByRole<HTMLButtonElement>('button', { name: es.retryPrepare }).disabled).toBe(false) })
   b.prepare.mockRejectedValueOnce(new Error('offline'))
   fireEvent.click(screen.getByRole('button', { name: es.retryPrepare }))
-  await screen.findByText('Falló el reconocimiento de voz: offline')
+  await screen.findByText('Error en el reconocimiento de voz: offline')
   b.prepare.mockRejectedValueOnce('network closed')
   fireEvent.click(screen.getByRole('button', { name: es.retryPrepare }))
-  await screen.findByText('Falló el reconocimiento de voz: network closed')
+  await screen.findByText('Error en el reconocimiento de voz: network closed')
   fireEvent.click(screen.getByRole('button', { name: es['short.failed'] }))
   expect(screen.queryByRole('progressbar')).toBeNull()
 })
@@ -92,8 +92,8 @@ it('explains download failures on the Host machine and retains an actionable ret
   } })
   const alert = screen.getByRole('alert')
   expect(alert.textContent).toContain('No se puede descargar model.int8.onnx: no se pudo resolver la dirección de descarga.')
-  expect(alert.textContent).toContain('Revisa el DNS y el proxy de la máquina que ejecuta DSH')
-  expect(alert.textContent).toContain('Origen de descarga: https://mirror.example')
+  expect(alert.textContent).toContain('Verifique la configuración de DNS y proxy en la máquina que ejecuta tBelt Code')
+  expect(alert.textContent).toContain('Fuente de descarga: https://mirror.example')
   expect(alert.textContent).toContain('Código de error: ENOTFOUND')
   expect(alert.textContent).not.toContain('fetch failed')
   expect(alert.textContent).not.toContain('Hugging Face')
@@ -108,13 +108,13 @@ it('explains download failures on the Host machine and retains an actionable ret
   expect(screen.getByRole('alert').textContent).not.toContain('Código de error')
   b.rerender(<PreparationCard {...b.props} provider={{ ...b.props.provider,
     preparation: { phase: 'failed', message: 'runtime missing' } }} />)
-  expect(screen.getByRole('alert').textContent).toBe('Falló la preparación: runtime missing')
+  expect(screen.getByRole('alert').textContent).toBe('Error de preparación: runtime missing')
 })
 it('persists settings and reports disconnection in the detail card', async () => {
   const store = createSnapshotStore<SpeechReadiness>({ connected: true, error: null, catalog: {
     selection: { providerId: id, language: 'auto' }, maxAudioBytes: 100, maxDurationSeconds: 120,
     providers: [{ id, name: 'SenseVoiceSmall', location: 'host-local', languages: ['auto', 'zh', 'en', 'ja'], preparation: { phase: 'ready' } },
-      { id: 'cloud' as SpeechProviderId, name: 'Cloud', location: 'cloud', languages: ['auto', 'en', 'zh', 'ja', 'fr'], preparation: { phase: 'ready' } }],
+      { id: 'cloud' as SpeechProviderId, name: 'Cloud', location: 'cloud', languages: ['auto', 'en', 'zh', 'ja', 'fr', 'it'], preparation: { phase: 'ready' } }],
   } })
   const configure = vi.fn<VoiceInputProps['configure']>(async () => {})
   const props = { useSpeechReadiness: bindSnapshotSelector(store), configure, t,
@@ -128,14 +128,15 @@ it('persists settings and reports disconnection in the detail card', async () =>
   act(() => { store.set({ ...current, catalog: { ...current.catalog!, selection: { providerId: 'cloud' as SpeechProviderId, language: 'en' } } }) })
   expect(screen.getByText(es.cloud)).toBeTruthy()
   expect(within(screen.getByLabelText(es.language)).getAllByRole<HTMLOptionElement>('option').map(item => item.value))
-    .toEqual(['auto', 'en', 'zh', 'ja', 'fr'])
-  expect(within(screen.getByLabelText(es.language)).getByRole('option', { name: 'fr' })).toBeTruthy()
+    .toEqual(['auto', 'en', 'zh', 'ja', 'fr', 'it'])
+  expect(within(screen.getByLabelText(es.language)).getByRole('option', { name: es.fr })).toBeTruthy()
+  expect(within(screen.getByLabelText(es.language)).getByRole('option', { name: 'it' })).toBeTruthy()
   configure.mockRejectedValueOnce(new Error('settings are read-only'))
   fireEvent.change(screen.getByLabelText(es.language), { target: { value: 'zh' } })
-  await screen.findByText('Falló el reconocimiento de voz: settings are read-only')
+  await screen.findByText('Error en el reconocimiento de voz: settings are read-only')
   configure.mockRejectedValueOnce('settings are locked')
   fireEvent.change(screen.getByLabelText(es.language), { target: { value: 'ja' } })
-  await screen.findByText('Falló el reconocimiento de voz: settings are locked')
+  await screen.findByText('Error en el reconocimiento de voz: settings are locked')
   act(() => { store.set({ catalog: null, connected: false, error: 'disconnected' }) })
   view.rerender(<VoicePreparation {...props} />)
   expect(screen.getByText(es.loading)).toBeTruthy()
@@ -153,9 +154,9 @@ it('shows provider-specific installation estimates before preparation and remove
   } }
   b.rerender(<PreparationCard {...b.props} provider={provider} />)
   expect(screen.getByText(es['setup.local'])).toBeTruthy()
-  expect(screen.getByText(/Reserva unos 5 GB/)).toBeTruthy()
-  expect(screen.getByText(/Unos 2 GB con el modelo cargado/)).toBeTruthy()
-  expect(screen.getByText(/Calcula entre 5 y 30 minutos/)).toBeTruthy()
+  expect(screen.getByText(/Permitir aproximadamente 5 GB/)).toBeTruthy()
+  expect(screen.getByText(/Aproximadamente 2 GB con el modelo cargado/)).toBeTruthy()
+  expect(screen.getByText(/Espere aproximadamente 5–30 minutos/)).toBeTruthy()
   b.rerender(<PreparationCard {...b.props} provider={{ ...provider, preparation: { phase: 'checking', startedAt: Date.now() } }} />)
   expect(screen.queryByText(es['setup.local'])).toBeNull()
 })
@@ -211,4 +212,15 @@ it('locks source changes while a preparation request is pending and hides them d
   expect(screen.getByLabelText<HTMLSelectElement>(es.sourceChoice).disabled).toBe(true)
   b.rerender(<PreparationCard {...b.props} provider={{ ...provider, preparation: { phase: 'downloading', resource: 'model.onnx', completedBytes: 0 } }} />)
   expect(screen.queryByLabelText(es.sourceChoice)).toBeNull()
+})
+
+it('gives each speech recognition language a distinct localized name', () => {
+  for (const dictionary of [en, es, el, fr]) {
+    const names = [
+      dictionary.zh, dictionary.en, dictionary.yue, dictionary.ja, dictionary.es,
+      dictionary.fr, dictionary.de, dictionary.ru, dictionary.pt, dictionary.ko,
+    ]
+    expect(new Set(names).size).toBe(names.length)
+  }
+  expect(es.fr).toBe('francés')
 })

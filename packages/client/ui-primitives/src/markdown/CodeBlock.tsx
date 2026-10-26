@@ -204,7 +204,7 @@ export function CodeBlock({
           onWrap={wrap === undefined ? () => { setWrapped(value => !value) } : undefined}
           actions={actions}
         /> : <div className={css.banner} data-code-block-banner>
-          <div className={css.infostring}>{lang ?? ''}</div>
+          <div className={css.infostring} data-text-interaction-exclude="">{lang ?? ''}</div>
           <div className={css.action}>
             {actions}
             <button type="button" className={css.copyButton} onClick={onCopy}>

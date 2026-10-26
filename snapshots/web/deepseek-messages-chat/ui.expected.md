@@ -7,6 +7,7 @@
   - tablist:
     - tab "Chat" [selected]
     - tab "Trajectory"
+  - button "More session views"
 - text: 只回复 MESSAGES_WEB_READY，不调用工具。 {{clock}}
 - button "Copy"
 - status: Completed

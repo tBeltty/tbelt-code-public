@@ -1,6 +1,7 @@
 {
   "meta": {
     "title": "Boucles Ralph",
-    "description": "Exécute un travail répété demandé explicitement avec de nouveaux agents."
+    "description": "Exécute un travail répété demandé explicitement avec de nouveaux agents.",
+    "detail": "docs/DETAIL.md"
   }
 }

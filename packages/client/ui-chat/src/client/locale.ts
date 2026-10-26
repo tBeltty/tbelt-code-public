@@ -109,6 +109,10 @@ export const en = {
   'settings.collapse.description': 'Choose when to automatically collapse work details',
   'settings.collapse.completion': 'On completion',
   'settings.collapse.nextInput': 'On next message',
+  'settings.foldedReplies.title': 'Replies After Collapse',
+  'settings.foldedReplies.description': 'Choose which assistant replies stay visible when work details collapse',
+  'settings.foldedReplies.all': 'All replies',
+  'settings.foldedReplies.final': 'Final answer only',
   'settings.transcript.compact': 'Compact',
   'settings.transcript.standard': 'Standard',
   'settings.transcript.detailed': 'Detailed',
@@ -207,7 +211,7 @@ export const en = {
   'quote.comment.submit': 'Add quote and comment',
 } satisfies Record<string, string>
 
-/** Spanish dictionary, checked complete against the English key set. */
+/** Spanish dictionary, checked against the English keys. */
 export const es = {
   'message.stepProcess.thinking': 'Analizando la solicitud',
   'message.stepProcess.read': 'Leyendo archivos',
@@ -310,6 +314,10 @@ export const es = {
   'settings.collapse.description': 'Elige cuándo contraer automáticamente el detalle del trabajo',
   'settings.collapse.completion': 'Al terminar',
   'settings.collapse.nextInput': 'En el siguiente mensaje',
+  'settings.foldedReplies.title': 'Respuestas después del plegado',
+  'settings.foldedReplies.description': 'Elija qué respuestas del asistente permanecen visibles cuando los detalles del trabajo colapsan',
+  'settings.foldedReplies.all': 'Todas las respuestas',
+  'settings.foldedReplies.final': 'Solo respuesta final',
   'settings.transcript.compact': 'Compacto',
   'settings.transcript.standard': 'Estándar',
   'settings.transcript.detailed': 'Detallado',
@@ -511,6 +519,10 @@ export const el = {
   'settings.collapse.description': 'Επιλέξτε πότε θα συμπτύσσονται αυτόματα οι λεπτομέρειες εργασίας',
   'settings.collapse.completion': 'Με την ολοκλήρωση',
   'settings.collapse.nextInput': 'Στο επόμενο μήνυμα',
+  'settings.foldedReplies.title': 'Απαντήσεις μετά τη σύμπτυξη',
+  'settings.foldedReplies.description': 'Επιλέξτε ποιες απαντήσεις του βοηθού παραμένουν ορατές όταν συμπτύσσονται οι λεπτομέρειες εργασίας',
+  'settings.foldedReplies.all': 'Όλες οι απαντήσεις',
+  'settings.foldedReplies.final': 'Μόνο η τελική απάντηση',
   'settings.transcript.compact': 'Συμπαγής',
   'settings.transcript.standard': 'Τυπική',
   'settings.transcript.detailed': 'Αναλυτική',
@@ -609,7 +621,7 @@ export const el = {
   'quote.comment.submit': 'Προσθήκη παράθεσης και σχολίου',
 } satisfies Record<keyof typeof en, string>
 
-/** French dictionary, checked complete against the English key set. */
+/** French dictionary, checked against the English keys. */
 export const fr = {
   'message.stepProcess.thinking': 'Analyse de la demande',
   'message.stepProcess.read': 'Lecture de fichiers',
@@ -712,6 +724,10 @@ export const fr = {
   'settings.collapse.description': 'Choisissez quand réduire automatiquement les détails du travail',
   'settings.collapse.completion': 'À la fin',
   'settings.collapse.nextInput': 'Au message suivant',
+  'settings.foldedReplies.title': 'Réponses après le repli',
+  'settings.foldedReplies.description': "Choisissez quelles réponses de l'assistant restent visibles lorsque les détails du travail sont réduits",
+  'settings.foldedReplies.all': 'Toutes les réponses',
+  'settings.foldedReplies.final': 'Réponse finale seulement',
   'settings.transcript.compact': 'Compact',
   'settings.transcript.standard': 'Standard',
   'settings.transcript.detailed': 'Détaillé',

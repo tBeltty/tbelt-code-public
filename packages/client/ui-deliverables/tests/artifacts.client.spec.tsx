@@ -63,7 +63,7 @@ const delivered = (...paths: string[]): DeliverablesTurnData => ({
 describe('Session artifact index', () => {
   it('keeps the latest declaration of each path and skips Turns without artifacts', () => {
     expect(artifactTurn(1, undefined)).toBeNull()
-    expect(artifactTurn(1, { produced: [{ seq: 2, path: 'a.ts' }] })).toBeNull()
+    expect(artifactTurn(1, { produced: [{ path: 'a.ts' }] })).toBeNull()
     expect(artifactTurn(2, {
       produced: [],
       presented: [{ path: 'r.md', seq: 3, index: 0 }, { path: 'r.md', seq: 5, index: 0, description: 'v2' }],

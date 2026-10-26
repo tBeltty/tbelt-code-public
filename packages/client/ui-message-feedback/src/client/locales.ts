@@ -34,7 +34,7 @@ export const en = {
   'error.noteTooLarge': 'The description is too long; shorten it and submit again',
 } satisfies Record<string, string>
 
-/** Spanish dictionary, checked complete against the English key set. */
+/** Spanish dictionary, checked against the English keys. */
 export const es = {
   'action.like': 'Buena respuesta',
   'action.likeActive': 'Quitar valoración',
@@ -82,7 +82,7 @@ export const el = {
   'error.noteTooLarge': 'Η περιγραφή είναι πολύ μεγάλη· συντομεύστε την και υποβάλετέ την ξανά',
 } satisfies Record<keyof typeof en, string>
 
-/** French dictionary, checked complete against the English key set. */
+/** French dictionary, checked against the English keys. */
 export const fr = {
   'action.like': 'Bonne réponse',
   'action.likeActive': 'Retirer la note',

@@ -21,6 +21,7 @@ import * as StorageDomain from '@deepseek-ai/dsh-storage-domain'
 import * as StorageJson from '@deepseek-ai/dsh-storage-json'
 import SystemPrompt from '@deepseek-ai/dsh-system-prompt'
 import ToolRuntime from '@deepseek-ai/dsh-tools'
+import * as NativeToolExecutor from '@deepseek-ai/dsh-tool-executor-native'
 import SpendBudget, { SPEND_LIMIT_CODE } from '../src/index.ts'
 import { PricedAdapter, type ScriptedResponse } from './fixtures/priced-adapter.ts'
 
@@ -66,6 +67,7 @@ async function harness(options: {
   await ctx.plugin(SessionProjectionRegistry)
   await ctx.plugin(SystemPrompt)
   await ctx.plugin(ToolRuntime)
+  await ctx.plugin(NativeToolExecutor)
   await ctx.plugin(AgentRegistry)
   await ctx.plugin(AgentLoop)
   const fiber = await ctx.plugin(SpendBudget, options.monthlyLimitUsd === undefined ? {} : { monthlyLimitUsd: options.monthlyLimitUsd })
@@ -268,6 +270,7 @@ describe('spend guard', () => {
     await ctx.spendBudget.setSessionLimit(agent.session.id, 0)
     const pre = await agentEvents(ctx, agent).waterfall('agent/pre-step', {
       messages: [], turn: 1, step: 1, signal: new AbortController().signal,
+      modelSelection: { provider: 'mock', model: 'm' },
     }, () => Promise.resolve({ kind: 'enter' as const, messages: [] })).catch((error: unknown) => error)
     expect(pre).toMatchObject({ code: SPEND_LIMIT_CODE })
     await dispose()

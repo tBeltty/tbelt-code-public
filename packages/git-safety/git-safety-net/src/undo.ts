@@ -8,7 +8,6 @@
 import type { Context } from '@deepseek-ai/cordis'
 import type { Agent } from '@deepseek-ai/dsh-agent'
 import type {} from '@deepseek-ai/dsh-fs'
-import type {} from '@deepseek-ai/dsh-session-projection'
 import {
   findRepoRoot,
   readCheckpointCommit,
@@ -34,11 +33,10 @@ export type UndoOutcome =
  * Revert every file `agent`'s current turn checkpointed, restoring each to its content
  * immediately before that turn's first edit to it.
  *
- * "Current turn" is `agent.session`'s `turnBoundary` projection `lastTurn` — the turn number of
- * the latest `turn/start` recorded by `@deepseek-ai/dsh-agent-loop`, whether or not it has
- * closed yet (0, and therefore `nothing-to-undo`, before any turn starts). Absent that
- * projection — no agent-loop mounted — this is always `nothing-to-undo`, matching the
- * projection's own documented capability-absence contract rather than treating it as an error.
+ * "Current turn" is `agent.session`'s turn-boundary `lastTurn` — the turn number of
+ * the latest `turn/start` recorded in the session, whether or not it has
+ * closed yet (0, and therefore `nothing-to-undo`, before any turn starts). Without the
+ * `agents` registry this is always `nothing-to-undo`, rather than treating it as an error.
  *
  * Checkpoints record one file's pre-edit content per commit, chained newest-first under
  * `CHECKPOINT_REF`, each tagged with the turn that produced it. A file edited more than once in
@@ -53,14 +51,14 @@ export type UndoOutcome =
  * the same guard an ordinary write would hit instead of silently overwriting it. A rejected or
  * failed restore stops the loop; files already restored in this call stay reverted.
  *
- * @param ctx - context carrying `ctx.fs` and, when composed, the optional `sessionProjections` registry.
+ * @param ctx - context carrying `ctx.fs` and, when composed, the optional `agents` registry.
  * @param agent - the agent whose current turn is reverted; its session's `cwd` locates the repository.
  * @param signal - aborts the restore between files.
  * @returns the reverted turn and files, or `nothing-to-undo` when there is no turn, no
  *   repository, or no checkpoint belonging to the current turn.
  */
 export async function undo(ctx: Context, agent: Agent, signal: AbortSignal): Promise<UndoOutcome> {
-  const turn = ctx.get('sessionProjections')?.stateOf(agent.session, 'turnBoundary')?.lastTurn ?? 0
+  const turn = ctx.get('agents')?.turnBoundaryOf(agent.session).lastTurn ?? 0
   if (turn === 0) return { kind: 'nothing-to-undo' }
   const cwd = agent.session.header.cwd
   if (cwd === undefined) return { kind: 'nothing-to-undo' }

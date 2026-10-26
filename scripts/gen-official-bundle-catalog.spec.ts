@@ -4,11 +4,13 @@ import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, statSync, uti
 import { tmpdir } from 'node:os'
 import { dirname, join } from 'node:path'
 import { afterEach, describe, expect, it } from 'vitest'
-import { ON_DEMAND_BUNDLES } from '../packages/boot/app-boot/src/official-bundles.ts'
+import { ON_DEMAND_BUNDLES } from '../packages/util/official-bundles/src/index.ts'
 import { generateOfficialBundleCatalog, renderOfficialBundleCatalog, syncOfficialBundleCatalog } from './gen-official-bundle-catalog.ts'
 
+import { SHIPPED_LOCALE_IDS } from './shipped-locales.ts'
+
 const roots: string[] = []
-const output = 'packages/boot/app-boot/src/official-bundles.generated.ts'
+const output = 'packages/util/official-bundles/src/catalog.generated.ts'
 
 function write(root: string, path: string, content: unknown): void {
   mkdirSync(dirname(join(root, path)), { recursive: true })
@@ -82,14 +84,14 @@ describe('Official bundle catalog generation', () => {
     expect(() => generateOfficialBundleCatalog(root, [ON_DEMAND_BUNDLES[0]!, ON_DEMAND_BUNDLES[0]!])).toThrow('distinct package names')
   })
 
-  it.each(['icon', 'en', 'es', 'el', 'fr'])('rejects missing %s metadata', (resource) => {
+  it.each(['icon', ...SHIPPED_LOCALE_IDS])('rejects missing %s metadata', (resource) => {
     const root = fixture()
     const dir = directory(ON_DEMAND_BUNDLES[0]!)
     rmSync(join(root, dir, resource === 'icon' ? 'icon.svg' : `locale/${resource}.json`))
     expect(() => generateOfficialBundleCatalog(root)).toThrow()
   })
 
-  it.each(['en', 'es', 'el', 'fr'])('requires explicit %s fields instead of metadata fallback text', (language) => {
+  it.each(SHIPPED_LOCALE_IDS)('requires explicit %s fields instead of metadata fallback text', (language) => {
     const root = fixture()
     write(root, `${directory(ON_DEMAND_BUNDLES[0]!)}/locale/${language}.json`, { meta: { description: 'Only a description.' } })
     expect(() => generateOfficialBundleCatalog(root)).toThrow(`explicit ${language} title and description`)

@@ -11,7 +11,14 @@ export const en = {
   failed: 'This HTML document could not be previewed.',
 } satisfies Record<string, string>
 
-/** Spanish dictionary, checked complete against the English key set. */
+declare module '@deepseek-ai/dsh-client-ui-slots' {
+  interface LocaleNamespaceMap {
+    /** HTML preview selection and status text. */
+    documentHtml: HtmlPreviewKey
+  }
+}
+
+/** Spanish dictionary, checked against the English keys. */
 export const es = {
   title: 'HTML',
   frame: 'Vista previa del documento HTML',
@@ -27,17 +34,10 @@ export const el = {
   failed: 'Δεν ήταν δυνατή η προεπισκόπηση αυτού του εγγράφου HTML.',
 } satisfies Record<keyof typeof en, string>
 
-/** French dictionary, checked complete against the English key set. */
+/** French dictionary, checked against the English keys. */
 export const fr = {
   title: 'HTML',
   frame: 'Aperçu du document HTML',
   loading: 'Rendu du document...',
   failed: 'Impossible d’afficher l’aperçu de ce document HTML.',
 } satisfies Record<keyof typeof en, string>
-
-declare module '@deepseek-ai/dsh-client-ui-slots' {
-  interface LocaleNamespaceMap {
-    /** HTML preview selection and status text. */
-    documentHtml: HtmlPreviewKey
-  }
-}

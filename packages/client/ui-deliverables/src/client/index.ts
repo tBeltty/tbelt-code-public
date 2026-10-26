@@ -188,7 +188,7 @@ export function apply(ctx: ClientContext): void {
       if (paths === null && presented.length === 0) return undefined
       return producedFileMentions([...new Set([...paths ?? [], ...presented.map(file => file.path)])], owner.openFile,
         path => t('presented.previewButton', { name: path }),
-        owner.turn.data.get('deliverables')?.produced.filter(operation => operation.seq <= owner.seq))
+        owner.turn.data.get('deliverables')?.produced)
     },
   }
   ctx.provide('chatFileMentions', mentions)

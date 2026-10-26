@@ -1,7 +1,7 @@
 {
   "name": "@deepseek-ai/dsh-presentation-plan",
   "description": "Plan documents and todo progress shared by the GUI and terminal clients",
-  "version": "0.2.1-rc.2",
+  "version": "0.2.1-rc.3",
   "publishConfig": {
     "access": "public"
   },

@@ -28,7 +28,7 @@ import { brandString } from '@deepseek-ai/dsh-brand'
 import { createWaterfallRequest, PendingQuestion, type QuestionRpcChannel } from './contract/slots.ts'
 import { createQuestionDraftStore } from './draft-store.ts'
 import { QuestionComposer } from './QuestionComposer.tsx'
-import { questionReplyDefinition } from './question-reply.ts'
+import { answeredQuestionDefinition, questionReplyDefinition } from './question-reply.ts'
 import { QuestionReplyView } from './QuestionReplyView.tsx'
 import { en, es, el, fr, type QuestionKey } from './locales.ts'
 
@@ -395,6 +395,7 @@ export function apply(ctx: ClientContext): void {
     QuestionComposer,
   ))
   ctx.uiConversation.events.register(questionReplyDefinition)
+  ctx.uiConversation.events.register(answeredQuestionDefinition)
   ctx.slots.inject('conversation.chat.node', () => ctx.slots.register({
     name: 'conversation.chat.node',
     key: 'question-reply',

@@ -34,23 +34,23 @@ export const en = {
   'time.years': '{n}y',
 } satisfies Record<string, string>
 
-/** Spanish dictionary, checked complete against the English key set. */
+/** Spanish dictionary, checked against the English keys. */
 export const es = {
   'section.files': 'Archivos y carpetas',
   'section.subagents': 'Subagentes',
   'section.sessions': 'Sesiones',
   'candidate.noCwd': '(sin directorio)',
   'crumb.root': 'Espacio de trabajo',
+  'fileOpen.title': 'No se pudo abrir el archivo',
+  'fileOpen.failed': 'No se pudo abrir «{path}». Inténtalo de nuevo o cierra este mensaje.',
+  'fileOpen.close': 'Cerrar',
+  'fileOpen.retry': 'Reintentar',
   'time.now': 'ahora',
   'time.minutes': '{n} min',
   'time.hours': '{n} h',
   'time.days': '{n} d',
   'time.months': '{n} m',
   'time.years': '{n} a',
-  'fileOpen.title': 'No se pudo abrir el archivo',
-  'fileOpen.failed': 'No se pudo abrir «{path}». Inténtalo de nuevo o cierra este mensaje.',
-  'fileOpen.close': 'Cerrar',
-  'fileOpen.retry': 'Reintentar',
 } satisfies Record<keyof typeof en, string>
 
 /** Greek dictionary, checked complete against the English key set. */
@@ -60,33 +60,33 @@ export const el = {
   'section.sessions': 'Συνεδρίες',
   'candidate.noCwd': '(χωρίς cwd)',
   'crumb.root': 'Χώρος εργασίας',
+  'fileOpen.title': 'Δεν ήταν δυνατό το άνοιγμα του αρχείου',
+  'fileOpen.failed': 'Δεν ήταν δυνατό το άνοιγμα του «{path}». Δοκιμάστε ξανά ή κλείστε αυτό το μήνυμα.',
+  'fileOpen.close': 'Κλείσιμο',
+  'fileOpen.retry': 'Επανάληψη',
   'time.now': 'τώρα',
   'time.minutes': '{n}λ',
   'time.hours': '{n}ω',
   'time.days': '{n}ημ.',
   'time.months': '{n}μ.',
   'time.years': '{n}έ.',
-  'fileOpen.title': 'Δεν ήταν δυνατό το άνοιγμα του αρχείου',
-  'fileOpen.failed': 'Δεν ήταν δυνατό το άνοιγμα του «{path}». Δοκιμάστε ξανά ή κλείστε αυτό το μήνυμα.',
-  'fileOpen.close': 'Κλείσιμο',
-  'fileOpen.retry': 'Επανάληψη',
 } satisfies Record<keyof typeof en, string>
 
-/** French dictionary, checked complete against the English key set. */
+/** French dictionary, checked against the English keys. */
 export const fr = {
   'section.files': 'Fichiers et dossiers',
   'section.subagents': 'Sous-agents',
   'section.sessions': 'Sessions',
   'candidate.noCwd': '(pas de cwd)',
   'crumb.root': 'Espace de travail',
+  'fileOpen.title': 'Impossible d’ouvrir le fichier',
+  'fileOpen.failed': 'Impossible d’ouvrir « {path} ». Réessayez ou fermez ce message.',
+  'fileOpen.close': 'Fermer',
+  'fileOpen.retry': 'Réessayer',
   'time.now': 'à l’instant',
   'time.minutes': '{n} min',
   'time.hours': '{n} h',
   'time.days': '{n} j',
   'time.months': '{n} mois',
   'time.years': '{n} a',
-  'fileOpen.title': 'Impossible d’ouvrir le fichier',
-  'fileOpen.failed': 'Impossible d’ouvrir « {path} ». Réessayez ou fermez ce message.',
-  'fileOpen.close': 'Fermer',
-  'fileOpen.retry': 'Réessayer',
 } satisfies Record<keyof typeof en, string>

@@ -42,7 +42,7 @@ export const en = {
   'error.unavailable': 'Read failed: {message}',
 } satisfies Record<string, string>
 
-/** Spanish dictionary, checked complete against the English key set. */
+/** Spanish dictionary, checked against the English keys. */
 export const es = {
   'shortcut.noSession': 'Selecciona primero una sesión',
   'type.label': 'Archivos',
@@ -84,7 +84,7 @@ export const el = {
   'error.unavailable': 'Η ανάγνωση απέτυχε: {message}',
 } satisfies Record<keyof typeof en, string>
 
-/** French dictionary, checked complete against the English key set. */
+/** French dictionary, checked against the English keys. */
 export const fr = {
   'shortcut.noSession': 'Sélectionnez d’abord une session',
   'type.label': 'Fichiers',

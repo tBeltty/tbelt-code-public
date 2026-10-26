@@ -1,7 +1,7 @@
 {
   "name": "@deepseek-ai/dsh-project-root",
   "description": "Upward marker-directory search that locates a project root from a working directory",
-  "version": "0.2.1-rc.2",
+  "version": "0.2.1-rc.3",
   "publishConfig": {
     "access": "public"
   },

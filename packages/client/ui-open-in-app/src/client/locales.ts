@@ -57,7 +57,10 @@ export const en = {
   'app.terminal': 'Terminal',
 } satisfies Record<string, string>
 
-/** Spanish dictionary, checked complete against the English key set. */
+/** Key domain of the `open-in-app` namespace (English is the source of truth). */
+export type OpenInAppKey = keyof typeof en
+
+/** Spanish dictionary, checked against the English keys. */
 export const es = {
   'open.title': 'Abrir en {app}',
   'path.appDefault': '{app} (predeterminada)',
@@ -97,7 +100,7 @@ export const el = {
   'app.terminal': 'Τερματικό',
 } satisfies Record<keyof typeof en, string>
 
-/** French dictionary, checked complete against the English key set. */
+/** French dictionary, checked against the English keys. */
 export const fr = {
   'open.title': 'Ouvrir dans {app}',
   'path.appDefault': '{app} (par défaut)',
@@ -116,6 +119,3 @@ export const fr = {
   'app.filemanager': 'Fichiers',
   'app.terminal': 'Terminal',
 } satisfies Record<keyof typeof en, string>
-
-/** Key domain of the `open-in-app` namespace (English is the source of truth). */
-export type OpenInAppKey = keyof typeof en

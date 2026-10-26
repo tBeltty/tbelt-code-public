@@ -8,10 +8,10 @@ export type TeamKey = keyof typeof en
 
 /** English dictionary and key-set source of truth. */
 export const en = {
-  trigger: 'Agent Team',
-  loading: 'Loading Team…',
+  trigger: 'Agent team',
+  loading: 'Loading team…',
   unavailable: 'Team is unavailable',
-  failure: 'Invalid persisted Team record: {message}',
+  failure: 'Invalid persisted team record: {message}',
   empty: 'No shared tasks yet. Create them through the conversation.',
   roster: 'Members',
   tasks: 'Shared tasks',
@@ -35,12 +35,12 @@ export const en = {
   'status.completed': 'Completed',
 } satisfies Record<string, string>
 
-/** Spanish dictionary, checked complete against the English key set. */
+/** Spanish dictionary, checked against the English keys. */
 export const es = {
-  trigger: 'Equipo de agentes',
-  loading: 'Cargando el equipo…',
+  trigger: 'equipo de agentes',
+  loading: 'Cargando equipo…',
   unavailable: 'El equipo no está disponible',
-  failure: 'Registro de equipo guardado no válido: {message}',
+  failure: 'Registro de equipo persistente no válido: {message}',
   empty: 'Todavía no hay tareas compartidas. Créalas desde la conversación.',
   roster: 'Miembros',
   tasks: 'Tareas compartidas',
@@ -93,12 +93,12 @@ export const el = {
   'status.completed': 'Ολοκληρώθηκε',
 } satisfies Record<keyof typeof en, string>
 
-/** French dictionary, checked complete against the English key set. */
+/** French dictionary, checked against the English keys. */
 export const fr = {
-  trigger: 'Équipe d’agents',
-  loading: 'Chargement de l’équipe…',
+  trigger: "Équipe d'agents",
+  loading: "Chargement de l'équipe…",
   unavailable: 'L’équipe est indisponible',
-  failure: 'Enregistrement d’équipe persistant non valide\u00a0: {message}',
+  failure: "Enregistrement d'équipe persistant non valide : {message}",
   empty: 'Aucune tâche partagée pour le moment. Créez-en dans la conversation.',
   roster: 'Membres',
   tasks: 'Tâches partagées',

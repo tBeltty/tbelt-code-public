@@ -22,6 +22,7 @@ export const en = {
   'desktop.update.checkNetworkFailed': 'Could not check for updates. Check your connection and try again.',
   'desktop.update.downloadNetworkFailed': 'Could not download the update. Check your connection and try again.',
   'desktop.update.installNetworkFailed': 'Could not install the update. Check your connection and try again.',
+  'desktop.update.fullscreenTimeout': 'Could not exit fullscreen. Exit fullscreen, then retry the update.',
   'desktop.update.stopFailed': 'Could not safely stop the tasks. The update has not been installed. Please try again later.',
   'desktop.update.tasksChanged': 'New tasks have started. Confirm again to stop the tasks and update.',
   'desktop.update.tasksUnavailable': 'Task status is unavailable. Try updating again when the workspace is ready.',
@@ -55,7 +56,7 @@ export const en = {
   'hostRelease.later': 'Not now',
 } satisfies Record<string, string>
 
-/** Spanish dictionary, checked complete against the English key set. */
+/** Spanish dictionary, checked against the English keys. */
 export const es = {
   'trigger': 'Ajustes',
   'shortcut.open': 'Abrir ajustes',
@@ -74,6 +75,7 @@ export const es = {
   'desktop.update.checkNetworkFailed': 'No se pudo buscar actualizaciones. Revisa tu conexión e inténtalo de nuevo.',
   'desktop.update.downloadNetworkFailed': 'No se pudo descargar la actualización. Revisa tu conexión e inténtalo de nuevo.',
   'desktop.update.installNetworkFailed': 'No se pudo instalar la actualización. Revisa tu conexión e inténtalo de nuevo.',
+  'desktop.update.fullscreenTimeout': 'No se pudo salir de la pantalla completa. Salga de la pantalla completa y luego vuelva a intentar la actualización.',
   'desktop.update.stopFailed': 'No se pudieron detener las tareas con seguridad. La actualización no se instaló. Inténtalo más tarde.',
   'desktop.update.tasksChanged': 'Han empezado tareas nuevas. Confirma de nuevo para detener las tareas y actualizar.',
   'desktop.update.tasksUnavailable': 'El estado de las tareas no está disponible. Vuelve a intentar la actualización cuando el espacio de trabajo esté listo.',
@@ -126,6 +128,7 @@ export const el = {
   'desktop.update.checkNetworkFailed': 'Δεν ήταν δυνατός ο έλεγχος για ενημερώσεις. Ελέγξτε τη σύνδεσή σας και δοκιμάστε ξανά.',
   'desktop.update.downloadNetworkFailed': 'Δεν ήταν δυνατή η λήψη της ενημέρωσης. Ελέγξτε τη σύνδεσή σας και δοκιμάστε ξανά.',
   'desktop.update.installNetworkFailed': 'Δεν ήταν δυνατή η εγκατάσταση της ενημέρωσης. Ελέγξτε τη σύνδεσή σας και δοκιμάστε ξανά.',
+  'desktop.update.fullscreenTimeout': 'Δεν ήταν δυνατή η έξοδος από την πλήρη οθόνη. Βγείτε από την πλήρη οθόνη και δοκιμάστε ξανά την ενημέρωση.',
   'desktop.update.stopFailed': 'Δεν ήταν δυνατή η ασφαλής διακοπή των εργασιών. Η ενημέρωση δεν εγκαταστάθηκε. Δοκιμάστε ξανά αργότερα.',
   'desktop.update.tasksChanged': 'Ξεκίνησαν νέες εργασίες. Επιβεβαιώστε ξανά για να διακοπούν οι εργασίες και να γίνει η ενημέρωση.',
   'desktop.update.tasksUnavailable': 'Η κατάσταση των εργασιών δεν είναι διαθέσιμη. Δοκιμάστε ξανά την ενημέρωση όταν ο χώρος εργασίας είναι έτοιμος.',
@@ -159,7 +162,7 @@ export const el = {
   'hostRelease.later': 'Όχι τώρα',
 } satisfies Record<keyof typeof en, string>
 
-/** French dictionary, checked complete against the English key set. */
+/** French dictionary, checked against the English keys. */
 export const fr = {
   'trigger': 'Paramètres',
   'shortcut.open': 'Ouvrir les paramètres',
@@ -178,6 +181,7 @@ export const fr = {
   'desktop.update.checkNetworkFailed': 'Impossible de rechercher des mises à jour. Vérifiez votre connexion et réessayez.',
   'desktop.update.downloadNetworkFailed': 'Impossible de télécharger la mise à jour. Vérifiez votre connexion et réessayez.',
   'desktop.update.installNetworkFailed': 'Impossible d’installer la mise à jour. Vérifiez votre connexion et réessayez.',
+  'desktop.update.fullscreenTimeout': 'Impossible de quitter le mode plein écran. Quittez le mode plein écran, puis réessayez la mise à jour.',
   'desktop.update.stopFailed': 'Impossible d’arrêter les tâches en toute sécurité. La mise à jour n’a pas été installée. Veuillez réessayer plus tard.',
   'desktop.update.tasksChanged': 'De nouvelles tâches ont démarré. Confirmez à nouveau pour arrêter les tâches et mettre à jour.',
   'desktop.update.tasksUnavailable': 'L’état des tâches est indisponible. Réessayez la mise à jour quand l’espace de travail sera prêt.',

@@ -20,10 +20,12 @@ import type { Agent } from '@deepseek-ai/dsh-agent'
 import { ToolCallId } from '@deepseek-ai/dsh-llm'
 import type { ApprovalOutcome } from '@deepseek-ai/dsh-user-approval'
 import * as sessionPlugin from '@deepseek-ai/dsh-session'
+import * as sessionProjectionPlugin from '@deepseek-ai/dsh-session-projection'
 import { SessionId, type SessionEvent } from '@deepseek-ai/dsh-session'
 import * as systemPromptPlugin from '@deepseek-ai/dsh-system-prompt'
 import * as toolsPlugin from '@deepseek-ai/dsh-tools'
-import { defineContentToolFixture, type PreToolDecision } from '@deepseek-ai/dsh-tools'
+import type { PreToolDecision } from '@deepseek-ai/dsh-tools'
+import { defineContentToolFixture, executeToolFixture } from '@deepseek-ai/dsh-tool-testkit'
 import * as approvalPlugin from '@deepseek-ai/dsh-user-approval'
 import * as permissionRulesPlugin from '@deepseek-ai/dsh-permission-rules'
 import type { PermissionRule } from '@deepseek-ai/dsh-permission-rules'
@@ -44,6 +46,7 @@ async function boot(rules: PermissionRule[]): Promise<Context> {
   const configPath = join(root, 'cordis.yml')
   await writeFile(configPath, [
     "- name: '@deepseek-ai/dsh-session'",
+    "- name: '@deepseek-ai/dsh-session-projection'",
     "- name: '@deepseek-ai/dsh-system-prompt'",
     "- name: '@deepseek-ai/dsh-tools'",
     "- name: '@deepseek-ai/dsh-user-approval'",
@@ -58,6 +61,7 @@ async function boot(rules: PermissionRule[]): Promise<Context> {
   ctx.loader.builtins.include = Include
   const modules = new Map<string, unknown>([
     ['@deepseek-ai/dsh-session', sessionPlugin],
+    ['@deepseek-ai/dsh-session-projection', sessionProjectionPlugin],
     ['@deepseek-ai/dsh-system-prompt', systemPromptPlugin],
     ['@deepseek-ai/dsh-tools', toolsPlugin],
     ['@deepseek-ai/dsh-user-approval', approvalPlugin],
@@ -96,7 +100,7 @@ function agentWithOpenTurn(ctx: Context, id: string): Agent {
 
 let callCounter = 0
 function call(ctx: Context, args: unknown, agent?: Agent) {
-  return ctx.tools.execute({
+  return executeToolFixture(ctx, {
     signal: new AbortController().signal,
     callId: ToolCallId(`call-${++callCounter}`),
     name: 'bash',
@@ -198,11 +202,11 @@ describe('permission engine — real composition', () => {
     expect(decisions[0]?.data).toMatchObject({ tool: 'bash', outcome: 'allow', matched: { kind: 'rule', priority: 0 } })
   })
 
-  it('a match.agent rule applies only to the agent whose preset the session projection reports', async () => {
+  it('a match.agent rule applies only to the agent whose preset the preset roster reports', async () => {
     const rule: PermissionRule = { priority: 0, match: { tool: 'bash', agent: 'reviewer', commandPattern: 'git push*' }, outcome: 'deny', description: 'reviewers never push' }
     const ctx = await boot([rule])
     const presets = new Map<string, string>([['reviewer-session', 'reviewer'], ['coder-session', 'coder']])
-    ctx.provide('sessionProjections', { stateOf: (session: { id: string }) => presets.get(session.id) } as never)
+    ctx.provide('agentPresets', { presetForSession: (session: { id: string }) => presets.get(session.id) ?? null } as never)
 
     const reviewer = agentWithOpenTurn(ctx, 'reviewer-session')
     const denied = await call(ctx, { command: 'git status && git push origin main' }, reviewer)

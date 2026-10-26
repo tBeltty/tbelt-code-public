@@ -14,7 +14,7 @@ describe('preset display copy', () => {
     ['audit-manual', 'presetAuditManualName', 'presetAuditManualDescription'],
     ['audit-autonomous', 'presetAuditAutoName', 'presetAuditAutoDescription'],
     ['cordis', 'presetCordisName', 'presetCordisDescription'],
-  ] as const)('localizes the shipped %s preset in English and Chinese', (id, nameKey, descriptionKey) => {
+  ] as const)('localizes the shipped %s preset in English and Spanish', (id, nameKey, descriptionKey) => {
     const preset = { id }
 
     expect(presetDisplayText(preset, translate(en)))

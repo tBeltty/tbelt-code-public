@@ -7,7 +7,11 @@ import { t } from './copy.ts'
 import type { Style } from './ansi.ts'
 import { numberField, oneLine, stringField } from './lines.ts'
 
-/** Whether a record type is one of the workflow run events. */
+/**
+ * Whether a record type is one of the workflow run events.
+ * @param type Session record type.
+ * @returns True for the four workflow run start and end types.
+ */
 export function isWorkflowEvent(type: string): boolean {
   return type === 'tool-workflow/run-start' || type === 'tool-workflow/agent-start'
     || type === 'tool-workflow/agent-end' || type === 'tool-workflow/run-end'

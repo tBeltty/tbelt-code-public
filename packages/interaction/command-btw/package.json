@@ -1,7 +1,7 @@
 {
   "name": "@deepseek-ai/dsh-command-btw",
   "description": "Side conversation for a running Session: the /btw command and the btw Host Remote that answer a question without interrupting the agent and deliver the exchange to it as context",
-  "version": "0.2.1-rc.2",
+  "version": "0.2.1-rc.3",
   "publishConfig": {
     "access": "public"
   },

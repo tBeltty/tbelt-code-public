@@ -1,6 +1,7 @@
 {
   "meta": {
     "title": "Saisie vocale",
-    "description": "Transcrit localement les enregistrements avec SenseVoice ; la première utilisation nécessite d’installer des dépendances."
+    "description": "Transcrivez les enregistrements localement avec SenseVoice ; la première utilisation nécessite l'installation de dépendances.",
+    "detail": "docs/DETAIL.md"
   }
 }

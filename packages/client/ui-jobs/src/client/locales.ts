@@ -47,7 +47,10 @@ export const en = {
   'terminal.expandAria': 'Expand {n} collapsed output lines',
 } satisfies Record<string, string>
 
-/** Spanish dictionary, checked complete against the English key set. */
+/** Key domain of the `job` namespace (English is the source of truth). */
+export type JobKey = keyof typeof en
+
+/** Spanish dictionary, checked against the English keys. */
 export const es = {
   'count.live.one': '{count} tarea en segundo plano en curso',
   'count.live.other': '{count} tareas en segundo plano en curso',
@@ -135,7 +138,7 @@ export const el = {
   'terminal.expandAria': 'Ανάπτυξη {n} συμπτυγμένων γραμμών εξόδου',
 } satisfies Record<keyof typeof en, string>
 
-/** French dictionary, checked complete against the English key set. */
+/** French dictionary, checked against the English keys. */
 export const fr = {
   'count.live.one': '{count} tâche d’arrière-plan en cours',
   'count.live.other': '{count} tâches d’arrière-plan en cours',
@@ -178,6 +181,3 @@ export const fr = {
   'terminal.expand': 'Afficher {n} lignes de plus',
   'terminal.expandAria': 'Développer les {n} lignes de sortie réduites',
 } satisfies Record<keyof typeof en, string>
-
-/** Key domain of the `job` namespace (English is the source of truth). */
-export type JobKey = keyof typeof en

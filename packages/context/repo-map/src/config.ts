@@ -23,7 +23,7 @@ export interface Config {
 }
 
 /** Stable failure codes exposed to host adapters. */
-export type RepoMapErrorCode = 'REPO_MAP_INVALID_CONFIG' | 'REPO_MAP_MISSING_PROJECTION'
+export type RepoMapErrorCode = 'REPO_MAP_INVALID_CONFIG'
 
 /** Typed repo-map failure suitable for host protocol error mapping. */
 export class RepoMapError extends Error {

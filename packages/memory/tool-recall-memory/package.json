@@ -1,7 +1,7 @@
 {
   "name": "@deepseek-ai/dsh-tool-recall-memory",
   "description": "Model-facing recall_memory tool: on-demand, literal-keyword topic-file recall over the memory storage read API",
-  "version": "0.2.1-rc.2",
+  "version": "0.2.1-rc.3",
   "publishConfig": {
     "access": "public"
   },
@@ -36,6 +36,8 @@
     "@deepseek-ai/cordis-plugin-loader": "workspace:^",
     "@deepseek-ai/dsh-agent": "workspace:*",
     "@deepseek-ai/dsh-agent-loop-testkit": "workspace:*",
+    "@deepseek-ai/dsh-session-projection": "workspace:*",
+    "@deepseek-ai/dsh-tool-testkit": "workspace:*",
     "@deepseek-ai/dsh-llm": "workspace:*",
     "@deepseek-ai/dsh-memory-storage": "workspace:*",
     "@deepseek-ai/dsh-session": "workspace:*",

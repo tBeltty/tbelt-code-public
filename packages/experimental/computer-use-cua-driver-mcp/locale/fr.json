@@ -1,6 +1,6 @@
 {
   "meta": {
-    "title": "Utilisation de l’ordinateur (Cua Driver MCP)",
+    "title": "Utilisation de l'ordinateur (Cua Driver MCP)",
     "description": "Permet au modèle de piloter le bureau via un exécutable cua-driver installé séparément."
   }
 }

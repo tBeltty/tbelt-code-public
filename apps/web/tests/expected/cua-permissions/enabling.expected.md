@@ -1,0 +1,5 @@
+- listitem:
+  - button "View Computer use": Computer use
+  - text: Experimental Currently supports macOS; Windows support is in development. Loads computer use for existing and new PTC sessions. Switch to PTC mode and grant Accessibility and Screen Recording permissions to use it.
+  - status: Applying changes to Computer use
+  - switch "Enable Computer use" [disabled]

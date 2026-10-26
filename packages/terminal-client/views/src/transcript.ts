@@ -118,7 +118,9 @@ export class TranscriptRenderer {
     }
   }
 
-  /** Finish an open line, such as when a turn ends or an approval prompt interrupts a reply. */
+  /** Finish an open line, such as when a turn ends or an approval prompt interrupts a reply.
+   * @returns The text that closes the open line, or an empty string when none is open.
+   */
   flush(): string {
     return this.#close()
   }

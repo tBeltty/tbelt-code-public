@@ -104,7 +104,7 @@ function bench(options: {
 }
 
 function openPanel(): void {
-  fireEvent.click(screen.getByRole('button', { name: /Equipo de agentes/u }))
+  fireEvent.click(screen.getByRole('button', { name: /equipo de agentes/iu }))
 }
 
 function setProjectionSnapshot(
@@ -126,7 +126,7 @@ describe('TeamAction', () => {
   it('renders the Lead projection and applies later projection frames without any user action', async () => {
     const b = bench()
     render(<TeamAction {...b.props} />)
-    expect(screen.getByRole('button', { name: /Equipo de agentes/u }).textContent).toBe(es.trigger)
+    expect(screen.getByRole('button', { name: /equipo de agentes/iu }).textContent).toBe(es.trigger)
     openPanel()
     expect(await screen.findByText('Implement runtime')).toBeTruthy()
     expect(screen.getByText('write scopes overlap with task-2')).toBeTruthy()
@@ -262,7 +262,7 @@ describe('TeamAction', () => {
     })
     render(<TeamAction {...b.props} />)
     openPanel()
-    expect(screen.getByRole('alert').textContent).toBe('Registro de equipo guardado no válido: revision is not contiguous')
+    expect(screen.getByRole('alert').textContent).toBe('Registro de equipo persistente no válido: revision is not contiguous')
     expect(screen.getByText('Implement runtime')).toBeTruthy()
   })
 
@@ -314,7 +314,7 @@ describe('TeamAction', () => {
     expect(screen.getByRole('alert').textContent).toBe('Error: navigation failed')
     fireEvent.keyDown(screen.getByRole('dialog'), { key: 'Escape' })
     expect(screen.queryByRole('dialog')).toBeNull()
-    expect(document.activeElement).toBe(screen.getByRole('button', { name: /Equipo de agentes/u }))
+    expect(document.activeElement).toBe(screen.getByRole('button', { name: /equipo de agentes/iu }))
   })
 
   it('closes the panel and clears a navigation failure when the conversation switches sessions', () => {
@@ -336,7 +336,7 @@ describe('TeamAction', () => {
   it('keeps panel interactions open and dismisses on outside pointer or Escape', () => {
     const b = bench()
     const rendered = render(<TeamAction {...b.props} />)
-    const trigger = screen.getByRole('button', { name: /Equipo de agentes/u })
+    const trigger = screen.getByRole('button', { name: /equipo de agentes/iu })
     fireEvent.click(trigger)
     const panel = screen.getByRole('dialog')
     expect(rendered.container.contains(panel)).toBe(false)
@@ -363,7 +363,7 @@ describe('TeamAction', () => {
     const clientHeight = vi.spyOn(Element.prototype, 'clientHeight', 'get').mockReturnValue(60)
     try {
       render(<TeamAction {...bench().props} />)
-      fireEvent.click(screen.getByRole('button', { name: /Equipo de agentes/u }))
+      fireEvent.click(screen.getByRole('button', { name: /equipo de agentes/iu }))
       const expand = await screen.findByRole('button', { name: es['task.expand'] })
       const description = screen.getByText('Build the Team runtime')
       expect(expand.getAttribute('aria-expanded')).toBe('false')
@@ -389,7 +389,7 @@ describe('TeamAction', () => {
     }
     const b = bench()
     const rendered = render(<TeamAction {...b.props} />)
-    const trigger = screen.getByRole('button', { name: /Equipo de agentes/u })
+    const trigger = screen.getByRole('button', { name: /equipo de agentes/iu })
     const root = trigger.parentElement!
 
     fireEvent.mouseEnter(trigger)
@@ -424,7 +424,7 @@ describe('TeamAction', () => {
       await act(async () => { await vi.advanceTimersByTimeAsync(duration) })
     }
     render(<TeamAction {...bench().props} />)
-    const trigger = screen.getByRole('button', { name: /Equipo de agentes/u })
+    const trigger = screen.getByRole('button', { name: /equipo de agentes/iu })
     const root = trigger.parentElement!
 
     fireEvent.click(trigger)
@@ -461,7 +461,7 @@ describe('TeamAction', () => {
       await act(async () => { await vi.advanceTimersByTimeAsync(duration) })
     }
     render(<TeamAction {...bench().props} />)
-    const trigger = screen.getByRole('button', { name: /Equipo de agentes/u })
+    const trigger = screen.getByRole('button', { name: /equipo de agentes/iu })
     const label = screen.getByText(es.trigger)
     const computedStyle = window.getComputedStyle.bind(window)
     vi.spyOn(window, 'getComputedStyle').mockImplementation(element =>

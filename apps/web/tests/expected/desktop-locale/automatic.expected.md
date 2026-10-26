@@ -1,6 +1,6 @@
 - dialog "Ajustes":
+  - text: Ajustes
   - navigation:
-    - text: Ajustes
     - button "General"
     - button "Modelos"
     - button "Gasto"
@@ -25,6 +25,8 @@
   - button "Estándar"
   - text: Cuándo contraer el detalle del trabajo Elige cuándo contraer automáticamente el detalle del trabajo
   - button "Al terminar"
+  - text: Respuestas después del plegado Elija qué respuestas del asistente permanecen visibles cuando los detalles del trabajo colapsan
+  - button "Todas las respuestas"
   - text: Mostrar la vista de código Muestra la trayectoria, los diffs de código y todos los preajustes de agente
   - switch "Mostrar la vista de código" [checked]
   - text: Atajos de teclado

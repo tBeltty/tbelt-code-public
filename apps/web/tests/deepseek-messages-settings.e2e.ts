@@ -2,7 +2,7 @@
 import { readFile } from 'node:fs/promises'
 import { join } from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { chromium, type Browser, type Page } from 'playwright'
+import { chromium, webkit, type Browser, type Page } from 'playwright'
 import { afterAll, beforeAll, describe, expect, it, onTestFailed } from 'vitest'
 import {
   captureStableAria, compareOrRefreshGolden, launchWebScaffold,
@@ -11,6 +11,46 @@ import {
 import { openSettings, connectFreshWorkspace, saveFailureShot, EN_BROWSER_LOCALE } from './support.ts'
 
 const EXPECTED = fileURLToPath(new URL('./expected/deepseek-messages-settings/', import.meta.url))
+
+it.each([{ name: 'Chromium', engine: chromium }, { name: 'WebKit', engine: webkit }])(
+  'keeps a foreign model drag from editing another provider input in $name', async ({ engine }) => {
+    const scaffold = await launchWebScaffold({ deepSeekMissingCredential: true })
+    let browser: Browser | undefined
+    try {
+      browser = await engine.launch()
+      const page = await browser.newPage({ viewport: { width: 1680, height: 1000 }, locale: EN_BROWSER_LOCALE })
+      const tripwire = watchConsole(page)
+      await page.goto(scaffold.authenticatedUrl, { waitUntil: 'load' })
+      const onboarding = page.getByRole('dialog', { name: 'Choose a model provider to get started' })
+      await onboarding.getByRole('button', { name: 'Configure later' }).click()
+      await onboarding.waitFor({ state: 'detached' })
+      await openSettings(page)
+      const dialog = page.getByRole('dialog', { name: 'Settings', exact: true })
+      await dialog.getByRole('button', { name: 'Models', exact: true }).click()
+      const setup = dialog.getByText('DeepSeek', { exact: true }).locator('xpath=ancestor::li')
+      await setup.getByText('Customized settings', { exact: true }).click()
+      await dialog.getByRole('button', { name: 'Add model provider' }).click()
+      await dialog.getByRole('tab', { name: 'Custom model API' }).click()
+      const custom = dialog.getByRole('tabpanel', { name: 'Custom model API' })
+      await custom.getByRole('button', { name: 'Add model', exact: true }).click()
+      const target = custom.getByLabel('Model ID 1', { exact: true })
+      await target.fill('foreign-model')
+      const before = scaffold.ctx.settings.describe({ redactSecrets: true }).map(row => ({ ns: row.ns, value: row.value }))
+      const source = setup.getByRole('button', { name: 'Reorder model 1', exact: true })
+      await source.dragTo(target)
+      expect(await target.inputValue()).toBe('foreign-model')
+      expect(await setup.getByLabel('Model ID 1', { exact: true }).inputValue()).toBe('deepseek-flash')
+      expect(scaffold.ctx.settings.describe({ redactSecrets: true }).map(row => ({ ns: row.ns, value: row.value }))).toEqual(before)
+      expect(tripwire.pageErrors).toEqual([])
+    } finally {
+      try {
+        await browser?.close()
+      } finally {
+        await scaffold.close()
+      }
+    }
+  }, 60_000,
+)
 
 describe.skipIf(webSnapshotMode() === 'record')('web e2e: DeepSeek Messages settings', () => {
   let scaffold: WebScaffold
@@ -99,6 +139,8 @@ describe.skipIf(webSnapshotMode() === 'record')('web e2e: DeepSeek Messages sett
     onTestFailed(() => saveFailureShot(page, 'web-e2e-deepseek-messages-default'))
     await page.keyboard.press('Escape')
     await scaffold.ctx.agentDefaultModel.saveSelection({ provider: 'deepseek-official', model: 'deepseek-v4-flash' })
+    const patchPath = join(scaffold.harnessHome, 'profiles', 'scaffold', 'cordis.patch.yml')
+    expect(await readFile(patchPath, 'utf8')).toContain('model: deepseek-v4-flash')
     await page.reload({ waitUntil: 'load' })
     const input = page.locator('[data-composer-input]').first()
     const trigger = page.getByRole('button', { name: 'Select model', exact: true })
@@ -113,8 +155,8 @@ describe.skipIf(webSnapshotMode() === 'record')('web e2e: DeepSeek Messages sett
     await expect.poll(() => scaffold.ctx.agentDefaultModel.currentSelection()).toMatchObject({
       provider: 'deepseek-official', model: 'deepseek-flash',
     })
-    const settings = await readFile(join(scaffold.harnessHome, 'profiles', 'scaffold', 'cordis.patch.yml'), 'utf8')
-    expect(settings).toContain('provider: deepseek-official')
+    const settings = await readFile(patchPath, 'utf8')
+    expect(settings).not.toContain('id: agent-default-model')
     expect(tripwire.pageErrors).toEqual([])
   }, 60_000)
 })

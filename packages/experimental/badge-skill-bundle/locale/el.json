@@ -1,6 +1,7 @@
 {
   "meta": {
-    "title": "Δεξιότητα εμβλήματος DSH",
-    "description": "Προσφέρει το έμβλημα «powered by DSH» ως δεξιότητα που μπορεί να ανακαλυφθεί."
+    "title": "Δεξιότητα εμβλήματος tBelt Code",
+    "description": "Προσφέρει το έμβλημα «powered by tBelt Code» ως δεξιότητα που μπορεί να ανακαλυφθεί.",
+    "detail": "docs/DETAIL.md"
   }
 }

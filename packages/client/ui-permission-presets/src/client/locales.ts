@@ -25,7 +25,34 @@ export const en = {
   'confirm.enable': 'Enable Full access',
 } satisfies Record<string, string>
 
-/** Spanish dictionary, checked complete against the English key set. */
+/** Current-session popup-gate key union. */
+export type PermissionAccessKey = keyof typeof accessEn
+
+/** English dictionary for the current-session popup gate. */
+export const accessEn = {
+  'mode': 'Access mode, current: {name}',
+  'close': 'Close',
+  'preset.readOnly': 'Read Only',
+  'preset.workspaceWrite': 'Workspace Write',
+  'preset.fullAccess': 'Full access',
+  'hint.readOnly': 'Reads files but cannot change them.',
+  'hint.workspaceWrite': 'Edits files inside the workspace and asks before going outside it.',
+  'hint.fullAccess': 'Full file access without confirmation prompts.',
+  'confirm.title': 'Enable Full access?',
+  'confirm.description': 'Full access reduces confirmation steps and lets the agent perform more actions directly, including sensitive operations, file changes, or external commands. Only use it when you trust the current task.',
+  'confirm.acknowledge': 'I understand the risks and want to continue',
+  'confirm.cancel': 'Cancel',
+  'confirm.enable': 'Enable Full access',
+  'auto.label': 'Auto review',
+  'auto.badge': 'EXP',
+  'auto.description': 'Run without a sandbox after an experimental same-model review of every native tool call and PTC inner call.',
+  'auto.confirm.title': 'Enable Auto review (experimental)?',
+  'auto.confirm.description': 'Auto review runs without a sandbox. Before every native tool call and PTC inner call, the same model as the current agent reviews whether to allow it; you approve or reject each call it denies. This feature is experimental, can falsely allow or deny actions, and uses additional tokens.',
+  'auto.confirm.acknowledge': 'I understand these risks and want to continue',
+  'auto.confirm.enable': 'Enable Auto review',
+} satisfies Record<string, string>
+
+/** Spanish dictionary, checked against the English keys. */
 export const es = {
   'title': 'Permisos',
   'description': 'Elige el modo de permisos predeterminado para las sesiones nuevas',
@@ -63,7 +90,7 @@ export const el = {
   'confirm.enable': 'Ενεργοποίηση Πλήρους πρόσβασης',
 } satisfies Record<keyof typeof en, string>
 
-/** French dictionary, checked complete against the English key set. */
+/** French dictionary, checked against the English keys. */
 export const fr = {
   'title': 'Autorisation',
   'description': 'Choisissez le mode d’autorisation par défaut des nouvelles sessions',
@@ -82,34 +109,7 @@ export const fr = {
   'confirm.enable': 'Activer l’accès complet',
 } satisfies Record<keyof typeof en, string>
 
-/** Current-session popup-gate key union. */
-export type PermissionAccessKey = keyof typeof accessEn
-
-/** English dictionary for the current-session popup gate. */
-export const accessEn = {
-  'mode': 'Access mode, current: {name}',
-  'close': 'Close',
-  'preset.readOnly': 'Read Only',
-  'preset.workspaceWrite': 'Workspace Write',
-  'preset.fullAccess': 'Full access',
-  'hint.readOnly': 'Reads files but cannot change them.',
-  'hint.workspaceWrite': 'Edits files inside the workspace and asks before going outside it.',
-  'hint.fullAccess': 'Full file access without confirmation prompts.',
-  'confirm.title': 'Enable Full access?',
-  'confirm.description': 'Full access reduces confirmation steps and lets the agent perform more actions directly, including sensitive operations, file changes, or external commands. Only use it when you trust the current task.',
-  'confirm.acknowledge': 'I understand the risks and want to continue',
-  'confirm.cancel': 'Cancel',
-  'confirm.enable': 'Enable Full access',
-  'auto.label': 'Auto review',
-  'auto.badge': 'EXP',
-  'auto.description': 'Run without a sandbox after an experimental same-model review of every native tool call and PTC inner call.',
-  'auto.confirm.title': 'Enable Auto review (experimental)?',
-  'auto.confirm.description': 'Auto review runs without a sandbox. Before every native tool call and PTC inner call, the same model as the current agent reviews whether to allow it; you approve or reject each call it denies. This feature is experimental, can falsely allow or deny actions, and uses additional tokens.',
-  'auto.confirm.acknowledge': 'I understand these risks and want to continue',
-  'auto.confirm.enable': 'Enable Auto review',
-} satisfies Record<string, string>
-
-/** Spanish dictionary, checked complete against the English key set. */
+/** Spanish dictionary, checked against the English keys. */
 export const accessEs = {
   'mode': 'Modo de acceso, actual: {name}',
   'close': 'Cerrar',
@@ -131,7 +131,7 @@ export const accessEs = {
   'auto.confirm.description': 'La revisión automática se ejecuta sin sandbox. Antes de cada llamada a herramientas nativas y cada llamada interna de PTC, el mismo modelo que usa el agente actual revisa si debe permitirla; tú apruebas o rechazas cada llamada que deniegue. Esta función es experimental, puede permitir o denegar acciones por error y consume tokens adicionales.',
   'auto.confirm.acknowledge': 'Entiendo estos riesgos y quiero continuar',
   'auto.confirm.enable': 'Activar revisión automática',
-} satisfies Record<keyof typeof accessEn, string>
+} satisfies typeof accessEn
 
 /** Greek dictionary, checked complete against the English key set. */
 export const accessEl = {
@@ -157,7 +157,7 @@ export const accessEl = {
   'auto.confirm.enable': 'Ενεργοποίηση Αυτόματης επισκόπησης',
 } satisfies Record<keyof typeof accessEn, string>
 
-/** French dictionary, checked complete against the English key set. */
+/** French dictionary, checked against the English keys. */
 export const accessFr = {
   'mode': 'Mode d’accès, actuel\u00a0: {name}',
   'close': 'Fermer',
@@ -179,4 +179,4 @@ export const accessFr = {
   'auto.confirm.description': 'La revue automatique s’exécute sans bac à sable. Avant chaque appel d’outil natif et chaque appel interne PTC, le même modèle que l’agent actuel détermine s’il faut l’autoriser\u00a0; vous approuvez ou rejetez chaque appel qu’il refuse. Cette fonctionnalité est expérimentale, peut autoriser ou refuser des actions à tort et consomme des tokens supplémentaires.',
   'auto.confirm.acknowledge': 'Je comprends ces risques et je souhaite continuer',
   'auto.confirm.enable': 'Activer la revue automatique',
-} satisfies Record<keyof typeof accessEn, string>
+} satisfies typeof accessEn

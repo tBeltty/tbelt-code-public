@@ -1,0 +1,6 @@
+{
+  "meta": {
+    "title": "Hooks του Claude Code",
+    "description": "Εκτελεί hooks από το hooks.json ή τις ρυθμίσεις του Claude Code στα σημεία παρεμβολής του Harness."
+  }
+}

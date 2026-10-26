@@ -17,7 +17,14 @@ export const en = {
   retry: 'Retry',
 } satisfies Record<string, string>
 
-/** Spanish dictionary, checked complete against the English key set. */
+declare module '@deepseek-ai/dsh-client-ui-slots' {
+  interface LocaleNamespaceMap {
+    /** PDF page, loading, and failure messages. */
+    sidebarPdf: PdfLocaleKey
+  }
+}
+
+/** Spanish dictionary, checked against the English keys. */
 export const es = {
   ...zoomEs,
   title: 'PDF',
@@ -45,7 +52,7 @@ export const el = {
   retry: 'Επανάληψη',
 } satisfies Record<keyof typeof en, string>
 
-/** French dictionary, checked complete against the English key set. */
+/** French dictionary, checked against the English keys. */
 export const fr = {
   ...zoomFr,
   title: 'PDF',
@@ -58,10 +65,3 @@ export const fr = {
   unsupported: 'L’aperçu du PDF nécessite le contenu complet du fichier.',
   retry: 'Réessayer',
 } satisfies Record<keyof typeof en, string>
-
-declare module '@deepseek-ai/dsh-client-ui-slots' {
-  interface LocaleNamespaceMap {
-    /** PDF page, loading, and failure messages. */
-    sidebarPdf: PdfLocaleKey
-  }
-}

@@ -43,7 +43,7 @@ export const en = {
   'notice.attachmentsUnsupported': '/{command} does not accept attachments; remove them first',
 } satisfies Record<string, string>
 
-/** Spanish dictionary, checked complete against the English key set. */
+/** Spanish dictionary, checked against the English keys. */
 export const es = {
   'section.add': 'Añadir',
   'section.commands': 'Comandos',
@@ -113,7 +113,7 @@ export const el = {
   'notice.attachmentsUnsupported': 'Το /{command} δεν δέχεται συνημμένα· αφαιρέστε τα πρώτα',
 } satisfies Record<keyof typeof en, string>
 
-/** French dictionary, checked complete against the English key set. */
+/** French dictionary, checked against the English keys. */
 export const fr = {
   'section.add': 'Ajouter',
   'section.commands': 'Commandes',

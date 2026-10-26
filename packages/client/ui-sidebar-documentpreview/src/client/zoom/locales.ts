@@ -10,7 +10,10 @@ export const zoomEn = {
   zoomValue: '{percent}%',
 } satisfies Record<string, string>
 
-/** Spanish counterpart of {@link zoomEn}. */
+/** Shared zoom dictionary keys. */
+export type ZoomLocaleKey = keyof typeof zoomEn
+
+/** Spanish dictionary, checked against the English keys. */
 export const zoomEs = {
   zoomControls: 'Controles de zoom',
   zoomMenu: 'Elegir zoom',
@@ -18,7 +21,7 @@ export const zoomEs = {
   zoomIn: 'Acercar',
   zoomFitWidth: 'Ajustar al ancho',
   zoomValue: '{percent}%',
-} satisfies Record<keyof typeof zoomEn, string>
+} satisfies typeof zoomEn
 
 /** Greek counterpart of {@link zoomEn}. */
 export const zoomEl = {
@@ -30,7 +33,7 @@ export const zoomEl = {
   zoomValue: '{percent}%',
 } satisfies Record<keyof typeof zoomEn, string>
 
-/** French counterpart of {@link zoomEn}. */
+/** French dictionary, checked against the English keys. */
 export const zoomFr = {
   zoomControls: 'Commandes de zoom',
   zoomMenu: 'Choisir le zoom',
@@ -38,7 +41,4 @@ export const zoomFr = {
   zoomIn: 'Zoom avant',
   zoomFitWidth: 'Ajuster à la largeur',
   zoomValue: '{percent} %',
-} satisfies Record<keyof typeof zoomEn, string>
-
-/** Shared zoom dictionary keys. */
-export type ZoomLocaleKey = keyof typeof zoomEn
+} satisfies typeof zoomEn

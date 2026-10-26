@@ -1,12 +1,15 @@
 /** Shared model fields and actions for both adapter catalog editors; only the pi-ai editor edits list prices. */
 
-import type { ReactNode } from 'react'
+import type { DragEvent, ReactNode } from 'react'
 import {
-  IconChevronDownOutlineRegular, IconChevronRightOutlineRegular, IconTrashOutlineRegular,
+  IconChevronDownOutlineRegular, IconChevronRightOutlineRegular, IconDragHandleOutlineRegular,
+  IconTrashOutlineRegular, Tooltip, useRowDragPreview,
 } from '@deepseek-ai/dsh-client-ui-primitives'
 import type { DeepSeekModelDraft } from './DeepSeekModelsEditor.tsx'
 import type { ModelsKey } from './locales.ts'
 import { ModelInputTypes } from './ModelInputTypes.tsx'
+import { ModelReasoningEfforts } from './ModelReasoningEfforts.tsx'
+import type { ModelRowOrder } from './useModelRows.ts'
 import styles from './ModelsSection.module.css'
 
 /** A capacity's editable text and adapter-specific inherited hint. */
@@ -23,7 +26,9 @@ export type PriceField = 'input' | 'output' | 'cacheRead'
 /** Adapter-owned data and actions for one model row. */
 interface ModelRowProps {
   model: DeepSeekModelDraft
+  rowKey: number
   position: number
+  order: ModelRowOrder
   inputField: 'inputModalities' | 'input'
   inputFallback?: readonly string[] | undefined
   inputLoading?: boolean
@@ -32,6 +37,8 @@ interface ModelRowProps {
   t: (key: ModelsKey) => string
   contextWindow: CapacityInput
   maxTokens: CapacityInput
+  /** Levels the row's `reasoningEfforts` may declare; absent or empty shows no reasoning control. */
+  reasoningLevels?: readonly string[] | undefined
   /** List-price inputs; absent on an adapter whose models take no configured price. */
   pricing?: Readonly<Record<PriceField, CapacityInput>> | undefined
   onFieldChange: (field: 'id' | 'name', value: string | undefined) => void
@@ -48,6 +55,11 @@ const PRICE_LABEL: Readonly<Record<PriceField, ModelsKey>> = {
   cacheRead: 'modelPriceCacheRead',
 }
 
+function rowHalf(event: DragEvent<HTMLElement>): 'before' | 'after' {
+  const rect = event.currentTarget.getBoundingClientRect()
+  return event.clientY < rect.top + rect.height / 2 ? 'before' : 'after'
+}
+
 /**
  * Render consistent model identity, capacity, and input-type controls.
  * @param props - drafted fields and their owning editor's actions.
@@ -55,9 +67,56 @@ const PRICE_LABEL: Readonly<Record<PriceField, ModelsKey>> = {
  */
 export function ModelRow(props: ModelRowProps): ReactNode {
   const { model, position, t, disabled } = props
+  const preview = useRowDragPreview(styles['modelDragPreview'] as string)
   return (
-    <div className={styles['modelEntry']}>
+    <div
+      className={styles['modelEntry']}
+      data-row-key={props.rowKey}
+      data-dragging={props.order.dragging || undefined}
+      data-drop-target={props.order.dragging ? undefined : props.order.target}
+      onDragOver={(event) => {
+        if (!props.order.canDrop) return
+        event.preventDefault()
+        event.dataTransfer.dropEffect = 'move'
+        props.order.onOver(rowHalf(event))
+      }}
+      onDragLeave={(event) => {
+        if (event.relatedTarget instanceof Node && event.currentTarget.contains(event.relatedTarget)) return
+        props.order.onLeave()
+      }}
+      onDrop={(event) => {
+        if (!props.order.canDrop) return
+        event.preventDefault()
+        props.order.onDrop(rowHalf(event))
+      }}
+    >
       <div className={styles['modelRow']}>
+        <Tooltip label={t('reorderModelHelp')}>
+          <button
+            type="button"
+            className={`${styles['iconButton']} ${styles['modelDragHandle']}`}
+            aria-label={`${t('reorderModel')} ${String(position)}`}
+            aria-keyshortcuts="ArrowUp ArrowDown"
+            aria-description={t('reorderModelHelp')}
+            disabled={disabled}
+            draggable={!disabled}
+            onDragStart={(event) => {
+              event.dataTransfer.effectAllowed = 'move'
+              event.dataTransfer.setData('application/x-dsh-model-order', String(position))
+              props.order.onStart()
+              preview.start(event, event.currentTarget.closest('[data-row-key]') as HTMLElement)
+            }}
+            onDragEnd={() => { if (preview.clear()) props.order.onEnd() }}
+            onKeyDown={(event) => {
+              if (event.key !== 'ArrowUp' && event.key !== 'ArrowDown') return
+              event.preventDefault()
+              event.stopPropagation()
+              props.order.onMove(event.key === 'ArrowUp' ? -1 : 1)
+            }}
+          >
+            <IconDragHandleOutlineRegular size={14} />
+          </button>
+        </Tooltip>
         {(['id', 'name'] as const).map(field => (
           <input
             key={field}
@@ -140,6 +199,13 @@ export function ModelRow(props: ModelRowProps): ReactNode {
               model={model} field={props.inputField} position={position}
               fallback={props.inputFallback} disabled={disabled || props.inputLoading === true} t={t} onChange={props.onChange}
             />
+            {props.reasoningLevels !== undefined && props.reasoningLevels.length > 0
+              ? (
+                <ModelReasoningEfforts
+                  model={model} levels={props.reasoningLevels} position={position} disabled={disabled} t={t} onChange={props.onChange}
+                />
+              )
+              : null}
           </div>
         )
         : null}

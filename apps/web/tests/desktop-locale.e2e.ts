@@ -21,6 +21,7 @@ describe.skipIf(MODE === 'record')('web e2e: native and Client locale preference
   let page: Page
   let tripwire: ReturnType<typeof watchConsole>
   const reported: string[] = []
+  let languages = ['it-IT', 'es-ES', 'en-US']
 
   beforeAll(async () => {
     scaffold = await launchWebScaffold()
@@ -29,7 +30,7 @@ describe.skipIf(MODE === 'record')('web e2e: native and Client locale preference
     tripwire = watchConsole(page)
     await page.exposeFunction('nativeLocaleRead', () => {
       const section = scaffold.ctx.settings.describe().find(row => row.ns === 'locale')!.value as { preference?: string }
-      return { languages: ['ja-JP', 'es-ES', 'en-US'], preference: section.preference ?? null }
+      return { languages, preference: section.preference ?? null }
     })
     await page.exposeFunction('nativeLocaleChanged', (locale: string) => { reported.push(locale) })
     await page.addInitScript(() => {
@@ -61,7 +62,17 @@ describe.skipIf(MODE === 'record')('web e2e: native and Client locale preference
     expect(scaffold.ctx.settings.describe().find(row => row.ns === 'locale')!.value).toEqual({})
     await compareOrRefreshGolden(join(SNAPSHOT_DIR, 'automatic.expected.md'),
       await captureStableAria(page, '[role="dialog"]', scaffold.workspaceCwd, versionCapture), MODE)
-    await esDialog.getByRole('button', { name: 'Automático', exact: true }).click()
+    languages = ['el-GR', 'es-ES', 'en-US']
+    const automaticWarnings = tripwire.warnings.length
+    reported.length = 0
+    await page.reload({ waitUntil: 'load' })
+    acknowledgeReloadConnectionLoss(tripwire, automaticWarnings)
+    await page.getByRole('button', { name: 'Ρυθμίσεις', exact: true }).click()
+    const elDialog = page.getByRole('dialog', { name: 'Ρυθμίσεις', exact: true })
+    await elDialog.getByRole('button', { name: 'Αυτόματα', exact: true }).waitFor()
+    await expect.poll(() => reported).toEqual(['el'])
+    expect(scaffold.ctx.settings.describe().find(row => row.ns === 'locale')!.value).toEqual({})
+    await elDialog.getByRole('button', { name: 'Αυτόματα', exact: true }).click()
     await page.getByRole('menuitem', { name: 'English', exact: true }).click()
     const enDialog = page.getByRole('dialog', { name: 'Settings', exact: true })
     await enDialog.getByRole('button', { name: 'English', exact: true }).waitFor()
@@ -79,6 +90,43 @@ describe.skipIf(MODE === 'record')('web e2e: native and Client locale preference
     await expect.poll(() => reported).toEqual(['en'])
     expect(await page.evaluate(() => document.documentElement.lang)).toBe('en')
     expect(await page.evaluate(() => localStorage.getItem('dsh.locale'))).toBeNull()
+    await enDialog.getByRole('button', { name: 'English', exact: true }).click()
+    await page.getByRole('menuitem', { name: 'Ελληνικά', exact: true }).click()
+    await elDialog.getByRole('button', { name: 'Ελληνικά', exact: true }).waitFor()
+    await expect.poll(() => readFile(join(scaffold.harnessHome, 'profiles', 'scaffold', 'cordis.patch.yml'), 'utf8'))
+      .toContain('preference: el')
+    const greekReloadWarnings = tripwire.warnings.length
+    reported.length = 0
+    await page.reload({ waitUntil: 'load' })
+    acknowledgeReloadConnectionLoss(tripwire, greekReloadWarnings)
+    await page.getByRole('button', { name: 'Ρυθμίσεις', exact: true }).click()
+    await elDialog.getByRole('button', { name: 'Ελληνικά', exact: true }).waitFor()
+    await expect.poll(() => reported).toEqual(['el'])
+    expect(await page.evaluate(() => document.documentElement.lang)).toBe('el')
+    await page.setViewportSize({ width: 390, height: 844 })
+    const overflows = (): Promise<number> => elDialog.evaluate((dialog) => {
+      // The narrow navigation strip scrolls horizontally by design; inspect the panel and section content.
+      const options = dialog.lastElementChild!
+      const containers = [dialog, options, ...options.querySelectorAll<HTMLElement>('*')]
+        .filter(element => element === dialog || ['auto', 'scroll'].includes(getComputedStyle(element).overflowX))
+      return containers.filter(element => element.clientWidth > 0 && element.scrollWidth > element.clientWidth + 1).length
+    })
+    await expect.poll(overflows).toBe(0)
+    await elDialog.evaluate((dialog) => {
+      const options = dialog.lastElementChild!
+      const probe = document.createElement('div')
+      probe.dataset.localeOverflowProbe = ''
+      probe.style.width = '2000px'
+      probe.style.height = '1px'
+      options.append(probe)
+    })
+    try {
+      expect(await overflows()).toBeGreaterThan(0)
+    } finally {
+      await elDialog.locator('[data-locale-overflow-probe]').evaluate((element) => { element.remove() })
+    }
+    await expect.poll(overflows).toBe(0)
+
     expect(tripwire.warnings).toEqual([])
     expect(tripwire.pageErrors).toEqual([])
     await assertFixtureInventory(SNAPSHOT_DIR, ['automatic.expected.md', 'selected.expected.md'])

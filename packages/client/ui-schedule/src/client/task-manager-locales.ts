@@ -134,15 +134,30 @@ export const en = {
   'delete.cancel': 'Cancel',
   'delete.close': 'Close deletion confirmation',
   'delete.pending': 'Deleting…',
+  'list.more': 'More task actions',
+  'clear.action': 'Clear all inactive tasks',
+  'clear.title': 'Clear inactive tasks ({count})?',
+  'clear.description': 'These tasks and their saved delivery records will be permanently deleted. '
+    + 'Enabled tasks, original sessions, and queued messages are not affected.',
+  'clear.confirm': 'Clear tasks',
+  'clear.pending': 'Clearing…',
+  'clear.close': 'Close clear confirmation',
   'toast.deleted': 'Task deleted.',
   'toast.deleteFailed': 'Could not delete the task.',
+  'toast.cleared.one': 'Cleared {count} inactive task.',
+  'toast.cleared.other': 'Cleared {count} inactive tasks.',
+  'toast.clearedNone': 'No inactive tasks to clear.',
+  'toast.clearFailed': 'Could not clear tasks.',
   'card.open': 'Open',
   'card.openLabel': 'Open task details: {title}',
   'card.deleted': 'Deleted',
   'tool.invoked': 'Invoked {name}',
-} as const
+} satisfies Record<string, string>
 
-/** Spanish dictionary, checked complete against the English key set. */
+/** Keys registered under `schedule.manager`. */
+export type TaskManagerKey = keyof typeof en
+
+/** Spanish dictionary, checked against the English keys. */
 export const es = {
   'panel': 'Tareas de automatización',
   'title': 'Tareas de automatización',
@@ -273,8 +288,19 @@ export const es = {
   'delete.cancel': 'Cancelar',
   'delete.close': 'Cerrar la confirmación de eliminación',
   'delete.pending': 'Eliminando…',
+  'list.more': 'Más acciones de tareas',
+  'clear.action': 'Borrar todas las tareas inactivas',
+  'clear.title': '¿Borrar las tareas inactivas ({count})?',
+  'clear.description': 'Estas tareas y sus registros de entrega guardados se eliminarán permanentemente. Las tareas habilitadas, las sesiones originales y los mensajes en cola no se verán afectados.',
+  'clear.confirm': 'Borrar tareas',
+  'clear.pending': 'Borrando…',
+  'clear.close': 'Cerrar confirmación de borrado',
   'toast.deleted': 'Tarea eliminada.',
   'toast.deleteFailed': 'No se pudo eliminar la tarea.',
+  'toast.cleared.one': 'Se ha borrado {count} tarea inactiva.',
+  'toast.cleared.other': 'Se han borrado {count} tareas inactivas.',
+  'toast.clearedNone': 'No hay tareas inactivas que borrar.',
+  'toast.clearFailed': 'No se pudieron borrar las tareas.',
   'card.open': 'Abrir',
   'card.openLabel': 'Abrir detalles de la tarea: {title}',
   'card.deleted': 'Eliminada',
@@ -412,15 +438,27 @@ export const el = {
   'delete.cancel': 'Ακύρωση',
   'delete.close': 'Κλείσιμο επιβεβαίωσης διαγραφής',
   'delete.pending': 'Διαγραφή…',
+  'list.more': 'Περισσότερες ενέργειες εργασιών',
+  'clear.action': 'Εκκαθάριση όλων των ανενεργών εργασιών',
+  'clear.title': 'Εκκαθάριση ανενεργών εργασιών ({count});',
+  'clear.description': 'Αυτές οι εργασίες και οι αποθηκευμένες εγγραφές παράδοσής τους θα διαγραφούν οριστικά. '
+    + 'Οι ενεργοποιημένες εργασίες, οι αρχικές συνεδρίες και τα μηνύματα στην ουρά δεν επηρεάζονται.',
+  'clear.confirm': 'Εκκαθάριση εργασιών',
+  'clear.pending': 'Εκκαθάριση…',
+  'clear.close': 'Κλείσιμο επιβεβαίωσης εκκαθάρισης',
   'toast.deleted': 'Η εργασία διαγράφηκε.',
   'toast.deleteFailed': 'Δεν ήταν δυνατή η διαγραφή της εργασίας.',
+  'toast.cleared.one': 'Εκκαθαρίστηκε {count} ανενεργή εργασία.',
+  'toast.cleared.other': 'Εκκαθαρίστηκαν {count} ανενεργές εργασίες.',
+  'toast.clearedNone': 'Δεν υπάρχουν ανενεργές εργασίες προς εκκαθάριση.',
+  'toast.clearFailed': 'Δεν ήταν δυνατή η εκκαθάριση των εργασιών.',
   'card.open': 'Άνοιγμα',
   'card.openLabel': 'Άνοιγμα λεπτομερειών εργασίας: {title}',
   'card.deleted': 'Διαγράφηκε',
   'tool.invoked': 'Κλήθηκε το {name}',
 } satisfies Record<keyof typeof en, string>
 
-/** French dictionary, checked complete against the English key set. */
+/** French dictionary, checked against the English keys. */
 export const fr = {
   'panel': 'Tâches d’automatisation',
   'title': 'Tâches d’automatisation',
@@ -551,13 +589,21 @@ export const fr = {
   'delete.cancel': 'Annuler',
   'delete.close': 'Fermer la confirmation de suppression',
   'delete.pending': 'Suppression…',
+  'list.more': 'Autres actions sur les tâches',
+  'clear.action': 'Effacer toutes les tâches inactives',
+  'clear.title': 'Effacer les tâches inactives ({count}) ?',
+  'clear.description': "Ces tâches et leurs enregistrements de livraison seront définitivement supprimés. Les tâches activées, les sessions originales et les messages en file d'attente ne sont pas affectés.",
+  'clear.confirm': 'Effacer les tâches',
+  'clear.pending': 'Effacement…',
+  'clear.close': "Fermer la confirmation d'effacement",
   'toast.deleted': 'Tâche supprimée.',
   'toast.deleteFailed': 'Impossible de supprimer la tâche.',
+  'toast.cleared.one': '{count} tâche inactive effacée.',
+  'toast.cleared.other': '{count} tâches inactives effacées.',
+  'toast.clearedNone': 'Aucune tâche inactive à effacer.',
+  'toast.clearFailed': "Impossible d'effacer les tâches.",
   'card.open': 'Ouvrir',
   'card.openLabel': 'Ouvrir les détails de la tâche\u00a0: {title}',
   'card.deleted': 'Supprimée',
   'tool.invoked': '{name} appelé',
 } satisfies Record<keyof typeof en, string>
-
-/** Keys registered under `schedule.manager`. */
-export type TaskManagerKey = keyof typeof en

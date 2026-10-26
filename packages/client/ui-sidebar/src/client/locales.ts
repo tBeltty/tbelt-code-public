@@ -11,9 +11,11 @@ export const en = {
   'toggle.collapse': 'Collapse sidebar',
   'panels.label': 'Global panels',
   'brand.preview': 'Preview',
+  'panels.more': 'More',
+  'version.copied': 'Version copied',
 } satisfies Record<string, string>
 
-/** Spanish dictionary, checked complete against the English key set. */
+/** Spanish dictionary, checked against the English keys. */
 export const es = {
   'session.new': 'Nueva sesión',
   'session.new.label': 'Nueva sesión',
@@ -21,6 +23,8 @@ export const es = {
   'toggle.collapse': 'Contraer barra lateral',
   'panels.label': 'Paneles globales',
   'brand.preview': 'Vista previa',
+  'panels.more': 'Más',
+  'version.copied': 'Versión copiada',
 } satisfies Record<keyof typeof en, string>
 
 /** Greek dictionary, checked complete against the English key set. */
@@ -31,9 +35,11 @@ export const el = {
   'toggle.collapse': 'Σύμπτυξη πλευρικής γραμμής',
   'panels.label': 'Καθολικοί πίνακες',
   'brand.preview': 'Προεπισκόπηση',
+  'panels.more': 'Περισσότερα',
+  'version.copied': 'Η έκδοση αντιγράφηκε',
 } satisfies Record<keyof typeof en, string>
 
-/** French dictionary, checked complete against the English key set. */
+/** French dictionary, checked against the English keys. */
 export const fr = {
   'session.new': 'Nouvelle session',
   'session.new.label': 'Nouvelle session',
@@ -41,4 +47,6 @@ export const fr = {
   'toggle.collapse': 'Réduire la barre latérale',
   'panels.label': 'Panneaux globaux',
   'brand.preview': 'Aperçu',
+  'panels.more': 'Plus',
+  'version.copied': 'Version copiée',
 } satisfies Record<keyof typeof en, string>

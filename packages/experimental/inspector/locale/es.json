@@ -1,6 +1,6 @@
 {
   "meta": {
-    "title": "Inspector",
+    "title": "Inspector NodeJS",
     "description": "Abre el Host en ejecución y sus clientes de navegador en Chrome DevTools mediante un endpoint de loopback que permite ejecutar código y captura el tráfico de red del Host, incluidos los secretos. Para desarrolladores; solo Web; recarga las páginas abiertas después de activarlo."
   }
 }

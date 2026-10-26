@@ -44,7 +44,7 @@ export const en = {
   unloading: 'Unloading',
 } satisfies Record<string, string>
 
-/** Spanish dictionary, checked complete against the English key set. */
+/** Spanish dictionary, checked against the English keys. */
 export const es = {
   tab: 'Lista de plugins',
   loading: 'Leyendo plugins…',
@@ -126,7 +126,7 @@ export const el = {
   unloading: 'Εκφόρτωση',
 } satisfies Record<keyof typeof en, string>
 
-/** French dictionary, checked complete against the English key set. */
+/** French dictionary, checked against the English keys. */
 export const fr = {
   tab: 'Liste des plugins',
   loading: 'Lecture des plugins…',

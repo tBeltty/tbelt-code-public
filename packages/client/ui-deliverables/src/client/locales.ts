@@ -90,7 +90,10 @@ export const en = {
   'diff.truncated': 'Showing the first {count} lines',
 } satisfies Record<string, string>
 
-/** Spanish dictionary, checked complete against the English key set. */
+/** Union of this namespace's dictionary keys. */
+export type DeliverablesKey = keyof typeof en
+
+/** Spanish dictionary, checked against the English keys. */
 export const es = {
   'artifacts.title': 'Artefactos',
   'artifacts.description': 'Archivos que esta sesión entregó y cambió',
@@ -264,7 +267,7 @@ export const el = {
   'diff.truncated': 'Εμφάνιση των πρώτων {count} γραμμών',
 } satisfies Record<keyof typeof en, string>
 
-/** French dictionary, checked complete against the English key set. */
+/** French dictionary, checked against the English keys. */
 export const fr = {
   'artifacts.title': 'Livrables',
   'artifacts.description': 'Fichiers livrés et modifiés par cette session',
@@ -350,6 +353,3 @@ export const fr = {
   'diff.coarse': 'La comparaison des lignes a expiré\u00a0; affichage comme remplacement du fichier entier',
   'diff.truncated': 'Affichage des {count} premières lignes',
 } satisfies Record<keyof typeof en, string>
-
-/** Union of this namespace's dictionary keys. */
-export type DeliverablesKey = keyof typeof en

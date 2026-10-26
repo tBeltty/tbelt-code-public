@@ -18,10 +18,11 @@ beforeEach(() => { vi.stubGlobal('requestAnimationFrame', vi.fn(() => 1)); vi.st
 afterEach(() => { cleanup(); vi.useRealTimers(); vi.unstubAllGlobals() })
 const id = 'sensevoice-local' as SpeechProviderId
 const transcript: Transcript = { text: 'Revisa los tipos de TypeScript', audioSeconds: 2, inferenceSeconds: 0.4 }
-function fixture(recording?: Recording) {
+function fixture(recording?: Recording, navigable = true) {
   const capture = Object.assign(new Recording(() => {}), { start: vi.fn<Recording['start']>(async () => {}), stop: vi.fn(async () => new Uint8Array(48)),
     amplitude: () => 0, dispose: vi.fn(async () => {}) })
-  const inputActions = { notify: vi.fn(), captureInsertion: vi.fn(() => ({ start: 3, end: 3, draftRev: 1 })), insertText: vi.fn(() => true),
+  const inputActions = { notify: vi.fn(), insertQuote: () => false,
+    captureInsertion: vi.fn(() => ({ start: 3, end: 3, draftRev: 1 })), insertText: vi.fn(() => true),
     setDraft: vi.fn(), persistDraft: vi.fn(), addAttachments: vi.fn(() => true), removeAttachment: vi.fn(),
     pruneAttachments: vi.fn(), submit: vi.fn() }
   const readiness = createSnapshotStore<SpeechReadiness>({ connected: true, error: null, catalog: {
@@ -34,6 +35,7 @@ function fixture(recording?: Recording) {
     openSettings: vi.fn(), prepare: vi.fn(async () => {}), cancelPreparation: vi.fn(async () => {}), configure: vi.fn(async () => {}),
     selectMicrophone: vi.fn(), useMicrophoneDevice: bindSnapshotSelector(createSnapshotStore({ id: '', label: '' })),
     useSpeechReadiness: bindSnapshotSelector(readiness), createRecording: () => recording ?? capture,
+    usePluginNavigation: bindSnapshotSelector(createSnapshotStore(navigable)),
     t: makeTranslate(es, commonEs) }
   const view = render(<VoiceInput {...props} />)
   return { props, capture, inputActions, readiness, transcribe, view }
@@ -46,8 +48,8 @@ function stop(): void { fireEvent.click(screen.getByRole('button', { name: es.st
 
 it('clicks to record, shows measured audio, and stops to insert without sending or a popup', async () => {
   const b = fixture()
-  fireEvent.mouseEnter(screen.getByRole('button', { name: es.start }).parentElement!)
-  expect(screen.getByRole('tooltip').textContent).toBe('Dictar')
+  fireEvent.pointerEnter(screen.getByRole('button', { name: es.start }).parentElement!)
+  expect((await screen.findByRole('tooltip')).textContent).toBe('Dictar')
   fireEvent.mouseDown(screen.getByRole('button', { name: es.start }))
   await start()
   expect(b.props.onActiveChange).toHaveBeenLastCalledWith(true)
@@ -134,7 +136,7 @@ it('keeps empty-speech and service errors inside the toolbar with retry and dism
   await screen.findByRole('button', { name: es.stop })
   b.transcribe.mockResolvedValueOnce({ ok: false, error: new RemoteError('gateway/internal', 'offline', {}) })
   stop()
-  await screen.findByText('Falló el reconocimiento de voz: offline')
+  await screen.findByText('Error en el reconocimiento de voz: offline')
   fireEvent.click(screen.getByRole('button', { name: es.cancel }))
   expect(screen.getByRole('button', { name: es.start })).toBeTruthy()
 })
@@ -142,14 +144,14 @@ it('keeps empty-speech and service errors inside the toolbar with retry and dism
 it.each([new RecordingError('permission'), new Error('device lost'), 'device lost'])('handles capture failure locally (%s)', async (failure) => {
   const b = fixture(); b.capture.start.mockRejectedValueOnce(failure)
   fireEvent.click(screen.getByRole('button', { name: es.start }))
-  await screen.findByText(failure instanceof RecordingError ? es.permission : 'Falló el reconocimiento de voz: device lost')
+  await screen.findByText(failure instanceof RecordingError ? es.permission : 'Error en el reconocimiento de voz: device lost')
   expect(b.inputActions.notify).not.toHaveBeenCalled()
 })
 
 it.each([new RecordingError('empty'), new Error('decode failed'), 'decode failed'])('handles conversion failure locally (%s)', async (failure) => {
   const b = fixture(); b.capture.stop.mockRejectedValueOnce(failure)
   await start(); stop()
-  await screen.findByText(failure instanceof RecordingError ? es.empty : 'Falló el reconocimiento de voz: decode failed')
+  await screen.findByText(failure instanceof RecordingError ? es.empty : 'Error en el reconocimiento de voz: decode failed')
   expect(b.capture.dispose).toHaveBeenCalledOnce()
   expect(b.inputActions.insertText).not.toHaveBeenCalled()
 })
@@ -157,7 +159,7 @@ it.each([new RecordingError('empty'), new Error('decode failed'), 'decode failed
 it('bounds recordings, indicates idle wake-up, and cancels an in-flight transcription', async () => {
   const b = fixture(), result = Promise.withResolvers<RemoteResult<Transcript>>()
   b.transcribe.mockReturnValueOnce(result.promise)
-  vi.useFakeTimers()
+  vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] })
   fireEvent.click(screen.getByRole('button', { name: es.start })); await act(async () => {})
   await act(async () => { await vi.advanceTimersByTimeAsync(120000) })
   expect(b.capture.stop).toHaveBeenCalledWith(120)
@@ -304,7 +306,7 @@ it('offers installation on click without a preparation tooltip', () => {
   const mic = screen.getByRole<HTMLButtonElement>('button', { name: es['setupPrompt.trigger'] })
   expect(mic.disabled).toBe(false)
   expect(mic.getAttribute('aria-haspopup')).toBe('dialog')
-  fireEvent.mouseEnter(mic.parentElement!)
+  fireEvent.pointerEnter(mic.parentElement!)
   expect(screen.queryByRole('tooltip')).toBeNull()
   fireEvent.click(mic)
   expect(screen.getByRole('dialog').textContent).toContain(es['setupPrompt.body'])
@@ -332,6 +334,18 @@ it.each<SpeechPreparationState>([
   expect(b.props.prepare).not.toHaveBeenCalled()
   fireEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: es['setupPrompt.details'] }))
   expect(b.props.openSettings).toHaveBeenCalledOnce()
+})
+
+it('offers no plugin details from setup guidance while the Plugins page navigation is absent', () => {
+  const b = fixture(undefined, false), state = b.readiness.getSnapshot()
+  act(() => { b.readiness.set({ ...state, catalog: { ...state.catalog!, providers: [
+    { ...state.catalog!.providers[0]!, preparation: { phase: 'unprepared' } },
+  ] } }) })
+  fireEvent.click(screen.getByRole('button', { name: es['setupPrompt.trigger'] }))
+  const dialog = within(screen.getByRole('dialog'))
+  expect(dialog.queryByRole('button', { name: es['setupPrompt.open'] })).toBeNull()
+  expect(dialog.getByRole('button', { name: es['setupPrompt.later'] })).toBeTruthy()
+  expect(b.props.openSettings).not.toHaveBeenCalled()
 })
 
 it('moves focus into setup guidance, contains Tab traversal, and restores the draft focus on dismissal', () => {

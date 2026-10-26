@@ -12,6 +12,7 @@ export type ConversationKey = keyof typeof en
 
 /** English dictionary and key-set source of truth. */
 export const en = {
+  'quote.remove': 'Remove quote',
   'shortcut.newline': 'New line',
   'shortcut.complementary': 'Use the complementary Queue / Steer action',
   'shortcut.slash': 'Open command menu',
@@ -84,6 +85,8 @@ export const en = {
   'hero.headline': `Welcome to ${PRODUCT_NAME}`,
   'hero.chooseWorkspace': 'Choose workspace',
   'session.hierarchy': 'Session hierarchy',
+  'session.moreViews': 'More conversation views',
+  'session.moreViewsCurrent': 'More conversation views · {name}',
   'todo.title': 'To-dos',
   'todo.progress.done': '{done} completed',
   'todo.progress.active': '{active} in progress',
@@ -393,8 +396,9 @@ export const en = {
   'row.imageSizeDownscaled': '{width}x{height}px (downscaled from {originalWidth}x{originalHeight}px), {bytes} bytes',
 } satisfies Record<string, string>
 
-/** Spanish dictionary, checked complete against the English key set. */
+/** Spanish dictionary, checked against the English keys. */
 export const es = {
+  'quote.remove': 'Eliminar cotización',
   'shortcut.newline': 'Nueva línea',
   'shortcut.complementary': 'Usa la acción complementaria En cola / Dirigir',
   'shortcut.slash': 'Abrir el menú de comandos',
@@ -467,6 +471,8 @@ export const es = {
   'hero.headline': `Te damos la bienvenida a ${PRODUCT_NAME}`,
   'hero.chooseWorkspace': 'Elegir espacio de trabajo',
   'session.hierarchy': 'Jerarquía de sesiones',
+  'session.moreViews': 'Más vistas de conversación',
+  'session.moreViewsCurrent': 'Más vistas de conversación · {name}',
   'todo.title': 'Tareas pendientes',
   'todo.progress.done': '{done} completadas',
   'todo.progress.active': '{active} en curso',
@@ -776,6 +782,7 @@ export const es = {
 
 /** Greek dictionary, checked complete against the English key set. */
 export const el = {
+  'quote.remove': 'Αφαίρεση παράθεσης',
   'shortcut.newline': 'Νέα γραμμή',
   'shortcut.complementary': 'Χρήση της συμπληρωματικής ενέργειας Ουρά / Καθοδήγηση',
   'shortcut.slash': 'Άνοιγμα μενού εντολών',
@@ -848,6 +855,8 @@ export const el = {
   'hero.headline': `Καλώς ήρθατε στο ${PRODUCT_NAME}`,
   'hero.chooseWorkspace': 'Επιλογή χώρου εργασίας',
   'session.hierarchy': 'Ιεραρχία συνεδριών',
+  'session.moreViews': 'Περισσότερες προβολές συνομιλίας',
+  'session.moreViewsCurrent': 'Περισσότερες προβολές συνομιλίας · {name}',
   'todo.title': 'Εκκρεμότητες',
   'todo.progress.done': '{done} ολοκληρώθηκαν',
   'todo.progress.active': '{active} σε εξέλιξη',
@@ -1082,8 +1091,6 @@ export const el = {
   'row.input': 'ΕΙΣ',
   'row.output': 'ΕΞ',
   'row.inspect': 'Επιθεώρηση',
-  'row.imageSize': '{width}x{height}px, {bytes} byte',
-  'row.imageSizeDownscaled': '{width}x{height}px (σμικρύνθηκε από {originalWidth}x{originalHeight}px), {bytes} byte',
   'tool.title.search': 'Αναζήτηση',
   'tool.title.read': 'Ανάγνωση',
   'tool.title.bash': 'Bash',
@@ -1153,10 +1160,13 @@ export const el = {
   'terminal.sendInput': '(αποστολή εισόδου)',
   'terminal.session': 'Τερματικό {sessionId}',
   'hero.preview': 'Προεπισκόπηση',
+  'row.imageSize': '{width}x{height}px, {bytes} byte',
+  'row.imageSizeDownscaled': '{width}x{height}px (σμικρύνθηκε από {originalWidth}x{originalHeight}px), {bytes} byte',
 } satisfies Record<keyof typeof en, string>
 
-/** French dictionary, checked complete against the English key set. */
+/** French dictionary, checked against the English keys. */
 export const fr = {
+  'quote.remove': 'Supprimer le devis',
   'shortcut.newline': 'Nouvelle ligne',
   'shortcut.complementary': 'Utiliser l’action complémentaire File d’attente / Orientation',
   'shortcut.slash': 'Ouvrir le menu des commandes',
@@ -1229,6 +1239,8 @@ export const fr = {
   'hero.headline': `Bienvenue dans ${PRODUCT_NAME}`,
   'hero.chooseWorkspace': 'Choisir un espace de travail',
   'session.hierarchy': 'Hiérarchie des sessions',
+  'session.moreViews': 'Plus de vues de conversations',
+  'session.moreViewsCurrent': 'Plus de vues de conversations · {name}',
   'todo.title': 'À faire',
   'todo.progress.done': '{done} terminées',
   'todo.progress.active': '{active} en cours',
@@ -1463,8 +1475,6 @@ export const fr = {
   'row.input': 'ENTRÉE',
   'row.output': 'SORTIE',
   'row.inspect': 'Inspecter',
-  'row.imageSize': '{width}x{height} px, {bytes} octets',
-  'row.imageSizeDownscaled': '{width}x{height} px (réduite depuis {originalWidth}x{originalHeight} px), {bytes} octets',
   'tool.title.search': 'Rechercher',
   'tool.title.read': 'Lire',
   'tool.title.bash': 'Bash',
@@ -1534,4 +1544,6 @@ export const fr = {
   'terminal.sendInput': '(envoyer une entrée)',
   'terminal.session': 'Terminal {sessionId}',
   'hero.preview': 'Aperçu',
+  'row.imageSize': '{width}x{height} px, {bytes} octets',
+  'row.imageSizeDownscaled': '{width}x{height} px (réduite depuis {originalWidth}x{originalHeight} px), {bytes} octets',
 } satisfies Record<keyof typeof en, string>

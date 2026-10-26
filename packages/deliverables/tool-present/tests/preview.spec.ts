@@ -5,7 +5,8 @@ import { join } from 'node:path'
 import { afterEach, expect, it } from 'vitest'
 import { Context } from '@deepseek-ai/cordis'
 import AgentRegistry, { type Agent } from '@deepseek-ai/dsh-agent'
-import { unsupportedInbox } from '@deepseek-ai/dsh-agent-loop-testkit'
+import { unsupportedInbox, unsupportedModel, provideWorkingDirectoryFixture } from '@deepseek-ai/dsh-agent-loop-testkit'
+import { executeToolFixture } from '@deepseek-ai/dsh-tool-testkit'
 import LocalFileSystem from '@deepseek-ai/dsh-fs-local'
 import { createScope, type Scope } from '@deepseek-ai/dsh-scope'
 import { ToolCallId } from '@deepseek-ai/dsh-llm'
@@ -13,6 +14,7 @@ import { SESSION_FORMAT_VERSION, Session, SessionId } from '@deepseek-ai/dsh-ses
 import SessionProjectionRegistry from '@deepseek-ai/dsh-session-projection'
 import SystemPrompt from '@deepseek-ai/dsh-system-prompt'
 import ToolRuntime from '@deepseek-ai/dsh-tools'
+import type { ToolExecutionResult } from '@deepseek-ai/dsh-tools'
 import * as Present from '../src/index.ts'
 
 const cleanups: Array<() => Promise<unknown>> = []
@@ -33,6 +35,7 @@ async function agent(ctx: Context, cwd: string | undefined): Promise<Agent> {
     options: {},
     session,
     inbox: unsupportedInbox(),
+    model: unsupportedModel(),
     status: 'idle',
     get ctx() { return scope.ctx },
     send: () => {},
@@ -52,23 +55,24 @@ async function setup(preview = true) {
   const root = await mkdtemp(join(tmpdir(), 'dsh-preview-'))
   cleanups.push(() => rm(root, { recursive: true, force: true }))
   const ctx = new Context()
+  provideWorkingDirectoryFixture(ctx)
   cleanups.push(() => ctx.fiber.dispose())
   await ctx.plugin(SystemPrompt)
   await ctx.plugin(ToolRuntime)
+  await ctx.plugin(SessionProjectionRegistry)
   await ctx.plugin(AgentRegistry)
   await ctx.plugin(LocalFileSystem, { cwd: root })
-  await ctx.plugin(SessionProjectionRegistry)
   const fiber = ctx.plugin(Present, { maxFiles: 2, preview })
   await fiber
   const owner = await agent(ctx, root)
-  const execute = (target: string, caller: Agent | null = owner) => ctx.tools.execute({
+  const execute = (target: string, caller: Agent | null = owner) => executeToolFixture(ctx, {
     signal: new AbortController().signal, callId: ToolCallId(`call-${++callNumber}`),
     name: 'preview', arguments: { target }, ...caller === null ? {} : { agent: caller },
   })
   return { ctx, owner, root, fiber, execute }
 }
 
-function text(result: Awaited<ReturnType<Context['tools']['execute']>>): string {
+function text(result: ToolExecutionResult): string {
   return result.content.map(item => item.type === 'text' ? item.text : '').join('')
 }
 

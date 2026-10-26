@@ -15,22 +15,22 @@ export const en = {
   retry: 'Retry',
 } satisfies Record<string, string>
 
-/** Spanish dictionary, checked complete against the English key set. */
+declare module '@deepseek-ai/dsh-client-ui-slots' {
+  interface LocaleNamespaceMap {
+    /** Excel preview status and third-party locale selection. */
+    sidebarExcel: ExcelPreviewKey
+  }
+}
+
+/** Spanish dictionary, checked against the English keys. */
 export const es = {
-  title: 'Hoja de cálculo',
-  language: 'en',
-  loading: 'Renderizando documento...',
-  invalid: 'No se pudo abrir esta hoja de cálculo. Comprueba su formato, su contenido o si tiene contraseña.',
-  tooLarge: 'Este libro supera el límite de tamaño de la vista previa.',
-  timeout: 'Se agotó el tiempo al abrir este libro. Prueba con un archivo más pequeño.',
-  encoding: 'No se pudo leer esta codificación de texto. Guarda el archivo como UTF-8 o UTF-16 con BOM e inténtalo de nuevo.',
+  title: 'Hoja de cálculo', language: 'en', loading: 'Representando documento...',
+  invalid: 'Esta hoja de cálculo no se pudo abrir. Comprueba su formato, contenidos o protección con contraseña.',
+  tooLarge: 'Este libro excede el límite de tamaño de vista previa.', timeout: 'Se agotó el tiempo de apertura de este libro. Pruebe con un archivo más pequeño.',
+  encoding: 'Esta codificación de texto no se pudo leer. Guarde el archivo como UTF-8 o UTF-16 con una lista de materiales y vuelva a intentarlo.',
   formulaWarning: 'Este libro contiene fórmulas. Los resultados mostrados pueden faltar o ser inexactos.',
-  unsupportedNotice: 'Esta vista previa no admite {features} de este libro. Ábrelo en una aplicación del sistema para verlo completo.',
-  charts: 'gráficos',
-  images: 'imágenes',
-  shapes: 'formas',
-  conditionalFormatting: 'formato condicional',
-  featureSeparator: ', ',
+  unsupportedNotice: 'Esta vista previa no es compatible con {features} en este libro. Ábralo en una aplicación del sistema para disfrutar de la experiencia completa.',
+  charts: 'gráficos', images: 'imágenes', shapes: 'formas', conditionalFormatting: 'formato condicional', featureSeparator: ', ',
   retry: 'Reintentar',
 } satisfies Record<keyof typeof en, string>
 
@@ -53,28 +53,14 @@ export const el = {
   retry: 'Επανάληψη',
 } satisfies Record<keyof typeof en, string>
 
-/** French dictionary, checked complete against the English key set. */
+/** French dictionary, checked against the English keys. */
 export const fr = {
-  title: 'Feuille de calcul',
-  language: 'en',
-  loading: 'Rendu du document...',
-  invalid: 'Impossible d’ouvrir cette feuille de calcul. Vérifiez son format, son contenu ou sa protection par mot de passe.',
-  tooLarge: 'Ce classeur dépasse la taille limite de l’aperçu.',
-  timeout: 'L’ouverture de ce classeur a expiré. Essayez un fichier plus petit.',
-  encoding: 'Impossible de lire cet encodage de texte. Enregistrez le fichier en UTF-8 ou en UTF-16 avec BOM, puis réessayez.',
-  formulaWarning: 'Ce classeur contient des formules. Les résultats affichés peuvent être absents ou inexacts.',
-  unsupportedNotice: 'Cet aperçu ne prend pas en charge {features} dans ce classeur. Ouvrez-le dans une application du système pour profiter de toutes les fonctionnalités.',
-  charts: 'les graphiques',
-  images: 'les images',
-  shapes: 'les formes',
-  conditionalFormatting: 'la mise en forme conditionnelle',
-  featureSeparator: ', ',
+  title: 'Feuille de calcul', language: 'en', loading: 'Rendu du document...',
+  invalid: "Cette feuille de calcul n'a pas pu être ouverte. Vérifiez son format, son contenu ou sa protection par mot de passe.",
+  tooLarge: "Ce classeur dépasse la limite de taille d'aperçu.", timeout: "L'ouverture de ce classeur a expiré. Essayez un fichier plus petit.",
+  encoding: "Cet encodage de texte n'a pas pu être lu. Enregistrez le fichier au format UTF-8 ou UTF-16 avec une nomenclature et réessayez.",
+  formulaWarning: 'Ce classeur contient des formules. Les résultats affichés peuvent être manquants ou inexacts.',
+  unsupportedNotice: 'Cet aperçu ne prend pas en charge {features} dans ce classeur. Ouvrez-le dans une application système pour une expérience complète.',
+  charts: 'graphiques', images: 'photos', shapes: 'formes', conditionalFormatting: 'mise en forme conditionnelle', featureSeparator: ', ',
   retry: 'Réessayer',
 } satisfies Record<keyof typeof en, string>
-
-declare module '@deepseek-ai/dsh-client-ui-slots' {
-  interface LocaleNamespaceMap {
-    /** Excel preview status and third-party locale selection. */
-    sidebarExcel: ExcelPreviewKey
-  }
-}

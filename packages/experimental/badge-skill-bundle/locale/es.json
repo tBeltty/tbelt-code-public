@@ -1,6 +1,7 @@
 {
   "meta": {
-    "title": "Habilidad de insignia DSH",
-    "description": "Ofrece la insignia «powered by DSH» como habilidad descubrible."
+    "title": "Habilidad de insignia tBelt Code",
+    "description": "Ofrece la insignia «powered by tBelt Code» como habilidad descubrible.",
+    "detail": "docs/DETAIL.md"
   }
 }

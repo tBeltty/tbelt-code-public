@@ -103,11 +103,11 @@ export interface PermissionRulesReader {
   contribute(rules: readonly PermissionRule[]): () => void
 }
 
-/** The calling agent's current preset id, read from the session projection when that service is mounted. */
+/** The calling agent's current preset id, read from the preset roster when that service is mounted. */
 function presetOf(ctx: Context, exec: ToolExecution): string | undefined {
   const session = exec.agent?.session
   if (session === undefined) return undefined
-  return ctx.get('sessionProjections')?.stateOf(session, 'agentPreset') ?? undefined
+  return ctx.get('agentPresets')?.presetForSession(session) ?? undefined
 }
 
 /** Append the `permission/decision` audit event when a call was actually matched (never for an unmatched default allow). */

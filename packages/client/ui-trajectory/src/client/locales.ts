@@ -213,7 +213,7 @@ export const en = {
   'layout.compactionInterrupted': 'Compaction was interrupted before completion.',
 } satisfies Record<string, string>
 
-/** Spanish dictionary, checked complete against the English key set. */
+/** Spanish dictionary, checked against the English keys. */
 export const es = {
   'view.trajectory': 'Trayectoria',
   'toolbar.aria': 'Barra de herramientas de la trayectoria',
@@ -370,9 +370,9 @@ export const es = {
   'details.toolCalls': 'Llamadas a herramientas',
   'details.subtoolCalls': 'Llamadas a subherramientas',
   'details.error': 'Error',
+  'details.lastAttemptError': 'Error del último intento',
   'details.failure.auth': 'La clave de API no es válida',
   'details.retry': 'Reintentar',
-  'details.lastAttemptError': 'Error del último intento',
   'details.retryDelay': 'Espera antes de reintentar',
   'details.result': 'Resultado',
   'details.compacted': 'Compactado',
@@ -566,9 +566,9 @@ export const el = {
   'details.toolCalls': 'Κλήσεις εργαλείων',
   'details.subtoolCalls': 'Κλήσεις υποεργαλείων',
   'details.error': 'Σφάλμα',
+  'details.lastAttemptError': 'Σφάλμα τελευταίας προσπάθειας',
   'details.failure.auth': 'Το κλειδί API δεν είναι έγκυρο',
   'details.retry': 'Επανάληψη',
-  'details.lastAttemptError': 'Σφάλμα τελευταίας προσπάθειας',
   'details.retryDelay': 'Καθυστέρηση επανάληψης',
   'details.result': 'Αποτέλεσμα',
   'details.compacted': 'Συμπυκνώθηκε',
@@ -605,7 +605,7 @@ export const el = {
   'layout.compactionInterrupted': 'Η συμπύκνωση διακόπηκε πριν ολοκληρωθεί.',
 } satisfies Record<keyof typeof en, string>
 
-/** French dictionary, checked complete against the English key set. */
+/** French dictionary, checked against the English keys. */
 export const fr = {
   'view.trajectory': 'Trajectoire',
   'toolbar.aria': 'Barre d’outils de la trajectoire',
@@ -762,9 +762,9 @@ export const fr = {
   'details.toolCalls': 'Appels d’outils',
   'details.subtoolCalls': 'Appels de sous-outils',
   'details.error': 'Erreur',
+  'details.lastAttemptError': 'Erreur de la dernière tentative',
   'details.failure.auth': 'La clé API n’est pas valide',
   'details.retry': 'Nouvelle tentative',
-  'details.lastAttemptError': 'Erreur de la dernière tentative',
   'details.retryDelay': 'Délai avant nouvelle tentative',
   'details.result': 'Résultat',
   'details.compacted': 'Compacté',

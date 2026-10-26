@@ -207,12 +207,13 @@ describe.skipIf(MODE === 'record')('web e2e: first-run DeepSeek credential setup
       await settings.getByRole('button', { name: /Delete model/ }).first().click()
     }
     await settings.getByRole('button', { name: 'Add model', exact: true }).click()
-    const customModelId = settings.getByLabel('Model ID 1')
+    const model = settings.locator('[data-row-key]')
+    const customModelId = model.getByLabel('Model ID 1')
     await customModelId.fill('private-preview')
-    await settings.getByLabel('Display name 1').fill('Private Preview')
+    await model.getByLabel('Display name 1').fill('Private Preview')
     await settings.getByRole('button', { name: 'Model options 1' }).click()
-    await settings.getByLabel('Context window 1').fill('131072')
-    await settings.getByLabel('Max output tokens 1').fill('64K')
+    await model.getByLabel('Context window 1').fill('131072')
+    await model.getByLabel('Max output tokens 1').fill('64K')
     expect(await settings.getByRole('group', { name: 'Input types 1' }).getByRole('checkbox', { name: 'Image' }).isChecked()).toBe(false)
     await settings.getByRole('group', { name: 'Input types 1' }).getByRole('checkbox', { name: 'Image' }).check()
 

@@ -3,7 +3,8 @@
  * base, web and terminal layers apply in order.
  */
 import { fileURLToPath } from 'node:url'
-import { composeEntries, loadOverlayPatches, PROFILE_TEMPLATES } from '@deepseek-ai/dsh-app-boot'
+import { composeEntries, loadOverlayPatches } from '@deepseek-ai/dsh-app-boot'
+import { PROFILE_TEMPLATES } from '@deepseek-ai/dsh-official-bundles'
 import { describe, expect, it } from 'vitest'
 
 const layer = (bundle: string) => loadOverlayPatches('terminal-test', fileURLToPath(new URL(`../../${bundle}/cordis.patch.yml`, import.meta.url)))

@@ -128,11 +128,10 @@ export const en = {
 
 } satisfies Record<string, string>
 
-/** Spanish dictionary, checked complete against the English key set. */
+/** Spanish dictionary, checked against the English keys. */
 export const es = {
   ...guideEs,
-  builtInGroup: 'Integrados',
-  customGroup: 'Propios',
+  builtInGroup: 'Integrados', customGroup: 'Personalizados',
   sectionIntro: 'Elige las herramientas del agente y cómo trabaja. Usa el modo Estándar para el día a día, o el modo Creador para añadir capacidades a tBelt Code.',
   seatHint: 'Elige el preajuste de agente para tu tarea nueva',
   headerHint: 'El preajuste de agente elegido al empezar esta tarea',
@@ -176,9 +175,9 @@ export const es = {
   noDescription: 'Sin descripción.',
   brokenBadge: 'No se pudo cargar',
   switchRefused: 'No se pudo cambiar a {name}: {reason}',
+  standardUnavailable: 'El modo estándar no está disponible. Restáuralo o elige otro modo disponible.',
   close: 'Cerrar',
   creatorDraft: 'Quiero que el agente me ayude a crear un preajuste',
-  standardUnavailable: 'El modo estándar no está disponible. Restáuralo o elige otro modo disponible.',
   createPlugin: 'Que el agente cree un plugin',
   createPluginDescription: 'Entra en el modo creador y crea tu propio plugin de tBelt Code',
   createPluginChecking: 'Comprobando si el modo creador está disponible',
@@ -189,8 +188,7 @@ export const es = {
 /** Greek dictionary, checked complete against the English key set. */
 export const el = {
   ...guideEl,
-  builtInGroup: 'Ενσωματωμένες',
-  customGroup: 'Προσαρμοσμένες',
+  builtInGroup: 'Ενσωματωμένες', customGroup: 'Προσαρμοσμένες',
   sectionIntro: 'Επιλέξτε τα εργαλεία του πράκτορα και πώς λειτουργεί. Χρησιμοποιήστε την Τυπική λειτουργία για καθημερινές εργασίες ή τη λειτουργία Δημιουργού για να προσθέσετε δυνατότητες στο tBelt Code.',
   seatHint: 'Επιλέξτε την προεπιλογή πράκτορα για τη νέα εργασία σας',
   headerHint: 'Η προεπιλογή πράκτορα που επιλέχθηκε όταν ξεκίνησε αυτή η εργασία',
@@ -233,9 +231,9 @@ export const el = {
   noDescription: 'Χωρίς περιγραφή.',
   brokenBadge: 'Η φόρτωση απέτυχε',
   switchRefused: 'Δεν ήταν δυνατή η εναλλαγή σε {name}: {reason}',
+  standardUnavailable: 'Η Τυπική λειτουργία δεν είναι διαθέσιμη. Επαναφέρετέ την ή επιλέξτε άλλη διαθέσιμη λειτουργία.',
   close: 'Κλείσιμο',
   creatorDraft: 'Δημιουργία προεπιλογής με τη βοήθεια του πράκτορα',
-  standardUnavailable: 'Η Τυπική λειτουργία δεν είναι διαθέσιμη. Επαναφέρετέ την ή επιλέξτε άλλη διαθέσιμη λειτουργία.',
   createPlugin: 'Δημιουργία πρόσθετου από τον πράκτορα',
   createPluginDescription: 'Μεταβείτε στη λειτουργία Δημιουργού και φτιάξτε το δικό σας πρόσθετο για το tBelt Code',
   createPluginChecking: 'Έλεγχος αν η λειτουργία Δημιουργού είναι διαθέσιμη',
@@ -243,11 +241,10 @@ export const el = {
   createPluginMissing: 'Η λειτουργία Δημιουργού δεν περιλαμβάνεται σε αυτή τη διαμόρφωση',
 } satisfies Record<keyof typeof en, string>
 
-/** French dictionary, checked complete against the English key set. */
+/** French dictionary, checked against the English keys. */
 export const fr = {
   ...guideFr,
-  builtInGroup: 'Intégrés',
-  customGroup: 'Personnalisés',
+  builtInGroup: 'Intégrés', customGroup: 'Personnalisés',
   sectionIntro: 'Choisissez les outils de l’agent et son mode de fonctionnement. Utilisez le mode Standard pour les tâches courantes, ou le mode Créateur pour ajouter des fonctionnalités à tBelt Code.',
   seatHint: 'Choisissez le préréglage d’agent pour votre nouvelle tâche',
   headerHint: 'Le préréglage d’agent choisi au démarrage de cette tâche',
@@ -290,9 +287,9 @@ export const fr = {
   noDescription: 'Aucune description.',
   brokenBadge: 'Échec du chargement',
   switchRefused: 'Impossible de passer à {name}\u00a0: {reason}',
+  standardUnavailable: 'Le mode Standard est indisponible. Restaurez-le ou choisissez un autre mode disponible.',
   close: 'Fermer',
   creatorDraft: 'Laisser l’agent m’aider à créer un préréglage',
-  standardUnavailable: 'Le mode Standard est indisponible. Restaurez-le ou choisissez un autre mode disponible.',
   createPlugin: 'Laisser l’agent créer un plugin',
   createPluginDescription: 'Passez en mode Créateur et créez votre propre plugin tBelt Code',
   createPluginChecking: 'Vérification de la disponibilité du mode Créateur',
@@ -305,3 +302,4 @@ export const fr = {
 // Settings plugin list inlines the same fold over this plugin's dictionaries.
 export { isBuiltInPreset, presetDisplayText } from '@deepseek-ai/dsh-agent-preset-registry/display'
 export type { PresetDisplaySource, PresetDisplayText } from '@deepseek-ai/dsh-agent-preset-registry/display'
+

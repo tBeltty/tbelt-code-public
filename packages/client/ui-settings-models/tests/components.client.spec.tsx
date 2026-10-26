@@ -23,7 +23,7 @@ import { deriveKeyRef, ModelsSettingsStore } from '../src/client/store.ts'
 import { createModelsOperations } from '../src/client/operations.ts'
 import type { ModelsOperations } from '../src/client/operations.ts'
 import type { ProviderRow } from '../src/client/store.ts'
-import { en, es } from '../src/client/locales.ts'
+import { en, es, el, fr } from '../src/client/locales.ts'
 import { settingsSchema } from './settings-schema.client.ts'
 
 afterEach(cleanup)
@@ -2329,4 +2329,17 @@ it('renders the localized account row and supports catalogs without capacity def
     namespace={{ ...namespace, value: { models: [] }, base: { models: [] } }} settingsPath={[]} schema={settingsSchema}
     operations={operationsWith(scripted.face)} t={t} readOnly={false} onClose={() => {}} />)
   expect(screen.queryByLabelText(en.keyInput)).toBeNull()
+})
+
+it.each([es, el, fr])('keeps capacity examples in translated validation messages parseable', (dictionary) => {
+  for (const [key, examples] of [
+    ['modelContextInvalid', ['131072', '256K', '1M']],
+    ['modelMaxTokensInvalid', ['8192', '64K', '1M']],
+  ] as const) {
+    for (const example of examples) {
+      const token = dictionary[key].match(new RegExp(`(?<![0-9])${example}(?![0-9A-Za-z])`, 'u'))?.[0]
+      expect(token, dictionary[key]).toBe(example)
+      expect(parseCapacity(token!)).toBeGreaterThan(0)
+    }
+  }
 })

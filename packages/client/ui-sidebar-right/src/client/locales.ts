@@ -44,10 +44,11 @@ export const en = {
   'dock.drop.top': 'Add top split',
   'dock.drop.bottom': 'Add bottom split',
   'tab.guide.title': 'Start',
+  'tab.guide.more': 'More tools',
   'tab.unavailable': 'Nothing here can view this kind of content yet.',
 } satisfies Record<string, string>
 
-/** Spanish dictionary, checked complete against the English key set. */
+/** Spanish dictionary, checked against the English keys. */
 export const es = {
   'command.close': 'Cerrar la página o ventana actual',
   'command.refresh': 'Actualizar la página actual',
@@ -82,6 +83,7 @@ export const es = {
   'dock.drop.top': 'Añadir división arriba',
   'dock.drop.bottom': 'Añadir división abajo',
   'tab.guide.title': 'Inicio',
+  'tab.guide.more': 'Más herramientas',
   'tab.unavailable': 'Aquí todavía no se puede ver este tipo de contenido.',
 } satisfies Record<keyof typeof en, string>
 
@@ -120,10 +122,11 @@ export const el = {
   'dock.drop.top': 'Προσθήκη επάνω διαίρεσης',
   'dock.drop.bottom': 'Προσθήκη κάτω διαίρεσης',
   'tab.guide.title': 'Έναρξη',
+  'tab.guide.more': 'Περισσότερα εργαλεία',
   'tab.unavailable': 'Τίποτα εδώ δεν μπορεί ακόμη να προβάλει αυτό το είδος περιεχομένου.',
 } satisfies Record<keyof typeof en, string>
 
-/** French dictionary, checked complete against the English key set. */
+/** French dictionary, checked against the English keys. */
 export const fr = {
   'command.close': 'Fermer la page ou la fenêtre actuelle',
   'command.refresh': 'Actualiser la page actuelle',
@@ -158,5 +161,6 @@ export const fr = {
   'dock.drop.top': 'Ajouter une division en haut',
   'dock.drop.bottom': 'Ajouter une division en bas',
   'tab.guide.title': 'Démarrer',
+  'tab.guide.more': "Plus d'outils",
   'tab.unavailable': 'Rien ici ne peut encore afficher ce type de contenu.',
 } satisfies Record<keyof typeof en, string>

@@ -3,6 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { Context } from '@deepseek-ai/cordis'
 import { stubConfigForm, type StubConfigForm } from '@deepseek-ai/dsh-client-test-runtime'
 import type { LocaleSettings, LocaleSnapshot } from '@deepseek-ai/dsh-client-locale/client'
+import { en, es, el, fr } from '../src/locales/settings.ts'
 import { FALLBACK_LOCALE, LocaleRuntime } from '@deepseek-ai/dsh-client-locale/client'
 const make = (host?: StubConfigForm<LocaleSettings>): {
   ctx: Context
@@ -34,6 +35,25 @@ describe('LocaleRuntime', () => {
 
   afterEach(() => {
     vi.unstubAllGlobals()
+  })
+
+  it('checks additional dictionaries against the declared namespace and requires the baseline locales', () => {
+    const { svc } = make()
+    const it = { 'language.title': 'Lingua', 'language.auto': 'Automatico' }
+    svc.addLanguage({ id: 'it', label: 'Italiano', fallback: 'en' })
+    const dispose = svc.register('settings.locale', { en, es, el, fr, it })
+    svc.setLocale('it')
+    expect(svc.bind('settings.locale')('language.title')).toBe('Lingua')
+    dispose()
+    expect(svc.bind('settings.locale')('language.title')).toBe('language.title')
+    if (false) {
+      // @ts-expect-error additional locales require the declared namespace's keys
+      svc.register('settings.locale', { en, es, el, fr, it: { other: 'x' } })
+      // @ts-expect-error additional locales cannot omit a namespace key
+      svc.register('settings.locale', { en, es, el, fr, it: {} })
+      // @ts-expect-error additional locales do not replace the baseline locales
+      svc.register('settings.locale', { en, it })
+    }
   })
 
   it('translates through the active-locale -> en -> key chain', () => {

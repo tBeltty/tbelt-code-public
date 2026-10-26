@@ -133,7 +133,7 @@ it.each([new Error('device busy'), 'device busy'])('shows capture failures witho
   try {
     await act(async () => { b.media.dispatchEvent(new Event('devicechange')) })
     await screen.findByRole('option', { name: 'Micrófono 1' })
-    await screen.findByText('Falló el reconocimiento de voz: device busy')
+    await screen.findByText('Error en el reconocimiento de voz: device busy')
   } finally { b.unmount(); await Promise.all(b.recordings.map(recording => recording.dispose())) }
 })
 
@@ -148,7 +148,7 @@ it('reports unavailable browser capture and enumeration failures beside the fiel
     b.enumerateDevices.mockRejectedValueOnce(new Error('enumeration failed'))
     b.props.createRecording = () => new Recording(() => {}, b.selection.getSnapshot().id)
     b.rerender(<MicrophonePicker {...b.props} />)
-    await screen.findByText('Falló el reconocimiento de voz: enumeration failed')
+    await screen.findByText('Error en el reconocimiento de voz: enumeration failed')
   } finally { b.unmount(); await Promise.all(b.recordings.map(recording => recording.dispose())) }
 })
 
@@ -312,7 +312,7 @@ it.each(['resolve', 'reject'])('ignores an older enumeration after a newer hot-p
     await act(async () => { if (settle === 'resolve') pending.resolve(existing); else pending.reject(new Error('Stale failure')) })
     expect(screen.getByRole('option', { name: `USB microphone — ${es.deviceUnavailable}` })).toBeTruthy()
     expect(screen.queryByRole('img', { name: es.inputLevel })).toBeNull()
-    expect(screen.queryByText('Falló el reconocimiento de voz: Stale failure')).toBeNull()
+    expect(screen.queryByText('Error en el reconocimiento de voz: Stale failure')).toBeNull()
   } finally { pending.resolve([]); b.unmount(); await Promise.all(b.recordings.map(recording => recording.dispose())) }
 })
 
@@ -354,7 +354,7 @@ it('recovers system-default preview after its track ends and shows unavailable w
     expect(b.getUserMedia.mock.calls.at(-1)?.[0].audio).not.toHaveProperty('deviceId')
     b.enumerateDevices.mockResolvedValue([])
     await act(async () => { b.media.dispatchEvent(new Event('devicechange')) })
-    const unavailable = screen.getByRole<HTMLOptionElement>('option', { name: `Predeterminado del sistema (Fixture microphone) — ${es.deviceUnavailable}` })
+    const unavailable = screen.getByRole<HTMLOptionElement>('option', { name: `Valor predeterminado del sistema (Fixture microphone) — ${es.deviceUnavailable}` })
     expect(unavailable.disabled).toBe(true)
     expect(screen.queryByRole('img', { name: es.inputLevel })).toBeNull()
   } finally { b.unmount(); await Promise.all(b.recordings.map(recording => recording.dispose())) }
@@ -427,7 +427,7 @@ it('keeps the active system device name and the communications choice', async ()
   b.enumerateDevices.mockResolvedValue(inputs)
   try {
     await act(async () => { b.media.dispatchEvent(new Event('devicechange')) })
-    expect(selector().selectedOptions[0]?.textContent).toBe('Predeterminado del sistema (Fixture microphone)')
+    expect(selector().selectedOptions[0]?.textContent).toBe('Valor predeterminado del sistema (Fixture microphone)')
     await waitForPreview()
     await screen.findByRole('option', { name: 'Communications headset' })
     fireEvent.change(selector(), { target: { value: 'communications' } })
@@ -448,7 +448,7 @@ it('uses the acquired device group to show its physical name without the browser
   b.enumerateDevices.mockResolvedValue(devices)
   try {
     await act(async () => { b.media.dispatchEvent(new Event('devicechange')) })
-    expect(selector().selectedOptions[0]?.textContent).toBe('Predeterminado del sistema (Active microphone)')
+    expect(selector().selectedOptions[0]?.textContent).toBe('Valor predeterminado del sistema (Active microphone)')
     expect(b.getUserMedia).toHaveBeenCalledOnce()
   } finally { b.unmount(); await Promise.all(b.recordings.map(recording => recording.dispose())) }
 })

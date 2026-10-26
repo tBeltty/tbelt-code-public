@@ -1,6 +1,7 @@
 {
   "meta": {
     "title": "Títulos que siguen la conversación",
-    "description": "Actualiza los títulos de sesión cuando llegan nuevas indicaciones humanas."
+    "description": "Actualiza los títulos de sesión cuando llegan nuevas indicaciones humanas.",
+    "detail": "docs/DETAIL.md"
   }
 }

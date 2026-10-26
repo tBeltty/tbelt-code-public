@@ -1,7 +1,7 @@
 {
   "name": "@deepseek-ai/dsh-memory-redact",
   "description": "Fail-closed, content-based secret detection for text destined for a memory write",
-  "version": "0.2.1-rc.2",
+  "version": "0.2.1-rc.3",
   "publishConfig": {
     "access": "public"
   },

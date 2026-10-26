@@ -177,3 +177,24 @@ it.each([
     expect((await screen.findByRole('tooltip')).textContent).toBe(label)
   } finally { f.view.unmount(); f.status.resolve({ phase: 'idle' }) }
 })
+
+it('localizes fullscreen timeout guidance and preserves the retry action', async () => {
+  const f = fixture()
+  const copy: string[] = []
+  try {
+    await f.emit({ phase: 'error', failure: 'fullscreen-timeout', version: available.version })
+    for (const dictionary of [es, en]) {
+      f.view.rerender(<f.Indicator dictionary={dictionary} />)
+      fireEvent.focus(screen.getByRole('button'))
+      copy.push((await screen.findByRole('tooltip')).textContent ?? '')
+    }
+    expect(copy).toMatchInlineSnapshot(`
+      [
+        "No se pudo salir de la pantalla completa. Salga de la pantalla completa y luego vuelva a intentar la actualización.",
+        "Could not exit fullscreen. Exit fullscreen, then retry the update.",
+      ]
+    `)
+    fireEvent.click(screen.getByRole('button'))
+    expect(f.open).toHaveBeenCalledOnce()
+  } finally { f.view.unmount(); f.status.resolve(available) }
+})

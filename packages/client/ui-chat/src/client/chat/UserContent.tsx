@@ -1,7 +1,7 @@
 /** Reusable user contents inside a caller-owned message row. */
 import { Fragment } from 'react'
 import type { FactoryComponentPropsOf } from '@deepseek-ai/dsh-client-ui-slots'
-import { fileExtension, FileTypeIcon, fileSizeText, JsonBlock } from '@deepseek-ai/dsh-client-ui-primitives'
+import { fileExtension, FileTypeIcon, fileSizeText, JsonBlock, UserMessageBubble } from '@deepseek-ai/dsh-client-ui-primitives'
 import { SentQuoteChip } from '../quote/QuoteChip.tsx'
 import { splitQuotedMessage } from '../quote/quotes.ts'
 import css from './MessageItem.module.css'
@@ -47,13 +47,13 @@ FactoryComponentPropsOf<'conversation.chat.user.content'>) {
             ))}
         </div>
       )}
-      {showBubble && <div className={css.bubble}>
+      {showBubble && <UserMessageBubble data-message-bubble="" data-text-interaction-source="">
         {quotes.map((quote, index) => <SentQuoteChip key={index} text={quote} />)}
         {renderFactorySlot('conversation.user.text', { text: body, facts, interactive, ellipsis })}
         {extraBlocks.map((block, index) => (
           <JsonBlock key={index} label={t('message.extraBlock')} payload={block} truncatedLabel={truncated} />
         ))}
-      </div>}
+      </UserMessageBubble>}
       {referenceLabels.length > 0 && (
         <div className={css.referenceSummary}>
           {t('message.referenceSummary', { labels: referenceLabels.join(t('message.referenceSeparator')) })}

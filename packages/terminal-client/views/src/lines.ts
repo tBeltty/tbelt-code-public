@@ -45,7 +45,11 @@ export function relativeText(at: number, now: number): string {
   return gap >= 0 ? `in ${durationText(gap)}` : `${durationText(-gap)} ago`
 }
 
-/** A record, or undefined for anything else. */
+/**
+ * A record, or undefined for anything else.
+ * @param value Value to narrow.
+ * @returns The value as a record, or undefined for arrays, null and primitives.
+ */
 export function recordOf(value: unknown): Record<string, unknown> | undefined {
   return typeof value === 'object' && value !== null && !Array.isArray(value) ? value as Record<string, unknown> : undefined
 }

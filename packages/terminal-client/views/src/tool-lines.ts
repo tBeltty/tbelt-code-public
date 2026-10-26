@@ -39,7 +39,10 @@ export interface ToolViewContext {
 const RESULT_LEAD = '  ⎿ '
 const RESULT_INDENT = '    '
 
-/** Output may hold cursor movement and other control bytes that would corrupt the screen; keep visible text only. */
+/** Output may hold cursor movement and other control bytes that would corrupt the screen; keep visible text only.
+ * @param text Raw tool output.
+ * @returns The output without ANSI sequences and control bytes.
+ */
 export function sanitizeOutput(text: string): string {
   return stripAnsi(text)
     .split('\n')

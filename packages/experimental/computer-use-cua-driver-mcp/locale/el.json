@@ -1,6 +1,6 @@
 {
   "meta": {
-    "title": "Χρήση υπολογιστή (Cua Driver MCP)",
+    "title": "Computer use (Cua Driver MCP)",
     "description": "Επιτρέπει στο μοντέλο να χειρίζεται την επιφάνεια εργασίας μέσω ενός εκτελέσιμου cua-driver που έχει εγκατασταθεί ξεχωριστά."
   }
 }

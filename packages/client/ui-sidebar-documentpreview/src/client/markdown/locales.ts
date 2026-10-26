@@ -11,7 +11,14 @@ export const en = {
   'footnotes': 'Footnotes',
 } satisfies Record<string, string>
 
-/** Spanish dictionary, checked complete against the English key set. */
+declare module '@deepseek-ai/dsh-client-ui-slots' {
+  interface LocaleNamespaceMap {
+    /** Markdown document renderer and its code/footnote controls. */
+    documentMarkdown: MarkdownPreviewKey
+  }
+}
+
+/** Spanish dictionary, checked against the English keys. */
 export const es = {
   'viewer.label': 'Markdown',
   'code.copy': 'Copiar',
@@ -27,17 +34,10 @@ export const el = {
   'footnotes': 'Υποσημειώσεις',
 } satisfies Record<keyof typeof en, string>
 
-/** French dictionary, checked complete against the English key set. */
+/** French dictionary, checked against the English keys. */
 export const fr = {
   'viewer.label': 'Markdown',
   'code.copy': 'Copier',
   'code.copied': 'Copié',
   'footnotes': 'Notes de bas de page',
 } satisfies Record<keyof typeof en, string>
-
-declare module '@deepseek-ai/dsh-client-ui-slots' {
-  interface LocaleNamespaceMap {
-    /** Markdown document renderer and its code/footnote controls. */
-    documentMarkdown: MarkdownPreviewKey
-  }
-}

@@ -5,7 +5,7 @@
  * Mirrors `session-reference`'s `loader-composition.spec.ts` template.
  */
 
-import { mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises'
+import { mkdir, mkdtemp, readFile, rm, utimes, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { pathToFileURL } from 'node:url'
@@ -13,6 +13,7 @@ import { afterEach, describe, expect, it } from 'vitest'
 import { Context } from '@deepseek-ai/cordis'
 import Loader from '@deepseek-ai/cordis-plugin-loader'
 import Include from '@deepseek-ai/cordis-plugin-include'
+import * as agentPlugin from '@deepseek-ai/dsh-agent'
 import { agentEvents, type Agent } from '@deepseek-ai/dsh-agent'
 import { createUserMessage, ToolCallId } from '@deepseek-ai/dsh-llm'
 import { Session, SessionId } from '@deepseek-ai/dsh-session'
@@ -22,10 +23,11 @@ import * as subprocessLocalPlugin from '@deepseek-ai/dsh-subprocess-local'
 import * as tokenMeterPlugin from '@deepseek-ai/dsh-token-meter'
 import * as systemPromptPlugin from '@deepseek-ai/dsh-system-prompt'
 import * as toolsPlugin from '@deepseek-ai/dsh-tools'
+import { executeToolFixture } from '@deepseek-ai/dsh-tool-testkit'
+import { provideWorkingDirectoryFixture } from '@deepseek-ai/dsh-agent-loop-testkit'
 import * as fsLocalPlugin from '@deepseek-ai/dsh-fs-local'
 import * as toolFsPlugin from '@deepseek-ai/dsh-tool-fs'
 import * as repoMapPlugin from '@deepseek-ai/dsh-repo-map'
-import * as registerTurnBoundaryPlugin from './fixtures/register-turn-boundary.ts'
 
 let context: Context | undefined
 let root: string | undefined
@@ -79,6 +81,9 @@ async function bootFixture(): Promise<Fixture> {
   await writeFile(join(projectDir, 'alpha.ts'), ALPHA_SOURCE)
   await writeFile(join(projectDir, 'beta.ts'), BETA_SOURCE)
   await writeFile(join(projectDir, 'gamma.ts'), GAMMA_SOURCE)
+  // Equal mtimes tie-break by path and would rank the oversized alpha block first.
+  const newer = new Date(Date.now() + 10_000)
+  await utimes(join(projectDir, 'gamma.ts'), newer, newer)
 
   const fixture = await readFile(new URL('./fixtures/cordis.yml', import.meta.url), 'utf8')
   const configPath = join(root, 'cordis.yml')
@@ -86,18 +91,19 @@ async function bootFixture(): Promise<Fixture> {
 
   const ctx = context = new Context()
   ctx.baseUrl = pathToFileURL(root).href + '/'
+  provideWorkingDirectoryFixture(ctx)
   await ctx.plugin(Loader)
   ctx.loader.builtins.include = Include
   const modules = new Map<string, unknown>([
     ['@deepseek-ai/dsh-session', sessionPlugin],
     ['@deepseek-ai/dsh-session-projection', sessionProjectionPlugin],
+    ['@deepseek-ai/dsh-agent', agentPlugin],
     ['@deepseek-ai/dsh-subprocess-local', subprocessLocalPlugin],
     ['@deepseek-ai/dsh-token-meter', tokenMeterPlugin],
     ['@deepseek-ai/dsh-system-prompt', systemPromptPlugin],
     ['@deepseek-ai/dsh-tools', toolsPlugin],
     ['@deepseek-ai/dsh-fs-local', fsLocalPlugin],
     ['@deepseek-ai/dsh-tool-fs', toolFsPlugin],
-    ['./register-turn-boundary.ts', registerTurnBoundaryPlugin],
     ['@deepseek-ai/dsh-repo-map', repoMapPlugin],
   ])
   ctx.loader.internal = {
@@ -118,6 +124,7 @@ async function bootFixture(): Promise<Fixture> {
 async function preStep(ctx: Context, agent: Agent, message: ReturnType<typeof createUserMessage>) {
   return agentEvents(ctx, agent).waterfall('agent/pre-step', {
     messages: [message], turn: 1, step: 1, signal: new AbortController().signal,
+    modelSelection: { provider: 'mock', model: 'm' },
   }, () => Promise.resolve({ kind: 'enter' as const, messages: [message] }))
 }
 
@@ -161,7 +168,7 @@ describe('repo-map real Loader composition', () => {
     const recomputeBefore = ctx.repoMap.fileRecomputeCount
 
     const newFilePath = join(projectDir, 'delta.ts')
-    const result = await ctx.tools.execute({
+    const result = await executeToolFixture(ctx, {
       name: 'write',
       callId: ToolCallId('write-untracked'),
       arguments: { file_path: newFilePath, content: 'export function deltaOne(): void {}\n' },
@@ -184,7 +191,7 @@ describe('repo-map real Loader composition', () => {
     const recomputeBefore = ctx.repoMap.fileRecomputeCount
 
     const alphaPath = join(projectDir, 'alpha.ts')
-    const result = await ctx.tools.execute({
+    const result = await executeToolFixture(ctx, {
       name: 'edit',
       callId: ToolCallId('edit-tracked'),
       arguments: {
@@ -212,7 +219,7 @@ describe('repo-map real Loader composition', () => {
     session.append('step/start', { turn: 1, step: 1 })
 
     const betaPath = join(projectDir, 'beta.ts')
-    const result = await ctx.tools.execute({
+    const result = await executeToolFixture(ctx, {
       name: 'edit',
       callId: ToolCallId('edit-mid-step'),
       arguments: {

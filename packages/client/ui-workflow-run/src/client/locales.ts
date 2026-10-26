@@ -25,7 +25,10 @@ export const en = {
   'status.interrupted': 'Interrupted',
 } satisfies Record<string, string>
 
-/** Spanish dictionary, checked complete against the English key set. */
+/** Union of this namespace's dictionary keys. */
+export type WorkflowRunKey = keyof typeof en
+
+/** Spanish dictionary, checked against the English keys. */
 export const es = {
   'run.title': '{name}',
   'run.members.one': '{count} miembro',
@@ -69,7 +72,7 @@ export const el = {
   'status.interrupted': 'Διακόπηκε',
 } satisfies Record<keyof typeof en, string>
 
-/** French dictionary, checked complete against the English key set. */
+/** French dictionary, checked against the English keys. */
 export const fr = {
   'run.title': '{name}',
   'run.members.one': '{count} membre',
@@ -90,6 +93,3 @@ export const fr = {
   'status.cancelled': 'Annulé',
   'status.interrupted': 'Interrompu',
 } satisfies Record<keyof typeof en, string>
-
-/** Union of this namespace's dictionary keys. */
-export type WorkflowRunKey = keyof typeof en

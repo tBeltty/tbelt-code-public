@@ -6,6 +6,7 @@ import type { Agent } from '@deepseek-ai/dsh-agent'
 import AgentLoop from '@deepseek-ai/dsh-agent-loop'
 import { mountAgentLoopTestDependencies } from '@deepseek-ai/dsh-agent-loop-testkit'
 import { defineTool } from '@deepseek-ai/dsh-tools'
+import { executeToolFixture } from '@deepseek-ai/dsh-tool-testkit'
 import { MockAdapter, textResponse, toolCallResponse } from '../../../core/agent-loop/tests/mock-adapter.ts'
 import * as ToolGroups from '../src/index.ts'
 import { ENABLE_TOOLS, resolveGroups } from '../src/index.ts'
@@ -180,7 +181,7 @@ describe('tool groups through the agent loop', () => {
 
   it('refuses a caller without an agent', async () => {
     const ctx = await harness(new MockAdapter([]))
-    const result = await ctx.tools.execute({
+    const result = await executeToolFixture(ctx, {
       signal: new AbortController().signal,
       callId: 'call-x' as never,
       name: ENABLE_TOOLS,

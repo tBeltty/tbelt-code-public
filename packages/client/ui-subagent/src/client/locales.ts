@@ -48,7 +48,10 @@ export const en = {
   'readonly.body': 'The parent session is offline; reopen it to continue sending messages.',
 } satisfies Record<string, string>
 
-/** Spanish dictionary, checked complete against the English key set. */
+/** Key domain of the `subagent` namespace (English is the source of truth). */
+export type SubagentKey = keyof typeof en
+
+/** Spanish dictionary, checked against the English keys. */
 export const es = {
   'duration.seconds': '{seconds} s',
   'duration.minutes': '{minutes} min {seconds} s',
@@ -138,7 +141,7 @@ export const el = {
   'readonly.body': 'Η γονική συνεδρία είναι εκτός σύνδεσης· ανοίξτε την ξανά για να συνεχίσετε να στέλνετε μηνύματα.',
 } satisfies Record<keyof typeof en, string>
 
-/** French dictionary, checked complete against the English key set. */
+/** French dictionary, checked against the English keys. */
 export const fr = {
   'duration.seconds': '{seconds} s',
   'duration.minutes': '{minutes} min {seconds} s',
@@ -182,6 +185,3 @@ export const fr = {
   'readonly.oneShot.body': 'Les tâches à usage unique n’acceptent pas de suite\u00a0; consultez ici l’enregistrement complet de l’exécution.',
   'readonly.body': 'La session parente est hors ligne\u00a0; rouvrez-la pour continuer à envoyer des messages.',
 } satisfies Record<keyof typeof en, string>
-
-/** Key domain of the `subagent` namespace (English is the source of truth). */
-export type SubagentKey = keyof typeof en

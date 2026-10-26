@@ -22,10 +22,11 @@ import type { Agent } from '@deepseek-ai/dsh-agent'
 import { ToolCallId } from '@deepseek-ai/dsh-llm'
 import type { ApprovalOutcome } from '@deepseek-ai/dsh-user-approval'
 import * as sessionPlugin from '@deepseek-ai/dsh-session'
+import * as sessionProjectionPlugin from '@deepseek-ai/dsh-session-projection'
 import { SessionId, type SessionEvent } from '@deepseek-ai/dsh-session'
 import * as systemPromptPlugin from '@deepseek-ai/dsh-system-prompt'
 import * as toolsPlugin from '@deepseek-ai/dsh-tools'
-import { defineContentToolFixture } from '@deepseek-ai/dsh-tools'
+import { defineContentToolFixture, executeToolFixture } from '@deepseek-ai/dsh-tool-testkit'
 import * as approvalPlugin from '@deepseek-ai/dsh-user-approval'
 import * as permissionRulesPlugin from '@deepseek-ai/dsh-permission-rules'
 import type { PermissionRule } from '@deepseek-ai/dsh-permission-rules'
@@ -46,6 +47,7 @@ async function boot(rules: PermissionRule[]): Promise<Context> {
   const configPath = join(root, 'cordis.yml')
   await writeFile(configPath, [
     "- name: '@deepseek-ai/dsh-session'",
+    "- name: '@deepseek-ai/dsh-session-projection'",
     "- name: '@deepseek-ai/dsh-system-prompt'",
     "- name: '@deepseek-ai/dsh-tools'",
     "- name: '@deepseek-ai/dsh-user-approval'",
@@ -60,6 +62,7 @@ async function boot(rules: PermissionRule[]): Promise<Context> {
   ctx.loader.builtins.include = Include
   const modules = new Map<string, unknown>([
     ['@deepseek-ai/dsh-session', sessionPlugin],
+    ['@deepseek-ai/dsh-session-projection', sessionProjectionPlugin],
     ['@deepseek-ai/dsh-system-prompt', systemPromptPlugin],
     ['@deepseek-ai/dsh-tools', toolsPlugin],
     ['@deepseek-ai/dsh-user-approval', approvalPlugin],
@@ -98,7 +101,7 @@ function agentWithOpenTurn(ctx: Context, id: string): Agent {
 
 let callCounter = 0
 function call(ctx: Context, args: unknown, agent?: Agent) {
-  return ctx.tools.execute({
+  return executeToolFixture(ctx, {
     signal: new AbortController().signal,
     callId: ToolCallId(`call-${++callCounter}`),
     name: 'bash',

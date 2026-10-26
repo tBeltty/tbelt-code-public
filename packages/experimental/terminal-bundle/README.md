@@ -7,7 +7,7 @@ kind: "package-bundle"
 
 ## Summary
 
-Add six experimental global terminal tools to every Agent. The bundle owns an isolated terminal registry with the platform shell backend; terminals remain Agent-owned. It ships switched off in Web and Desktop. Select it in Plugins to enable it.
+Add six experimental global terminal tools to every Agent. The bundle owns an isolated terminal registry with the platform shell backend; terminals remain Agent-owned. It ships switched off in Web and Desktop and is omitted from the Plugins bundle lists and detail pages.
 
 ## Table of Contents
 
@@ -23,9 +23,9 @@ Add six experimental global terminal tools to every Agent. The bundle owns an is
 <a id="use-this-package"></a>
 ## Use this package
 
-In Web or Desktop, open Plugins and enable **Persistent terminals** in Official. Switch it off to remove its profile layer.
+In `$DSH_HOME/profiles/<name>/package.json` (default home: `~/.dsh`), add `@deepseek-ai/dsh-experimental-terminal-bundle` to `dsh.profile.bundles` to enable its profile layer; remove it from that list to disable it. Restart that profile to apply the change; see the [profile reference](../../../apps/cli/reference/README.md#profile-boot). The [minimal preset](../../bundle/web-app/presets/minimal.patch.yml) loads its own persistent shell independently of this bundle.
 
-Enabling or disabling the bundle registers or removes its global tools in the running Host, so every Agent sees the change on its next request, in every preset including minimal.
+The selected layer adds its global tools to every Agent in the Host, in every preset including minimal. Hiding the management entry preserves existing selections; the upgrade guide explains how to disable a previously enabled layer.
 
 -----
 

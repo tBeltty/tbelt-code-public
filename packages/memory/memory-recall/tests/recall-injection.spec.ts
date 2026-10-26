@@ -67,7 +67,7 @@ async function runPreStep(ctx: Context, agent: Agent): Promise<PreStepDecision> 
   const signal = new AbortController().signal
   return agentEvents(ctx, agent).waterfall(
     'agent/pre-step',
-    { messages: [], turn: 1, step: 1, signal },
+    { messages: [], turn: 1, step: 1, signal, modelSelection: { provider: 'mock', model: 'm' } },
     () => Promise.resolve({ kind: 'enter' as const, messages: [] }),
   )
 }

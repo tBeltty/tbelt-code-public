@@ -1,7 +1,7 @@
 {
   "name": "@deepseek-ai/dsh-git-safety-net",
   "description": "Pre-edit file snapshots recorded as checkpoint commits under refs/tbelt-code/checkpoints, via git plumbing only, without touching the user's index, HEAD, or stash, plus the undo() restore path that reverts a turn's checkpoints",
-  "version": "0.2.1-rc.2",
+  "version": "0.2.1-rc.3",
   "publishConfig": {
     "access": "public"
   },

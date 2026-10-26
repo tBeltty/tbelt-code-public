@@ -37,7 +37,14 @@ export const en = {
   'address.unknown': 'The page navigated; this carrier cannot read its new URL.',
 } satisfies Record<string, string>
 
-/** Spanish dictionary, checked complete against the English key set. */
+declare module '@deepseek-ai/dsh-client-ui-slots' {
+  interface LocaleNamespaceMap {
+    /** Sidebar Browser labels, navigation controls, and failures. */
+    sidebarBrowser: SidebarBrowserKey
+  }
+}
+
+/** Spanish dictionary, checked against the English keys. */
 export const es = {
   'type.label': 'Navegador',
   'guide.title': 'Navegador',
@@ -105,7 +112,7 @@ export const el = {
   'address.unknown': 'Η σελίδα πλοηγήθηκε· αυτός ο φορέας δεν μπορεί να διαβάσει τη νέα διεύθυνσή της.',
 } satisfies Record<keyof typeof en, string>
 
-/** French dictionary, checked complete against the English key set. */
+/** French dictionary, checked against the English keys. */
 export const fr = {
   'type.label': 'Navigateur',
   'guide.title': 'Navigateur',
@@ -138,10 +145,3 @@ export const fr = {
   'load.failed.detail': 'Échec du chargement de la page ({code})\u00a0: {description}',
   'address.unknown': 'La page a navigué\u00a0; ce support ne peut pas lire sa nouvelle URL.',
 } satisfies Record<keyof typeof en, string>
-
-declare module '@deepseek-ai/dsh-client-ui-slots' {
-  interface LocaleNamespaceMap {
-    /** Sidebar Browser labels, navigation controls, and failures. */
-    sidebarBrowser: SidebarBrowserKey
-  }
-}

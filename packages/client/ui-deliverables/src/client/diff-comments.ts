@@ -51,6 +51,7 @@ export function formatDiffComments(comments: readonly DiffComment[]): string {
 
 /** Observable comment memory shared by the review tab, the composer prefix, and the send action. */
 export class DiffCommentStore {
+  /** Comments keyed by diff file path. */
   readonly state: SnapshotStore<DiffCommentState> = createSnapshotStore<DiffCommentState>({})
   private sequence = 0
 

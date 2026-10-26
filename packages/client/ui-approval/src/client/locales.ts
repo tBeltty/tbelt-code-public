@@ -17,12 +17,14 @@ export const en = {
   technical: 'Technical details',
   'technical.tool': 'Tool: {toolName}',
   reject: 'Reject',
+  allow: 'Allow',
   allowOnce: 'Allow once',
   allowSession: 'Allow for this session',
   allowMenu: 'More ways to allow',
+  allowAlways: 'Always allow',
 } satisfies Record<string, string>
 
-/** Spanish dictionary, checked complete against the English key set. */
+/** Spanish dictionary, checked against the English keys. */
 export const es = {
   waiting: 'Esperando aprobación',
   'detail.aria': 'Detalles de la aprobación',
@@ -36,9 +38,11 @@ export const es = {
   technical: 'Detalles técnicos',
   'technical.tool': 'Herramienta: {toolName}',
   reject: 'Rechazar',
+  allow: 'Permitir',
   allowOnce: 'Permitir una vez',
   allowSession: 'Permitir durante esta sesión',
   allowMenu: 'Más formas de permitir',
+  allowAlways: 'Permitir siempre',
 } satisfies Record<keyof typeof en, string>
 
 /** Greek dictionary, checked complete against the English key set. */
@@ -55,12 +59,14 @@ export const el = {
   technical: 'Τεχνικές λεπτομέρειες',
   'technical.tool': 'Εργαλείο: {toolName}',
   reject: 'Απόρριψη',
+  allow: 'Να επιτρέπεται',
   allowOnce: 'Να επιτραπεί μία φορά',
   allowSession: 'Να επιτραπεί για αυτή τη συνεδρία',
   allowMenu: 'Περισσότεροι τρόποι να επιτραπεί',
+  allowAlways: 'Να επιτρέπεται πάντα',
 } satisfies Record<keyof typeof en, string>
 
-/** French dictionary, checked complete against the English key set. */
+/** French dictionary, checked against the English keys. */
 export const fr = {
   waiting: 'En attente d’approbation',
   'detail.aria': 'Détails de l’approbation',
@@ -74,7 +80,9 @@ export const fr = {
   technical: 'Détails techniques',
   'technical.tool': 'Outil\u00a0: {toolName}',
   reject: 'Refuser',
+  allow: 'Autoriser',
   allowOnce: 'Autoriser une fois',
   allowSession: 'Autoriser pour cette session',
   allowMenu: 'Autres façons d’autoriser',
+  allowAlways: 'Toujours autoriser',
 } satisfies Record<keyof typeof en, string>

@@ -1,7 +1,7 @@
 {
   "name": "@deepseek-ai/dsh-command-remember",
   "description": "Human-facing /remember command that writes a durable memory entry through the memory storage write path",
-  "version": "0.2.1-rc.2",
+  "version": "0.2.1-rc.3",
   "publishConfig": {
     "access": "public"
   },

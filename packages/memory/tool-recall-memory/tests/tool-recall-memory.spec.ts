@@ -12,10 +12,12 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 import { Context } from '@deepseek-ai/cordis'
 import AgentRegistry from '@deepseek-ai/dsh-agent'
 import type { Agent } from '@deepseek-ai/dsh-agent'
-import { unsupportedInbox } from '@deepseek-ai/dsh-agent-loop-testkit'
+import { unsupportedInbox, unsupportedModel } from '@deepseek-ai/dsh-agent-loop-testkit'
+import { executeToolFixture } from '@deepseek-ai/dsh-tool-testkit'
 import { ToolCallId } from '@deepseek-ai/dsh-llm'
 import MemoryStorage from '@deepseek-ai/dsh-memory-storage'
 import { Session, SessionId } from '@deepseek-ai/dsh-session'
+import SessionProjectionRegistry from '@deepseek-ai/dsh-session-projection'
 import Storage from '@deepseek-ai/dsh-storage'
 import { DomainFacility } from '@deepseek-ai/dsh-storage-domain'
 import SystemPrompt from '@deepseek-ai/dsh-system-prompt'
@@ -40,6 +42,7 @@ afterEach(async () => {
 async function harness(): Promise<{ ctx: Context; agent: Agent }> {
   const ctx = new Context()
   context = ctx
+  await ctx.plugin(SessionProjectionRegistry)
   await ctx.plugin(AgentRegistry)
   await ctx.plugin(SystemPrompt)
   await ctx.plugin(ToolRuntime)
@@ -57,7 +60,7 @@ async function harness(): Promise<{ ctx: Context; agent: Agent }> {
   const id = SessionId('tool-recall-memory-test')
   const session = Session.create(id)
   const agent: Agent = {
-    id, options: {}, session, inbox: unsupportedInbox(),
+    id, options: {}, session, inbox: unsupportedInbox(), model: unsupportedModel(),
     status: 'idle', ctx: scope.ctx,
     followup: () => {}, steer: () => {}, inject: () => {}, send: () => {}, cancel() {},
     runMaintenance: task => task(new AbortController().signal),
@@ -74,7 +77,7 @@ async function remember(ctx: Context, agent: Agent, input: {
   content: string
   projectScope: 'project' | 'global'
 }): Promise<void> {
-  const result = await ctx.tools.execute({
+  const result = await executeToolFixture(ctx, {
     signal: new AbortController().signal,
     callId: ToolCallId(`remember-${input.name}`),
     name: 'remember_fact',
@@ -99,7 +102,7 @@ describe('recall_memory tool through ctx.tools.execute', () => {
       projectScope: 'global',
     })
 
-    const result = await ctx.tools.execute({
+    const result = await executeToolFixture(ctx, {
       signal: new AbortController().signal,
       callId: ToolCallId('recall-1'),
       name: 'recall_memory',
@@ -121,7 +124,7 @@ describe('recall_memory tool through ctx.tools.execute', () => {
       projectScope: 'global',
     })
 
-    const result = await ctx.tools.execute({
+    const result = await executeToolFixture(ctx, {
       signal: new AbortController().signal,
       callId: ToolCallId('recall-2'),
       name: 'recall_memory',
@@ -151,7 +154,7 @@ describe('recall_memory tool through ctx.tools.execute', () => {
       projectScope: 'global',
     })
 
-    const result = await ctx.tools.execute({
+    const result = await executeToolFixture(ctx, {
       signal: new AbortController().signal,
       callId: ToolCallId('recall-3'),
       name: 'recall_memory',
@@ -171,7 +174,7 @@ describe('recall_memory tool through ctx.tools.execute', () => {
       projectScope: 'global',
     })
 
-    const result = await ctx.tools.execute({
+    const result = await executeToolFixture(ctx, {
       signal: new AbortController().signal,
       callId: ToolCallId('recall-4'),
       name: 'recall_memory',
@@ -186,7 +189,7 @@ describe('recall_memory tool through ctx.tools.execute', () => {
 
   it('rejects a call from a non-agent caller', async () => {
     const { ctx } = await harness()
-    const result = await ctx.tools.execute({
+    const result = await executeToolFixture(ctx, {
       signal: new AbortController().signal,
       callId: ToolCallId('recall-no-agent'),
       name: 'recall_memory',

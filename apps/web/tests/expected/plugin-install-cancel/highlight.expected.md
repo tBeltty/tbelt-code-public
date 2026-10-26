@@ -1,5 +1,6 @@
 - listitem:
   - button "View slow-package": slow-package
+  - status
   - switch "Enable slow-package" [checked]
 
 [

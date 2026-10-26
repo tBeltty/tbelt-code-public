@@ -15,7 +15,8 @@ import SessionProjectionRegistry from '@deepseek-ai/dsh-session-projection'
 import SystemPrompt from '@deepseek-ai/dsh-system-prompt'
 import ToolRuntime from '@deepseek-ai/dsh-tools'
 import * as ToolSearchReplace from '@deepseek-ai/dsh-tool-search-replace'
-import { unsupportedInbox } from '@deepseek-ai/dsh-agent-loop-testkit'
+import { unsupportedInbox, unsupportedModel } from '@deepseek-ai/dsh-agent-loop-testkit'
+import { executeToolFixture } from '@deepseek-ai/dsh-tool-testkit'
 
 const contexts: Context[] = []
 const roots: string[] = []
@@ -37,6 +38,7 @@ async function agent(ctx: Context, cwd: string): Promise<Agent> {
     options: {},
     session,
     inbox: unsupportedInbox(),
+    model: unsupportedModel(),
     status: 'idle',
     ctx: scope.ctx,
     send: () => {},
@@ -56,7 +58,7 @@ function text(result: { content: { type: string; text?: string }[] }): string {
 }
 
 function call(ctx: Context, owner: Agent | undefined, args: unknown) {
-  return ctx.tools.execute({
+  return executeToolFixture(ctx, {
     signal: new AbortController().signal,
     callId: ToolCallId(`search-replace-${++callNumber}`),
     name: 'search_replace',
@@ -78,13 +80,13 @@ async function setup(
   contexts.push(ctx)
   await ctx.plugin(SystemPrompt)
   await ctx.plugin(ToolRuntime)
+  await ctx.plugin(SessionProjectionRegistry)
   await ctx.plugin(AgentRegistry)
   if (options.sandboxMode === undefined) {
     await ctx.plugin(LocalFileSystem, { cwd: root })
   } else {
     // SandboxPolicy declares the registry as a required injection; mount it
     // before the policy activates.
-    await ctx.plugin(SessionProjectionRegistry)
     await ctx.plugin(SandboxPolicy, { mode: options.sandboxMode, workspaceRoot: root })
     await ctx.plugin(SandboxedFileSystem, { cwd: root })
   }

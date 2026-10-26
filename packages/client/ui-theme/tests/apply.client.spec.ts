@@ -224,7 +224,7 @@ describe('ui-theme apply', () => {
             "⌘",
             "=",
           ],
-          "label": "增大字号",
+          "label": "Aumentar el tamaño de letra",
         },
         {
           "bindings": [
@@ -234,7 +234,7 @@ describe('ui-theme apply', () => {
             "⌘",
             "-",
           ],
-          "label": "减小字号",
+          "label": "Reducir el tamaño de letra",
         },
       ]
     `)

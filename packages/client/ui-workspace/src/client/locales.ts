@@ -143,7 +143,7 @@ export const en = {
   'time.ago': '{t} ago',
 } satisfies Record<string, string>
 
-/** Spanish dictionary, checked complete against the English key set. */
+/** Spanish dictionary, checked against the English keys. */
 export const es = {
   'defaultWorkspace.failed': 'No se pudo crear el espacio de trabajo predeterminado. Usa Elegir espacio de trabajo para seleccionar una carpeta.',
   'draft.workspaceRequired': 'Elige primero un espacio de trabajo.',
@@ -215,6 +215,9 @@ export const es = {
   'menu.unarchiveSession': 'Desarchivar sesión',
   'menu.pinSession': 'Fijar sesión',
   'menu.unpinSession': 'Dejar de fijar sesión',
+  'menu.sessionId': 'Copiar ID de sesión',
+  'toast.sessionIdCopied': 'ID de sesión copiado',
+  'toast.sessionIdCopyFailed': 'No se pudo copiar. Inténtalo de nuevo.',
   'row.archived': 'Archivada',
   'row.pinned': 'Fijada',
   'toast.archivedNotOpenable': 'Las sesiones archivadas no se pueden abrir. Desarchívala para verla.',
@@ -274,9 +277,6 @@ export const es = {
   'time.months': '{n} m',
   'time.years': '{n} a',
   'time.ago': 'hace {t}',
-  'menu.sessionId': 'Copiar ID de sesión',
-  'toast.sessionIdCopied': 'ID de sesión copiado',
-  'toast.sessionIdCopyFailed': 'No se pudo copiar. Inténtalo de nuevo.',
 } satisfies Record<keyof typeof en, string>
 
 /** Greek dictionary, checked complete against the English key set. */
@@ -351,6 +351,9 @@ export const el = {
   'menu.unarchiveSession': 'Αναίρεση αρχειοθέτησης συνεδρίας',
   'menu.pinSession': 'Καρφίτσωμα συνεδρίας',
   'menu.unpinSession': 'Ξεκαρφίτσωμα συνεδρίας',
+  'menu.sessionId': 'Αντιγραφή αναγνωριστικού συνεδρίας',
+  'toast.sessionIdCopied': 'Το αναγνωριστικό συνεδρίας αντιγράφηκε',
+  'toast.sessionIdCopyFailed': 'Η αντιγραφή απέτυχε. Δοκιμάστε ξανά.',
   'row.archived': 'Αρχειοθετημένη',
   'row.pinned': 'Καρφιτσωμένη',
   'toast.archivedNotOpenable': 'Οι αρχειοθετημένες συνεδρίες δεν μπορούν να ανοιχτούν. Αναιρέστε την αρχειοθέτηση για να τη δείτε.',
@@ -410,12 +413,9 @@ export const el = {
   'time.months': '{n}μ.',
   'time.years': '{n}έ.',
   'time.ago': 'πριν από {t}',
-  'menu.sessionId': 'Αντιγραφή αναγνωριστικού συνεδρίας',
-  'toast.sessionIdCopied': 'Το αναγνωριστικό συνεδρίας αντιγράφηκε',
-  'toast.sessionIdCopyFailed': 'Η αντιγραφή απέτυχε. Δοκιμάστε ξανά.',
 } satisfies Record<keyof typeof en, string>
 
-/** French dictionary, checked complete against the English key set. */
+/** French dictionary, checked against the English keys. */
 export const fr = {
   'defaultWorkspace.failed': 'Impossible de créer l’espace de travail par défaut. Utilisez «\u00a0Choisir un espace de travail\u00a0» pour sélectionner un dossier.',
   'draft.workspaceRequired': 'Choisissez d’abord un espace de travail.',
@@ -487,6 +487,9 @@ export const fr = {
   'menu.unarchiveSession': 'Désarchiver la session',
   'menu.pinSession': 'Épingler la session',
   'menu.unpinSession': 'Désépingler la session',
+  'menu.sessionId': 'Copier l’ID de session',
+  'toast.sessionIdCopied': 'ID de session copié',
+  'toast.sessionIdCopyFailed': 'Échec de la copie. Réessayez.',
   'row.archived': 'Archivée',
   'row.pinned': 'Épinglée',
   'toast.archivedNotOpenable': 'Les sessions archivées ne peuvent pas être ouvertes. Désarchivez-la pour la consulter.',
@@ -546,7 +549,4 @@ export const fr = {
   'time.months': '{n} mois',
   'time.years': '{n} a',
   'time.ago': 'il y a {t}',
-  'menu.sessionId': 'Copier l’ID de session',
-  'toast.sessionIdCopied': 'ID de session copié',
-  'toast.sessionIdCopyFailed': 'Échec de la copie. Réessayez.',
 } satisfies Record<keyof typeof en, string>

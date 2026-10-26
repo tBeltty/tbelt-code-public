@@ -25,8 +25,10 @@
   cursor: pointer;
 }
 
-.iconButton:hover {
-  background: var(--dsw-alias-interactive-bg-hover);
+@media (hover: hover) {
+  .iconButton:hover {
+    background: var(--dsw-alias-interactive-bg-hover);
+  }
 }
 
 /* Extends the click area of the 28px button to 32px without changing its layout. */

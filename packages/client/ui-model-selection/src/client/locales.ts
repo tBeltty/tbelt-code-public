@@ -48,7 +48,7 @@ export const en = {
   'price.titleCache': 'Per million tokens: input {input}, output {output}, cache read {cacheRead}',
 } satisfies Record<string, string>
 
-/** Spanish dictionary, checked complete against the English key set. */
+/** Spanish dictionary, checked against the English keys. */
 export const es = {
   'provider.account': 'Cuenta de DeepSeek',
   'command.label': 'Modelo',
@@ -122,7 +122,7 @@ export const el = {
   'price.titleCache': 'Ανά εκατομμύριο tokens: είσοδος {input}, έξοδος {output}, ανάγνωση cache {cacheRead}',
 } satisfies Record<keyof typeof en, string>
 
-/** French dictionary, checked complete against the English key set. */
+/** French dictionary, checked against the English keys. */
 export const fr = {
   'provider.account': 'Compte DeepSeek',
   'command.label': 'Modèle',

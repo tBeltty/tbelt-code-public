@@ -17,9 +17,7 @@ export const en = {
   'wait.continued': 'Work continued — you can still answer',
   'review.status': 'Answered',
   'review.skipped': 'This question was skipped.',
-  'reply.label': 'Reply to earlier pending questions',
-  'reply.open': 'Open question details',
-  'reply.close': 'Close question details',
+  'reply.label': 'Questions and answers',
   'reply.answerLabel': 'Answer: ',
   'reply.skipped': 'Skipped',
   'nav.prev': 'Previous question',
@@ -28,6 +26,8 @@ export const en = {
   'nav.maximize': 'Expand the question card',
   'nav.cancel': 'Dismiss all questions',
   'nav.close': 'Close the panel — reopen it from the tool call',
+  'text.expand': 'Expand',
+  'text.collapse': 'Collapse',
   'option.recommended': 'Recommended',
   'custom.placeholder': 'Type your answer',
   'action.skip': 'Skip',
@@ -38,7 +38,7 @@ export const en = {
   'plan.discuss': 'Request changes',
 } satisfies Record<string, string>
 
-/** Spanish dictionary, checked complete against the English key set. */
+/** Spanish dictionary, checked against the English keys. */
 export const es = {
   'error.incomplete': 'Completa primero esta pregunta.',
   'error.unanswered': 'Elige una opción o escribe una respuesta personalizada.',
@@ -52,9 +52,7 @@ export const es = {
   'wait.continued': 'El trabajo continuó; aún puedes responder',
   'review.status': 'Respondida',
   'review.skipped': 'Esta pregunta se omitió.',
-  'reply.label': 'Responder a preguntas pendientes anteriores',
-  'reply.open': 'Abrir detalles de la pregunta',
-  'reply.close': 'Cerrar detalles de la pregunta',
+  'reply.label': 'Preguntas y respuestas',
   'reply.answerLabel': 'Respuesta: ',
   'reply.skipped': 'Omitida',
   'nav.prev': 'Pregunta anterior',
@@ -63,6 +61,8 @@ export const es = {
   'nav.maximize': 'Expandir la tarjeta de la pregunta',
   'nav.cancel': 'Descartar todas las preguntas',
   'nav.close': 'Cerrar el panel: se vuelve a abrir desde la llamada a la herramienta',
+  'text.expand': 'Expandir',
+  'text.collapse': 'Contraer',
   'option.recommended': 'Recomendada',
   'custom.placeholder': 'Escribe tu respuesta',
   'action.skip': 'Omitir',
@@ -87,9 +87,7 @@ export const el = {
   'wait.continued': 'Η εργασία συνεχίστηκε — μπορείτε ακόμη να απαντήσετε',
   'review.status': 'Απαντήθηκε',
   'review.skipped': 'Αυτή η ερώτηση παραλείφθηκε.',
-  'reply.label': 'Απάντηση σε προηγούμενες ερωτήσεις που εκκρεμούν',
-  'reply.open': 'Άνοιγμα λεπτομερειών ερώτησης',
-  'reply.close': 'Κλείσιμο λεπτομερειών ερώτησης',
+  'reply.label': 'Ερωτήσεις και απαντήσεις',
   'reply.answerLabel': 'Απάντηση: ',
   'reply.skipped': 'Παραλείφθηκε',
   'nav.prev': 'Προηγούμενη ερώτηση',
@@ -98,6 +96,8 @@ export const el = {
   'nav.maximize': 'Ανάπτυξη της κάρτας ερώτησης',
   'nav.cancel': 'Απόρριψη όλων των ερωτήσεων',
   'nav.close': 'Κλείσιμο του πίνακα — ανοίξτε τον ξανά από την κλήση εργαλείου',
+  'text.expand': 'Ανάπτυξη',
+  'text.collapse': 'Σύμπτυξη',
   'option.recommended': 'Προτείνεται',
   'custom.placeholder': 'Πληκτρολογήστε την απάντησή σας',
   'action.skip': 'Παράλειψη',
@@ -108,7 +108,7 @@ export const el = {
   'plan.discuss': 'Αίτημα αλλαγών',
 } satisfies Record<keyof typeof en, string>
 
-/** French dictionary, checked complete against the English key set. */
+/** French dictionary, checked against the English keys. */
 export const fr = {
   'error.incomplete': 'Terminez d’abord cette question.',
   'error.unanswered': 'Sélectionnez une option ou saisissez une réponse personnalisée.',
@@ -122,9 +122,7 @@ export const fr = {
   'wait.continued': 'Le travail a repris — vous pouvez encore répondre',
   'review.status': 'Répondu',
   'review.skipped': 'Cette question a été ignorée.',
-  'reply.label': 'Répondre aux questions en attente précédentes',
-  'reply.open': 'Ouvrir les détails de la question',
-  'reply.close': 'Fermer les détails de la question',
+  'reply.label': 'Questions et réponses',
   'reply.answerLabel': 'Réponse\u00a0: ',
   'reply.skipped': 'Ignorée',
   'nav.prev': 'Question précédente',
@@ -133,6 +131,8 @@ export const fr = {
   'nav.maximize': 'Développer la carte de question',
   'nav.cancel': 'Ignorer toutes les questions',
   'nav.close': 'Fermer le panneau — rouvrez-le depuis l’appel d’outil',
+  'text.expand': 'Développer',
+  'text.collapse': 'Réduire',
   'option.recommended': 'Recommandé',
   'custom.placeholder': 'Saisissez votre réponse',
   'action.skip': 'Ignorer',

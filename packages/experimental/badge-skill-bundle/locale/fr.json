@@ -1,6 +1,7 @@
 {
   "meta": {
-    "title": "Compétence du badge DSH",
-    "description": "Propose le badge « powered by DSH » comme compétence détectable."
+    "title": "Compétence du badge tBelt Code",
+    "description": "Propose le badge « powered by tBelt Code » comme compétence détectable.",
+    "detail": "docs/DETAIL.md"
   }
 }

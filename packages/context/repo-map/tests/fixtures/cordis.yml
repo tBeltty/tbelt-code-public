@@ -1,5 +1,6 @@
 - name: '@deepseek-ai/dsh-session'
 - name: '@deepseek-ai/dsh-session-projection'
+- name: '@deepseek-ai/dsh-agent'
 - name: '@deepseek-ai/dsh-subprocess-local'
 - name: '@deepseek-ai/dsh-token-meter'
 - name: '@deepseek-ai/dsh-system-prompt'
@@ -8,7 +9,6 @@
   config:
     cwd: '/'
 - name: '@deepseek-ai/dsh-tool-fs'
-- name: './register-turn-boundary.ts'
 - name: '@deepseek-ai/dsh-repo-map'
   config:
     rootDir: '{{rootDir}}'

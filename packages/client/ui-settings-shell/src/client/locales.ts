@@ -27,7 +27,16 @@ export const en = {
   invalidNumber: 'Enter a number, or leave blank to use the default.',
 } satisfies Record<string, string>
 
-/** Spanish dictionary, checked complete against the English key set. */
+/**
+ * The form frame's copy, read from this page's dictionary.
+ * @param t - the page's locale reader.
+ * @returns the labels the shared settings form renders.
+ */
+export function formLabels(t: (key: ShellSettingsLocaleKey) => string): SettingsFormLabels {
+  return { unavailable: t('unavailable'), readOnly: t('readOnly'), saveFailed: t('saveFailed'), save: t('save'), saving: t('saving') }
+}
+
+/** Spanish dictionary, checked against the English keys. */
 export const es = {
   title: 'Shell',
   description: 'Limita cuánto puede durar cada comando y cuánta salida puede producir.',
@@ -63,7 +72,7 @@ export const el = {
   invalidNumber: 'Εισαγάγετε αριθμό ή αφήστε το κενό για να χρησιμοποιηθεί η προεπιλογή.',
 } satisfies Record<keyof typeof en, string>
 
-/** French dictionary, checked complete against the English key set. */
+/** French dictionary, checked against the English keys. */
 export const fr = {
   title: 'Shell',
   description: 'Limitez la durée d’exécution de chaque commande et le volume de sortie qu’elle peut produire.',
@@ -80,12 +89,3 @@ export const fr = {
   saveFailed: 'Le déploiement n’a pas accepté ces valeurs\u00a0; elles ont été laissées pour que vous les corrigiez.',
   invalidNumber: 'Saisissez un nombre, ou laissez vide pour utiliser la valeur par défaut.',
 } satisfies Record<keyof typeof en, string>
-
-/**
- * The form frame's copy, read from this page's dictionary.
- * @param t - the page's locale reader.
- * @returns the labels the shared settings form renders.
- */
-export function formLabels(t: (key: ShellSettingsLocaleKey) => string): SettingsFormLabels {
-  return { unavailable: t('unavailable'), readOnly: t('readOnly'), saveFailed: t('saveFailed'), save: t('save'), saving: t('saving') }
-}

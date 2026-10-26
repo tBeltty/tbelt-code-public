@@ -1,6 +1,6 @@
 {
   "meta": {
-    "title": "Utilisation de l’ordinateur (Cua Driver)",
+    "title": "Utilisation de l'ordinateur (Cua Driver)",
     "description": "Permet au modèle de piloter le bureau avec le runtime Cua Driver fourni ; nécessite des autorisations de bureau pour l’application qui lance dsh."
   }
 }

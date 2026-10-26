@@ -13,7 +13,14 @@ export const en = {
   unsupported: 'Image preview requires the complete file contents.',
 } satisfies Record<string, string>
 
-/** Spanish dictionary, checked complete against the English key set. */
+declare module '@deepseek-ai/dsh-client-ui-slots' {
+  interface LocaleNamespaceMap {
+    /** Image preview selection, accessible name, and status text. */
+    sidebarImage: ImagePreviewKey
+  }
+}
+
+/** Spanish dictionary, checked against the English keys. */
 export const es = {
   ...zoomEs,
   title: 'Imagen',
@@ -33,7 +40,7 @@ export const el = {
   unsupported: 'Η προεπισκόπηση εικόνας απαιτεί το πλήρες περιεχόμενο του αρχείου.',
 } satisfies Record<keyof typeof en, string>
 
-/** French dictionary, checked complete against the English key set. */
+/** French dictionary, checked against the English keys. */
 export const fr = {
   ...zoomFr,
   title: 'Image',
@@ -42,10 +49,3 @@ export const fr = {
   failed: 'Impossible d’afficher cette image.',
   unsupported: 'L’aperçu de l’image nécessite le contenu complet du fichier.',
 } satisfies Record<keyof typeof en, string>
-
-declare module '@deepseek-ai/dsh-client-ui-slots' {
-  interface LocaleNamespaceMap {
-    /** Image preview selection, accessible name, and status text. */
-    sidebarImage: ImagePreviewKey
-  }
-}

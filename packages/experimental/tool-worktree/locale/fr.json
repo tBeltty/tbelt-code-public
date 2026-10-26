@@ -1,6 +1,7 @@
 {
   "meta": {
-    "title": "Git Worktrees",
-    "description": "Permet à l’agent de créer une nouvelle branche et un nouveau worktree Git, puis de continuer dedans."
+    "title": "Arbres de travail Git",
+    "description": "Permet à l’agent de créer une nouvelle branche et un nouveau worktree Git, puis de continuer dedans.",
+    "detail": "docs/DETAIL.md"
   }
 }

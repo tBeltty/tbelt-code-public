@@ -22,6 +22,7 @@ export const PASTE_START = '\u001B[200~'
 export const PASTE_END = '\u001B[201~'
 /** Sequences that turn bracketed paste on and off. */
 export const BRACKETED_PASTE_ON = '\u001B[?2004h'
+/** Sequence that turns bracketed paste off. */
 export const BRACKETED_PASTE_OFF = '\u001B[?2004l'
 
 const CONTROL_KEYS: Readonly<Record<string, KeyName>> = {

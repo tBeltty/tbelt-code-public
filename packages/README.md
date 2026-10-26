@@ -81,7 +81,7 @@ New packages join existing groups; a new group updates its own README and this t
 | [`test-support/`](test-support/README.md) | Test infrastructure (testkits, replay, Loader smokes) |
 | [`presentation/`](presentation/README.md) | Presenters shared by GUI and terminal |
 | [`terminal-client/`](terminal-client/README.md) | Views and runtime of `dsh terminal` |
-| [`util/`](util/README.md) | Low-level zero-dependency utilities shared across groups (`Branded<B>`, home/path helpers, timeout, retention) |
+| [`util/`](util/README.md) | Low-level utilities and data-only package lists shared across groups (`Branded<B>`, home/path helpers, timeout, retention, official bundle lists) |
 
 -----
 

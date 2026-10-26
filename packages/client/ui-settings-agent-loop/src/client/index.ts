@@ -40,8 +40,8 @@ export const inject = ['slots', 'locale', 'configForms']
  * @param ctx - the browser plugin context.
  */
 export function apply(ctx: ClientContext): void {
-  const t = ctx.locale.bind(NS)
   ctx.effect(() => ctx.locale.register(NS, { en, es, el, fr }), 'ui-settings-agent-loop: dictionaries')
+  const t = ctx.locale.bind(NS)
   const card = new AgentLoopCardController(ctx.configForms.get(AGENT_LOOP_NS))
   ctx.effect(() => () => { card.dispose() }, 'ui-settings-agent-loop: form subscription')
   ctx.effect(() => ctx.configForms.whileServed([AGENT_LOOP_NS], () => ctx.slots.inject('plugins.item', () => ctx.slots.register({

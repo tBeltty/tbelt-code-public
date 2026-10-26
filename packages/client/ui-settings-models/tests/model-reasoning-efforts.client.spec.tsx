@@ -241,9 +241,16 @@ describe('reasoning-level validation', () => {
 describe('reasoning levels in the model list', () => {
   const operations: ModelsOperations = {
     discoverModels: () => Promise.resolve({ kind: 'found', models: [] }),
+    describeCredential: vi.fn(),
     storeCredential: vi.fn(),
     removeCredential: vi.fn(),
     writeSettings: vi.fn(),
+    setDefaultModel: vi.fn(),
+    signInFlows: vi.fn(),
+    beginSignIn: vi.fn(),
+    readSignIn: vi.fn(),
+    answerSignIn: vi.fn(),
+    cancelSignIn: vi.fn(),
   }
 
   /** Render the list over local state, reporting every write. */

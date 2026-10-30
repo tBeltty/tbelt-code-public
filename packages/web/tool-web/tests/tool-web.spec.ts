@@ -310,6 +310,16 @@ describe('fetch formatting', () => {
       .toBe('**bold _italic_**\n\n> quoted')
   })
 
+  it('drops navigation, footer, aside and landmark chrome around the content', () => {
+    expect(renderHtml('<nav><a href="/">Home</a></nav><div role="banner">Site</div><main><h1>Title</h1><p>Body</p></main><aside>Related</aside><div role="contentinfo">Legal</div><div role="Search">Find</div><footer>Contact</footer>'))
+      .toBe('# Title\n\nBody')
+  })
+
+  it('keeps chrome elements when nothing else carries the page', () => {
+    expect(renderHtml('<aside><p>Only content</p></aside>')).toBe('Only content')
+    expect(renderHtml('<nav>Menu</nav>')).toBe('Menu')
+  })
+
   it('does not expand numeric colspan attributes into unbounded output', () => {
     const table = '<table><thead><tr><th colspan="1000000">A</th></tr></thead><tbody><tr><td>B</td></tr></tbody></table>'
     expect(renderHtml(table)).toBe('| A   |\n| --- |\n| B   |')

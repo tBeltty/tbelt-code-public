@@ -96,6 +96,10 @@ interface EditorTarget extends ProviderIdentity {
   credentialRef?: string
   /** The adapter reports this route as one it does not ship (see {@link ProviderEditorProps.declared}). */
   declared?: boolean
+  /** Endpoint the route uses when its profile sets none (see {@link ProviderEditorProps.defaultBaseURL}). */
+  defaultBaseURL?: string
+  /** Environment variable that already authenticates the route (see {@link ProviderEditorProps.nativeEnv}). */
+  nativeEnv?: string
 }
 
 /** A dormant directory row the add card can adopt, with its registered namespace. */
@@ -133,6 +137,14 @@ interface ProviderEditorRenderProps extends Pick<
   target: EditorTarget
 }
 
+/** The route facts an editor shows beside its fields. */
+function nativeProps(target: EditorTarget): Pick<ProviderEditorProps, 'defaultBaseURL' | 'nativeEnv'> {
+  return {
+    ...target.defaultBaseURL === undefined ? {} : { defaultBaseURL: target.defaultBaseURL },
+    ...target.nativeEnv === undefined ? {} : { nativeEnv: target.nativeEnv },
+  }
+}
+
 /** Render an editor for either the setup posture or an expanded provider row. */
 function renderProviderEditor({ target, ...props }: ProviderEditorRenderProps): ReactNode {
   return (
@@ -141,6 +153,7 @@ function renderProviderEditor({ target, ...props }: ProviderEditorRenderProps): 
       displayName={target.displayName}
       settingsPath={target.settingsPath}
       {...target.declared === true ? { declared: true } : {}}
+      {...nativeProps(target)}
       {...props}
     />
   )
@@ -196,12 +209,13 @@ export function needsSetup(row: ProviderRow, anyUsable: boolean): boolean {
  * for the row — the profile's `apiKeyEnv`, or the page's derived
  * `<ROUTE>_API_KEY` while the profile names none — confirmed configured. The
  * derived half is what keeps the seat consistent with the editor on the
- * add-provider draft, whose dormant row names no reference yet.
+ * add-provider draft, whose dormant row names no reference yet. A resolving
+ * native environment variable also counts while the profile names none.
  */
 function keyConfiguredOf(row: ProviderRow): boolean {
   return row.apiKeyEnv !== undefined
     ? row.credential?.configured === true
-    : row.derivedCredential?.configured === true
+    : row.derivedCredential?.configured === true || row.nativeEnv !== undefined
 }
 
 function targetOf(row: ProviderRow): EditorTarget {
@@ -219,6 +233,8 @@ function targetOf(row: ProviderRow): EditorTarget {
     ...credentialRef === undefined ? {} : { credentialRef },
     // Only declared routes may expose route-owned fields.
     ...row.entry.declared === true ? { declared: true } : {},
+    ...row.entry.defaultBaseURL === undefined ? {} : { defaultBaseURL: row.entry.defaultBaseURL },
+    ...row.nativeEnv === undefined ? {} : { nativeEnv: row.nativeEnv },
   }
 }
 
@@ -684,6 +700,7 @@ function Loaded({ injected, renderSlot }: { injected: ModelsSectionFace; renderS
                           provider={draft.target.provider}
                           displayName={draft.target.displayName}
                           hideTitle
+                          {...nativeProps(draft.target)}
                           namespace={draft.namespace}
                           schema={schema}
                           settingsPath={draft.target.settingsPath}

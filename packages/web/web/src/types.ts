@@ -110,6 +110,12 @@ export interface WebSearchProvider {
    * when the provider takes no user key.
    */
   readonly credentialRef?: string | undefined
+  /**
+   * True for a provider that needs no credential. Selection prefers any usable
+   * provider without this flag, and falls back to free providers, in
+   * registration order, only when none is usable.
+   */
+  readonly free?: boolean
   /** Cheap local usability check; must not make network calls. */
   available(): boolean
   /**

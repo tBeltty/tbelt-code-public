@@ -84,6 +84,10 @@ export interface WebRuntimeConfig {
  * - No id configured, exactly one registered usable provider → that provider.
  * - No id configured, multiple usable providers → `WEB_PROVIDER_AMBIGUOUS`.
  * - No id configured, no usable provider → `WEB_PROVIDER_UNAVAILABLE`.
+ *
+ * Search providers flagged `free` (no credential) take part only when no other
+ * search provider is usable: the usable free providers then form a chain tried
+ * in registration order, and a provider's failure moves to the next one.
  */
 export class WebRuntime extends TypertRemoteService {
   /**
@@ -164,8 +168,8 @@ export class WebRuntime extends TypertRemoteService {
    * @returns the provider's results, capped to `request.maxResults`.
    */
   async search(request: WebSearchRequest, signal?: AbortSignal): Promise<WebSearchResult> {
-    const result = await this.selectSearchProvider().search(request, signal)
-    return capSources(result, request.maxResults)
+    const chain = this.selectSearchChain()
+    return capSources(await searchThrough(chain, request, signal), request.maxResults)
   }
 
   /**
@@ -177,13 +181,13 @@ export class WebRuntime extends TypertRemoteService {
    * @returns false only when the selected provider reports that it cannot authenticate.
    */
   async searchReady(llmProvider?: string): Promise<boolean> {
-    return await selectedProviderReady(() => this.selectSearchProvider(), llmProvider)
+    return await selectedProviderReady(() => this.selectSearchChain()[0], llmProvider)
   }
 
-  /** Select the search provider with the rules above, throwing the matching {@link WebError}. */
-  private selectSearchProvider(): WebSearchProvider {
+  /** Select the search providers one search tries with the rules above, throwing the matching {@link WebError}. */
+  private selectSearchChain(): [WebSearchProvider, ...WebSearchProvider[]] {
     const configuredId = this.searchProviderId()
-    return resolveProvider({
+    return resolveSearchChain({
       kind: 'search',
       providers: this.searchProviders,
       ...configuredId !== undefined ? { configuredId } : {},
@@ -320,6 +324,56 @@ function resolveProvider<P extends ResolvableProvider>(selection: Selection<P>):
     throw new WebError(`multiple usable web providers are registered (${ids}); configure one explicitly`, 'WEB_PROVIDER_AMBIGUOUS')
   }
   return single
+}
+
+/**
+ * Resolve the providers one search tries, in order. A pinned provider is the
+ * whole chain; otherwise a usable provider with a credential wins, and the
+ * usable free providers apply only when there is none.
+ */
+function resolveSearchChain(selection: Selection<WebSearchProvider>): [WebSearchProvider, ...WebSearchProvider[]] {
+  if (selection.configuredId !== undefined) return [resolveProvider(selection)]
+  const usable = [...selection.providers.values()].filter(provider => provider.available())
+  const keyed = usable.filter(provider => provider.free !== true)
+  if (keyed.length > 0) {
+    return [resolveProvider({ ...selection, providers: new Map(keyed.map(provider => [provider.id, provider])) })]
+  }
+  const [first, ...rest] = usable
+  // With nothing usable, resolution throws `WEB_PROVIDER_UNAVAILABLE`.
+  return first === undefined ? [resolveProvider(selection)] : [first, ...rest]
+}
+
+/**
+ * Search through a chain: the first provider that answers wins. A failure moves
+ * to the next provider; cancellation never does. When every provider fails, the
+ * last failure is thrown, naming the earlier ones.
+ */
+async function searchThrough(
+  chain: readonly [WebSearchProvider, ...WebSearchProvider[]],
+  request: WebSearchRequest,
+  signal?: AbortSignal,
+): Promise<WebSearchResult> {
+  const failures: string[] = []
+  const last = chain.at(-1) as WebSearchProvider
+  for (const provider of chain.slice(0, -1)) {
+    try {
+      return await provider.search(request, signal)
+    } catch (error: unknown) {
+      if (!isFailover(error, signal)) throw error
+      failures.push(`${provider.id}: ${error.message}`)
+    }
+  }
+  try {
+    return await last.search(request, signal)
+  } catch (error: unknown) {
+    if (failures.length === 0 || !isFailover(error, signal)) throw error
+    throw new WebError(`${error.message} (earlier: ${failures.join('; ')})`, error.code, { cause: error })
+  }
+}
+
+/** True for a provider failure the next provider of a chain may answer; cancellation is not one. */
+function isFailover(error: unknown, signal: AbortSignal | undefined): error is WebError {
+  return error instanceof WebError && error.code !== 'WEB_ABORTED' && signal?.aborted !== true
 }
 
 /** Enforce `maxResults` on a search result: truncate `sources[]` and flag it. */

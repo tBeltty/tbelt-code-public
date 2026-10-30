@@ -25,6 +25,7 @@
     fetchProvider: deepseek-fetch-api
 
 - id: web-deepseek-api
+  disabled: false
   name: '@deepseek-ai/dsh-web-deepseek-api'
   config:
     apiKey: snapshot-key

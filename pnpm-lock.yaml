@@ -2683,6 +2683,9 @@ importers:
       '@deepseek-ai/dsh-web-search-deepseek':
         specifier: workspace:*
         version: link:../../web/web-search-deepseek
+      '@deepseek-ai/dsh-web-search-free':
+        specifier: workspace:*
+        version: link:../../web/web-search-free
       '@deepseek-ai/dsh-workflow-ptc':
         specifier: workspace:*
         version: link:../../workflow/workflow-ptc
@@ -17546,6 +17549,22 @@ importers:
         specifier: workspace:*
         version: link:../web
 
+  packages/web/web-search-free:
+    dependencies:
+      '@deepseek-ai/schemastery':
+        specifier: link:../../../vendor/schemastery
+        version: link:../../../vendor/schemastery
+    devDependencies:
+      '@deepseek-ai/cordis':
+        specifier: workspace:~
+        version: link:../../../vendor/cordis
+      '@deepseek-ai/dsh-http-proxy':
+        specifier: workspace:*
+        version: link:../../util/http-proxy
+      '@deepseek-ai/dsh-web':
+        specifier: workspace:*
+        version: link:../web
+
   packages/web/web-search-perplexity:
     dependencies:
       '@deepseek-ai/schemastery':
@@ -18259,6 +18278,9 @@ importers:
       '@deepseek-ai/dsh-web-search-exa':
         specifier: workspace:*
         version: link:../../packages/web/web-search-exa
+      '@deepseek-ai/dsh-web-search-free':
+        specifier: workspace:*
+        version: link:../../packages/web/web-search-free
       '@deepseek-ai/dsh-web-search-perplexity':
         specifier: workspace:*
         version: link:../../packages/web/web-search-perplexity

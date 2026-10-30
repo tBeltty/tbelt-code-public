@@ -90,7 +90,7 @@ A rejected key surfaces as `WEB_PROVIDER_AUTH`, a plan, credit, or rate limit as
 ## Further Exploration
 
 - Web subsystem — the exhaustive search request/result vocabulary and error codes.
-- [Web package map](../README.md) — the eight-package family and each role.
+- [Web package map](../README.md) — the ten-package family and each role.
 - [dsh-web](../web/README.md) — the web service this provider registers into.
 - [dsh-tool-web](../tool-web/README.md) — the model-facing `web_search` tool that renders this provider's sources.
 

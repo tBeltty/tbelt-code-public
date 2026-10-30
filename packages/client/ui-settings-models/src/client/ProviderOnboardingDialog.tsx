@@ -285,6 +285,8 @@ export function ProviderOnboardingDialog(props: ProviderOnboardingDialogProps): 
               provider={chosen.row.entry.provider}
               displayName={chosen.row.entry.displayName}
               hideTitle
+              {...chosen.row.entry.defaultBaseURL === undefined ? {} : { defaultBaseURL: chosen.row.entry.defaultBaseURL }}
+              {...chosen.row.nativeEnv === undefined ? {} : { nativeEnv: chosen.row.nativeEnv }}
               namespace={chosen.namespace}
               schema={schema}
               settingsPath={chosen.row.entry.settingsPath}

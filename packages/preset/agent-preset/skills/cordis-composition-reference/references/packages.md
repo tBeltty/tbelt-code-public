@@ -542,6 +542,7 @@ Every package below exports a Cordis plugin that a bundle patch can name in a Lo
 | `@deepseek-ai/dsh-web-search-brave` | yes | Brave Search-backed search provider for the tBelt Code web capability seam (ctx.web) |
 | `@deepseek-ai/dsh-web-search-deepseek` | yes | DeepSeek-backed search provider (native web_search via the Anthropic-compatible API) for the tBelt Code web capability seam (ctx.web) |
 | `@deepseek-ai/dsh-web-search-exa` | yes | Exa-backed search provider for the tBelt Code web capability seam (ctx.web) |
+| `@deepseek-ai/dsh-web-search-free` | yes | Keyless search provider for the tBelt Code web capability seam (ctx.web) |
 | `@deepseek-ai/dsh-web-search-perplexity` | yes | Perplexity-backed search provider for the tBelt Code web capability seam (ctx.web) |
 | `@deepseek-ai/dsh-web-search-tavily` | yes | Tavily-backed search provider for the tBelt Code web capability seam (ctx.web) |
 

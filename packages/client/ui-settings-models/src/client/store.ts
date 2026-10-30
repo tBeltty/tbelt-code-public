@@ -48,6 +48,12 @@ export interface ProviderRow {
    * own derivation rule.
    */
   derivedCredential?: CredentialInfo
+  /**
+   * First environment variable the route's native authentication reads that
+   * resolves, once described. Absent when the profile names its own reference,
+   * the route reports no native authentication, or none of its variables resolves.
+   */
+  nativeEnv?: string
 }
 
 /** Page snapshot. */
@@ -208,7 +214,11 @@ export class ModelsSettingsStore {
           && catalog.value.groups.some(group => group.id === 'deepseek-account' && group.models.length > 0)
       }
     }
-    const refs = [...new Set(rows.filter(row => row.entry.provider !== 'deepseek-account').map(row => row.apiKeyEnv ?? deriveKeyRef(row.entry.provider)))]
+    const keyed = rows.filter(row => row.entry.provider !== 'deepseek-account')
+    const refs = [...new Set([
+      ...keyed.map(row => row.apiKeyEnv ?? deriveKeyRef(row.entry.provider)),
+      ...keyed.flatMap(row => row.entry.nativeAuth?.env ?? []),
+    ])]
     let credentials: Record<string, CredentialInfo> = {}
     let credentialError: string | null = null
     if (refs.length > 0) {
@@ -229,8 +239,11 @@ export class ModelsSettingsStore {
         if (row.entry.provider === 'deepseek-account') return row
         const named = row.apiKeyEnv === undefined ? undefined : credentials[row.apiKeyEnv]
         const derived = row.apiKeyEnv !== undefined ? undefined : credentials[deriveKeyRef(row.entry.provider)]
+        // A profile that names its own reference opts out of native authentication.
+        const nativeEnv = row.apiKeyEnv !== undefined ? undefined : row.entry.nativeAuth?.env.find(ref => credentials[ref]?.configured === true)
         return {
           ...row,
+          ...nativeEnv === undefined ? {} : { nativeEnv },
           ...named === undefined ? {} : { credential: named },
           ...derived === undefined ? {} : { derivedCredential: derived },
         }

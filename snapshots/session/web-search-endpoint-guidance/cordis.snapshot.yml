@@ -26,6 +26,7 @@
       name: './web-search-error-fixture.mjs'
 
 - id: web-search-deepseek
+  disabled: false
   name: '@deepseek-ai/dsh-web-search-deepseek'
   config:
     apiKey: snapshot-key

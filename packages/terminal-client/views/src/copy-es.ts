@@ -252,7 +252,7 @@ const MAIN = {
   'providers.customKeyHint': 'Déjalo vacío si no hay. Algunos servidores locales aceptan cualquier texto. El texto pegado se oculta.',
   'webSearch.title': 'Elige el proveedor de búsqueda web',
   'webSearch.automatic': 'Automático',
-  'webSearch.automaticDetail': 'que el servicio elija uno que tenga clave',
+  'webSearch.automaticDetail': 'un proveedor con clave guardada; si no hay, un servicio de búsqueda gratuito',
   'webSearch.keySet': 'clave guardada',
   'webSearch.noKey': 'sin clave',
   'webSearch.unavailable': 'Los ajustes de búsqueda web no están disponibles en esta instalación.',

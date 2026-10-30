@@ -37,6 +37,10 @@ export interface ProviderJsonRequest {
   body?: unknown
   /** Cancellation signal; an abort rejects with `WEB_ABORTED`. */
   signal?: AbortSignal
+  /** `Accept` header value. Defaults to `application/json`. */
+  accept?: string
+  /** Parses the successful response text, for a body that is not one JSON document. A throw is `WEB_PROVIDER_ERROR`. */
+  parseBody?: (text: string) => unknown
 }
 
 /**
@@ -72,7 +76,7 @@ export async function requestProviderJson(request: ProviderJsonRequest): Promise
       redirect: 'error',
       headers: {
         ...request.headers,
-        'accept': 'application/json',
+        'accept': request.accept ?? 'application/json',
         'user-agent': USER_AGENT,
         ...request.body === undefined ? {} : { 'content-type': 'application/json' },
       },
@@ -95,8 +99,8 @@ export async function requestProviderJson(request: ProviderJsonRequest): Promise
     throw refusal(label, response.status, detail)
   }
   try {
-    const body: unknown = await response.json()
-    return body
+    if (request.parseBody === undefined) return await response.json() as unknown
+    return request.parseBody(await response.text())
   } catch (error: unknown) {
     throw transportError(label, 'returned an unprocessable response body', error)
   }

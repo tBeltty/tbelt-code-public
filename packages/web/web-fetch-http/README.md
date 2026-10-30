@@ -104,7 +104,7 @@ A fetch validates the URL and sends the request. It repeats URL validation for e
 Read these pages when the package-level contract is not enough. They move from the shared vocabulary to the service, the model-facing tools, and the design rationale.
 
 - Web subsystem — the exhaustive fetch request/result vocabulary and error codes.
-- [Web package map](../README.md) — the eight-package family and each role.
+- [Web package map](../README.md) — the ten-package family and each role.
 - [dsh-web](../web/README.md) — the web service this provider registers into.
 - [dsh-tool-web](../tool-web/README.md) — the model-facing `web_fetch` tool that renders this provider's bodies.
 - Generated configuration catalog — every accepted config field and its source declaration.

@@ -868,7 +868,7 @@ const SERVICE_ROLES: ServiceRole[] = [
     pkg: 'web',
     title: 'Web access provider registry',
     mode: 'seam',
-    implementations: ['web-search-exa', 'web-search-perplexity', 'web-search-brave', 'web-search-tavily', 'web-search-deepseek', 'web-deepseek-api', 'web-fetch-http'],
+    implementations: ['web-search-exa', 'web-search-perplexity', 'web-search-brave', 'web-search-tavily', 'web-search-free', 'web-search-deepseek', 'web-deepseek-api', 'web-fetch-http'],
     consumers: ['tool-web'],
     note: 'Search and fetch providers register into one ctx.web seam; tool-web owns the stable model-facing names.',
   },

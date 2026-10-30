@@ -629,14 +629,11 @@
 # The product ships model-agnostic: no provider adapter is pre-registered, so
 # Settings > Models opens empty until the user adds a provider themselves.
 # `base` composes the native
-# DeepSeek chat adapter and its DeepSeek-specific web-search provider
-# unconditionally, which is right for the CLI and SDK bundles that many
-# existing fixtures pin against; the Web surface is the one product this
-# repository brands as provider-neutral, so it alone turns both off here.
+# DeepSeek chat adapter unconditionally, which is right for the CLI and SDK
+# bundles that many existing fixtures pin against; the Web surface is the one
+# product this repository brands as provider-neutral, so it alone turns it off
+# here. The DeepSeek search routes are disabled in `base` itself.
 - id: llm-deepseek
-  disabled: true
-
-- id: web-search-deepseek
   disabled: true
 
 # The DeepSeek account route signs in through the DeepSeek Platform. The Web

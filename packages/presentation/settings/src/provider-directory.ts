@@ -20,6 +20,15 @@ export interface ConfigurableProvider {
   /** Path from that section's root to the provider's profile; empty when the section is the profile. */
   readonly settingsPath: readonly string[]
   readonly declared?: boolean | undefined
+  /** Endpoint the route uses when its profile sets no `baseURL`. */
+  readonly defaultBaseURL?: string | undefined
+  /** Authentication the route performs without a credential reference in its profile. */
+  readonly nativeAuth?: {
+    /** Environment variables the authentication reads, in lookup order. */
+    readonly env: readonly string[]
+    /** Whether a stored OAuth sign-in can authenticate the route. */
+    readonly oauth: boolean
+  } | undefined
   /** Configuration problem the Host reports for the provider. */
   readonly error?: string | undefined
 }
@@ -33,6 +42,8 @@ export interface ProviderDirectoryEntry {
   /** Whether the route is live now. */
   readonly active: boolean
   readonly declared?: boolean
+  readonly defaultBaseURL?: string
+  readonly nativeAuth?: NonNullable<ConfigurableProvider['nativeAuth']>
   readonly error?: string
 }
 
@@ -59,6 +70,8 @@ export function joinProviderDirectory(
     settingsPath: [...entry.settingsPath],
     active: active.has(entry.provider),
     ...entry.declared === undefined ? {} : { declared: entry.declared },
+    ...entry.defaultBaseURL === undefined ? {} : { defaultBaseURL: entry.defaultBaseURL },
+    ...entry.nativeAuth === undefined ? {} : { nativeAuth: { env: [...entry.nativeAuth.env], oauth: entry.nativeAuth.oauth } },
     ...entry.error === undefined ? {} : { error: entry.error },
   }))
   for (const provider of registered) {

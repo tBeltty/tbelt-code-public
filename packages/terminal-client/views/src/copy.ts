@@ -279,7 +279,7 @@ const CONFIG = {
   'providers.customKeyHint': 'Leave it empty for none. Some local servers accept any text. Pasted text is hidden.',
   'webSearch.title': 'Choose the web search provider',
   'webSearch.automatic': 'Automatic',
-  'webSearch.automaticDetail': 'let the service pick one that has a key',
+  'webSearch.automaticDetail': 'a provider with a stored key, otherwise a free search service',
   'webSearch.keySet': 'key stored',
   'webSearch.noKey': 'no key',
   'webSearch.unavailable': 'Web search settings are not available in this installation.',

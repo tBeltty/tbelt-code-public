@@ -252,7 +252,7 @@ export const COPY_FR: Readonly<Record<CopyKey, string>> = {
   'providers.customKeyHint': 'Laissez vide s’il n’y en a pas. Certains serveurs locaux acceptent n’importe quel texte. Le texte collé est masqué.',
   'webSearch.title': 'Choisir le fournisseur de recherche web',
   'webSearch.automatic': 'Automatique',
-  'webSearch.automaticDetail': 'laisser le service en choisir un qui a une clé',
+  'webSearch.automaticDetail': 'un fournisseur avec une clé enregistrée, sinon un service de recherche gratuit',
   'webSearch.keySet': 'clé enregistrée',
   'webSearch.noKey': 'pas de clé',
   'webSearch.unavailable': 'Les paramètres de recherche web ne sont pas disponibles dans cette installation.',

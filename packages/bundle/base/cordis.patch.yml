@@ -533,32 +533,31 @@
     # The shared base enables the stable model-facing web_search and web_fetch
     # tools. The Web app disables this host row and composes both tools per agent
     # preset; products with a stricter network policy override tool-web. No
-    # search provider is pinned here: the product ships provider-agnostic, so
-    # `web` auto-selects the sole registered, available search provider and
-    # fails cleanly (WEB_PROVIDER_UNAVAILABLE) until the user configures one's
-    # credential. The DeepSeek route stays registered as one legitimate, non-
-    # forced option; it resolves the same DEEPSEEK_API_KEY credential the
-    # Models page manages for chat, at each search, through its own Messages
-    # endpoint (separate from chat-completions, so it takes its own base-URL
-    # override). Anonymous fetch accepts only public HTTP(S) destinations,
-    # resolves and validates every destination, and pins every actual
-    # connection. Search is a full auxiliary model request with server-side
-    # retrieval, so the DeepSeek route gets 60s while the provider-neutral
-    # tool default remains 30s. The DeepSeek Search and Fetch APIs register as
-    # deepseek-search-api and deepseek-fetch-api with the same credential; the Web
-    # search settings switch selects both in place of these defaults.
+    # search provider is pinned here: the product ships provider-agnostic. With
+    # no credential stored, `web` searches through the keyless providers of
+    # web-search-free (Exa's hosted endpoint, no account); a usable provider
+    # with a key, or a pinned `searchProvider`, replaces them. The DeepSeek
+    # search routes stay mounted but disabled, so a composition that wants one
+    # turns its row on and pins it. Anonymous fetch accepts only public HTTP(S)
+    # destinations, resolves and validates every destination, and pins every
+    # actual connection.
     - id: web
       name: '@deepseek-ai/dsh-web'
       config:
         fetchProvider: http
 
+    - id: web-search-free
+      name: '@deepseek-ai/dsh-web-search-free'
+
     - id: web-search-deepseek
       name: '@deepseek-ai/dsh-web-search-deepseek'
+      disabled: true
       config:
         apiKeyEnv: DEEPSEEK_API_KEY
 
     - id: web-deepseek-api
       name: '@deepseek-ai/dsh-web-deepseek-api'
+      disabled: true
       config:
         apiKeyEnv: DEEPSEEK_API_KEY
 

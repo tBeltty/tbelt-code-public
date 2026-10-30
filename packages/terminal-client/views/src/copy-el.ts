@@ -252,7 +252,7 @@ export const COPY_EL: Readonly<Record<CopyKey, string>> = {
   'providers.customKeyHint': 'Αφήστε το κενό αν δεν υπάρχει. Ορισμένοι τοπικοί διακομιστές δέχονται οποιοδήποτε κείμενο. Το κείμενο που επικολλάτε κρύβεται.',
   'webSearch.title': 'Επιλογή παρόχου αναζήτησης στον ιστό',
   'webSearch.automatic': 'Αυτόματα',
-  'webSearch.automaticDetail': 'να επιλέγεται ένας πάροχος που έχει κλειδί',
+  'webSearch.automaticDetail': 'πάροχος με αποθηκευμένο κλειδί, αλλιώς δωρεάν υπηρεσία αναζήτησης',
   'webSearch.keySet': 'υπάρχει κλειδί',
   'webSearch.noKey': 'χωρίς κλειδί',
   'webSearch.unavailable': 'Οι ρυθμίσεις αναζήτησης στον ιστό δεν είναι διαθέσιμες σε αυτή την εγκατάσταση.',

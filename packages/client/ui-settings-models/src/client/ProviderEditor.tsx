@@ -69,6 +69,10 @@ export interface ProviderEditorProps {
    * override every one of them and the card does not offer it.
    */
   declared?: boolean
+  /** Endpoint the route uses when its profile sets no `baseURL`; shown as the field's placeholder. */
+  defaultBaseURL?: string
+  /** Environment variable that already authenticates the route; named under the key field. */
+  nativeEnv?: string
   /** The owning namespace view (schema, layers, secrets). */
   namespace: SettingsNamespaceView
   /** Settings-owned synchronous schema and immutable path operations. */
@@ -414,6 +418,9 @@ export function ProviderEditor(props: ProviderEditorProps): ReactNode {
             autoFocus={props.autoFocusCredential === true}
             disabled={disabled}
           />
+          {props.nativeEnv === undefined || keyState?.configured === true
+            ? null
+            : <p className={styles['advancedHint']}>{t('keyFromEnvironment').replace('{name}', props.nativeEnv)}</p>}
           {shownKeyFailure === undefined ? null : <p className={styles['error']}>{t(shownKeyFailure)}</p>}
           {keyCheck.kind === 'checking' ? <p className={styles['advancedHint']} role="status">{t('onboardingKeyChecking')}</p> : null}
           {keyCheck.kind === 'refused' ? <p className={styles['error']} role="alert">{keyCheck.message}</p> : null}
@@ -456,7 +463,7 @@ export function ProviderEditor(props: ProviderEditorProps): ReactNode {
                 value={stringAt(draft, 'baseURL') ?? ''}
                 placeholder={family === 'deepseek'
                   ? t('deepSeekBaseUrl')
-                  : stringAt(fallback, 'baseURL') ?? t('baseUrlDefault')}
+                  : stringAt(fallback, 'baseURL') ?? props.defaultBaseURL ?? t('baseUrlDefault')}
                 aria-describedby={family === 'deepseek' ? `${props.provider}-endpoint-hint` : undefined}
                 aria-label={t('baseUrl')}
                 disabled={disabled}

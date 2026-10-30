@@ -14,9 +14,9 @@ export type WebSearchSettingsLocaleKey =
 /** English copy. */
 export const en = {
   title: 'Web search',
-  description: 'Choose the search provider the agent uses for current information.',
+  description: 'Search works without setup. Choose a provider and add its key to use it instead.',
   provider: 'Search provider',
-  providerHint: 'The agent searches only through the provider chosen here. Your key is sent to that provider and nowhere else.',
+  providerHint: 'With no key stored, searches go to a free service that needs no account. With a key, the agent searches only through that provider, and the key goes nowhere else.',
   noProviders: 'No search provider is installed.',
   providerExa: 'Exa',
   providerPerplexity: 'Perplexity',
@@ -61,9 +61,9 @@ export function formLabels(t: (key: WebSearchSettingsLocaleKey) => string): Sett
 /** Spanish dictionary, checked against the English keys. */
 export const es = {
   title: 'Búsqueda web',
-  description: 'Elige el proveedor de búsqueda que usa el agente para obtener información actual.',
+  description: 'La búsqueda funciona sin configurar nada. Elige un proveedor y añade su clave para usarlo en su lugar.',
   provider: 'Proveedor de búsqueda',
-  providerHint: 'El agente busca solo a través del proveedor elegido aquí. Tu clave se envía a ese proveedor y a nadie más.',
+  providerHint: 'Sin clave guardada, las búsquedas van a un servicio gratuito que no pide cuenta. Con clave, el agente busca solo con ese proveedor y la clave no se envía a ningún otro sitio.',
   noProviders: 'No hay ningún proveedor de búsqueda instalado.',
   providerExa: 'Exa',
   providerPerplexity: 'Perplexity',
@@ -91,9 +91,9 @@ export const es = {
 /** Greek dictionary, checked complete against the English key set. */
 export const el = {
   title: 'Αναζήτηση στο διαδίκτυο',
-  description: 'Επιλέξτε τον πάροχο αναζήτησης που χρησιμοποιεί ο πράκτορας για επίκαιρες πληροφορίες.',
+  description: 'Η αναζήτηση λειτουργεί χωρίς ρύθμιση. Επιλέξτε έναν πάροχο και προσθέστε το κλειδί του για να τον χρησιμοποιείτε αντί γι’ αυτήν.',
   provider: 'Πάροχος αναζήτησης',
-  providerHint: 'Ο πράκτορας κάνει αναζητήσεις μόνο μέσω του παρόχου που επιλέγετε εδώ. Το κλειδί σας στέλνεται σε αυτόν τον πάροχο και πουθενά αλλού.',
+  providerHint: 'Χωρίς αποθηκευμένο κλειδί, οι αναζητήσεις πηγαίνουν σε μια δωρεάν υπηρεσία που δεν απαιτεί λογαριασμό. Με κλειδί, ο πράκτορας αναζητά μόνο μέσω αυτού του παρόχου και το κλειδί δεν στέλνεται πουθενά αλλού.',
   noProviders: 'Δεν είναι εγκατεστημένος κανένας πάροχος αναζήτησης.',
   providerExa: 'Exa',
   providerPerplexity: 'Perplexity',
@@ -121,9 +121,9 @@ export const el = {
 /** French dictionary, checked against the English keys. */
 export const fr = {
   title: 'Recherche web',
-  description: 'Choisissez le fournisseur de recherche que l’agent utilise pour obtenir des informations récentes.',
+  description: 'La recherche fonctionne sans configuration. Choisissez un fournisseur et ajoutez sa clé pour l’utiliser à la place.',
   provider: 'Fournisseur de recherche',
-  providerHint: 'L’agent ne recherche que via le fournisseur choisi ici. Votre clé n’est envoyée qu’à ce fournisseur et nulle part ailleurs.',
+  providerHint: 'Sans clé enregistrée, les recherches passent par un service gratuit qui ne demande pas de compte. Avec une clé, l’agent ne recherche que via ce fournisseur, et la clé n’est envoyée nulle part ailleurs.',
   noProviders: 'Aucun fournisseur de recherche n’est installé.',
   providerExa: 'Exa',
   providerPerplexity: 'Perplexity',

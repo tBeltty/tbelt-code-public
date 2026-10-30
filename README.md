@@ -37,7 +37,7 @@ Download the app from [code.tbelt.online](https://code.tbelt.online). It can ins
 - In the terminal, add providers and API keys, choose models, set web search, edit settings, manage plugins and agent presets, and pick permission modes.
 - In Orca, a `dsh terminal` pane shows live status in the tab.
 - Run buttons on shell commands, executed in a terminal in the side panel.
-- Web search through Exa, Perplexity, Brave or Tavily, with your own key.
+- Web search with no account or key, or through Exa, Perplexity, Brave or Tavily with your own key.
 - Model prices in the model picker, refreshable from a JSON directory you name, with spend per chat and per month and limits with `/budget`.
 - Native notifications and an attention filter for sessions that wait for you.
 - Automatic context compaction, including for local models with small context windows.

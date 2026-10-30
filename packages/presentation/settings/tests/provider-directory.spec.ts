@@ -18,6 +18,17 @@ describe('joinProviderDirectory', () => {
     expect(rows.find(row => row.provider === 'anthropic')).not.toHaveProperty('error')
   })
 
+  it('carries the default endpoint and native authentication without sharing the env list', () => {
+    const env = ['OPENAI_API_KEY']
+    const [row] = joinProviderDirectory([], [{
+      provider: 'openai', displayName: 'OpenAI', settingsNs: 'llm-pi-ai', settingsPath: ['providers', 'openai'],
+      defaultBaseURL: 'https://api.openai.com/v1', nativeAuth: { env, oauth: false },
+    }])
+    env.push('mutated')
+    expect(row).toMatchObject({ defaultBaseURL: 'https://api.openai.com/v1', nativeAuth: { env: ['OPENAI_API_KEY'], oauth: false } })
+    expect(joinProviderDirectory([], directory)[0]).not.toHaveProperty('nativeAuth')
+  })
+
   it('adds a live route that no adapter declares as configurable, without a settings address', () => {
     const rows = joinProviderDirectory([{ id: 'custom', name: 'Custom' }], [])
     expect(rows).toEqual([{ provider: 'custom', displayName: 'Custom', settingsNs: '', settingsPath: [], active: true }])

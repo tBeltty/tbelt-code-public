@@ -1419,6 +1419,31 @@ describe('ModelsSection', () => {
     ])
   })
 
+  it('counts a native environment variable as the key and shows the default endpoint', async () => {
+    const scripted = scriptedFace()
+    scripted.face.llm.listConfigurableProviders.mockImplementation(() => Promise.resolve(remoteOk([
+      { provider: 'openai', displayName: 'openai', settingsNs: 'llm-pi-ai', settingsPath: ['providers', 'openai'] },
+      {
+        provider: 'anthropic', displayName: 'anthropic', settingsNs: 'llm-pi-ai', settingsPath: ['providers', 'anthropic'],
+        defaultBaseURL: 'https://api.example.test/v1', nativeAuth: { env: ['EXAMPLE_TOKEN', 'EXAMPLE_KEY'], oauth: false },
+      },
+    ])))
+    scripted.face.credentials.describe.mockImplementation((refs: string[]) => Promise.resolve(remoteOk(
+      Object.fromEntries(refs.map(ref => [ref, ref === 'EXAMPLE_KEY'
+        ? { configured: true, source: 'env', writable: true }
+        : { configured: ref === 'OPENAI_API_KEY', writable: true }])),
+    )))
+    const { renderSlot, controller } = await mountFace(scripted)
+    const anthropic = controller.store.getSnapshot().rows.find(row => row.entry.provider === 'anthropic')
+    expect(anthropic?.nativeEnv).toBe('EXAMPLE_KEY')
+    fireEvent.click(screen.getByText(en.add))
+    fireEvent.click(await screen.findByRole('button', { name: en.addWithoutKey }))
+    expect(screen.getByText(en.keyFromEnvironment.replace('{name}', 'EXAMPLE_KEY'))).toBeTruthy()
+    expect(cardSeatCalls(renderSlot).find(call => call[0] === 'anthropic')?.[2]).toBe(true)
+    fireEvent.click(screen.getByText(en.customized))
+    expect(screen.getByLabelText<HTMLInputElement>(en.baseUrl).placeholder).toBe('https://api.example.test/v1')
+  })
+
   it('adds a dormant provider with a derived reference and stores its key', async () => {
     const { mutate, set } = await mountSection()
     fireEvent.click(screen.getByText(en.add))

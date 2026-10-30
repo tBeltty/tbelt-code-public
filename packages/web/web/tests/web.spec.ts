@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 import { Context } from '@deepseek-ai/cordis'
 import WebRuntime, {
   WebError,
@@ -324,5 +324,92 @@ describe('live provider selection', () => {
       await expect(ctx.web.search({ query: 'q' })).resolves.toMatchObject({ content: 'second' })
       await expect(ctx.web.fetch({ url: 'https://example.com' })).resolves.toMatchObject({ body: { content: 'second' } })
     } finally { await ctx.fiber.dispose() }
+  })
+})
+
+describe('WebRuntime free providers', () => {
+  const free = (id: string, search: () => Promise<WebSearchResult>): WebSearchProvider => ({
+    ...makeSearchProvider(id, available, search),
+    free: true,
+  })
+  const failing = (code: string): (() => Promise<WebSearchResult>) => () => Promise.reject(new WebError(`${code} failure`, code))
+
+  it('searches through a free provider when it is the only one', async () => {
+    const { web } = await mountWeb()
+    web.registerSearchProvider(free('exa-free', () => Promise.resolve(searchResult('free'))))
+    await expect(web.search({ query: 'q' })).resolves.toMatchObject({ content: 'free' })
+  })
+
+  it('prefers a usable provider with a key over free providers, without ambiguity', async () => {
+    const { web } = await mountWeb()
+    web.registerSearchProvider(free('exa-free', () => Promise.resolve(searchResult('free'))))
+    web.registerSearchProvider(makeSearchProvider('brave', available, () => Promise.resolve(searchResult('brave'))))
+    await expect(web.search({ query: 'q' })).resolves.toMatchObject({ content: 'brave' })
+  })
+
+  it('does not fall back to a free provider when the provider with a key fails', async () => {
+    const { web } = await mountWeb()
+    web.registerSearchProvider(free('exa-free', () => Promise.resolve(searchResult('free'))))
+    web.registerSearchProvider(makeSearchProvider('brave', available, failing('WEB_PROVIDER_QUOTA')))
+    await expect(web.search({ query: 'q' })).rejects.toMatchObject({ code: 'WEB_PROVIDER_QUOTA' })
+  })
+
+  it('still reports two usable providers with keys as ambiguous next to a free one', async () => {
+    const { web } = await mountWeb()
+    web.registerSearchProvider(free('exa-free', () => Promise.resolve(searchResult('free'))))
+    web.registerSearchProvider(makeSearchProvider('exa', available, () => Promise.resolve(searchResult('exa'))))
+    web.registerSearchProvider(makeSearchProvider('brave', available, () => Promise.resolve(searchResult('brave'))))
+    await expect(web.search({ query: 'q' })).rejects.toMatchObject({ code: 'WEB_PROVIDER_AMBIGUOUS' })
+  })
+
+  it('moves to the next free provider when one fails', async () => {
+    const { web } = await mountWeb()
+    web.registerSearchProvider(free('first', failing('WEB_PROVIDER_QUOTA')))
+    web.registerSearchProvider(free('second', () => Promise.resolve(searchResult('second'))))
+    await expect(web.search({ query: 'q' })).resolves.toMatchObject({ content: 'second' })
+  })
+
+  it('names the earlier failures when every free provider fails', async () => {
+    const { web } = await mountWeb()
+    web.registerSearchProvider(free('first', failing('WEB_PROVIDER_QUOTA')))
+    web.registerSearchProvider(free('second', failing('WEB_PROVIDER_ERROR')))
+    await expect(web.search({ query: 'q' })).rejects.toMatchObject({
+      code: 'WEB_PROVIDER_ERROR',
+      message: 'WEB_PROVIDER_ERROR failure (earlier: first: WEB_PROVIDER_QUOTA failure)',
+    })
+  })
+
+  it('rethrows the failure of a lone free provider unchanged', async () => {
+    const { web } = await mountWeb()
+    web.registerSearchProvider(free('only', failing('WEB_PROVIDER_ERROR')))
+    await expect(web.search({ query: 'q' })).rejects.toMatchObject({ message: 'WEB_PROVIDER_ERROR failure' })
+  })
+
+  it('does not move on after a cancellation or a foreign error', async () => {
+    const { web } = await mountWeb()
+    const second = vi.fn(() => Promise.resolve(searchResult('second')))
+    web.registerSearchProvider(free('first', failing('WEB_ABORTED')))
+    web.registerSearchProvider(free('second', second))
+    await expect(web.search({ query: 'q' })).rejects.toMatchObject({ code: 'WEB_ABORTED' })
+    const other = await mountWeb()
+    other.web.registerSearchProvider(free('first', () => Promise.reject(new TypeError('bug'))))
+    other.web.registerSearchProvider(free('second', second))
+    await expect(other.web.search({ query: 'q' })).rejects.toThrow(TypeError)
+    expect(second).not.toHaveBeenCalled()
+  })
+
+  it('does not move on once the caller aborted', async () => {
+    const { web } = await mountWeb()
+    const controller = new AbortController()
+    web.registerSearchProvider(free('first', () => { controller.abort(); return Promise.reject(new WebError('late failure', 'WEB_PROVIDER_ERROR')) }))
+    web.registerSearchProvider(free('second', () => Promise.resolve(searchResult('second'))))
+    await expect(web.search({ query: 'q' }, controller.signal)).rejects.toMatchObject({ message: 'late failure' })
+  })
+
+  it('lets a pinned free provider run alone', async () => {
+    const { web } = await mountWeb({ searchProvider: 'second' })
+    web.registerSearchProvider(free('first', () => Promise.resolve(searchResult('first'))))
+    web.registerSearchProvider(free('second', () => Promise.resolve(searchResult('second'))))
+    await expect(web.search({ query: 'q' })).resolves.toMatchObject({ content: 'second' })
   })
 })

@@ -6,7 +6,9 @@
  * and the renderer's recent error-level console output.
  */
 
+import { readFileSync } from 'node:fs'
 import { mkdir, readdir, unlink, writeFile } from 'node:fs/promises'
+import { freemem, release, totalmem } from 'node:os'
 import { join } from 'node:path'
 import { inspect } from 'node:util'
 
@@ -37,7 +39,69 @@ export interface CrashReportInput {
   /** Recent renderer console lines at error level, oldest first. */
   readonly rendererConsole: readonly string[]
   readonly app: CrashReportApp
+  /** Lines from {@link collectEnvironmentFacts}. */
+  readonly environment: readonly string[]
   readonly time: Date
+}
+
+/** Process and system reads behind {@link collectEnvironmentFacts}, replaceable in tests. */
+export interface EnvironmentSource {
+  readonly platform: NodeJS.Platform
+  readonly env: NodeJS.ProcessEnv
+  readonly osRelease: string
+  readonly totalMemory: number
+  readonly freeMemory: number
+  /** @returns the file text, or `undefined` when it cannot be read. */
+  readText(path: string): string | undefined
+}
+
+const MIB = 1024 * 1024
+
+/** User-namespace switches that decide whether the bubblewrap sandbox and Electron's sandbox can start on Linux. */
+const LINUX_NAMESPACE_SWITCHES = [
+  '/proc/sys/kernel/unprivileged_userns_clone',
+  '/proc/sys/kernel/apparmor_restrict_unprivileged_userns',
+  '/proc/sys/user/max_user_namespaces',
+] as const
+
+/**
+ * @param path - file to read.
+ * @returns the file text, or `undefined` when it cannot be read.
+ */
+export function readOptionalText(path: string): string | undefined {
+  try {
+    return readFileSync(path, 'utf8')
+  } catch (error) {
+    // A missing /proc switch or os-release file is expected on other kernels and distributions.
+    void error
+    return undefined
+  }
+}
+
+const REAL_ENVIRONMENT: EnvironmentSource = {
+  platform: process.platform,
+  env: process.env,
+  osRelease: release(),
+  get totalMemory() { return totalmem() },
+  get freeMemory() { return freemem() },
+  readText: readOptionalText,
+}
+
+/**
+ * Facts that decide whether the Host and its sandbox can run on this machine.
+ * @param source - system reads; defaults to the running process.
+ * @returns report lines; on Linux they include the distribution, AppImage use and user-namespace switches.
+ */
+export function collectEnvironmentFacts(source: EnvironmentSource = REAL_ENVIRONMENT): string[] {
+  const lines = [
+    `os release: ${source.osRelease}`,
+    `memory: ${String(Math.round(source.freeMemory / MIB))} MiB free of ${String(Math.round(source.totalMemory / MIB))} MiB`,
+  ]
+  if (source.platform !== 'linux') return lines
+  const distribution = /^PRETTY_NAME="?([^"\n]*)"?$/mu.exec(source.readText('/etc/os-release') ?? '')?.[1]
+  lines.push(`distribution: ${distribution ?? 'unknown'}`, `appimage: ${source.env['APPIMAGE'] ?? 'no'}`)
+  for (const path of LINUX_NAMESPACE_SWITCHES) lines.push(`${path}: ${source.readText(path)?.trim() ?? 'not present'}`)
+  return lines
 }
 
 /** File name prefix every report shares. */
@@ -118,6 +182,9 @@ export function renderCrashReport(input: CrashReportInput): string {
     : input.rendererConsole.join('\n')
   return [
     header.join('\n'),
+    '',
+    '--- environment ---',
+    ...input.environment,
     '',
     '--- error ---',
     boundedErrorSection(input.error),

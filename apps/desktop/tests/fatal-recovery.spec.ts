@@ -18,6 +18,7 @@ function fixture(
     exit: vi.fn(),
     restart: vi.fn(),
     writeReport: vi.fn(writeReport),
+    copyReport: vi.fn(async (_path: string) => {}),
   }
   return { operations, choice, stopped, recovery: new DesktopFatalRecovery(operations) }
 }
@@ -188,7 +189,7 @@ it('names the report file in the listener-conflict dialog too', async () => {
   await shown(operations)
   await vi.waitFor(() => { expect(operations.show).toHaveBeenCalledOnce() })
   const options = operations.show.mock.calls[0]![0]
-  expect(options.buttons).toHaveLength(2)
+  expect(options.buttons).toHaveLength(3)
   expect(options.detail).toBe(`${operations.messages().startupAddressInUse}\n${operations.messages().reportWrittenTo.replace('{path}', REPORT_PATH)}`)
   choice.resolve({ response: 0, checkboxChecked: false })
   stopped.resolve(undefined)
@@ -238,4 +239,43 @@ it('writes the report once for the first fatal failure and not for the recovery-
   expect(operations.show).toHaveBeenCalledTimes(2)
   expect(operations.writeReport).toHaveBeenCalledOnce()
   expect(operations.show.mock.calls[1]![0].detail).toContain(REPORT_PATH)
+})
+
+it('copies the report and shows the dialog again with a confirmation', async () => {
+  const { operations, stopped, recovery } = fixture('en', async () => REPORT_PATH)
+  operations.show.mockResolvedValueOnce({ response: 3, checkboxChecked: false })
+    .mockResolvedValueOnce({ response: 0, checkboxChecked: false })
+  stopped.resolve(undefined)
+  await recovery.report(new Error('fatal'), 'host')
+  const messages = operations.messages()
+  expect(operations.show.mock.calls[0]![0].buttons).toContain(messages.copyReport)
+  expect(operations.copyReport).toHaveBeenCalledExactlyOnceWith(REPORT_PATH)
+  expect(operations.show.mock.calls[0]![0].detail).not.toContain(messages.reportCopied)
+  expect(operations.show.mock.calls[1]![0].detail).toContain(messages.reportCopied)
+})
+
+it('shows no copy button without a report file and keeps the dialog when copying fails', async () => {
+  vi.spyOn(console, 'error').mockImplementation(() => {})
+  const none = fixture('en')
+  none.operations.show.mockResolvedValueOnce({ response: 0, checkboxChecked: false })
+  none.stopped.resolve(undefined)
+  await none.recovery.report(new Error('fatal'), 'host')
+  expect(none.operations.show.mock.calls[0]![0].buttons).not.toContain(none.operations.messages().copyReport)
+
+  const { operations, stopped, recovery } = fixture('en', async () => REPORT_PATH)
+  operations.copyReport.mockRejectedValueOnce(new Error('clipboard unavailable'))
+  operations.show.mockResolvedValueOnce({ response: 3, checkboxChecked: false })
+    .mockResolvedValueOnce({ response: 0, checkboxChecked: false })
+  stopped.resolve(undefined)
+  await recovery.report(new Error('fatal'), 'host')
+  expect(operations.show.mock.calls[1]![0].detail).not.toContain(operations.messages().reportCopied)
+})
+
+it('puts the copy button after exit and restart for a listener conflict', async () => {
+  const { operations, stopped, recovery } = fixture('en', async () => REPORT_PATH)
+  operations.show.mockResolvedValueOnce({ response: 0, checkboxChecked: false })
+  stopped.resolve(undefined)
+  await recovery.report(new Error('listen EADDRINUSE: address already in use'), 'host')
+  const messages = operations.messages()
+  expect(operations.show.mock.calls[0]![0].buttons).toEqual([messages.exitApplication, messages.restartApplication, messages.copyReport])
 })

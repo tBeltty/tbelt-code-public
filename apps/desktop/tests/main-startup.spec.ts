@@ -217,6 +217,7 @@ const harness = await vi.hoisted(async () => {
     set publishUpdate(value: (state: DesktopUpdateState) => DesktopUpdateState) { publishUpdate = value },
     dialog: { showOpenDialog: vi.fn(), showErrorBox: vi.fn(), showMessageBox: vi.fn() },
     openExternal: vi.fn(async () => {}),
+    clipboardWrite: vi.fn<(text: string) => void>(),
     protocolHandle: vi.fn<(scheme: string, handler: (request: Request) => Response | Promise<Response>) => void>(),
     applyRelease: vi.fn(() => { preparing.resolve(); return prepared.promise }),
     disableAllPlugins: vi.fn(async () => {
@@ -279,6 +280,7 @@ vi.mock('electron', () => ({
   BrowserWindow: harness.FakeWindow,
   dialog: harness.dialog,
   shell: { openExternal: harness.openExternal },
+  clipboard: { writeText: harness.clipboardWrite },
   nativeTheme: harness.nativeTheme,
   net: { fetch: vi.fn() },
   ipcMain: {
@@ -309,6 +311,7 @@ vi.mock('node:fs/promises', async (importOriginal) => {
     if (path === join('desktop-test-app', 'package.json')) {
       return Promise.resolve(JSON.stringify({ dshDesktopAppId: 'com.deepseek.dsh', dshMandatoryUpdatePolicy: harness.embeddedPolicy }))
     }
+    if (path === 'desktop-test-logs/crash-test.log') return Promise.resolve('crash report text')
     return encoding === undefined ? original.readFile(path) : original.readFile(path, encoding)
   }) }
 })
@@ -1954,8 +1957,17 @@ describe('desktop main startup', () => {
     harness.prepared.reject(new Error('runtime resources missing'))
     await harness.dialogShown.promise
     expect((harness.dialog.showMessageBox.mock.calls[0]![0] as MessageBoxOptions).detail).toContain('runtime resources missing')
-    expect((harness.dialog.showMessageBox.mock.calls[0]![0] as MessageBoxOptions).buttons).toEqual(['Exit', 'Restart', 'Disable third-party plugins, back up profile patch, and restart'])
+    expect((harness.dialog.showMessageBox.mock.calls[0]![0] as MessageBoxOptions).buttons).toEqual(['Exit', 'Restart', 'Disable third-party plugins, back up profile patch, and restart', 'Copy report'])
     expect(harness.windows[0]!.urls).toEqual(['dsh-app://app/'])
+  })
+
+  it('copies the written crash report to the clipboard from the recovery dialog', async () => {
+    harness.dialog.showMessageBox.mockResolvedValueOnce({ response: 3 }).mockResolvedValue({ response: 0 })
+    await import('../src/main.ts')
+    await harness.preparing.promise
+    harness.prepared.reject(new Error('runtime resources missing'))
+    await vi.waitFor(() => { expect(harness.clipboardWrite).toHaveBeenCalledOnce() })
+    expect(harness.clipboardWrite).toHaveBeenCalledWith('crash report text')
   })
 
   it.each(['preload', 'renderer'])('retains the document after a fatal %s failure and reports only the first error', async (kind) => {

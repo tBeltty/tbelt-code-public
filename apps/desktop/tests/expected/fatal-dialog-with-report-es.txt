@@ -8,3 +8,4 @@ Si faltan archivos de la aplicación o están dañados, ciérrala y reinstálala
 Salir
 Reiniciar
 Desactivar los plugins de terceros, respaldar el parche del perfil y reiniciar
+Copiar informe

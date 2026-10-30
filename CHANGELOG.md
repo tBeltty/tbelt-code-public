@@ -4,6 +4,12 @@ Notable changes to tBelt Code, newest first. The format follows [Keep a Changelo
 
 ## [Unreleased]
 
+## [0.2.1-rc.3.20261030.2] - 2026-10-30
+
+### Added
+
+- The startup error dialog has a Copy report button, and the report lists the Linux distribution, memory and sandbox settings.
+
 ## [0.2.1-rc.3.20261030] - 2026-10-30
 
 ### Added
@@ -399,7 +405,8 @@ Notable changes to tBelt Code, newest first. The format follows [Keep a Changelo
 - Downloads no longer return an older installer.
 - A key that ran out of credit or hit its spending limit is reported as a quota problem instead of an invalid API key.
 
-[Unreleased]: https://github.com/tBeltty/tbelt-code-public/compare/v0.2.1-rc.3.20261030...HEAD
+[Unreleased]: https://github.com/tBeltty/tbelt-code-public/compare/v0.2.1-rc.3.20261030.2...HEAD
+[0.2.1-rc.3.20261030.2]: https://github.com/tBeltty/tbelt-code-public/releases/tag/v0.2.1-rc.3.20261030.2
 [0.2.1-rc.3.20261030]: https://github.com/tBeltty/tbelt-code-public/releases/tag/v0.2.1-rc.3.20261030
 [0.2.1-rc.3.20261026]: https://github.com/tBeltty/tbelt-code-public/releases/tag/v0.2.1-rc.3.20261026
 [0.2.1-rc.2.20261020.4]: https://github.com/tBeltty/tbelt-code-public/releases/tag/v0.2.1-rc.2.20261020.4

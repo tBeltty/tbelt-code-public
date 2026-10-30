@@ -43,7 +43,7 @@ import { DesktopUpdateCoordinator } from './update-coordinator.ts'
 import { DesktopCommandManager } from './command-management.ts'
 import { serveWebDocument, authenticateWebHost, forwardWebRequest } from './web-document.ts'
 import { DesktopFatalRecovery } from './fatal-recovery.ts'
-import { pruneCrashReports, RendererConsoleTail, writeCrashReport, type CrashReportSource } from './crash-report.ts'
+import { collectEnvironmentFacts, pruneCrashReports, RendererConsoleTail, writeCrashReport, type CrashReportSource } from './crash-report.ts'
 import { openWelcomeWindow } from './welcome-window.ts'
 import { WELCOME_IPC, needsWelcome, type WelcomeNotice } from './welcome-api.ts'
 import { connectDesktopWelcome, type DesktopWelcomeBackend } from './welcome-backend.ts'
@@ -115,6 +115,7 @@ const recovery = new DesktopFatalRecovery({
   exit: () => { quitWithoutConfirmation() },
   restart: () => { app.relaunch(); quitWithoutConfirmation() },
   writeReport: (error, source) => persistCrashReport(error, source),
+  copyReport: async (path) => { clipboard.writeText(await readFile(path, 'utf8')) },
 })
 
 function persistCrashReport(error: unknown, source: CrashReportSource): Promise<string | undefined> {
@@ -124,6 +125,7 @@ function persistCrashReport(error: unknown, source: CrashReportSource): Promise<
     error,
     ...(error instanceof DesktopHostFatalError && error.diagnostic !== undefined ? { hostDiagnostic: error.diagnostic } : {}),
     rendererConsole: rendererConsole.snapshot(),
+    environment: collectEnvironmentFacts(),
     app: {
       name: app.name, version: app.getVersion(), platform: process.platform, arch: process.arch,
       electron: process.versions.electron, node: process.versions.node, locale: currentDesktopLocale().id,

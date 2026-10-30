@@ -14,6 +14,8 @@ interface RecoveryOperations {
   restart(): void
   /** Persist the complete diagnostic; resolves with the file path, or `undefined` when nothing was written. */
   writeReport(error: unknown, source: CrashReportSource): Promise<string | undefined>
+  /** Put the complete report file text on the clipboard. */
+  copyReport(path: string): Promise<void>
 }
 
 /** Upper bound on waiting for the crash report before the dialog opens. */
@@ -69,22 +71,34 @@ export class DesktopFatalRecovery {
     const reportPath = await this.persist(error, source)
     let detail = desktopErrorState(error).message
     let message = messages.fatalSummary
+    let copied = false
     for (;;) {
       const addressInUse = /\blisten EADDRINUSE\b/u.test(detail)
+      const buttons = [
+        messages.exitApplication,
+        messages.restartApplication,
+        ...addressInUse ? [] : [messages.disableThirdPartyPlugins],
+        ...reportPath === undefined ? [] : [messages.copyReport],
+      ]
       const { response } = await this.operations.show({
         type: 'error',
         title: messages.startupFailed,
         message,
-        detail: addressInUse
+        detail: `${addressInUse
           ? `${messages.startupAddressInUse}${reportLine(messages, reportPath)}`
-          : dialogDetail(detail, messages, reportPath),
-        buttons: addressInUse
-          ? [messages.exitApplication, messages.restartApplication]
-          : [messages.exitApplication, messages.restartApplication, messages.disableThirdPartyPlugins],
+          : dialogDetail(detail, messages, reportPath)}${copied ? `\n${messages.reportCopied}` : ''}`,
+        buttons,
         defaultId: 1,
         cancelId: 0,
         noLink: true,
       })
+      if (reportPath !== undefined && response === buttons.length - 1) {
+        try {
+          await this.operations.copyReport(reportPath)
+          copied = true
+        } catch (failure) { console.error(failure) }
+        continue
+      }
       if (response === 0) {
         try { await this.operations.stop() } catch (failure) { console.error(failure) }
         this.operations.exit()

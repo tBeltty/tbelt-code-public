@@ -3,9 +3,9 @@ import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { afterEach, expect, it, vi } from 'vitest'
 import {
-  CRASH_REPORTS_RETAINED, crashReportFileName, ERROR_SECTION_MAX_CHARS, pruneCrashReports, renderCrashReport, RendererConsoleTail,
+  CRASH_REPORTS_RETAINED, collectEnvironmentFacts, crashReportFileName, ERROR_SECTION_MAX_CHARS, pruneCrashReports, renderCrashReport, RendererConsoleTail,
   writeCrashReport,
-  type CrashReportInput,
+  readOptionalText, type CrashReportInput, type EnvironmentSource,
 } from '../src/crash-report.ts'
 
 const roots: string[] = []
@@ -27,6 +27,7 @@ const input = (overrides: Partial<CrashReportInput> = {}): CrashReportInput => (
     errno: -4058, code: 'ENOENT', syscall: 'open', path: 'C:\\Temp\\dsh-subprocess-x\\out.log',
   }),
   rendererConsole: [],
+  environment: ['os release: 6.8.0'],
   app: { name: 'tBelt Code', version: '0.1.7', platform: 'win32', arch: 'x64', electron: '44.0.0', node: '24.18.1', locale: 'zh_CN' },
   time: new Date('2026-09-22T10:30:00.123Z'),
   ...overrides,
@@ -114,4 +115,52 @@ it('keeps the newest renderer console lines within the byte cap, never cutting a
   expect(tail.snapshot()).toEqual(['b'.repeat(8), 'c'.repeat(8)])
   tail.push('d'.repeat(40))
   expect(tail.snapshot()).toEqual(['d'.repeat(40)])
+})
+
+it('records the environment section in the report', () => {
+  expect(renderCrashReport(input())).toContain('--- environment ---\nos release: 6.8.0\n\n--- error ---')
+})
+
+const source = (overrides: Partial<EnvironmentSource> = {}): EnvironmentSource => ({
+  platform: 'linux',
+  env: { APPIMAGE: '/home/u/tbelt-code.AppImage' },
+  osRelease: '6.8.0-45-generic',
+  totalMemory: 8192 * 1024 * 1024,
+  freeMemory: 1024 * 1024 * 1024,
+  readText: path => ({
+    '/etc/os-release': 'NAME="Ubuntu"\nPRETTY_NAME="Ubuntu 24.04.1 LTS"\n',
+    '/proc/sys/kernel/apparmor_restrict_unprivileged_userns': '1\n',
+  })[path],
+  ...overrides,
+})
+
+it('lists Linux distribution, AppImage use and user-namespace switches', () => {
+  expect(collectEnvironmentFacts(source())).toEqual([
+    'os release: 6.8.0-45-generic',
+    'memory: 1024 MiB free of 8192 MiB',
+    'distribution: Ubuntu 24.04.1 LTS',
+    'appimage: /home/u/tbelt-code.AppImage',
+    '/proc/sys/kernel/unprivileged_userns_clone: not present',
+    '/proc/sys/kernel/apparmor_restrict_unprivileged_userns: 1',
+    '/proc/sys/user/max_user_namespaces: not present',
+  ])
+})
+
+it('reports unknown distribution and no AppImage, and omits Linux facts elsewhere', () => {
+  const lines = collectEnvironmentFacts(source({ env: {}, readText: () => undefined }))
+  expect(lines).toContain('distribution: unknown')
+  expect(lines).toContain('appimage: no')
+  expect(collectEnvironmentFacts(source({ platform: 'darwin' }))).toHaveLength(2)
+})
+
+it('reads the running system by default', () => {
+  expect(collectEnvironmentFacts()[0]).toMatch(/^os release: /u)
+})
+
+it('reads an optional text file and yields undefined when it is absent', async () => {
+  const root = await mkdtemp(join(tmpdir(), 'dsh-env-'))
+  roots.push(root)
+  await writeFile(join(root, 'present'), 'text')
+  expect(readOptionalText(join(root, 'present'))).toBe('text')
+  expect(readOptionalText(join(root, 'absent'))).toBeUndefined()
 })

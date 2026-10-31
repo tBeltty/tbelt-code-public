@@ -39,7 +39,7 @@ jobs:
   package:
     # Hosted runner minutes are free only for public repositories.
     if: ${{ !github.event.repository.private }}
-    runs-on: ${{ inputs.target == 'mac-arm64' && 'macos-14' || inputs.target == 'win-x64' && 'windows-latest' || 'ubuntu-latest' }}
+    runs-on: ${{ inputs.target == 'mac-arm64' && 'macos-15' || inputs.target == 'win-x64' && 'windows-latest' || 'ubuntu-latest' }}
     timeout-minutes: 90
     steps:
       - uses: actions/checkout@v4

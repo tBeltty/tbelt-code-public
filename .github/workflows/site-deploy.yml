@@ -1,7 +1,7 @@
 name: Site deploy
 
 # Publishes site/ (https://code.tbelt.online) to Cloudflare Pages when main changes
-# site/. Runs only in the public repository. It never builds the app or runs
+# site/ or CHANGELOG.md. Runs only in the public repository. It never builds the app or runs
 # the quality gate.
 #
 # Repository secret: CLOUDFLARE_API_TOKEN (Account > Cloudflare Pages > Edit).
@@ -10,7 +10,7 @@ name: Site deploy
 on:
   push:
     branches: [main]
-    paths: ['site/**', '.github/workflows/site-deploy.yml']
+    paths: ['site/**', 'CHANGELOG.md', '.github/workflows/site-deploy.yml']
   workflow_dispatch:
 
 permissions:
@@ -36,7 +36,10 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Test release lookup
-        run: node --test shared/releases.test.js
+        run: node --test shared/releases.test.js shared/changelog.test.js
+
+      - name: Build the changelog page
+        run: node scripts/build-changelog.mjs
 
       - name: Check Cloudflare credentials
         id: credentials

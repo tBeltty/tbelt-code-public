@@ -81,7 +81,9 @@ function renderRelease(entry) {
  * @returns {string} HTML document.
  */
 export function renderChangelogPage(markdown) {
-  const releases = parseChangelog(markdown).map(renderRelease).join('\n')
+  const [latest, ...older] = parseChangelog(markdown).map(renderRelease)
+  const archive = older.length === 0 ? '' : `\n<details class="older">\n<summary>Older versions</summary>\n${older.join('\n')}\n</details>`
+  const releases = `${latest ?? ''}${archive}`
   return `<!doctype html>
 <html lang="en">
 <head>

@@ -210,3 +210,7 @@ h2 { font-size: clamp(26px, 3vw, 34px); font-weight: 500; letter-spacing: -0.015
 .changelog ul { margin: 10px 0 0; padding-left: 20px; color: var(--text-secondary); }
 .changelog li { margin-top: 8px; }
 .changelog li a { color: var(--text-secondary); }
+.changelog .older { margin-top: 56px; border-top: 1px solid var(--border-subtle); }
+.changelog .older summary { margin-top: 24px; cursor: pointer; color: var(--text-secondary); font-size: 16px; }
+.changelog .older summary:hover { color: var(--text-primary); }
+.changelog .older .release:first-of-type { margin-top: 32px; }

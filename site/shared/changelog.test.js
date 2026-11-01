@@ -41,6 +41,13 @@ test('renders code and links, and escapes other markup', () => {
   assert.match(html, /<link rel="canonical" href="https:\/\/code.tbelt.online\/changelog">/)
 })
 
+test('shows the newest release open and folds the older ones', () => {
+  const html = renderChangelogPage(SAMPLE)
+  const fold = html.indexOf('<details class="older">')
+  assert.ok(html.indexOf('id="v1.1.0-rc.1"') < fold)
+  assert.ok(html.indexOf('id="v1.0.0"') > fold)
+})
+
 test('parses the repository changelog', async () => {
   const { readFileSync } = await import('node:fs')
   const releases = parseChangelog(readFileSync(new URL('../../CHANGELOG.md', import.meta.url), 'utf8'))

@@ -28,6 +28,10 @@ pre-push:
     - name: changelog needs README
       run: scripts/release-notes.sh features-pr origin/main
 
+    # Style rules for [Unreleased] lines, see docs/changelog-standard.md.
+    - name: changelog style
+      run: scripts/release-notes.sh lint
+
     # Reads one YAML file and a directory listing; no build needed.
     - name: surface parity
       glob: '{docs/product/surface-parity-manifest.yml,packages/client/ui-*/**,packages/terminal-client/views/src/**,scripts/verify-surface-parity.ts}'

@@ -8,66 +8,65 @@ Notable changes to tBelt Code, newest first. The format follows [Keep a Changelo
 
 ### Added
 
-- The startup error dialog has a Copy report button, and the report lists the Linux distribution, memory and sandbox settings.
+- When tBelt Code fails to start, the error window has a Copy report button that copies your system details to attach to a bug report.
 
 ## [0.2.1-rc.3.20261030] - 2026-10-30
 
 ### Added
 
 - Web search works without an account or an API key.
-- Free web search switches to DuckDuckGo when the first free service refuses a query.
+- When the free web search refuses a query, tBelt Code retries it through DuckDuckGo.
 
 ### Changed
 
-- Fetched pages leave out navigation, footers and sidebars.
-- A provider with a stored key takes over from the free search without being chosen first.
-- DeepSeek search stays off unless a configuration turns it on.
+- Web pages the agent fetches no longer include navigation menus, footers and sidebars.
+- When you add an API key for a provider, the agent searches the web through that provider without further setup.
 
 ### Fixed
 
-- Provider cards in Settings no longer show a missing key when the key is set in your environment, such as `OPENAI_API_KEY`, and they show the provider's default endpoint.
+- In Settings, a provider whose API key is set in an environment variable such as `OPENAI_API_KEY` no longer shows a missing key, and each provider shows its default endpoint.
 
 ## [0.2.1-rc.3.20261026] - 2026-10-26
 
 ### Added
 
-- Image and PDF previews have zoom controls.
-- Clear inactive scheduled tasks from the task manager at once.
-- A session can be copied as Markdown from its menu.
-- Models on a custom provider can declare their own reasoning levels in Settings.
+- Image and PDF previews can be zoomed in and out.
+- The scheduled tasks list has a Clear all inactive tasks action that removes every task that is not active.
+- You can copy a whole session as Markdown from its menu.
+- In Settings, a model on a custom provider can define which reasoning levels it supports.
 
 ### Changed
 
-- Model lists include new models from OpenCode, OpenRouter, Fireworks, MiniMax and Google.
-- Answers to agent questions appear as one message bubble.
+- The model lists for OpenCode, OpenRouter, Fireworks, MiniMax and Google include their newest models.
+- Your answers to an agent's questions appear together as one message.
 
 ### Fixed
 
-- Multiline display math renders.
+- Display math written across several lines renders as a formula.
 
 ## [0.2.1-rc.2.20261020.4] - 2026-10-20
 
 ### Added
 
-- Agents can choose their own provider, model, reasoning effort and skills in their definition file.
-- Agent files load and reload without a restart, and each one is offered to delegation tools.
-- Agents can be created, edited and deleted in Settings and in the terminal.
+- An agent definition file can set the agent's provider, model, reasoning effort and skills.
+- Changes to agent definition files apply without a restart, and the agent can delegate tasks to each defined agent.
+- You can create, edit and delete agents in Settings and in `dsh terminal`.
 
 ### Changed
 
-- Child agents from agent files run one task and end after their final answer.
+- An agent defined in a file and started by another agent runs one task and ends after its final answer.
 
 ## [0.2.1-rc.2.20261020.3] - 2026-10-20
 
 ### Fixed
 
-- New sessions open again after the last update, which failed with a tool-subagent error.
+- New sessions open again. The previous release failed to start them.
 
 ## [0.2.1-rc.2.20261020.2] - 2026-10-20
 
 ### Fixed
 
-- OpenCode now lists its free DeepSeek V4.1 Flash model.
+- The OpenCode model list includes its newest free model.
 
 ## [0.2.1-rc.2.20261020] - 2026-10-20
 
@@ -77,7 +76,7 @@ Notable changes to tBelt Code, newest first. The format follows [Keep a Changelo
 
 ### Fixed
 
-- A turn cut short when tBelt Code closed unexpectedly now says so, and warns that its unfinished tool calls may not have completed.
+- When tBelt Code exits while the agent is working, the session shows after the restart that the turn did not finish and that unfinished tool calls have unknown outcomes.
 
 ## [0.2.1-alpha.2.20261015.2] - 2026-10-15
 

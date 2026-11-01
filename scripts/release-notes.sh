@@ -8,6 +8,7 @@
 #        scripts/release-notes.sh missing          list commits with no changelog line
 #        scripts/release-notes.sh features         check README.md lists the new features
 #        scripts/release-notes.sh features-pr [base]  same check on a branch before it merges
+#        scripts/release-notes.sh lint [version]   check entry style (default: [Unreleased])
 #
 # `cut` names the version <root package.json version>.<YYYYMMDD of date>, adding
 # .2, .3, ... for further releases on the same day, writes the section and its
@@ -32,6 +33,11 @@
 # after <base> (default origin/main) add an "Added" entry under [Unreleased]
 # but neither change README.md nor carry `README: none` in a message. Running
 # it before the branch merges keeps `features` from failing at release time.
+#
+# `lint` applies docs/changelog-standard.md to one section: every line is a
+# single sentence that ends with a period, has no parentheses or dashes outside
+# code spans, stays under 200 characters, avoids internal vocabulary, and does
+# not open with a screen element such as "The ... dialog".
 set -euo pipefail
 
 root=$(git rev-parse --show-toplevel)
@@ -160,8 +166,26 @@ case "${1:-}" in
     git log --format=%B "$base..HEAD" | grep -q -x 'README: none' && exit 0
     features_failure "$new"
     ;;
+  lint)
+    status=0
+    while IFS= read -r line; do
+      [[ -n "$line" ]] || continue
+      text=${line//\`[^\`]*\`/}
+      problem=''
+      if [[ "$line" != '- '* ]]; then problem='not a "- " list item'
+      elif [[ "$line" != *. ]]; then problem='does not end with a period'
+      elif [[ "$text" == *'('* || "$text" == *')'* ]]; then problem='has a parenthetical'
+      elif [[ "$text" == *—* || "$text" == *–* ]]; then problem='has a dash'
+      elif grep -q -i -E '^- (the|a|an) ([a-z-]+ ){0,3}(dialog|button|card|page|screen|panel|window|view|tab) ' <<<"$text"; then problem='starts from a screen element the reader may not know; name the situation'
+      elif (( ${#line} > 200 )); then problem='is over 200 characters'
+      elif grep -q -i -E '\b(upstream|fork|refactor|runner|lockfile|dependenc(y|ies)|bump(ed)?|CI)\b' <<<"$text"; then problem='uses internal vocabulary'
+      fi
+      [[ -z "$problem" ]] || { printf 'release-notes: %s: %s\n' "$problem" "$line" >&2; status=1; }
+    done < <(section "${2:-Unreleased}" | grep -v -E '^(### .*)?$' || true)
+    [[ "$status" == 0 ]] || { echo 'release-notes: see docs/changelog-standard.md' >&2; exit 1; }
+    ;;
   *)
-    echo 'usage: release-notes.sh version | notes <version> | unreleased | cut [date] | missing | features | features-pr [base]' >&2
+    echo 'usage: release-notes.sh version | notes <version> | unreleased | cut [date] | missing | features | features-pr [base] | lint [version]' >&2
     exit 2
     ;;
 esac

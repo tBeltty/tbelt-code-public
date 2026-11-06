@@ -37,3 +37,17 @@ if [[ ! "$abl" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ || "$abl" != "$eb" ]]; then
   echo "check-workspace-ranges: $pkg must pin app-builder-lib ($abl) and electron-builder ($eb) to the same exact version" >&2
   exit 1
 fi
+
+# The dsh release family shares one version; a package added after the last
+# bump keeps its old one and fails `release:pack` on every desktop target.
+root_version=$(sed -nE '0,/"version": "([^"]+)"/s//\1/p' package.json)
+family=$(git ls-files ':(glob)packages/*/*/package.json' ':(glob)apps/*/package.json')
+skewed=$(printf '%s\n' "$family" | while read -r f; do
+  v=$(sed -nE '0,/"version": "([^"]+)"/s//\1/p' "$f")
+  [[ -z "$v" || "$v" == "$root_version" ]] || echo "$f: $v"
+done)
+if [[ -n "$skewed" ]]; then
+  printf '%s\n' "$skewed" >&2
+  echo "check-workspace-ranges: every package must use the root version $root_version" >&2
+  exit 1
+fi

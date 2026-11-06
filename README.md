@@ -29,6 +29,8 @@ Download the app from [code.tbelt.online](https://code.tbelt.online). It can ins
 - A light theme next to the dark one, or follow the system setting.
 - Choose the font for text, code and the terminal.
 - An Artifacts page listing the files each turn delivered or changed.
+- Open an image in a conversation to save the original file or copy it to the clipboard. In the app, saving asks where to put the file, and images from other sites can be copied.
+- The agent edits files by applying patches, and the conversation shows each patch as its own row.
 - A side panel preview for HTML pages, images, PDFs and local dev servers.
 - Point at an element in the preview and the agent knows exactly which one.
 - `dsh terminal`: the same sessions in a terminal, with streaming, tool lines, plain-language permission prompts, agent questions with or without a time limit, plan review and resume.
@@ -44,6 +46,8 @@ Download the app from [code.tbelt.online](https://code.tbelt.online). It can ins
 - Memory per project or global with `/remember`, with secrets redacted.
 - A repository map in context at the start of each session.
 - An Automation tasks page for the tasks and reminders agents schedule.
+- The agent lists and edits your scheduled tasks when you ask.
+- The app menu has a Developer tools item.
 - Inspector, Coder and Tester subagents, and saved agent presets.
 - Fast mode: a short prompt and a few core tools. The agent turns on search, web, subagents and other tool groups when a task needs them.
 - Manual and autonomous audit modes: the agent splits work into numbered tasks with checks and approves a task only after re-running its checks.

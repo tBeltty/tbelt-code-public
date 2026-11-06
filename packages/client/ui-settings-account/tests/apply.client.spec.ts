@@ -74,6 +74,7 @@ it('registers account sign-in in a plain browser without the Desktop-only surfac
     expect(c.ctx.slots.entries('settings.launcher')).toHaveLength(1)
     // tBelt's Models section declares no sign-in child slot, so the account contribution is never mounted.
     expect(c.ctx.slots.entries('settings.models.sign-in')).toHaveLength(0)
+    expect(c.ctx.slots.entries('settings.models.provider-card').map(entry => entry.options.key)).toEqual(['llm-deepseek-account'])
     expect(quotaNoticeEntry(c)).toBeDefined()
     expect(platformHostEntry(c)).toBeUndefined()
     expect(c.ctx.slots.entries('shell.overlay').some(entry => entry.options.id === 'desktop-onboarding')).toBe(false)
@@ -87,6 +88,7 @@ withoutAccountAccess('opens no account stream and registers no account surface w
   expect(c.ctx.slots.entries('settings.launcher')).toHaveLength(0)
   expect(quotaNoticeEntry(c)).toBeUndefined()
   expect(c.ctx.slots.entries('settings.models.sign-in')).toHaveLength(0)
+  expect(c.ctx.slots.entries('settings.models.provider-card')).toHaveLength(0)
   expect(c.ctx.slots.entries('settings.section').some(entry => entry.options.id === 'account')).toBe(false)
 }, 60_000)
 

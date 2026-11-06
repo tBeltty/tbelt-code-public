@@ -22,7 +22,7 @@ function transfer(token = ''): DataTransfer {
   })
 }
 
-async function bench(language: 'zh' | 'en' | 'ja' = 'zh') {
+async function bench(language: 'en' | 'ja' = 'en') {
   revokeUrl.mockReset()
   vi.stubGlobal('File', NodeFile)
   vi.stubGlobal('URL', Object.assign(URL, { createObjectURL: vi.fn(() => 'blob:transfer'), revokeObjectURL: revokeUrl }))
@@ -66,9 +66,8 @@ it('retains bytes after source unmount and releases on the detached node dragend
 })
 
 it.each([
-  ['zh', '拖放失败，请重试'],
   ['en', 'Drag failed. Try again.'],
-  ['ja', 'ドラッグ＆ドロップに失敗しました。もう一度お試しください。'],
+  ['ja', 'Drag failed. Try again.'],
 ] as const)('reports a late native failure after source unmount in %s', async (language, message) => {
   const pending = Promise.withResolvers<boolean>()
   const handle = 'handle' as FileDragHandle

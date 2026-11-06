@@ -149,6 +149,30 @@ describe('PluginInventoryGateway', () => {
     ])
   })
 
+  it.each(['error', 'stack object'] as const)('reads %s startup diagnostics from failed fibers and clears them after recovery', async (kind) => {
+    const { ctx, inventory } = await harness()
+    const failure: unknown = kind === 'error' ? new Error('native preparation unavailable')
+      : { stack: 'plugin startup failure', toString: () => 'native preparation unavailable' }
+    ctx.loader.builtins.failing = {
+      async apply(_ctx: Context, config: { fail: boolean }) {
+        if (config.fail) throw failure
+      },
+    }
+    const entry = ctx.loader.resolve(await ctx.loader.create({ name: 'cordis:failing', config: { fail: true } }))
+    await expect(entry.fiber!.await()).rejects.toBe(failure)
+    for (let index = 0; index < 2; index++) {
+      expect((await inventory.list()).entries).toContainEqual({
+        entryId: entry.id, moduleName: 'cordis:failing', enabled: true,
+        fiberPhase: 'failed', diagnostic: 'native preparation unavailable',
+      })
+    }
+    await entry.update({ config: { fail: false } })
+    await entry.fiber!.await()
+    expect((await inventory.list()).entries).toContainEqual({
+      entryId: entry.id, moduleName: 'cordis:failing', enabled: true, fiberPhase: 'active',
+    })
+  })
+
   it('projects current non-group Loader entries without a second cache', async () => {
     const { ctx, inventory } = await harness()
     const activeId = await ctx.loader.create({ name: 'cordis:active' })
@@ -202,7 +226,7 @@ describe('PluginInventoryGateway', () => {
       compositionInventory: async () => [
         {
           id: 'standard',
-          name: '标准模式',
+          name: 'Standard mode',
           isDefault: true,
           rows: [
             { entryId: 'alpha', moduleName: 'pkg-alpha', enabled: true, fiberState: FiberState.ACTIVE },
@@ -217,7 +241,7 @@ describe('PluginInventoryGateway', () => {
     expect(snapshot.agentPresets).toEqual([
       {
         id: 'standard',
-        name: '标准模式',
+        name: 'Standard mode',
         isDefault: true,
         rows: [
           { entryId: 'alpha', moduleName: 'pkg-alpha', enabled: true, fiberPhase: 'active' },

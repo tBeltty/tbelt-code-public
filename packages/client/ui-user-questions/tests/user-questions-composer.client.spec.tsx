@@ -1,4 +1,5 @@
 // @vitest-environment jsdom
+import { contextMenuHook } from '@deepseek-ai/dsh-client-test-runtime'
 import type { GlobalStandardProps } from '@deepseek-ai/dsh-client-ui-slots'
 import { useSyncExternalStore } from 'react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
@@ -125,7 +126,9 @@ const kitBase: Omit<QuestionComposerProps, 'matched' | 'useStore' | 'useQuestion
   pendingInteraction: undefined,
   useSession: selector => selector(sessionState),
   useSessions: selector => selector(sessionList),
-  usePanelInfo, useResource,
+  usePanelInfo,
+  useContextMenu: contextMenuHook(),
+  useResource,
   useSessionStatus: selector => selector(attentionState),
   useSessionRetainInfo: () => undefined,
   useWorkspaces: selector => selector(workspaceState),
@@ -240,6 +243,58 @@ describe('QuestionComposer', () => {
     }
   })
 
+  it('starts every recommended choice of a multi-select question selected', () => {
+    const { carrier, answer } = wait([{
+      id: 'checks', question: 'Which checks?', multiSelect: true,
+      options: [{ label: 'Unit (Recommended)' }, { label: 'Lint' }, { label: 'Types（推荐）' }],
+    }])
+    render(<QuestionComposer matched={carrier} {...kit} />)
+    expect(screen.getByRole('checkbox', { name: 'Unit' }).getAttribute('aria-checked')).toBe('true')
+    expect(screen.getByRole('checkbox', { name: 'Lint' }).getAttribute('aria-checked')).toBe('false')
+    expect(screen.getByRole('checkbox', { name: 'Types' }).getAttribute('aria-checked')).toBe('true')
+
+    fireEvent.keyDown(screen.getByRole('checkbox', { name: 'Lint' }), { key: 'Enter' })
+    expect(answer).toHaveBeenCalledWith(answerBatch([
+      { id: 'checks', selected: ['Unit (Recommended)', 'Types（推荐）'] },
+    ]))
+  })
+
+  it('keeps several recommended multi-select defaults without pausing a timed wait', () => {
+    const { carrier } = wait([
+      {
+        id: 'checks', question: 'Which checks?', multiSelect: true,
+        options: [{ label: 'Unit (Recommended)' }, { label: 'Lint' }, { label: 'Types (Recommended)' }],
+      },
+      { id: 'note', question: 'Anything else?' },
+    ], Date.now() + 30_000)
+    try {
+      const view = render(<QuestionComposer matched={carrier} {...kit} />)
+      fireEvent.click(screen.getByLabelText('Pregunta siguiente'))
+      view.unmount()
+      render(<QuestionComposer matched={carrier} {...kit} />)
+      expect(carrier.snapshot().countdown?.running).toBe(true)
+      fireEvent.click(screen.getByLabelText('Pregunta anterior'))
+      expect(screen.getByRole('checkbox', { name: 'Unit' }).getAttribute('aria-checked')).toBe('true')
+      expect(screen.getByRole('checkbox', { name: 'Types' }).getAttribute('aria-checked')).toBe('true')
+    } finally {
+      carrier.timeout()
+    }
+  })
+
+  it('starts only a recommended first choice of a single-select question selected', () => {
+    const { carrier } = wait([
+      { id: 'first', question: 'First?', options: [{ label: 'A (Recommended)' }, { label: 'B (Recommended)' }] },
+      { id: 'later', question: 'Later?', options: [{ label: 'C' }, { label: 'D (Recommended)' }] },
+    ])
+    render(<QuestionComposer matched={carrier} {...kit} />)
+    expect(screen.getByRole('radio', { name: 'A' }).getAttribute('aria-checked')).toBe('true')
+    expect(screen.getByRole('radio', { name: 'B' }).getAttribute('aria-checked')).toBe('false')
+
+    fireEvent.click(screen.getByLabelText('Pregunta siguiente'))
+    expect(screen.getByRole('radio', { name: 'C' }).getAttribute('aria-checked')).toBe('false')
+    expect(screen.getByRole('radio', { name: 'D' }).getAttribute('aria-checked')).toBe('false')
+  })
+
   it('treats Enter on an unselected option as submit, without selecting it', () => {
     const { carrier, answer } = wait([{
       id: 'mode', question: 'Which mode?', options: [{ label: 'Alpha' }, { label: 'Beta' }],
@@ -316,7 +371,7 @@ describe('QuestionComposer', () => {
 
     // CSS shows each toggle only while its copy overflows; every candidate is rendered.
     const heading = screen.getByRole('heading', { name: 'How should the release graph change?' })
-    const [questionToggle, descriptionToggle, ...rest] = screen.getAllByRole('button', { name: '展开' })
+    const [questionToggle, descriptionToggle, ...rest] = screen.getAllByRole('button', { name: 'Expandir' })
     expect(rest).toHaveLength(0)
     if (questionToggle === undefined || descriptionToggle === undefined) throw new Error('Both copy toggles must render')
     expect(questionToggle.getAttribute('aria-describedby')).toBe(heading.id)
@@ -330,7 +385,7 @@ describe('QuestionComposer', () => {
 
     fireEvent.click(descriptionToggle)
     expect(descriptionToggle.getAttribute('aria-expanded')).toBe('true')
-    expect(descriptionToggle.getAttribute('aria-label')).toBe('收起')
+    expect(descriptionToggle.getAttribute('aria-label')).toBe('Contraer')
     expect(text.closest('[data-option-row]')?.hasAttribute('data-expanded')).toBe(true)
     expect(screen.getByText(description)).toBe(text)
     expect(option.getAttribute('aria-checked')).toBe('false')
@@ -338,13 +393,13 @@ describe('QuestionComposer', () => {
 
     fireEvent.click(questionToggle)
     expect(questionToggle.getAttribute('aria-expanded')).toBe('true')
-    expect(questionToggle.getAttribute('aria-label')).toBe('收起')
+    expect(questionToggle.getAttribute('aria-label')).toBe('Contraer')
     expect(heading.parentElement?.hasAttribute('data-expanded')).toBe(true)
     fireEvent.click(questionToggle)
     fireEvent.click(descriptionToggle)
     expect(heading.parentElement?.hasAttribute('data-expanded')).toBe(false)
     expect(text.closest('[data-option-row]')?.hasAttribute('data-expanded')).toBe(false)
-    expect(screen.getAllByRole('button', { name: '展开' })).toEqual([questionToggle, descriptionToggle])
+    expect(screen.getAllByRole('button', { name: 'Expandir' })).toEqual([questionToggle, descriptionToggle])
   })
 
   it('resets scrolling and expanded copy when the question changes', () => {
@@ -365,8 +420,8 @@ describe('QuestionComposer', () => {
     expect(screen.getByRole('region', { name: 'First question?' })).toBeTruthy()
     const firstScroll = screen.getByText('First question?').closest('[data-question-scroll]') as HTMLElement
     firstScroll.scrollTop = 80
-    for (const toggle of screen.getAllByRole('button', { name: '展开' })) fireEvent.click(toggle)
-    expect(screen.getAllByRole('button', { name: '收起' }).map(toggle => toggle.getAttribute('aria-expanded'))).toEqual(['true', 'true'])
+    for (const toggle of screen.getAllByRole('button', { name: 'Expandir' })) fireEvent.click(toggle)
+    expect(screen.getAllByRole('button', { name: 'Contraer' }).map(toggle => toggle.getAttribute('aria-expanded'))).toEqual(['true', 'true'])
     fireEvent.click(screen.getByRole('radio', { name: 'Continue' }))
 
     const secondScroll = screen.getByText('Second question?').closest('[data-question-scroll]') as HTMLElement
@@ -374,10 +429,10 @@ describe('QuestionComposer', () => {
     expect(screen.getByRole('region', { name: 'Second question?' })).toBeTruthy()
     expect(secondScroll).toBe(firstScroll)
     expect(secondScroll.scrollTop).toBe(0)
-    expect(screen.queryByRole('button', { name: '收起' })).toBeNull()
+    expect(screen.queryByRole('button', { name: 'Contraer' })).toBeNull()
     expect(secondScroll.querySelector('[data-expanded]')).toBeNull()
     expect(screen.queryByText(firstDescription)).toBeNull()
-    const descriptionToggle = screen.getAllByRole('button', { name: '展开' })[1]
+    const descriptionToggle = screen.getAllByRole('button', { name: 'Expandir' })[1]
     expect(document.getElementById(descriptionToggle?.getAttribute('aria-controls') ?? '')?.textContent).toBe(secondDescription)
   })
 
@@ -387,15 +442,15 @@ describe('QuestionComposer', () => {
       { id: 'second', question: 'Second question?', options: [{ label: 'Continue', description: 'Second detail.' }] },
     ])
     render(<QuestionComposer matched={carrier} {...kit} />)
-    fireEvent.click(screen.getAllByRole('button', { name: '展开' })[1] as HTMLElement)
-    expect(screen.getByRole('button', { name: '收起' })).toBeTruthy()
+    fireEvent.click(screen.getAllByRole('button', { name: 'Expandir' })[1] as HTMLElement)
+    expect(screen.getByRole('button', { name: 'Contraer' })).toBeTruthy()
 
     // Another surface of the same Session moves the shared question position.
     const blank = { selected: [], custom: '', skipped: false }
     act(() => { kit.actions.replace(carrier.key, { index: 1, drafts: [blank, blank] }) })
 
     expect(screen.getByRole('region', { name: 'Second question?' })).toBeTruthy()
-    expect(screen.queryByRole('button', { name: '收起' })).toBeNull()
+    expect(screen.queryByRole('button', { name: 'Contraer' })).toBeNull()
     expect(document.querySelector('[data-expanded]')).toBeNull()
   })
 
@@ -404,7 +459,7 @@ describe('QuestionComposer', () => {
       id: 'plan',
       question: '批准这个计划吗？',
       detail: '# 实施计划\n\n- **先验证**现状\n- 修改 `QuestionComposer`',
-      options: [{ label: '批准' }],
+      options: [{ label: 'Approve' }],
     }])
     const view = render(<QuestionComposer matched={carrier} {...kit} />)
 
@@ -971,7 +1026,7 @@ describe('review card', () => {
     expect(chosen.getAttribute('aria-checked')).toBe('true')
     expect(chosen.disabled).toBe(true)
     // Long copy stays readable on a frozen card.
-    expect(screen.getAllByRole<HTMLButtonElement>('button', { name: '展开' }).map(toggle => toggle.disabled)).toEqual([false, false, false])
+    expect(screen.getAllByRole<HTMLButtonElement>('button', { name: 'Expandir' }).map(toggle => toggle.disabled)).toEqual([false, false, false])
     // Nothing is left to send, and the unused free-text field would read as
     // somewhere to type.
     expect(screen.queryByRole('button', { name: 'Omitir' })).toBeNull()
@@ -992,6 +1047,28 @@ describe('review card', () => {
     expect(screen.getByText(es['review.skipped'])).toBeTruthy()
     expect(screen.getByRole('checkbox', { name: '系统设计' }).getAttribute('aria-checked')).toBe('false')
     expect(screen.queryByPlaceholderText('Escribe tu respuesta')).toBeNull()
+  })
+
+  it('shows recorded multi-select answers without restoring recommended defaults', () => {
+    const questions: PendingQuestion['questions'] = [
+      {
+        id: 'checks', question: 'Which checks?', multiSelect: true,
+        options: [{ label: 'Unit (Recommended)' }, { label: 'Lint' }, { label: 'Types (Recommended)' }],
+      },
+      {
+        id: 'unrecorded', question: 'Which targets?', multiSelect: true,
+        options: [{ label: 'Web (Recommended)' }, { label: 'Desktop' }],
+      },
+    ]
+    const carrier = new PendingQuestion(SID, questions, ToolCallId(REVIEWED_CALL), undefined, [{ id: 'checks', selected: ['Lint'] }])
+    carrier.attachSeat({ hide: vi.fn() })
+    render(<QuestionComposer matched={carrier} {...kit} />)
+
+    expect(screen.getByRole('checkbox', { name: 'Unit' }).getAttribute('aria-checked')).toBe('false')
+    expect(screen.getByRole('checkbox', { name: 'Lint' }).getAttribute('aria-checked')).toBe('true')
+    expect(screen.getByRole('checkbox', { name: 'Types' }).getAttribute('aria-checked')).toBe('false')
+    fireEvent.click(screen.getByLabelText('Pregunta siguiente'))
+    expect(screen.getByRole('checkbox', { name: 'Web' }).getAttribute('aria-checked')).toBe('false')
   })
 
   it('reads the record back instead of a draft the live card left under the same key', () => {

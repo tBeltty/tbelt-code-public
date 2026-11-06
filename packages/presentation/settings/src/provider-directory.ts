@@ -47,15 +47,12 @@ export interface ProviderDirectoryEntry {
   readonly error?: string
 }
 
-/** Route ids that the provider list places first, in this order. */
-const LEADING_ROUTES: readonly string[] = ['deepseek-account', 'deepseek-official']
-
 /**
  * Join the configurable providers with the live routes.
  * @param registered - live provider routes in registration order.
  * @param directory - configurable providers in declaration order.
- * @returns the account and official routes first, then every other route in its original order; a live route no
- * adapter declares as configurable has an empty settings address.
+ * @returns the configurable providers in declaration order, then live routes no adapter declares as configurable
+ * (their settings address is empty); no provider is placed first.
  */
 export function joinProviderDirectory(
   registered: readonly RegisteredProvider[],
@@ -78,11 +75,7 @@ export function joinProviderDirectory(
     if (declared.has(provider.id)) continue
     rows.push({ provider: provider.id, displayName: provider.name, settingsNs: '', settingsPath: [], active: true })
   }
-  const rank = (provider: string): number => {
-    const index = LEADING_ROUTES.indexOf(provider)
-    return index === -1 ? LEADING_ROUTES.length : index
-  }
-  return rows.toSorted((left, right) => rank(left.provider) - rank(right.provider))
+  return rows
 }
 
 /**

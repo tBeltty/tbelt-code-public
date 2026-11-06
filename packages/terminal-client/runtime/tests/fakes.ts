@@ -6,7 +6,8 @@ import type { SessionEvent } from '@deepseek-ai/dsh-session/types'
 import { createStyle } from '@deepseek-ai/dsh-terminal-views'
 import type { PickerItem, PromptOptions, TranscriptEvent } from '@deepseek-ai/dsh-terminal-views'
 import type {
-  ApprovalListenerPort, ChangeResultPort, ClientServicesPort, EventChangePort, EventEntryPort, EventWindowPort, ModelCatalogPort,
+  ApprovalListenerPort, ChangeResultPort, ClientServicesPort, EventChangePort, EventEntryPort, EventWindowPort, ImageRefPort,
+  ModelCatalogPort,
   ObservablePort, QueueActionPort, QuestionListenerPort, RemotePort, RemoteResultPort, SessionBindingPort, SessionFacePort,
   SessionRemotePort, SessionSnapshotPort, SessionsPort, SettingsNamespacePort, SettingsOpPort, StoredImagePort,
 } from '../src/ports.ts'
@@ -55,7 +56,7 @@ export class FakeSession implements SessionFacePort {
   )
 
   readonly readAttachment = vi.fn(
-    (_id: string): Promise<RemoteResultPort<StoredImagePort>> => Promise.resolve({
+    (_ref: ImageRefPort): Promise<RemoteResultPort<StoredImagePort>> => Promise.resolve({
       ok: true,
       value: { attachment: { mediaType: 'image/png', bytes: 3, width: 1, height: 1 }, data: Uint8Array.from([65, 66, 67]) },
     }),

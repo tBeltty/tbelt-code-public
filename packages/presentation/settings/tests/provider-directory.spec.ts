@@ -11,7 +11,7 @@ describe('joinProviderDirectory', () => {
   it('marks configurable providers active when their route is live and keeps the Host diagnostics', () => {
     const rows = joinProviderDirectory([{ id: 'anthropic', name: 'Anthropic' }], directory)
     expect(rows.map(row => [row.provider, row.active])).toEqual([
-      ['deepseek-official', false], ['anthropic', true], ['broken', false],
+      ['anthropic', true], ['deepseek-official', false], ['broken', false],
     ])
     expect(rows.find(row => row.provider === 'deepseek-official')).toMatchObject({ declared: false })
     expect(rows.find(row => row.provider === 'broken')).toMatchObject({ error: 'bad base URL' })
@@ -34,13 +34,13 @@ describe('joinProviderDirectory', () => {
     expect(rows).toEqual([{ provider: 'custom', displayName: 'Custom', settingsNs: '', settingsPath: [], active: true }])
   })
 
-  it('places the account route before the official route and both before the rest', () => {
+  it('keeps declaration order without placing any route first', () => {
     const rows = joinProviderDirectory([], [
       { provider: 'zed', displayName: 'Zed', settingsNs: 'n', settingsPath: [] },
       { provider: 'deepseek-official', displayName: 'Official', settingsNs: 'n', settingsPath: [] },
       { provider: 'deepseek-account', displayName: 'Account', settingsNs: 'n', settingsPath: [] },
     ])
-    expect(rows.map(row => row.provider)).toEqual(['deepseek-account', 'deepseek-official', 'zed'])
+    expect(rows.map(row => row.provider)).toEqual(['zed', 'deepseek-official', 'deepseek-account'])
   })
 })
 

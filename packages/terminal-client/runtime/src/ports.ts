@@ -59,6 +59,11 @@ export type PromptPartPort =
   | { readonly type: 'image'; readonly mediaType: string; readonly data: string; readonly name?: string }
   | { readonly type: 'file'; readonly receiptId: string }
 
+/** The stored-image reference a user message carries; the Host verifies it against storage. */
+export interface ImageRefPort {
+  readonly attachmentId: string
+}
+
 /** A stored image read back from the Host. */
 export interface StoredImagePort {
   readonly attachment: {
@@ -78,7 +83,7 @@ export interface SessionFacePort extends ObservablePort<SessionSnapshotPort> {
     mode: 'queue' | 'steer',
   ): Promise<RemoteResultPort<{ readonly accepted: true }>>
   rename(title: string): Promise<RemoteResultPort<{ readonly title: string }>>
-  readAttachment(attachmentId: string): Promise<RemoteResultPort<StoredImagePort>>
+  readAttachment(attachment: ImageRefPort): Promise<RemoteResultPort<StoredImagePort>>
   cancel(): Promise<RemoteResultPort<{ readonly accepted: true }>>
   command(line: string): Promise<RemoteResultPort<{ readonly matched: boolean }>>
   /** Apply one edit, removal or steer to a message still waiting in the queue. */

@@ -181,7 +181,7 @@ describe('one-shot preset children', () => {
   })
 
   it('tells the model which presets run one task', async () => {
-    const { ctx } = await setup({ allowedAgentPresets: ['writer', 'fast-reviewer'] }, {}, { ...fastReviewer, oneShot: true })
+    const { ctx } = await setup({ allowedAgentPresets: ['writer', 'fast-reviewer'] }, {}, { ...fastReviewer, origin: 'agent-file', oneShot: true })
     expect(JSON.stringify(ctx.tools.schemas())).toContain('fast-reviewer: Reviews on a cheap route Runs one task and accepts no follow-up messages.')
   })
 })

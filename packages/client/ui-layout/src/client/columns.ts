@@ -17,16 +17,12 @@ export const SIDEBAR_MAX = 420
 export const SIDEBAR_DEFAULT = 280
 /** Closed-sidebar rail: a 24px icon column between 16px horizontal paddings. */
 export const SIDEBAR_COLLAPSED = 56
+/** Frame width below which the sidebar overlays the main content without a rail. */
+export const SIDEBAR_DRAWER_BREAKPOINT = 768
 /** Viewport width below which the sidebar auto-collapses to the rail (deepsuite
  * LG breakpoint); a manual toggle below it re-expands over the squeezed center
  * (stores.ts narrowExpanded). */
 export const SIDEBAR_AUTO_COLLAPSE = 1024
-/** Below this width, "re-expand over the squeezed center" is no longer viable
- * (SIDEBAR_MIN alone leaves too little for reading text): the expanded
- * sidebar floats as a true overlay with a scrim instead of taking a grid
- * track. Matches the phone-tier breakpoint documented in
- * packages/client/README.md. */
-export const SIDEBAR_PHONE_OVERLAY = 599
 /** Right column drag clamp floor. */
 export const RIGHTBAR_MIN = 300
 /** Maximum normal right panel width as a fraction of the frame. */
@@ -52,11 +48,14 @@ export function clampWidth(px: number, min: number, max: number): number {
  * @param rightbar - requested right panel width in px (0 = no track).
  * @param collapsedWidth - track width of the closed sidebar; the default keeps
  *   the icon rail, 0 hides the column entirely (macOS desktop).
+ * @param centeredSidebar - place an expanded sidebar's edge at the frame midpoint.
  * @returns actual widths after shrinking or removing the right track; only
  *   without that track may the center fall below its minimum, down to zero.
  */
-export function computeColumns(viewport: number, sidebar: number, rightbar: number, collapsedWidth = SIDEBAR_COLLAPSED): Columns {
-  const s = sidebar === 0 ? collapsedWidth : clampWidth(sidebar, SIDEBAR_MIN, SIDEBAR_MAX)
+export function computeColumns(
+  viewport: number, sidebar: number, rightbar: number, collapsedWidth = SIDEBAR_COLLAPSED, centeredSidebar = false,
+): Columns {
+  const s = sidebar === 0 ? collapsedWidth : centeredSidebar ? viewport / 2 : clampWidth(sidebar, SIDEBAR_MIN, SIDEBAR_MAX)
   const available = viewport - s - CENTER_MIN
   const r = rightbar === 0 || available < RIGHTBAR_MIN
     ? 0

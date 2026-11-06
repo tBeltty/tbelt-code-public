@@ -1,1 +1,1 @@
-Cuenta de DeepSeekdeepseek-accountModelosUsando los valores predeterminados del adaptadorAñadir modeloCancelarAplicar
+Cuenta de DeepSeekdeepseek-accountModelosUsando los valores predeterminados del adaptadorNombre visibleNombre visibleAñadir modeloCancelarAplicar

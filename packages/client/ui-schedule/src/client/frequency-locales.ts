@@ -12,14 +12,20 @@
 
 /** English rule and duration copy; the key-set source of truth. */
 export const frequencyEn = {
+  'frequency.hostMonthly': 'Monthly on day {days} at {time}, or month end',
+  'frequency.hostDailyInterval': 'Every {interval} days at {time}',
+  'frequency.hostWeeklyInterval': 'Every {interval} weeks on {weekdays} at {time}',
+  'frequency.hostMonthlyInterval': 'Every {interval} months on day {days} at {time}, or month end',
+  'frequency.hostZone': '{rule} ({timeZone})',
+  'frequency.hostCustom': 'Custom',
   'time.locale': 'en',
   'time.utcPrefix': 'UTC',
   'frequency.daily': 'Daily at {time} ({timeZone})',
   'frequency.dailyLocal': 'Daily at {time}',
   'frequency.weekly': 'Weekly on {weekdays} at {time} ({timeZone})',
   'frequency.weeklyLocal': 'Weekly on {weekdays} at {time}',
-  'frequency.cron': 'Cron {expression} ({timeZone})',
-  'frequency.cronLocal': 'Cron {expression}',
+  'frequency.cron': 'Custom ({timeZone})',
+  'frequency.cronLocal': 'Custom',
   'frequency.cronRule': '{rule} ({timeZone})',
   'cron.list.join': ', ',
   'cron.part.join': ' ',
@@ -70,6 +76,12 @@ export const frequencyEn = {
 
 /** Spanish dictionary, checked against the English keys. */
 export const frequencyEs = {
+  'frequency.hostMonthly': 'Cada mes, los días {days} a las {time}, o a fin de mes',
+  'frequency.hostDailyInterval': 'Cada {interval} días a las {time}',
+  'frequency.hostWeeklyInterval': 'Cada {interval} semanas, {weekdays}, a las {time}',
+  'frequency.hostMonthlyInterval': 'Cada {interval} meses, los días {days} a las {time}, o a fin de mes',
+  'frequency.hostZone': '{rule} ({timeZone})',
+  'frequency.hostCustom': 'Personalizado',
   'time.locale': 'es',
   'time.utcPrefix': 'UTC',
   'frequency.daily': 'Cada día a las {time} ({timeZone})',
@@ -128,6 +140,12 @@ export const frequencyEs = {
 
 /** Greek counterpart of {@link frequencyEn}. */
 export const frequencyEl = {
+  'frequency.hostMonthly': 'Κάθε μήνα την ημέρα {days} στις {time}, ή στο τέλος του μήνα',
+  'frequency.hostDailyInterval': 'Κάθε {interval} ημέρες στις {time}',
+  'frequency.hostWeeklyInterval': 'Κάθε {interval} εβδομάδες, {weekdays}, στις {time}',
+  'frequency.hostMonthlyInterval': 'Κάθε {interval} μήνες την ημέρα {days} στις {time}, ή στο τέλος του μήνα',
+  'frequency.hostZone': '{rule} ({timeZone})',
+  'frequency.hostCustom': 'Προσαρμοσμένο',
   'time.locale': 'el',
   'time.utcPrefix': 'UTC',
   'frequency.daily': 'Καθημερινά στις {time} ({timeZone})',
@@ -186,6 +204,12 @@ export const frequencyEl = {
 
 /** French dictionary, checked against the English keys. */
 export const frequencyFr = {
+  'frequency.hostMonthly': 'Chaque mois, les jours {days} à {time}, ou en fin de mois',
+  'frequency.hostDailyInterval': 'Tous les {interval} jours à {time}',
+  'frequency.hostWeeklyInterval': 'Toutes les {interval} semaines, {weekdays}, à {time}',
+  'frequency.hostMonthlyInterval': 'Tous les {interval} mois, les jours {days} à {time}, ou en fin de mois',
+  'frequency.hostZone': '{rule} ({timeZone})',
+  'frequency.hostCustom': 'Personnalisé',
   'time.locale': 'fr',
   'time.utcPrefix': 'UTC',
   'frequency.daily': 'Tous les jours à {time} ({timeZone})',

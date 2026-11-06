@@ -755,7 +755,7 @@ describe('TerminalSession images', () => {
     events.append(userWithImage('a1'), assistantEvent('Nice.\n'))
     expect(io.text).not.toContain('1337')
     await flush()
-    expect(session.readAttachment).toHaveBeenCalledWith('a1')
+    expect(session.readAttachment).toHaveBeenCalledWith(expect.objectContaining({ attachmentId: 'a1' }))
     expect(io.text).toContain('\u001B]1337;File=inline=1;size=3;')
     expect(io.text).toContain('QUJD')
     const shown = visible(io.text)

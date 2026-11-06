@@ -1,1 +1,1 @@
-Esperando el inicio de sesión¿La página no se abrió sola? Copiar enlace de inicio de sesión, y ábrelo en tu navegador para terminar de iniciar sesión.Cancelar
+Esperando iniciar sesión¿La página no se abrió automáticamente? Copiar enlace de inicio de sesión, luego ábrelo en tu navegador para terminar de iniciar sesión.Cancelar

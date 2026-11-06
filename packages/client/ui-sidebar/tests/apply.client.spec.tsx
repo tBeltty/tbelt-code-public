@@ -22,7 +22,7 @@ afterEach(async () => {
 })
 
 function SidebarFrame({ renderSlot }: PropsRenderSlots<'sidebar'>) {
-  return renderSlot('sidebar', { collapsed: false, width: 300 })
+  return renderSlot('sidebar', { collapsed: false, width: 300, drawer: false })
 }
 
 async function bench(declare = true) {
@@ -35,7 +35,7 @@ async function bench(declare = true) {
   await ctx.plugin(SlotRegistry).await()
   const layout = { toggleSidebar: vi.fn(), selectPanel: vi.fn() }
   const uiWorkspace = { startSession: vi.fn() }
-  ctx.provide('shortcuts', { catalog: createSnapshotStore([]) } as never)
+  ctx.provide('shortcuts', { catalog: createSnapshotStore([]), describeBinding: () => ({ keys: [] }) } as never)
   ctx.provide('layout', layout)
   ctx.provide('uiWorkspace', uiWorkspace as never)
   ctx.provide('locale', new LocaleRuntime(ctx))

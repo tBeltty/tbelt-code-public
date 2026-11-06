@@ -18,7 +18,7 @@ function document(overrides: Record<string, unknown> = {}): Record<string, unkno
     title: { en: 'Example Market', zh: '示例市场' },
     metadata: {
       categories: { productivity: { title: 'Productivity' } },
-      labels: { official: { title: { en: 'Official', zh: '官方' } }, ui: { title: 'UI' } },
+      labels: { official: { title: { en: 'Official', zh: 'Official' } }, ui: { title: 'UI' } },
       sortKeys: { downloads: { title: 'Downloads', order: 'desc' } },
     },
     plugins: [entry()],
@@ -81,7 +81,7 @@ describe('parseMarketIndex', () => {
       description: 'Community bundles',
       metadata: {
         categories: { productivity: { title: 'Productivity' } },
-        labels: { official: { title: { en: 'Official', zh: '官方' } }, ui: { title: 'UI' } },
+        labels: { official: { title: { en: 'Official', zh: 'Official' } }, ui: { title: 'UI' } },
         sortKeys: { downloads: { title: 'Downloads', order: 'desc' } },
       },
       plugins: [

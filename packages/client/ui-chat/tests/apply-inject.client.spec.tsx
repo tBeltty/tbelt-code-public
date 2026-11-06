@@ -1,4 +1,6 @@
+import type { AssistantNodeInjected } from '../src/client/chat/AssistantNodeView.tsx'
 import { MessageId } from '@deepseek-ai/dsh-llm/brand'
+import { apply as applyMenus, inject as injectMenus } from '@deepseek-ai/dsh-client-ui-context-menu/client'
 // @vitest-environment jsdom
 /** Chat inject factories exercised over independently mounted Conversation and Chat plugins. */
 import { createSnapshotStore } from '@deepseek-ai/dsh-client-store'
@@ -54,7 +56,9 @@ function sessionFakeFor() {
   } satisfies SessionBehaviorOverrides
 }
 
-async function bench(initialSettings?: ChatSettings, withBrowserRegistry = true, withProcessGroups = true) {
+async function bench(
+  initialSettings?: ChatSettings, withBrowserRegistry = true, withProcessGroups = true, shortcuts?: object,
+) {
   const runtime = await SlotTestRuntime.create()
   const chatSettings = stubConfigForm<ChatSettings>()
   if (initialSettings !== undefined) chatSettings.publish({ value: initialSettings })
@@ -102,6 +106,10 @@ async function bench(initialSettings?: ChatSettings, withBrowserRegistry = true,
   const locale = new LocaleRuntime(runtime.ctx)
   runtime.ctx.provide('locale', locale)
   runtime.slots.installLocale(locale)
+  runtime.ctx.provide('shortcuts', (shortcuts ?? {
+    catalog: createSnapshotStore([]), describeBinding: () => ({ keys: [] }), registerFixed: () => () => {},
+  }) as never)
+  await runtime.mount({ inject: [...injectMenus], apply: applyMenus })
   await runtime.root.declare({
     'main': { kind: 'keyed', scope: 'root' },
     'settings.general.item': { kind: 'list', scope: 'root' },
@@ -317,7 +325,7 @@ describe('Chat inject API', () => {
       expect(prefixes.collect(ROOT).map(entry => entry.text)).toEqual(['> kept'])
       face.removeQuote(ROOT, kept!.id)
       expect(prefixes.collect(ROOT)).toEqual([])
-      expect(injected.quoteShortcut).toBeUndefined()
+      expect(injected.quoteShortcut).toEqual({ keys: [], mac: false })
 
       await b.chat.dispose()
       injected.quote('after unload')
@@ -331,9 +339,10 @@ describe('Chat inject API', () => {
   it('describes and reserves the fixed Quote shortcut through the shortcut service', async () => {
     const registerFixed = vi.fn<(command: { id: string; label: () => string }) => () => void>(() => () => {})
     const describeBinding = vi.fn(() => ({ keys: ['⌘', 'L'] }))
-    const b = await bench()
+    const b = await bench(undefined, true, true, {
+      catalog: createSnapshotStore([]), platform: 'macos', registerFixed, describeBinding,
+    })
     try {
-      b.runtime.ctx.provide('shortcuts', { platform: 'macos', registerFixed, describeBinding } as never)
       const quoteRow = () => registerFixed.mock.calls.map(([command]) => command).filter(command => command.id === 'chat.quote')
       await vi.waitFor(() => { expect(quoteRow()).toHaveLength(1) })
       expect(quoteRow()[0]).toMatchObject({ keys: ['⌘', 'L'], bindings: [{ code: 'KeyL', modifiers: ['primary'] }], group: 'input' })
@@ -371,9 +380,15 @@ describe('Chat inject API', () => {
   it('resolves relative file paths against the Session\'s current working directory', async () => {
     const b = await bench()
     const { injected } = b.chatViewApi(b.rootReference)
+    vi.spyOn(b.runtime.ctx.contextMenus, 'open')
     await b.runtime.sessions.setProjection(ROOT, 'workingDirectory', '/proj/.agents/worktrees/w')
     await injected.openFile('src/a.ts')
     expect(b.sidebarRight.openResource).toHaveBeenLastCalledWith('dsh-resource://file/session/root-1/.agents/worktrees/w/src/a.ts')
+    expect(injected.resolveFilePath('src/a.ts')).toBe('/proj/.agents/worktrees/w/src/a.ts')
+    await b.runtime.sessions.setProjection(ROOT, 'workingDirectory', null)
+    expect(injected.resolveFilePath('file.ts')).toBe('/proj/file.ts')
+    await b.runtime.sessions.setProjection(ROOT, 'workingDirectory', '/proj/.agents/worktrees/w')
+
     // A leading `./` names the same file, so the Sidebar reuses its tab.
     await injected.openFile('./src/a.ts')
     expect(b.sidebarRight.openResource).toHaveBeenLastCalledWith('dsh-resource://file/session/root-1/.agents/worktrees/w/src/a.ts')
@@ -572,12 +587,16 @@ describe('Chat inject API', () => {
     expect(flow.injected.hooks.connectionState).toBe(b.runtime.ctx.get('connection')!.state)
     expect(flow.injected.hooks.presentation).toBe(injected.hooks.presentation)
 
-    expect(injected.fileMentions(owner)).toBeUndefined()
+    const entry = b.runtime.slots.entries('conversation.chat.node').find(entry => entry.options.key === 'assistant-step')!
+    const assistant = entry.inject!(ROOT as never)
+    const fileMentions = assistant.fileMentions as AssistantNodeInjected['fileMentions']
+    const getFileTriggerProps = vi.fn(() => ({}))
+    expect(fileMentions(owner, getFileTriggerProps)).toBeUndefined()
     const mentions = { resolve: vi.fn() } as never
     const forClosing = vi.fn(() => mentions)
     b.runtime.ctx.provide('chatFileMentions', { forClosing } as never)
-    expect(injected.fileMentions(owner)).toBe(mentions)
-    expect(forClosing).toHaveBeenCalledWith(owner, ROOT)
+    expect(fileMentions(owner, getFileTriggerProps)).toBe(mentions)
+    expect(forClosing).toHaveBeenCalledWith(owner, ROOT, getFileTriggerProps)
 
     expect(injected.codeRunner()).toBeUndefined()
     const runner = { accepts: () => true, Component: () => null }
@@ -595,7 +614,7 @@ describe('Chat inject API', () => {
 
     const loaded = await injected.loadImage(ATTACHMENT)
     expect(loaded).toEqual(expect.any(String))
-    expect(b.session.readAttachment).toHaveBeenCalledWith(ATTACHMENT.attachmentId)
+    expect(b.session.readAttachment).toHaveBeenCalledWith(ATTACHMENT)
     expect(injected.loadImage.peek?.(ATTACHMENT)).toBe(loaded)
     await b.runtime.dispose()
   })

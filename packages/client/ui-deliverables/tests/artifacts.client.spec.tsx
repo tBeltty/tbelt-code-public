@@ -12,7 +12,7 @@ import type {
   ConversationLocationDataSource, ConversationLocationDataStore, ConversationTimelineSnapshot, ConversationTurnDataMap,
   TurnLocation,
 } from '@deepseek-ai/dsh-client-ui-conversation/client'
-import { makeTranslate } from '@deepseek-ai/dsh-client-test-runtime'
+import { contextMenuHook, makeTranslate } from '@deepseek-ai/dsh-client-test-runtime'
 import { SessionId } from '@deepseek-ai/dsh-session/types'
 import { ArtifactsButton } from '../src/client/ArtifactsButton.tsx'
 import { ArtifactsTab, type ArtifactsTabProps } from '../src/client/ArtifactsTab.tsx'
@@ -110,12 +110,13 @@ function tabProps(turns: readonly ArtifactTurn[], locale: typeof en = en) {
     ids: [], byId: { session: { cwd: '/work' } } as never, phase: 'ready', projectionsBySession: {},
   }
   const openResource = vi.fn()
-  const openPresented = vi.fn<PresentedOpenController['open']>().mockResolvedValue(null)
+  const openPresented = vi.fn<PresentedOpenController['open']>().mockResolvedValue({ kind: 'skipped' })
   const openChangesReview = vi.fn()
   const props = {
     sessionId: SessionId('session'),
     useSessions: <T,>(select: (state: SessionListState) => T): T => select(sessions),
     useTabInfo: () => ({ tab: { actions: { openResource } } }),
+    useContextMenu: contextMenuHook(vi.fn()),
     artifacts: () => source(turns),
     renderSlot: renderFileActions,
     useShowCodeDiff: <T,>(select: (value: boolean) => T): T => select(true),

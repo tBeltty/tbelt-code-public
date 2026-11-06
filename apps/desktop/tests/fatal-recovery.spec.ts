@@ -57,7 +57,8 @@ it.each(['win32', 'darwin', 'linux'] as const)('offers the same listener conflic
   expect(operations.show.mock.calls[0]![0].buttons).toEqual([
     operations.messages().exitApplication, operations.messages().restartApplication,
   ])
-  expect(operations.show.mock.calls[0]![0].detail).toBe(operations.messages().startupAddressInUse)
+  expect(operations.show.mock.calls[0]![0].detail)
+    .toBe(`${operations.messages().startupAddressInUse}\n${operations.messages().reportUnavailable}`)
   choice.resolve({ response: 0, checkboxChecked: false })
   stopped.resolve(undefined)
   await pending
@@ -203,7 +204,8 @@ it('shows the dialog without a path when the report write fails or returns nothi
     const pending = recovery.report(new Error('fatal'), 'main')
     await shown(operations)
     await vi.waitFor(() => { expect(operations.show).toHaveBeenCalledOnce() })
-    expect(operations.show.mock.calls[0]![0].detail).toBe(`fatal\n\n${operations.messages().startupReinstallAdvice}`)
+    expect(operations.show.mock.calls[0]![0].detail)
+      .toBe(`fatal\n${operations.messages().reportUnavailable}\n\n${operations.messages().startupReinstallAdvice}`)
     choice.resolve({ response: 0, checkboxChecked: false })
     stopped.resolve(undefined)
     await pending
@@ -223,6 +225,47 @@ it('does not wait longer than the report deadline before showing the dialog', as
     choice.resolve({ response: 0, checkboxChecked: false })
     stopped.resolve(undefined)
     await pending
+  } finally {
+    vi.useRealTimers()
+  }
+})
+
+it('reports a slow write as pending and copies the report once it is saved', async () => {
+  vi.useFakeTimers()
+  try {
+    const written = Promise.withResolvers<string>()
+    const { operations, stopped, recovery } = fixture('en', () => written.promise)
+    operations.show.mockResolvedValueOnce({ response: 3, checkboxChecked: false })
+      .mockResolvedValueOnce({ response: 0, checkboxChecked: false })
+    stopped.resolve(undefined)
+    const pending = recovery.report(new Error('fatal'), 'main')
+    await vi.advanceTimersByTimeAsync(CRASH_REPORT_WAIT_MS)
+    const messages = operations.messages()
+    expect(operations.show.mock.calls[0]![0].detail).toContain(messages.reportPending)
+    expect(operations.show.mock.calls[0]![0].buttons).toContain(messages.copyReport)
+    written.resolve(REPORT_PATH)
+    await pending
+    expect(operations.copyReport).toHaveBeenCalledExactlyOnceWith(REPORT_PATH)
+    expect(operations.show.mock.calls[1]![0].detail).toContain(messages.reportCopied)
+    expect(operations.show.mock.calls[1]![0].detail).toContain(REPORT_PATH)
+  } finally {
+    vi.useRealTimers()
+  }
+})
+
+it('keeps the pending status when the report is still unsaved after Copy report', async () => {
+  vi.useFakeTimers()
+  try {
+    const { operations, stopped, recovery } = fixture('en', () => new Promise<string>(() => {}))
+    operations.show.mockResolvedValueOnce({ response: 3, checkboxChecked: false })
+      .mockResolvedValueOnce({ response: 0, checkboxChecked: false })
+    stopped.resolve(undefined)
+    const pending = recovery.report(new Error('fatal'), 'main')
+    await vi.advanceTimersByTimeAsync(CRASH_REPORT_WAIT_MS * 2)
+    await pending
+    expect(operations.copyReport).not.toHaveBeenCalled()
+    expect(operations.show.mock.calls[1]![0].detail).toContain(operations.messages().reportPending)
+    expect(operations.show.mock.calls[1]![0].detail).not.toContain(operations.messages().reportCopied)
   } finally {
     vi.useRealTimers()
   }

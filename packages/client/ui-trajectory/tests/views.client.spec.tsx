@@ -1,4 +1,5 @@
 // @vitest-environment jsdom
+import { contextMenuHook } from '@deepseek-ai/dsh-client-test-runtime'
 /**
  * View registration acceptance on the real framework stack: the plugin fiber
  * registers Trajectory into a real SlotRegistry view ring, tabs
@@ -41,7 +42,6 @@ import { createConversationStore } from '@deepseek-ai/dsh-client-ui-conversation
 import { es as conversationEs } from '@deepseek-ai/dsh-client-ui-conversation/src/client/locales.ts'
 import * as localePlugin from '@deepseek-ai/dsh-client-locale/client'
 import { apply, inject } from '@deepseek-ai/dsh-client-ui-trajectory/client'
-import { apply as nodeApply } from '@deepseek-ai/dsh-client-ui-trajectory'
 import { PartialArguments } from '@deepseek-ai/dsh-util-values'
 import type { TrajectoryTurnModel } from '../src/client/layout.ts'
 import { TrajectoryTimeline as LocalizedTrajectoryTimeline } from '../src/client/TrajectoryTimeline.tsx'
@@ -237,6 +237,7 @@ function standaloneProps(
     useSessionRetainInfo: () => undefined,
     useWorkspaces: emptyWorkspaces(),
     ...allowAllAccess,
+    useContextMenu: contextMenuHook(),
     useConversation: bindSnapshotSelector(createSnapshotStore(conversationSnapshot(trajectory))),
     useInput: bindSnapshotSelector(input),
     inputActions,
@@ -261,6 +262,7 @@ type ConversationTargetSources = {
 /** Real-stack bench: root Context + real SlotRegistry ring + the plugin fiber. */
 async function bench(snapshot = historySnapshot(NODES)) {
   const runtime = await SlotTestRuntime.create()
+  runtime.remote.provideNamespaces({ toolResults: {} })
   runtimes.push(runtime)
   const ctx = runtime.ctx
   const slots = runtime.slots
@@ -276,7 +278,9 @@ async function bench(snapshot = historySnapshot(NODES)) {
   const conversationStore = createSnapshotStore<ConversationSnapshot>(conversationSnapshot(snapshot))
   const uiConversation = new UiConversation(ctx, runtime.sessions)
   const { events, views } = uiConversation
-  const targetSources: ConversationTargetSources = {
+  // Only the targets this trajectory bench binds; a typed lookup keeps the map
+  // non-exhaustive so other packages' targets need no dependency here.
+  const targetSources: Partial<ConversationTargetSources> = {
     chat: createSnapshotStore<ChatSnapshot | undefined>(undefined),
     trajectory: trajectoryStore,
     'tool-todo-history': createSnapshotStore<ConversationViewSnapshotMap['tool-todo-history'] | undefined>(undefined),
@@ -285,7 +289,11 @@ async function bench(snapshot = historySnapshot(NODES)) {
     snapshot: conversationStore,
     openTurn: createSnapshotStore<number | undefined>(undefined),
     activate: () => {},
-    target: target => targetSources[target],
+    target: (target) => {
+      const source = targetSources[target]
+      if (source === undefined) throw new Error(`trajectory bench has no source for target "${target}"`)
+      return source
+    },
   }
   vi.spyOn(uiConversation, 'binding').mockReturnValue(binding)
   // The conversation entry's role: declare the ring, then seed the chat entry.
@@ -369,6 +377,7 @@ function mount(fixture: Awaited<ReturnType<typeof bench>>) {
     useSessionRetainInfo: () => undefined,
     useWorkspaces,
     ...allowAllAccess,
+    useContextMenu: contextMenuHook(),
     useProjection,
     useInput,
     inputActions,
@@ -1333,6 +1342,118 @@ describe('timeline projection', () => {
 })
 
 describe('TrajectoryView state', () => {
+  const nestedCallNodes: LegacyConversationSlice['nodes'] = [
+    { kind: 'user', seq: 1, time: 1_000, content: [], source: null },
+    {
+      kind: 'assistant', seq: 2, time: 2_000, turn: 1, step: 1,
+      blocks: [
+        { kind: 'text', text: 'parent assistant' },
+        { kind: 'tool-call', callId: 'root', name: 'run_code', argsRaw: '{}' },
+        { kind: 'tool-call', callId: 'sibling', name: 'write', argsRaw: '{}' },
+      ],
+    },
+    {
+      kind: 'tool-result', seq: 3, time: 4_000, callId: 'root',
+      name: 'run_code', args: PartialArguments.fromText('{}'),
+      call: { name: 'run_code', argsRaw: '{}' }, callTime: 2_100,
+      content: [], isError: false,
+      subCalls: [{
+        phase: 'start', args: PartialArguments.fromText('{}'),
+        callId: 'first-child', parentCallId: 'root', name: 'bash', argsRaw: '{}',
+        turn: 1, step: 1, time: 2_200, subCalls: [],
+      }, {
+        phase: 'start', args: PartialArguments.fromText('{}'),
+        callId: 'child', parentCallId: 'root', name: 'read', argsRaw: '{}',
+        turn: 1, step: 1, time: 2_300,
+        subCalls: [{
+          phase: 'start', args: PartialArguments.fromText('{}'),
+          callId: 'grandchild', parentCallId: 'child', name: 'grep', argsRaw: '{}',
+          turn: 1, step: 1, time: 2_400, subCalls: [],
+        }],
+      }],
+    },
+    {
+      kind: 'tool-result', seq: 4, time: 5_000, callId: 'sibling',
+      name: 'write', args: PartialArguments.fromText('{}'),
+      call: { name: 'write', argsRaw: '{}' }, callTime: 2_100,
+      content: [], isError: false, subCalls: [],
+    },
+  ]
+
+  it('folds only descendants, searches them, and reveals a requested grandchild through every fold', () => {
+    const nodes = nestedCallNodes
+    const props = {
+      ...standaloneProps(nodes), t: tTrajectory,
+      ...standaloneHistory(historySnapshot(nodes)),
+      ...standaloneDuration(),
+    }
+    const view = render(<TrajectoryView {...props} />)
+    const collapse = screen.getByRole('button', { name: 'Collapse subcalls' })
+    expect(screen.getByRole('button', { name: 'Collapse calls' }).nextElementSibling).toBe(collapse)
+    expect(screen.getByRole('row', { name: /SUBTOOL.*bash/ })).toBeTruthy()
+    fireEvent.click(collapse)
+    expect(screen.queryByRole('row', { name: /SUBTOOL.*bash/ })).toBeNull()
+    expect(screen.getByRole('row', { name: /^TOOL.*run_code/ })).toBeTruthy()
+    expect(screen.getByRole('row', { name: /^TOOL.*write/ })).toBeTruthy()
+    expect(screen.getByRole('row', { name: /Collapsed subcalls/ }).textContent).toBe('…3 tool calls · bash, read, grep')
+    fireEvent.click(screen.getByRole('button', { name: 'Expand subcalls' }))
+    expect(screen.getByRole('row', { name: /SUBTOOL.*bash/ })).toBeTruthy()
+    fireEvent.click(screen.getByRole('button', { name: 'Collapse subcalls' }))
+    fireEvent.keyDown(screen.getByRole('row', { name: /Collapsed subcalls/ }), { key: 'Enter' })
+    expect(screen.getByRole('row', { name: /SUBTOOL.*bash/ })).toBeTruthy()
+    fireEvent.click(screen.getByRole('button', { name: 'Collapse subcalls' }))
+    fireEvent.change(screen.getByRole('searchbox', { name: 'Search trajectory' }), { target: { value: 'bash' } })
+    expect(screen.getByRole('row', { name: /SUBTOOL.*bash/ })).toBeTruthy()
+    fireEvent.change(screen.getByRole('searchbox', { name: 'Search trajectory' }), { target: { value: '' } })
+    expect(screen.queryByRole('row', { name: /SUBTOOL.*bash/ })).toBeNull()
+    fireEvent.click(screen.getByRole('button', { name: 'Collapse calls' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Collapse turns' }))
+    view.rerender(<TrajectoryView {...props} viewRequest={{ view: 'trajectory', focus: 'grandchild' }} />)
+    expect(screen.getByRole('row', { name: /SUBTOOL.*grep/ }).getAttribute('aria-selected')).toBe('true')
+    expect(screen.queryByRole('row', { name: /Collapsed/ })).toBeNull()
+  })
+
+  it.each(['click', 'Enter', ' '])('expands a subcall summary with %j', (activation) => {
+    render(<TrajectoryView
+      {...standaloneProps(nestedCallNodes)}
+      t={tTrajectory}
+      {...standaloneHistory(historySnapshot(nestedCallNodes))}
+      {...standaloneDuration()}
+    />)
+    fireEvent.click(screen.getByRole('button', { name: 'Collapse subcalls' }))
+    const summary = screen.getByRole('row', { name: /Collapsed subcalls summary.*3 tool calls/ })
+    expect(summary.tabIndex).toBe(0)
+    if (activation === 'click') fireEvent.click(summary)
+    else fireEvent.keyDown(summary, { key: activation })
+    expect(screen.getAllByRole('row', { name: /SUBTOOL/ })).toHaveLength(3)
+    expect(screen.queryByRole('row', { name: /Collapsed subcalls/ })).toBeNull()
+  })
+
+  it.each([
+    { outer: ['turns'] },
+    { outer: ['calls'] },
+    { outer: ['calls', 'turns'] },
+  ])('preserves subcall folding through outer folds $outer', ({ outer }) => {
+    render(<TrajectoryView
+      {...standaloneProps(nestedCallNodes)}
+      t={tTrajectory}
+      {...standaloneHistory(historySnapshot(nestedCallNodes))}
+      {...standaloneDuration()}
+    />)
+    fireEvent.click(screen.getByRole('button', { name: 'Collapse subcalls' }))
+    for (const kind of outer) {
+      fireEvent.click(screen.getByRole('button', { name: `Collapse ${kind}` }))
+    }
+    expect(screen.getAllByRole('row', { name: /Collapsed/ })).toHaveLength(1)
+    expect(screen.queryByRole('row', { name: /Collapsed subcalls/ })).toBeNull()
+    for (const kind of outer.toReversed()) {
+      fireEvent.click(screen.getByRole('button', { name: `Expand ${kind}` }))
+    }
+    expect(screen.getByRole('row', { name: /Collapsed subcalls/ })).toBeTruthy()
+    expect(screen.getByRole('row', { name: /^TOOL.*write/ })).toBeTruthy()
+    expect(screen.queryByRole('row', { name: /SUBTOOL/ })).toBeNull()
+  })
+
   it.each([
     { interrupted: true, status: 'Fallido' },
     { interrupted: false, status: 'Completado' },
@@ -1541,6 +1662,7 @@ describe('TrajectoryView state', () => {
     const first = render(
       <TrajectoryView
         {...commonProps}
+        {...standaloneDuration()}
         useDuration={bindSnapshotSelector(firstDuration)}
         setActualDuration={(value) => { firstDuration.set(value) }}
       />,
@@ -1556,6 +1678,7 @@ describe('TrajectoryView state', () => {
     render(
       <TrajectoryView
         {...commonProps}
+        {...standaloneDuration()}
         useDuration={bindSnapshotSelector(restoredDuration)}
         setActualDuration={(value) => { restoredDuration.set(value) }}
       />,
@@ -1597,10 +1720,4 @@ describe('TrajectoryView state', () => {
     )).toBeTruthy()
   })
 
-})
-
-describe('node half', () => {
-  it('node apply is an intentional no-op (loader-managed lifecycle only)', () => {
-    expect(() => { nodeApply() }).not.toThrow()
-  })
 })

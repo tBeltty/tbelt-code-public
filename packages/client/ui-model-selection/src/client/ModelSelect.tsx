@@ -39,12 +39,11 @@ import clsx from 'clsx'
 import type { ModelPricing, ModelReasoningEffort, ModelSelection } from '@deepseek-ai/dsh-api-remotes/client'
 import {
   IconCheckOutlineRegular, IconChevronDownOutlineRegular, IconChevronRightOutlineRegular, IconCloseFillRegular,
-  IconDataOutlineRegular, IconPlusOutlineRegular, IconWarningOutlineRegular, Input, isMobileDevice, rankByName, StateDot, Toast,
+  IconDataOutlineRegular, IconPlusOutlineRegular, IconWarningOutlineRegular, Input, isMobileDevice, rankByName, StateDot, Tag, Toast,
 } from '@deepseek-ai/dsh-client-ui-primitives'
 import type { PropsLocale, PropsRenderSlots } from '@deepseek-ai/dsh-client-ui-slots'
 import type { ModelLabelOwner, ModelSelectInjected } from './slots.ts'
 import css from './ModelSelect.module.css'
-import { orderModelProviders } from './provider-order.ts'
 
 /** Which pane the dropdown shows: the two-row root or one drilled-in list. */
 type Pane = 'root' | 'model' | 'effort'
@@ -91,7 +90,7 @@ function priceTitle(pricing: ModelPricing, t: PropsLocale<'model'>['t']): string
  * @returns the trigger and, while open, the two-level menu.
  */
 export function ModelSelect(
-  { locked, available, directory, load, select, modelSettings, t, renderSlot }:
+  { locked, available, directory, load, select, resolveText, modelSettings, t, renderSlot }:
   ModelSelectInjected & { locked: boolean } & PropsLocale<'model'>
   & Omit<PropsRenderSlots<'conversation.input.model.label'>, 'SessionProvider'>,
 ) {
@@ -124,7 +123,7 @@ export function ModelSelect(
   const id = useId()
 
   const accountProviderName = t('provider.account')
-  const groups = useMemo(() => orderModelProviders(state.groups).map(group => ({
+  const groups = useMemo(() => state.groups.map(group => ({
     ...group,
     provider: {
       id: group.id,
@@ -479,7 +478,17 @@ export function ModelSelect(
     placement: ModelLabelOwner['placement'], selected: boolean,
   ) => (
     <span data-provider-id={provider.id} data-model-id={model.id}>
-      {renderSlot('conversation.input.model.label', { provider, model, placement, selected }, { fallback: model.name })}
+      {renderSlot('conversation.input.model.label', {
+        provider, model, placement, selected,
+      }, {
+        fallback: model.badge === undefined ? model.name : (
+          <span className={css.badgedName}>
+            {placement === 'trigger' ? <><Tag className={css.badge} tone={model.badge.tone}>{resolveText(model.badge.text)}</Tag>{' '}</> : null}
+            <span className={css.badgedNameText}>{model.name}</span>
+            {placement === 'trigger' ? null : <>{' '}<Tag className={css.badge} tone={model.badge.tone}>{resolveText(model.badge.text)}</Tag></>}
+          </span>
+        ),
+      })}
     </span>
   )
   let itemIndex = 0

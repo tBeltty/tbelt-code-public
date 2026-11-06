@@ -109,9 +109,15 @@ describe('web e2e: plugin configuration pages', () => {
     await more.focus()
     await page.keyboard.press('Enter')
     await panel.getByRole('heading', { name: 'Experimental plugins', exact: true, level: 1 }).waitFor()
+    // The More list omits the shipped bundles whose own rows do not run (the visibility rule lives in
+    // ui-plugin-manager), so it holds fewer cards than the installed optional-bundle list.
     const bundles = await scaffold.ctx.pluginManager.listBundles()
+    const hiddenBundles = new Set([
+      '@deepseek-ai/dsh-experimental-terminal-bundle',
+      '@deepseek-ai/dsh-experimental-liveshare',
+    ])
     expect(await panel.locator('[data-plugin-group="more"] [data-plugin-package]').count())
-      .toBe(bundles.filter(bundle => bundle.name !== '@deepseek-ai/dsh-experimental-terminal-bundle'
+      .toBe(bundles.filter(bundle => !hiddenBundles.has(bundle.name)
         && bundle.official && (bundle.listedByDefault !== false || bundle.enabled || bundle.installed)).length)
     expect(await basic.count()).toBe(0)
     expect(await extensions.count()).toBe(0)
@@ -180,7 +186,7 @@ describe('web e2e: plugin configuration pages', () => {
     expect(await endpoint.inputValue()).toBe('https://search-api.test/api/v1/tools')
     const snapshot = await captureStableAria(page, '[data-plugin-panel]', scaffold.workspaceCwd)
     await compareOrRefreshGolden(join(SNAPSHOT_DIR, 'web-search.expected.md'), snapshot, MODE)
-    await panel.getByRole('button', { name: '恢复默认', exact: true }).click()
+    await panel.getByRole('button', { name: 'Reset to default', exact: true }).click()
     expect(await endpoint.inputValue()).toBe('https://api.deepseek.com/v1/tools')
     await save.click()
     await expect.poll(() => save.isDisabled()).toBe(true)

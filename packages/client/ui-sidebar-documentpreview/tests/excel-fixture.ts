@@ -86,7 +86,7 @@ export async function meetingMinutesFixture(): Promise<Uint8Array<ArrayBuffer>> 
   workbook.addWorksheet('风险与依赖')
   const dashboard = workbook.addWorksheet('统计看板')
   dashboard.getCell('A1').value = '会议纪要 · 统计看板'
-  dashboard.getCell('A5').value = '未开始'
+  dashboard.getCell('A5').value = 'Not started'
   dashboard.getCell('B5').value = { formula: 'COUNTIF(行动计划!$G$4:$G$23,$A5)' }
   dashboard.getCell('C5').value = { formula: 'IF($B5=0,"",REPT("█",MAX(1,ROUND($B5/MAX(1,$B$5)*16,0))))' }
   dashboard.getCell('D5').value = { formula: 'IFERROR($B5/$B$10,0)' }

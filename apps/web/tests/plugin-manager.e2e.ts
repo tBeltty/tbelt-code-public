@@ -2,7 +2,7 @@
 // managed scaffold profile: installed bundles, their rows, and bundle enablement. Zero
 // model calls: everything is client state, seeded Session state, profile files, and the settings
 // document, so there is no fixture and a stray stream would fail loud on the open llm seam.
-import { mkdtemp, readFile } from 'node:fs/promises'
+import { mkdtemp, readFile, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { fileURLToPath } from 'node:url'
 import type { Browser, Locator, Page } from 'playwright'
@@ -17,7 +17,7 @@ import {
   launchWebScaffold, watchConsole, webSnapshotMode, type WebScaffold,
 } from './scaffold.ts'
 import {
-  EN_BROWSER_LOCALE, connectFreshWorkspace, PLUGIN_TOGGLE_SETTLE_MS, saveFailureShot,
+  EN_BROWSER_LOCALE, connectFreshWorkspace, experimentalBundleDescription, PLUGIN_TOGGLE_SETTLE_MS, saveFailureShot,
 } from './support.ts'
 
 const SNAPSHOT_DIR = fileURLToPath(new URL('./expected/plugin-manager', import.meta.url))
@@ -114,8 +114,8 @@ describe('web e2e: plugin manager', () => {
       await bar.getByRole('tablist').waitFor()
       await add.focus()
       for (const [width, icons, narrowTabs, wraps] of [
-        [1280, false, false, false], [600, true, false, false],
-        [470, true, true, false], [390, true, true, true], [300, true, true, true],
+        [1280, false, false, false], [544, true, false, false],
+        [390, true, true, false], [320, true, true, true], [244, true, true, true],
       ] as const) {
         await probe.setViewportSize({ width, height: 480 })
         await body.evaluate((element) => { element.scrollTop = 180 })
@@ -688,15 +688,25 @@ describe('web e2e: plugin manager', () => {
     expect(await panel.getByRole('switch', { name: 'Enable Custom plugin indexes', exact: true }).getAttribute('aria-checked')).toBe('false')
     expect(await panel.getByRole('switch', { name: 'Enable Developer tools', exact: true }).count()).toBe(0)
     expect(await panel.getByText(/Cordis|Chrome DevTools/).count()).toBe(0)
+    // A bundle the installation ships but the profile runs no row of stays out of both lists: the
+    // LiveShare card appears only once its own plugins run (covered by the visibility scenario below).
+    expect(await panel.locator('[data-plugin-group="extensions"] [data-plugin-package="@deepseek-ai/dsh-experimental-liveshare"]').count()).toBe(0)
     await panel.getByRole('button', { name: 'More', exact: true }).click()
     await panel.getByRole('heading', { name: 'Experimental plugins', exact: true, level: 1 }).waitFor()
-    expect(await panel.getByText('Inspect and debug raw session data, grouped chat messages, and the NodeJS backend.', { exact: true }).count()).toBe(1)
+    expect(await panel.getByText(experimentalBundleDescription('inspector-profile', 'en'), { exact: true }).count()).toBe(1)
     const bundles = await scaffold.ctx.pluginManager.listBundles()
     expect(bundles.some(bundle => bundle.name === '@deepseek-ai/dsh-experimental-terminal-bundle')).toBe(true)
     expect(await panel.getByRole('switch', { name: 'Enable Persistent terminals', exact: true }).count()).toBe(0)
+    // The More list also omits LiveShare until its rows run, so the offered count is one lower than
+    // the eligible installed optional-bundle list.
+    expect(await panel.locator('[data-plugin-group="more"] [data-plugin-package="@deepseek-ai/dsh-experimental-liveshare"]').count()).toBe(0)
     expect(await panel.locator('[data-plugin-group="more"] [data-plugin-package]').count())
       .toBe(bundles.filter(bundle => bundle.name !== '@deepseek-ai/dsh-experimental-terminal-bundle'
+        && bundle.name !== '@deepseek-ai/dsh-experimental-liveshare'
         && bundle.official && (bundle.listedByDefault !== false || bundle.enabled || bundle.installed)).length)
+    expect(bundles.find(bundle => bundle.name === '@deepseek-ai/dsh-cua-bundle'))
+      .toMatchObject({ enabled: false, optional: false, availability: 'missing', listedByDefault: false })
+    expect(await panel.locator('[data-plugin-package="@deepseek-ai/dsh-cua-bundle"]').count()).toBe(0)
     for (const name of ['@deepseek-ai/dsh-experimental-session-search', '@deepseek-ai/dsh-experimental-ralph-bundle']) {
       expect((await scaffold.ctx.pluginManager.listBundles()).find(bundle => bundle.name === name))
         .toMatchObject({ enabled: false, optional: true, availability: 'installation', listedByDefault: false })
@@ -711,9 +721,9 @@ describe('web e2e: plugin manager', () => {
       ['@deepseek-ai/dsh-experimental-voice-input-bundle', 1],
       ['@deepseek-ai/dsh-experimental-plugin-market-bundle', 1],
       ['@deepseek-ai/dsh-experimental-auto-review', 1],
+      ['@deepseek-ai/dsh-experimental-forge-bundle', 1],
       ['@deepseek-ai/dsh-personalized-recommendations', 1],
       ['@deepseek-ai/dsh-experimental-inspector-profile', 1],
-      ['@deepseek-ai/dsh-cua-bundle', 1],
       ['@deepseek-ai/dsh-experimental-tool-worktree', 1],
       ['@deepseek-ai/dsh-experimental-session-titles-bundle', 1],
       ['@deepseek-ai/dsh-experimental-badge-skill-bundle', 1],
@@ -879,13 +889,13 @@ describe('web e2e: plugin manager', () => {
     const child = panel.locator('[data-plugin-row]', { hasText: 'tool-agent-team' })
     await panel.getByRole('heading', { name: 'Agent Teams', exact: true }).waitFor()
     expect(await packageName.textContent()).toBe('@deepseek-ai/dsh-experimental-agent-team-profile')
-    expect(await panel.getByText('Enable team collaboration, team tools, the member roster, and the shared task board.').count()).toBe(1)
+    expect(await panel.getByText(experimentalBundleDescription('agent-team-profile', 'en')).count()).toBe(1)
     await child.getByText('Team Tools', { exact: true }).waitFor()
     expect(await child.getByText('Give agents tools to coordinate members, exchange messages, and manage shared tasks.', { exact: true }).count()).toBe(1)
     try {
       await setLanguage('es')
       await panel.getByRole('heading', { name: 'Equipos de agentes', exact: true }).waitFor()
-      expect(await panel.getByText('Activa la colaboración en equipo, las herramientas de equipo, la lista de miembros y el tablero de tareas compartido.').count()).toBe(1)
+      expect(await panel.getByText(experimentalBundleDescription('agent-team-profile', 'es')).count()).toBe(1)
       await child.getByText('Herramientas de equipo', { exact: true }).waitFor()
       expect(await child.getByText('Da a los agentes herramientas para coordinar miembros, intercambiar mensajes y gestionar tareas compartidas.', { exact: true }).count()).toBe(1)
     } finally {
@@ -1212,6 +1222,76 @@ describe('web e2e: plugin manager', () => {
     await expect.poll(() => toggle.getAttribute('aria-checked'), { timeout: PLUGIN_TOGGLE_SETTLE_MS }).toBe('false')
     expect(tripwire.pageErrors).toEqual([])
   }, 90_000)
+
+  it('reveals LiveShare only while its plugin rows run, and hides it again when they stop', async () => {
+    // A dedicated scaffold keeps this profile patch away from the shared fixture profile above.
+    const visibilityScaffold = await launchWebScaffold({ profile: { packages: [] } })
+    const context = await browser.newContext({ viewport: { width: 1680, height: 1000 }, locale: EN_BROWSER_LOCALE })
+    try {
+      const probe = await context.newPage()
+      onTestFailed(() => saveFailureShot(probe, 'web-e2e-plugin-manager-liveshare-visibility'))
+      const consoleWatch = watchConsole(probe)
+      await probe.goto(visibilityScaffold.authenticatedUrl, { waitUntil: 'load' })
+      await probe.getByRole('button', { name: 'Plugins', exact: true }).click()
+      const panel = probe.locator('[data-plugin-panel]')
+      await panel.getByRole('heading', { name: 'Plugins', exact: true }).waitFor({ timeout: 20_000 })
+      const liveShare = '@deepseek-ai/dsh-experimental-liveshare'
+      const card = panel.locator(`[data-plugin-package="${liveShare}"]`)
+      // The profile is a managed one (the plugin manager lists its bundles) whose base bundle keeps HMR
+      // on, so writing the patch file recomposes the running loader; each step first waits for that
+      // recomposition and then re-reads the Host bundle list through the page's own Refresh.
+      const patchFile = join(visibilityScaffold.harnessHome, 'profiles', 'scaffold', 'cordis.patch.yml')
+      const declarationsRow = (): boolean => [...visibilityScaffold.ctx.loader.entries()]
+        .some(entry => entry.options.id === 'liveshare-viewer-declarations')
+      const refresh = panel.getByRole('button', { name: 'Refresh', exact: true })
+
+      // Default install: the package ships, but no row it declares runs, so neither list offers it.
+      await expect.poll(() => card.count(), {
+        timeout: 20_000, message: 'the default profile lists a LiveShare card before its rows run',
+      }).toBe(0)
+      await panel.getByRole('button', { name: 'More', exact: true }).click()
+      await probe.getByRole('heading', { name: 'Experimental plugins', exact: true, level: 1 }).waitFor()
+      await expect.poll(() => card.count(), {
+        timeout: 20_000, message: 'the default More list offers a LiveShare card before its rows run',
+      }).toBe(0)
+      await panel.getByRole('button', { name: 'Back to plugins', exact: true }).click()
+
+      // Enabling through cordis.patch.yml runs one of the bundle's declared rows while the profile still
+      // selects no such bundle: the card joins the experimental list.
+      await writeFile(patchFile, [
+        '- insert:',
+        '    - id: liveshare-viewer-declarations',
+        "      name: '@deepseek-ai/dsh-experimental-liveshare/viewer-declarations'",
+        '',
+      ].join('\n'))
+      await expect.poll(declarationsRow, {
+        timeout: 30_000, message: 'the profile patch did not compose the LiveShare declarations row',
+      }).toBe(true)
+      await refresh.click()
+      await expect.poll(() => card.count(), {
+        timeout: 30_000, message: 'the patch-enabled bundle did not join the experimental list',
+      }).toBe(1)
+
+      // Removing the row stops it: the card leaves both lists again.
+      await writeFile(patchFile, '[]\n')
+      await expect.poll(declarationsRow, {
+        timeout: 30_000, message: 'the profile patch did not remove the LiveShare declarations row',
+      }).toBe(false)
+      await refresh.click()
+      await expect.poll(() => card.count(), {
+        timeout: 30_000, message: 'the card stayed listed after its rows stopped',
+      }).toBe(0)
+      await panel.getByRole('button', { name: 'More', exact: true }).click()
+      await probe.getByRole('heading', { name: 'Experimental plugins', exact: true, level: 1 }).waitFor()
+      await expect.poll(() => card.count(), {
+        timeout: 20_000, message: 'the More list kept the card after its rows stopped',
+      }).toBe(0)
+      expect(consoleWatch.pageErrors).toEqual([])
+    } finally {
+      await context.close()
+      await visibilityScaffold.close()
+    }
+  }, 120_000)
 
   it.skipIf(MODE === 'record')('keeps the fixture inventory closed', async () => {
     expect(tripwire.warnings).toEqual([])

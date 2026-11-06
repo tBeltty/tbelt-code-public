@@ -21,7 +21,7 @@ describe.each([['Node', ExcelJS], ['browser bundle', browserExcel]] as const)('%
     const retained = new XlsxPreviewArchive(source).withoutDrawings()
     const workbook = new parser.Workbook()
     await workbook.xlsx.load(retained.buffer, { ignoreNodes: ['drawing'] })
-    const sheet = workbook.getWorksheet('数据')
+    const sheet = workbook.getWorksheet('Data')
     assert.ok(sheet)
     expect(sheet.getCell('A1').value).toBe('Item')
     expect(sheet.getCell('B2').value).toBe(42)

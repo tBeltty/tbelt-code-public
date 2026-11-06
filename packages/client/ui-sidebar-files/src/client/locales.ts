@@ -13,7 +13,7 @@ import type {} from '@deepseek-ai/dsh-client-ui-slots'
 
 declare module '@deepseek-ai/dsh-client-ui-slots' {
   interface LocaleNamespaceMap {
-    /** File-tree type name, guide entry, row states, and failure lines. */
+    /** File-tree type name, guide entry, navigator controls, row states, and failure lines. */
     sidebarFiles: SidebarFilesKey
   }
 }
@@ -36,6 +36,10 @@ export const en = {
   'autoRefresh.enable': 'Enable auto refresh',
   'autoRefresh.disable': 'Disable auto refresh',
   'entry.other': 'Not a file or a directory, so it cannot be opened.',
+  'entry.noViewer': 'No viewer can open this file.',
+  'navigator.show': 'Show file tree',
+  'navigator.hide': 'Hide file tree',
+  'navigator.resize': 'Resize file tree',
   'error.notFound': 'That directory is gone. It may have been moved or deleted.',
   'error.outsideWorkspace': 'That directory is outside the workspace, so the sidebar will not read it.',
   'error.notDirectory': 'That is not a directory.',
@@ -57,6 +61,10 @@ export const es = {
   'autoRefresh.enable': 'Activar actualización automática',
   'autoRefresh.disable': 'Desactivar actualización automática',
   'entry.other': 'No es un archivo ni un directorio, así que no se puede abrir.',
+  'entry.noViewer': 'Ningún visor puede abrir este archivo.',
+  'navigator.show': 'Mostrar árbol de archivos',
+  'navigator.hide': 'Ocultar árbol de archivos',
+  'navigator.resize': 'Cambiar el ancho del árbol de archivos',
   'error.notFound': 'Ese directorio ya no existe. Puede que se haya movido o eliminado.',
   'error.outsideWorkspace': 'Ese directorio está fuera del espacio de trabajo, así que la barra lateral no lo leerá.',
   'error.notDirectory': 'Eso no es un directorio.',
@@ -78,6 +86,10 @@ export const el = {
   'autoRefresh.enable': 'Ενεργοποίηση αυτόματης ανανέωσης',
   'autoRefresh.disable': 'Απενεργοποίηση αυτόματης ανανέωσης',
   'entry.other': 'Δεν είναι αρχείο ή φάκελος, επομένως δεν μπορεί να ανοιχτεί.',
+  'entry.noViewer': 'Κανένα πρόγραμμα προβολής δεν μπορεί να ανοίξει αυτό το αρχείο.',
+  'navigator.show': 'Εμφάνιση δέντρου αρχείων',
+  'navigator.hide': 'Απόκρυψη δέντρου αρχείων',
+  'navigator.resize': 'Αλλαγή μεγέθους δέντρου αρχείων',
   'error.notFound': 'Αυτός ο φάκελος δεν υπάρχει πια. Ίσως έχει μετακινηθεί ή διαγραφεί.',
   'error.outsideWorkspace': "Αυτός ο φάκελος βρίσκεται εκτός του χώρου εργασίας, γι' αυτό η πλευρική γραμμή δεν θα τον διαβάσει.",
   'error.notDirectory': 'Αυτό δεν είναι φάκελος.',
@@ -99,6 +111,10 @@ export const fr = {
   'autoRefresh.enable': 'Activer l’actualisation automatique',
   'autoRefresh.disable': 'Désactiver l’actualisation automatique',
   'entry.other': 'Ni fichier ni dossier\u00a0: il ne peut pas être ouvert.',
+  'entry.noViewer': 'Aucune visionneuse ne peut ouvrir ce fichier.',
+  'navigator.show': "Afficher l'arborescence des fichiers",
+  'navigator.hide': "Masquer l'arborescence des fichiers",
+  'navigator.resize': "Redimensionner l'arborescence des fichiers",
   'error.notFound': 'Ce dossier n’existe plus. Il a peut-être été déplacé ou supprimé.',
   'error.outsideWorkspace': 'Ce dossier est en dehors de l’espace de travail\u00a0: la barre latérale ne le lira pas.',
   'error.notDirectory': 'Ce n’est pas un dossier.',

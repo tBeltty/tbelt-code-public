@@ -31,6 +31,9 @@
     },
     {
       "path": "../../packages/credentials/deepseek-account"
+    },
+    {
+      "path": "../../packages/boot/plugin-manager"
     }
   ]
 }

@@ -10,7 +10,7 @@ export function legacyWorkbook(date1904 = false): WorkBook {
   const workbook = utils.book_new()
   const sheet = utils.aoa_to_sheet([
     ['旧版预算', null, null], ['项目', '金额', '比例'], ['研发', 1234.5, 0.25],
-    ['公式结果', 3, null], ['日期', date1904 ? 43890 : 45352, true],
+    ['公式结果', 3, null], ['Date', date1904 ? 43890 : 45352, true],
   ])
   const amount = sheet['B3'] as CellObject | undefined
   const ratio = sheet['C3'] as CellObject | undefined

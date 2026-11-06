@@ -52,7 +52,7 @@ async function bench(collapsed = false, track?: TrackProductEvent) {
   await runtime.mount({
     inject: ['slots'],
     apply(ctx: Context) {
-      ctx.provide('shortcuts', { catalog: createSnapshotStore([]) } as never)
+      ctx.provide('shortcuts', { catalog: createSnapshotStore([]), describeBinding: () => ({ keys: [] }) } as never)
       ctx.provide('layout', layout)
       ctx.provide('uiWorkspace', { startSession: vi.fn() } as never)
       ctx.provide('locale', locale)
@@ -72,7 +72,7 @@ async function bench(collapsed = false, track?: TrackProductEvent) {
     const activePanelId = usePanelInfo(info => info.activePanelId)
     return (
       <>
-        <aside>{renderSlot('sidebar', { collapsed, width: collapsed ? 56 : 300 })}</aside>
+        <aside>{renderSlot('sidebar', { collapsed, width: collapsed ? 56 : 300, drawer: false })}</aside>
         <main>{renderSlot('main', {}, { entryKey: activePanelId ?? 'conversation' })}</main>
       </>
     )

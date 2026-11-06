@@ -151,7 +151,7 @@ case "${1:-}" in
     last=$(git log -1 --format=%H --grep='^Release ' || true)
     range=${last:+$last..}HEAD
     [[ -n "$(git log --format=%H "$range" -- README.md)" ]] && exit 0
-    git log --format=%B "$range" | grep -q -x 'README: none' && exit 0
+    git log --format=%B "$range" | grep -x 'README: none' >/dev/null && exit 0
     features_failure "$added"
     ;;
   features-pr)
@@ -163,7 +163,7 @@ case "${1:-}" in
     new=$(comm -13 <(printf '%s\n' "$base_log" | sort) <(added_entries "$changelog" | sort))
     [[ -n "$new" ]] || exit 0
     [[ -n "$(git diff --name-only "$base...HEAD" -- README.md)" ]] && exit 0
-    git log --format=%B "$base..HEAD" | grep -q -x 'README: none' && exit 0
+    git log --format=%B "$base..HEAD" | grep -x 'README: none' >/dev/null && exit 0
     features_failure "$new"
     ;;
   lint)

@@ -45,6 +45,7 @@ export async function buildModelCatalog(
           ...(model.description === undefined ? {} : { description: model.description }),
           ...(reasoning === undefined ? {} : { reasoning }),
           ...(resolved.pricing === undefined ? {} : { pricing: { ...resolved.pricing } }),
+          ...(model.badge === undefined ? {} : { badge: model.badge }),
         }
       }))
       return {

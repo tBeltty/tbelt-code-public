@@ -11,6 +11,9 @@ export type SidebarRightKey = keyof typeof en
 
 /** English dictionary and key-set source of truth. */
 export const en = {
+  'menu.close': 'Close',
+  'menu.closeOthers': 'Close Other Tabs',
+  'menu.closeRight': 'Close Tabs to the Right',
   'command.close': 'Close current page or window',
   'command.refresh': 'Refresh current page',
   'command.noRefresh': 'This page cannot be refreshed',
@@ -50,6 +53,9 @@ export const en = {
 
 /** Spanish dictionary, checked against the English keys. */
 export const es = {
+  'menu.close': 'Cerrar',
+  'menu.closeOthers': 'Cerrar otras pestañas',
+  'menu.closeRight': 'Cerrar pestañas a la derecha',
   'command.close': 'Cerrar la página o ventana actual',
   'command.refresh': 'Actualizar la página actual',
   'command.noRefresh': 'Esta página no se puede actualizar',
@@ -89,6 +95,9 @@ export const es = {
 
 /** Greek dictionary, checked complete against the English key set. */
 export const el = {
+  'menu.close': 'Κλείσιμο',
+  'menu.closeOthers': 'Κλείσιμο των άλλων καρτελών',
+  'menu.closeRight': 'Κλείσιμο καρτελών προς τα δεξιά',
   'command.close': 'Κλείσιμο τρέχουσας σελίδας ή παραθύρου',
   'command.refresh': 'Ανανέωση τρέχουσας σελίδας',
   'command.noRefresh': 'Αυτή η σελίδα δεν μπορεί να ανανεωθεί',
@@ -128,6 +137,9 @@ export const el = {
 
 /** French dictionary, checked against the English keys. */
 export const fr = {
+  'menu.close': 'Fermer',
+  'menu.closeOthers': 'Fermer les autres onglets',
+  'menu.closeRight': 'Fermer les onglets à droite',
   'command.close': 'Fermer la page ou la fenêtre actuelle',
   'command.refresh': 'Actualiser la page actuelle',
   'command.noRefresh': 'Cette page ne peut pas être actualisée',

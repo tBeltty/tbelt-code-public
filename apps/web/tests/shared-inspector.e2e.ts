@@ -5,6 +5,7 @@ import { join } from 'node:path'
 import { chromium, type Browser } from 'playwright'
 import { expect, it, onTestFinished } from 'vitest'
 import { compareOrRefreshGolden, launchWebScaffold, seedSession, selectedSessionFixture, watchConsole, webSnapshotMode, type WebScaffold } from './scaffold.ts'
+import { experimentalBundleDescription } from './support.ts'
 
 const bundle = fileURLToPath(new URL('../../../packages/experimental/inspector-profile', import.meta.url))
 const fixture = fileURLToPath(new URL('../../../snapshots/web/fresh-round-trip/session.v4.jsonl', import.meta.url))
@@ -87,7 +88,7 @@ it('toggles bottom DevTools from the page and iframe without a selected Session'
 it.each([
   {
     locale: 'en-US', file: 'en', plugins: 'Plugins', open: 'View Developer tools', bundle: 'Developer tools',
-    description: 'Inspect and debug raw session data, grouped chat messages, and the NodeJS backend.',
+    description: experimentalBundleDescription('inspector-profile', 'en'),
     inspector: 'NodeJS inspector', inspectorDescription: 'Press Ctrl/Cmd+Shift+. to open Chrome DevTools in the bottom panel for development and debugging.',
     session: 'Session log', sessionDescription: "Enable analysis of the current session's raw data and grouped chat messages in the session sidebar.",
     openSidebar: 'Open right sidebar', sidebarDescription: 'Analyze raw logs and grouped chat messages for the current session in the sidebar.',

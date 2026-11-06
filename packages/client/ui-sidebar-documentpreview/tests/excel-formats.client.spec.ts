@@ -98,7 +98,7 @@ it('opens raw BIFF and empty legacy worksheets', async () => {
 
 it.each(['csv', 'tsv'] as const)('preserves %s strings, quoted separators, newlines, empty fields, and ragged rows', async (format) => {
   const delimiter = format === 'csv' ? ',' : '\t'
-  const text = ['编号', '说明', '值'].join(delimiter) + '\r\n'
+  const text = ['编号', 'Instructions', '值'].join(delimiter) + '\r\n'
     + ['00123', `"中文${delimiter}字段\n第二行 ""引号"""`, '=SUM(1,2)'].map((field, index) => index === 2 ? '"' + field + '"' : field).join(delimiter) + '\r\n'
     + ['2024-03-01', '', 'TRUE', '99999999999999999999'].join(delimiter) + '\r\nshort\r\n\r\n'
   const result = await convertExcel(encode(text), format, limits)

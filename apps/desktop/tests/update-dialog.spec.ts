@@ -49,7 +49,7 @@ function setup(locale: DesktopLocale | (() => DesktopLocale) = resolveDesktopLoc
   const parent = new fixture.FakeWindow({})
   dialogs = new DesktopUpdateDialog('preload-update-dialog.cjs', locale, new DesktopUpdateOverlays())
   const show = (signal?: AbortSignal) => dialogs!.show(parent as unknown as BrowserWindow, {
-    message: '下载完成', buttons: ['Instalar y reiniciar'], cancelId: 1, ...(signal === undefined ? {} : { signal }),
+    message: 'Download complete', buttons: ['Instalar y reiniciar'], cancelId: 1, ...(signal === undefined ? {} : { signal }),
   })
   const invoke = (channel: string, ...args: unknown[]) => {
     const window = fixture.windows.at(-1)!

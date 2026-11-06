@@ -171,10 +171,16 @@
 - id: ui-agent-preset
   disabled: true
 
-- id: ui-settings-session-log
+- id: ui-settings-plugins
   disabled: true
 
-- id: ui-settings-plugins
+- id: ui-file-actions
+  disabled: true
+
+- id: ui-context-menu
+  disabled: true
+
+- id: ui-file-drag
   disabled: true
 
 - id: ui-settings-shell

@@ -256,10 +256,10 @@ it.each((['web', 'desktop'] as const).flatMap(runtime => (['invalid', 'future'] 
   act(() => { f.config.set({ ...f.config.getSnapshot(), status: 'unreadable', error, usingDefaults: false,
     document: { schemaVersion: 1, profiles: { [`${runtime}:macos`]: { 'settings.open': null } } } }) })
   const text = screen.getByRole('alert').textContent
-  expect(text).toContain(runtime === 'web' ? 'dsh.keybindings.v1' : 'userData/keybindings.json')
+  expect(text).toContain(runtime === 'web' ? 'dsh.keybindings.v1' : dictionary === en ? 'userData/keybindings.json' : 'datos de usuario/bindings.json')
   expect(text).toContain(error === 'future'
-    ? dictionary === en ? 'Upgrade tBelt Code' : 'Actualiza tBelt Code'
-    : dictionary === en ? 'Back up and repair' : 'Haz una copia de seguridad, repárala')
+    ? dictionary === en ? 'Upgrade tBelt Code' : 'Actualice el arnés'
+    : dictionary === en ? 'Back up and repair' : 'Haga una copia de seguridad')
   expect(text).toContain(dictionary['using-accepted'])
   const reset = screen.getByRole('button', { name: dictionary['reset-all'] })
   expect(reset.hasAttribute('disabled')).toBe(true)

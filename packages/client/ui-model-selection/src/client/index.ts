@@ -35,7 +35,6 @@ import { ModelSelect } from './ModelSelect.tsx'
 import { SpendPill } from './SpendPill.tsx'
 import type { SpendPillInjected } from './slots.ts'
 import { en, es, el, fr, type ModelKey } from './locales.ts'
-import { orderModelProviders } from './provider-order.ts'
 
 export { ModelDirectory } from './directory.ts'
 export type { ModelDirectoryState } from './directory.ts'
@@ -58,7 +57,7 @@ function rowId(providerId: string, modelId: string): string {
 /** Flatten the directory into popup rows; failure rows are listed for visibility but never selectable. */
 function optionsOf(directory: ModelDirectoryState, t: TranslateNS<'model'>): SelectOption[] {
   const rows: SelectOption[] = []
-  for (const group of orderModelProviders(directory.groups)) {
+  for (const group of directory.groups) {
     const name = group.id === 'deepseek-account' ? t('provider.account') : group.name
     for (const model of group.models) {
       rows.push({
@@ -197,6 +196,7 @@ export function apply(ctx: ClientContext): void {
           load: () => {
             if (available) directory.load().catch(() => { /* surfaced on the store */ })
           },
+          resolveText: text => ctx.locale.resolveText(text),
           select: (selection: ModelSelection) => available
             ? directory.select(selection)
             : Promise.resolve(undefined),

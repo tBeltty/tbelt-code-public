@@ -4,6 +4,27 @@ Notable changes to tBelt Code, newest first. The format follows [Keep a Changelo
 
 ## [Unreleased]
 
+## [0.2.2-alpha.2.20261106] - 2026-11-06
+
+### Added
+
+- When you open an image in a conversation, you can save the original file or copy the image to the clipboard.
+- The agent can edit a file by applying a patch, and the conversation shows each patch as its own row.
+- The agent can list and edit your scheduled tasks when you ask it to.
+- In the app, saving the original file of an image can ask where to put it, and images hosted on other sites can be copied.
+- The app menu has a Developer tools item.
+
+### Changed
+
+- When tBelt Code fails to start, the error window appears in the language you last chose instead of the system language.
+- When tBelt Code fails to start and its report is still being saved, the error window says so and the Copy report button waits for the report.
+- In Settings, the Models page always lists the provider that signs in with an account and gives it its own Sign in button.
+- Model lists show providers in the same order as the catalog, with no provider placed first.
+
+### Fixed
+
+- In the sidebar, the Settings button at the bottom now lines up with the conversation rows above it.
+
 ## [0.2.1-rc.3.20261030.2] - 2026-10-30
 
 ### Added
@@ -404,7 +425,8 @@ Notable changes to tBelt Code, newest first. The format follows [Keep a Changelo
 - Downloads no longer return an older installer.
 - A key that ran out of credit or hit its spending limit is reported as a quota problem instead of an invalid API key.
 
-[Unreleased]: https://github.com/tBeltty/tbelt-code-public/compare/v0.2.1-rc.3.20261030.2...HEAD
+[Unreleased]: https://github.com/tBeltty/tbelt-code-public/compare/v0.2.2-alpha.2.20261106...HEAD
+[0.2.2-alpha.2.20261106]: https://github.com/tBeltty/tbelt-code-public/releases/tag/v0.2.2-alpha.2.20261106
 [0.2.1-rc.3.20261030.2]: https://github.com/tBeltty/tbelt-code-public/releases/tag/v0.2.1-rc.3.20261030.2
 [0.2.1-rc.3.20261030]: https://github.com/tBeltty/tbelt-code-public/releases/tag/v0.2.1-rc.3.20261030
 [0.2.1-rc.3.20261026]: https://github.com/tBeltty/tbelt-code-public/releases/tag/v0.2.1-rc.3.20261026

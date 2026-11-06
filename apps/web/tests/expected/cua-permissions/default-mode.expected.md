@@ -1,0 +1,4 @@
+- group "Default mode for new sessions":
+  - strong: Default mode for new sessions
+  - paragraph: Computer use is available only in PTC mode.
+  - button "Set to PTC"

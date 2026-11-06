@@ -563,7 +563,7 @@ describe('web e2e: the composer model switch is the default for later sessions',
     for (const palette of headingPalettes) {
       expect(palette.headingFills, `${palette.platform}, dark=${String(palette.dark)}`)
         .toEqual(['rgba(0, 0, 0, 0)'])
-      expect(palette.menuFill).toBe('rgba(67, 69, 74, 0.45)')
+      expect(palette.menuFill).toBe('rgba(48, 49, 54, 0.64)')
       expect(palette.searchBorder).toBe('rgba(0, 0, 0, 0)')
       expect(palette.positions).toEqual(['sticky'])
       expect(palette.headingRadii).toEqual([palette.platform === 'darwin' ? '0px' : palette.optionRadius])

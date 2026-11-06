@@ -1,6 +1,4 @@
 /** Deployment-owned preset choices for one delegation tool. */
-import type { Context } from '@deepseek-ai/cordis'
-import type {} from '@deepseek-ai/dsh-agent-preset-registry'
 import type { SubagentCapabilities, SubagentProvider } from '@deepseek-ai/dsh-subagent'
 
 /** Optional default and model-selectable preset ids for a spawn tool. */
@@ -35,10 +33,8 @@ export interface PresetSelectionRequest {
 
 const ONE_TASK_NOTE = ' Runs one task and accepts no follow-up messages.'
 
-/** Validates configured references and resolves model input against the choices a provider admits. */
+/** Validates configured choices and resolves model input against the choices a provider admits. */
 export class SubagentPresetSelection {
-  private readonly explicitDescriptions = new Map<string, string>()
-
   /**
    * @param config - deployment default and explicit allowlist.
    * @param agentFiles - current agent-file presets; read at each choice, so a change is seen by the next mount.
@@ -93,27 +89,6 @@ export class SubagentPresetSelection {
   }
 
   /**
-   * Read configured preset declarations before publishing the tool; mounting validates their activation.
-   * @param ctx - Tool composition containing the preset service.
-   */
-  async validate(ctx: Context): Promise<void> {
-    const presets = ctx.get('agentPresets')
-    if (presets === undefined) throw new Error('tool-subagent: agent preset selection requires the agent-presets service')
-    const ids = new Set([
-      ...this.config.agentPreset === undefined ? [] : [this.config.agentPreset],
-      ...this.config.allowedAgentPresets ?? [],
-    ])
-    this.explicitDescriptions.clear()
-    for (const id of ids) {
-      const preset = await presets.readDocument(id)
-      if (this.config.allowedAgentPresets?.includes(id) && preset.description !== undefined) {
-        const oneShot = presets.definitionOf(id)?.oneShot === true
-        this.explicitDescriptions.set(id, `${preset.description}${oneShot ? ONE_TASK_NOTE : ''}`)
-      }
-    }
-  }
-
-  /**
    * Reject independent selection for providers that inherit conversation history or lack support.
    * @param provider - Currently registered delegation provider.
    */
@@ -146,10 +121,8 @@ export class SubagentPresetSelection {
 
   private descriptionOf(id: string): string | undefined {
     const file = this.agentFiles().find(candidate => candidate.id === id)
-    if (file !== undefined) {
-      const text = `${file.description ?? ''}${file.oneShot ? ONE_TASK_NOTE : ''}`.trim()
-      return text === '' ? undefined : text
-    }
-    return this.explicitDescriptions.get(id)
+    if (file === undefined) return undefined
+    const text = `${file.description ?? ''}${file.oneShot ? ONE_TASK_NOTE : ''}`.trim()
+    return text === '' ? undefined : text
   }
 }

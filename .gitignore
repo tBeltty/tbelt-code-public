@@ -60,3 +60,6 @@ docs/architecture/.dependency-graph-meta.json
 
 # scripts/upstream-sync.sh report
 .upstream/last-sync-summary.md
+
+# Generated company-signed CUA release record.
+/packages/experimental/cua-macos/cua-helper.json

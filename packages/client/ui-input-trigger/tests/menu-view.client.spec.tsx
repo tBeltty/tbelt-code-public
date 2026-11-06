@@ -121,17 +121,17 @@ describe('MenuView', () => {
         source: 'command',
         status: 'ready',
         items: [
-          { name: 'plan', label: '计划', description: '进入或退出计划模式', icon: Glyph, section: '添加' },
-          { name: 'file', label: 'File', section: '添加' },
+          { name: 'plan', label: '计划', description: 'Enter or leave plan mode', icon: Glyph, section: 'Add' },
+          { name: 'file', label: 'File', section: 'Add' },
         ],
       }],
     }))
     const options = screen.getAllByRole('option')
-    expect(options.map(o => o.textContent)).toEqual(['计划plan进入或退出计划模式', 'File'])
+    expect(options.map(o => o.textContent)).toEqual(['计划planEnter or leave plan mode', 'File'])
     expect(options[0]?.querySelector('[data-glyph="plan"]')?.getAttribute('width')).toBe('14')
     // A label that is the name in another letter case renders no alias.
     expect(options[1]?.querySelectorAll('span')).toHaveLength(1)
-    expect(screen.getAllByText('添加')).toHaveLength(1)
+    expect(screen.getAllByText('Add')).toHaveLength(1)
   })
 
   it('keeps an opted-out source title hidden while its candidates are pending', () => {
@@ -170,15 +170,15 @@ describe('MenuView', () => {
         source: 'reference',
         status: 'ready',
         items: [
-          { name: 'Folder · src/', section: '文件与文件夹' },
-          { name: 'File · README.md', section: '文件与文件夹' },
+          { name: 'Folder · src/', section: 'Files & folders' },
+          { name: 'File · README.md', section: 'Files & folders' },
           { name: 'Session · Research', section: '对话' },
         ],
       }],
       highlight: { source: 'reference', index: 0 },
     }))
     expect(screen.queryByText('reference')).toBeNull()
-    expect(screen.getAllByText('文件与文件夹')).toHaveLength(1)
+    expect(screen.getAllByText('Files & folders')).toHaveLength(1)
     expect(screen.getAllByText('对话')).toHaveLength(1)
     const options = screen.getAllByRole('option')
     expect(options.map(option => option.textContent)).toEqual([

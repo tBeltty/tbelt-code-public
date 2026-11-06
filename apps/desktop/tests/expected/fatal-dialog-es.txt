@@ -2,6 +2,7 @@ tBelt Code no está disponible
 La aplicación no pudo iniciarse o se detuvo de forma inesperada.
 Desktop Host failed
 Plugin initialization failed
+No se pudo guardar el informe de diagnóstico. Puedes enviar una captura de pantalla de este cuadro al pedir ayuda.
 
 Si faltan archivos de la aplicación o están dañados, ciérrala y reinstálala. Tus tareas se guardan por separado.
 Salir

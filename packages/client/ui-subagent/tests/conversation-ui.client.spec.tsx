@@ -1,4 +1,5 @@
 // @vitest-environment jsdom
+import { contextMenuHook } from '@deepseek-ai/dsh-client-test-runtime'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { act, cleanup, fireEvent, render, screen, within } from '@testing-library/react'
 import { allowAllAccess, makeTranslate, RemoteError, sessionSnapshot } from '@deepseek-ai/dsh-client-test-runtime'
@@ -95,6 +96,7 @@ function props(
     useWorkspaces: unused,
     useResource: unused,
     ...allowAllAccess,
+    useContextMenu: contextMenuHook(),
     useProjection: unused,
     useConversation: unused,
     useInput: unused,
@@ -340,7 +342,7 @@ describe('SubagentHeaderLineage', () => {
   it('keeps touch entry closed and opens the catalog when tapped', async () => {
     vi.useFakeTimers()
     render(<HeaderCatalog {...props(catalog())} />)
-    const trigger = screen.getByRole('button', { name: /1 个子智能体，正在运行/ })
+    const trigger = screen.getByRole('button', { name: /1 subagente en ejecución/ })
     const touch = new Event('pointerover', { bubbles: true })
     Object.defineProperty(touch, 'pointerType', { value: 'touch' })
     fireEvent(trigger, touch)
@@ -1099,8 +1101,8 @@ describe('SubagentHeaderLineage', () => {
     const current = screen.getByRole('treeitem', { name: /worker/ })
     expect(current.getAttribute('aria-current')).toBe('true')
     expect(within(current).getByText('worker').className).toContain('currentLabel')
-    expect(within(current).queryByRole('button', { name: '在侧边栏打开 worker' })).toBeNull()
-    expect(within(screen.getByRole('treeitem', { name: /reviewer/ })).getByRole('button', { name: '在侧边栏打开 reviewer' })).toBeTruthy()
+    expect(within(current).queryByRole('button', { name: 'Abrir worker en la barra lateral' })).toBeNull()
+    expect(within(screen.getByRole('treeitem', { name: /reviewer/ })).getByRole('button', { name: 'Abrir reviewer en la barra lateral' })).toBeTruthy()
     fireEvent.click(screen.getByRole('treeitem', { name: /reviewer/ }))
     expect(input.openChild).toHaveBeenCalledWith({
       parentSessionId: PARENT,

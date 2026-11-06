@@ -29,7 +29,8 @@ import { questionError } from './question-error.ts'
 import { answerTimedQuestion } from './timed-question.ts'
 import type { HostTitleSettings } from './host-title.ts'
 import type {
-  ApprovalOutcomePort, ApprovalRequestPort, EventWindowPort, PromptPartPort, QuestionAnswerPort, QuestionRequestPort, RemotePort,
+  ApprovalOutcomePort, ApprovalRequestPort, EventWindowPort, ImageRefPort, PromptPartPort,
+  QuestionAnswerPort, QuestionRequestPort, RemotePort,
   RemoteResultPort, SessionBindingPort, SessionFacePort, SessionRemotePort, SessionsPort,
 } from './ports.ts'
 
@@ -317,14 +318,14 @@ export class TerminalSession {
     }, wanted)
   }
 
-  /** Attachment ids of the images in the user messages of a change. */
-  #imageIds(change: EventWindowPort['change']): string[] {
+  /** Stored-image references of the images in the user messages of a change. */
+  #imageIds(change: EventWindowPort['change']): ImageRefPort[] {
     if (this.#options.deps.imageProtocol === 'none' || change.kind === 'settle-assistant') return []
-    const ids: string[] = []
+    const ids: ImageRefPort[] = []
     for (const { event } of change.entries) {
       if (event.type !== 'user/message') continue
       for (const block of event.data.content) {
-        if (block.type === 'image') ids.push(block.attachment.attachmentId)
+        if (block.type === 'image') ids.push(block.attachment)
       }
     }
     return ids
@@ -334,10 +335,10 @@ export class TerminalSession {
    * Print text produced by `render`, after everything scheduled before it.
    * Output is immediate unless an earlier item still waits for image bytes.
    * @param render - produces the text at print time, so the renderer sees events in order.
-   * @param wanted - attachment ids whose bytes must be fetched before printing.
+   * @param wanted - stored-image references whose bytes must be fetched before printing.
    */
-  #schedule(render: () => string, wanted: readonly string[] = []): void {
-    const missing = wanted.filter(id => !this.#images.has(id))
+  #schedule(render: () => string, wanted: readonly ImageRefPort[] = []): void {
+    const missing = wanted.filter(ref => !this.#images.has(ref.attachmentId))
     if (missing.length === 0 && this.#queued === 0) {
       this.#printAbove(render())
       return
@@ -350,10 +351,10 @@ export class TerminalSession {
   }
 
   /** Fetch stored images; one that cannot be read is cached empty-handed so the transcript shows its marker. */
-  async #fetchImages(ids: readonly string[]): Promise<void> {
-    await Promise.all(ids.map(async (id) => {
-      const stored = await this.#session.readAttachment(id).catch(() => undefined)
-      if (stored?.ok === true) this.#images.set(id, Buffer.from(stored.value.data).toString('base64'))
+  async #fetchImages(refs: readonly ImageRefPort[]): Promise<void> {
+    await Promise.all(refs.map(async (ref) => {
+      const stored = await this.#session.readAttachment(ref).catch(() => undefined)
+      if (stored?.ok === true) this.#images.set(ref.attachmentId, Buffer.from(stored.value.data).toString('base64'))
     }))
   }
 

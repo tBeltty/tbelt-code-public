@@ -211,7 +211,7 @@ describe.skipIf(MODE === 'record')('web e2e: first-run DeepSeek credential setup
     const customModelId = model.getByLabel('Model ID 1')
     await customModelId.fill('private-preview')
     await model.getByLabel('Display name 1').fill('Private Preview')
-    await settings.getByRole('button', { name: 'Model options 1' }).click()
+    expect(await settings.getByRole('button', { name: 'Model options 1' }).getAttribute('aria-expanded')).toBe('true')
     await model.getByLabel('Context window 1').fill('131072')
     await model.getByLabel('Max output tokens 1').fill('64K')
     expect(await settings.getByRole('group', { name: 'Input types 1' }).getByRole('checkbox', { name: 'Image' }).isChecked()).toBe(false)

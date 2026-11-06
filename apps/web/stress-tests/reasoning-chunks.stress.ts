@@ -94,7 +94,7 @@ class ReasoningStressAdapter extends LlmAdapter {
       while (this.emitted < end) {
         const text = this.emitted === CHUNK_COUNT - 1
           ? `\n${MARKER}`
-          : this.emitted % 64 === 63 ? '推理\n' : '推理'
+          : this.emitted % 64 === 63 ? '推理\n' : 'Reasoning'
         parts.push(text)
         yield { type: 'reasoning-delta', index: 0, text }
         this.emitted += 1

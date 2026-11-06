@@ -32,6 +32,8 @@ const TOOL_TITLES = {
   'tool.title.updateGoal': 'Update goal',
   'tool.title.createSchedule': 'Create reminder',
   'tool.title.listSchedules': 'List reminders',
+  'tool.title.viewSchedule': 'View automation task',
+  'tool.title.editSchedule': 'Edit automation task',
   'tool.title.deleteSchedule': 'Delete reminder',
   'tool.title.updateSchedule': 'Update reminder',
   'tool.title.inspectProviders': 'Inspect providers',
@@ -64,6 +66,7 @@ const TOOL_TITLES = {
   'tool.title.updateTeamTask': 'Update team task',
   'tool.title.listTeamTasks': 'List team tasks',
   'tool.title.waitAgent': 'Wait for subagent',
+  'tool.title.applyPatch': 'Apply patch',
 } as const satisfies Record<ToolTitleKey, string>
 
 /** Sentence completing "I need permission to …", one per {@link ApprovalNeedKey}. */

@@ -170,7 +170,7 @@ it('keeps modal arbitration and updates locale without replacing the iframe', as
   press()
   const frame = body.view.getByTitle('NodeJS inspector')
   act(() => { locale.setLocale('es') })
-  expect(body.view.getByTitle('Inspector de NodeJS')).toBe(frame)
+  expect(body.view.getByTitle('Inspector NodeJS')).toBe(frame)
   act(() => { body.view.getByRole('button', { name: 'Contraer' }).click() })
   expect(body.container.querySelector('section')?.hidden).toBe(true)
 })
@@ -189,15 +189,12 @@ it('removes the command and frame on unload and starts a fresh closed panel on r
   expect(body.view.getByTitle('NodeJS inspector')).not.toBe(frame)
 })
 
-it('uses Japanese panel and shortcut labels through the production registration', async () => {
+it('uses French panel and shortcut labels through the production registration', async () => {
   const { runtime, locale, body } = await setup()
-  act(() => {
-    locale.addLanguage({ id: 'ja', label: '日本語', fallback: 'en' })
-    locale.setLocale('ja')
-  })
+  act(() => { locale.setLocale('fr') })
   press()
-  expect(body.view.getByRole('button', { name: '折りたたむ' })).toBeTruthy()
-  expect(body.view.getByTitle('NodeJS インスペクター')).toBeTruthy()
-  expect(body.container.querySelector('section')?.getAttribute('aria-label')).toBe('NodeJS インスペクター')
-  expect(runtime.ctx.shortcuts.catalog.getSnapshot().find(row => row.id === ID)?.label).toBe('NodeJS インスペクターの表示切り替え')
+  expect(body.view.getByRole('button', { name: 'Réduire' })).toBeTruthy()
+  expect(body.view.getByTitle('Inspecteur NodeJS')).toBeTruthy()
+  expect(body.container.querySelector('section')?.getAttribute('aria-label')).toBe('Inspecteur NodeJS')
+  expect(runtime.ctx.shortcuts.catalog.getSnapshot().find(row => row.id === ID)?.label).toBe("Basculer l'inspecteur NodeJS")
 })

@@ -100,7 +100,7 @@ describe('TerminalBlock states', () => {
     expect(runStateOf(view.container)).toEqual({ state: null, label: undefined })
     expect(outputLines(view.container)).toEqual([])
     expect(view.queryByText('launch acknowledgement')).toBeNull()
-    expect(view.queryByText('无输出')).toBeNull()
+    expect(view.queryByText('No output')).toBeNull()
     expect(view.queryByText('信号 SIGTERM')).toBeNull()
     expect(view.queryByRole('button')).toBeNull()
     expect(view.container.firstElementChild?.hasAttribute('data-running')).toBe(false)
@@ -114,14 +114,14 @@ describe('TerminalBlock states', () => {
     view.rerender(<TerminalBlock command="worker --watch" cwd="/workspace/app" background />)
     expect(view.container.querySelector('[data-command-text]')).toBe(command)
     expect(runStateOf(view.container)).toEqual({ state: null, label: undefined })
-    expect(view.queryByText('无输出')).toBeNull()
+    expect(view.queryByText('No output')).toBeNull()
     expect(view.queryByRole('button')).toBeNull()
   })
 
   it('keeps an explicit copyText override available in background mode', () => {
     const view = render(<TerminalBlock command="worker" background copyText="explicit copy" />)
-    expect(view.getByRole('button', { name: '复制' })).toBeTruthy()
-    expect(view.queryByText('无输出')).toBeNull()
+    expect(view.getByRole('button', { name: 'Copy' })).toBeTruthy()
+    expect(view.queryByText('No output')).toBeNull()
     expect(runStateOf(view.container)).toEqual({ state: null, label: undefined })
   })
 

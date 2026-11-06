@@ -1,0 +1,147 @@
+/** Manual task creation and editing through the shipped Web composition. */
+import { chromium } from 'playwright'
+import { expect, it } from 'vitest'
+import { launchWebScaffold, watchConsole } from './scaffold.ts'
+
+it('creates from a paused empty state, selects the task, and saves an inline edit without starting an Agent', async () => {
+  // First use registers the default Workspace, which a new task's directory starts with.
+  const scaffold = await launchWebScaffold({ firstUse: true })
+  let browser: Awaited<ReturnType<typeof chromium.launch>> | undefined
+  try {
+    browser = await chromium.launch()
+    const page = await browser.newPage({ viewport: { width: 1440, height: 960 }, locale: 'zh-CN', timezoneId: 'Asia/Shanghai' })
+    await page.addInitScript(() => { localStorage.setItem('dsh.locale', 'zh') })
+    const tripwire = watchConsole(page)
+    await page.goto(scaffold.authenticatedUrl, { waitUntil: 'load' })
+    await page.getByRole('button', { name: '自动化任务', exact: true }).click()
+    const manager = page.getByTestId('task-manager-page')
+    const createStyles = await manager.getByRole('group', { name: 'Create', exact: true }).getByRole('button').evaluateAll(buttons => buttons.map((button) => {
+      const style = getComputedStyle(button)
+      return { height: style.height, topLeft: style.borderTopLeftRadius, bottomLeft: style.borderBottomLeftRadius,
+        topRight: style.borderTopRightRadius, bottomRight: style.borderBottomRightRadius }
+    }))
+    expect(createStyles).toEqual([
+      { height: '32px', topLeft: '16px', bottomLeft: '16px', topRight: '0px', bottomRight: '0px' },
+      { height: '32px', topLeft: '0px', bottomLeft: '0px', topRight: '16px', bottomRight: '16px' },
+    ])
+    await manager.getByRole('button', { name: 'Paused', exact: true }).click()
+    await manager.getByRole('heading', { name: 'No paused automation tasks', exact: true }).waitFor()
+    await manager.getByRole('button', { name: 'Choose a creation method', exact: true }).click()
+    await page.getByRole('menuitem', { name: 'Create manually', exact: true }).waitFor()
+    await page.keyboard.press('Escape')
+    await manager.getByRole('button', { name: 'New automation task', exact: true }).click()
+    const dialog = page.getByRole('dialog', { name: 'Create manually', exact: true })
+    await dialog.getByRole('textbox', { name: 'Automation task name', exact: true }).fill('AI 新闻简报')
+    await dialog.getByRole('textbox', { name: 'Automation task instruction', exact: true }).fill('整理过去 24 小时的 AI 新闻，附原文链接。')
+    await dialog.getByRole('button', { name: /^重复 / }).click()
+    await page.getByRole('menuitem', { name: 'Monday to Friday', exact: true }).click()
+    await dialog.getByRole('button', { name: 'Time', exact: true }).click()
+    await page.getByRole('listbox', { name: 'Hour', exact: true }).getByRole('option', { name: '09', exact: true }).click()
+    await page.getByRole('listbox', { name: '分', exact: true }).getByRole('option', { name: '00', exact: true }).click()
+    await page.getByRole('listbox', { name: '秒', exact: true }).getByRole('option', { name: '00', exact: true }).click()
+    await page.keyboard.press('Escape')
+    await dialog.getByRole('button', { name: /^执行位置 / }).click()
+    await page.getByRole('menuitem', { name: '新建会话并复用 首次运行时创建，之后沿用这个会话', exact: true }).waitFor()
+    expect(await page.getByRole('menuitem').count()).toBe(2)
+    const workspace = dialog.getByRole('button', { name: /^关联工作区 / })
+    await expect.poll(() => workspace.textContent()).toContain('Default workspace')
+    await page.keyboard.press('Escape')
+    // The workspace menu states each directory, so the default workspace names its folder.
+    const defaultPath = scaffold.ctx.workspaceRegistry.list()[0]?.path
+    if (defaultPath === undefined) throw new Error('first use did not register the default workspace')
+    await workspace.click()
+    await page.getByRole('menuitem').getByTitle(defaultPath, { exact: true }).waitFor()
+    await page.keyboard.press('Escape')
+    expect(await dialog.count()).toBe(1)
+    await dialog.getByRole('button', { name: 'Create', exact: true }).click()
+    const detail = manager.getByRole('complementary', { name: 'Task details', exact: true })
+    await detail.getByRole('heading', { name: 'AI 新闻简报', exact: true }).waitFor()
+    expect(await manager.getByRole('button', { name: 'All', exact: true }).getAttribute('aria-pressed')).toBe('true')
+    expect(await manager.getByRole('list', { name: 'Task catalog', exact: true }).getByRole('button', { name: 'AI 新闻简报', exact: true }).count()).toBe(1)
+    await detail.getByText('Pending creation', { exact: true }).waitFor()
+    const task = (await scaffold.ctx.schedule.catalog()).find(task => task.title === 'AI 新闻简报')
+    if (task === undefined || task.target.kind !== 'new_once') throw new Error('manual task was not created with the reusable target')
+    expect(task.target.create.cwd).toBe(defaultPath)
+    await detail.getByRole('button', { name: 'Edit', exact: true }).click()
+    await detail.getByRole('textbox', { name: 'Automation task instruction', exact: true }).fill('整理过去 24 小时的 AI 新闻，附原文链接，按重要性排序。')
+    await detail.getByRole('button', { name: 'Save changes', exact: true }).click()
+    await detail.getByRole('textbox', { name: 'Automation task instruction', exact: true }).waitFor({ state: 'detached' })
+    await detail.getByText('整理过去 24 小时的 AI 新闻，附原文链接，按重要性排序。', { exact: true }).waitFor()
+    const saved = await scaffold.ctx.schedule.view({ id: task.id })
+    if ('code' in saved) throw new Error('edited task was not retained')
+    expect(saved.prompt).toBe('整理过去 24 小时的 AI 新闻，附原文链接，按重要性排序。')
+    await manager.getByRole('button', { name: 'Choose a creation method', exact: true }).click()
+    await page.getByRole('menuitem', { name: 'Create manually', exact: true }).click()
+    await dialog.getByRole('textbox', { name: 'Automation task name', exact: true }).fill('检查最新进展')
+    await dialog.getByRole('textbox', { name: 'Automation task instruction', exact: true }).fill('汇总最近的更新')
+    await dialog.getByRole('button', { name: /^重复 / }).click()
+    await page.getByRole('menuitem', { name: 'Every N minutes', exact: true }).click()
+    await dialog.getByRole('spinbutton', { name: 'Interval', exact: true }).fill('5')
+    await dialog.getByRole('button', { name: /^执行位置 / }).click()
+    await page.getByRole('menuitem', { name: '每次新建会话 每次运行都创建独立会话', exact: true }).click()
+    await dialog.getByText('运行间隔至少 1分钟', { exact: true }).waitFor()
+    const beforeCreate = Date.now()
+    await dialog.getByRole('button', { name: 'Create', exact: true }).click()
+    await detail.getByRole('heading', { name: '检查最新进展', exact: true }).waitFor()
+    const intervalTask = (await scaffold.ctx.schedule.catalog()).find(item => item.title === '检查最新进展')
+    if (intervalTask === undefined) throw new Error('interval task was not created')
+    expect(intervalTask.target.kind).toBe('new')
+    expect(Date.parse(intervalTask.scheduledAt) - beforeCreate).toBeGreaterThan(240_000)
+    expect(Date.parse(intervalTask.scheduledAt) - beforeCreate).toBeLessThanOrEqual(300_000)
+    await detail.getByRole('button', { name: 'Pause', exact: true }).click()
+    await detail.getByRole('button', { name: 'Resume', exact: true }).waitFor()
+    expect(await detail.getByText('Pending creation', { exact: true }).count()).toBe(0)
+    expect(await detail.getByText('Latest run session', { exact: true }).count()).toBe(0)
+    expect(await detail.getByText('运行间隔至少', { exact: false }).count()).toBe(0)
+    expect(tripwire.pageErrors).toEqual([])
+    expect(scaffold.ctx.agents.get(task.target.sessionId)).toBeUndefined()
+  } finally {
+    try { await browser?.close() } finally { await scaffold.close() }
+  }
+})
+
+it('creates and edits Custom Cron through the built UI while retaining its explicit zone and record kind', async () => {
+  const scaffold = await launchWebScaffold({ firstUse: true })
+  let browser: Awaited<ReturnType<typeof chromium.launch>> | undefined
+  try {
+    browser = await chromium.launch()
+    const page = await browser.newPage({ viewport: { width: 1440, height: 960 }, locale: 'zh-CN', timezoneId: 'Asia/Shanghai' })
+    await page.addInitScript(() => { localStorage.setItem('dsh.locale', 'zh') })
+    const tripwire = watchConsole(page)
+    await page.goto(scaffold.authenticatedUrl, { waitUntil: 'load' })
+    await page.getByRole('button', { name: '自动化任务', exact: true }).click()
+    const manager = page.getByTestId('task-manager-page')
+    await manager.getByRole('button', { name: 'Choose a creation method', exact: true }).click()
+    await page.getByRole('menuitem', { name: 'Create manually', exact: true }).click()
+    const dialog = page.getByRole('dialog', { name: 'Create manually', exact: true })
+    await dialog.getByRole('textbox', { name: 'Automation task name', exact: true }).fill('Cron deployment check')
+    await dialog.getByRole('textbox', { name: 'Automation task instruction', exact: true }).fill('Check the deployment status.')
+    await dialog.getByRole('button', { name: /^重复 / }).click()
+    await page.getByRole('menuitem', { name: '自定义', exact: true }).click()
+    await dialog.getByRole('textbox', { name: '自定义', exact: true }).fill('0 9 * * 1-5')
+    await dialog.getByRole('button', { name: /^时区 / }).waitFor()
+    await dialog.getByRole('button', { name: 'Create', exact: true }).click()
+    const detail = manager.getByRole('complementary', { name: 'Task details', exact: true })
+    await detail.getByRole('heading', { name: 'Cron deployment check', exact: true }).waitFor()
+    const created = (await scaffold.ctx.schedule.catalog()).find(task => task.title === 'Cron deployment check')
+    if (created === undefined) throw new Error('Custom Cron creation did not store a task')
+    expect(created).toMatchObject({ kind: 'cron', expression: '0 9 * * 1-5', timeZone: 'Asia/Shanghai' })
+    expect(created).not.toHaveProperty('rrule')
+
+    await detail.getByRole('button', { name: 'Edit', exact: true }).click()
+    await detail.getByRole('textbox', { name: '自定义', exact: true }).fill(' ')
+    await detail.getByRole('button', { name: 'Save changes', exact: true }).click()
+    await detail.getByRole('alert').getByText('Check the rule and time zone', { exact: true }).waitFor()
+    expect(await scaffold.ctx.schedule.view({ id: created.id })).toEqual(created)
+    await detail.getByRole('textbox', { name: '自定义', exact: true }).fill('0 10 * * 1-5')
+    await detail.getByRole('button', { name: /^时区 / }).waitFor()
+    await detail.getByRole('button', { name: 'Save changes', exact: true }).click()
+    await detail.getByRole('textbox', { name: '自定义', exact: true }).waitFor({ state: 'detached' })
+    const edited = await scaffold.ctx.schedule.view({ id: created.id })
+    expect(edited).toMatchObject({ id: created.id, kind: 'cron', expression: '0 10 * * 1-5', timeZone: 'Asia/Shanghai' })
+    expect(edited).not.toHaveProperty('rrule')
+    expect(tripwire.pageErrors).toEqual([])
+  } finally {
+    try { await browser?.close() } finally { await scaffold.close() }
+  }
+})

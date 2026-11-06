@@ -544,7 +544,7 @@ describe('web e2e: settings modal and General preferences', () => {
     await codeSize.click()
     await expect.poll(readCodeSize, { timeout: 5_000 }).toBe('12px')
     await expect.poll(async () => readFile(patchFile, 'utf8'), { timeout: 5_000 }).toContain('codeFontSize: 12')
-    await commit('正文字体', 'Georgia')
+    await commit('Text font', 'Georgia')
     await expect.poll(readFonts, { timeout: 5_000 }).toEqual({ ...defaults, text: `Georgia, ${textStack}`, code: `"Courier New", monospace, ${codeStack}` })
     // The snapshot updates optimistically; reload only after the Host has persisted both lists.
     await expect.poll(async () => readFile(patchFile, 'utf8'), { timeout: 5_000 }).toContain('Georgia')
@@ -562,7 +562,7 @@ describe('web e2e: settings modal and General preferences', () => {
     const reloaded = page.getByRole('dialog', { name: 'Settings' })
     await expandFonts()
     expect(await reloaded.getByRole('textbox', { name: 'Code font', exact: true }).inputValue()).toBe('"Courier New", monospace')
-    await commit('正文字体', '')
+    await commit('Text font', '')
     await commit('Code font', '')
     await reloaded.getByRole('button', { name: 'Decrease code font size', exact: true }).click()
     await expect.poll(readFonts, { timeout: 5_000 }).toEqual(defaults)

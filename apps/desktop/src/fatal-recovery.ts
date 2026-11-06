@@ -18,6 +18,8 @@ interface RecoveryOperations {
   copyReport(path: string): Promise<void>
 }
 
+type ReportState = { kind: 'pending' } | { kind: 'failed' } | { kind: 'ready'; path: string }
+
 /** Upper bound on waiting for the crash report before the dialog opens. */
 export const CRASH_REPORT_WAIT_MS = 1_000
 
@@ -29,26 +31,29 @@ const DETAIL_TAIL_LINES = 8
 
 /**
  * Compose the dialog detail: the error's last lines (prefixed by the
- * shortening notice when they are not the whole error), then the report path
- * when one was written, then the reinstall advice. The report line does not
+ * shortening notice when they are not the whole error), then the report status
+ * (its path once written), then the reinstall advice. The report line does not
  * depend on shortening: a short error that was persisted names its file too.
  */
-function dialogDetail(error: string, messages: DesktopMessages, reportPath: string | undefined): string {
+function dialogDetail(error: string, messages: DesktopMessages, reportState: ReportState): string {
   const advice = `\n\n${messages.startupReinstallAdvice}`
-  const report = reportLine(messages, reportPath)
+  const report = reportLine(messages, reportState)
   const tail = error.split(/\r\n|[\n\r\u2028\u2029]/u).slice(-DETAIL_TAIL_LINES).join('\n')
   const budget = DETAIL_BUDGET - advice.length - report.length - messages.diagnosticTruncated.length - 1
   const shortened = tail.slice(-budget).replace(/^[\uDC00-\uDFFF]/u, '')
   return `${shortened === error ? error : `${messages.diagnosticTruncated}\n${shortened}`}${report}${advice}`
 }
 
-function reportLine(messages: DesktopMessages, reportPath: string | undefined): string {
-  return reportPath === undefined ? '' : `\n${formatDesktopMessage(messages.reportWrittenTo, { path: reportPath })}`
+function reportLine(messages: DesktopMessages, state: ReportState): string {
+  if (state.kind === 'pending') return `\n${messages.reportPending}`
+  if (state.kind === 'failed') return `\n${messages.reportUnavailable}`
+  return `\n${formatDesktopMessage(messages.reportWrittenTo, { path: state.path })}`
 }
 
 /** Deduplicates fatal reports while keeping explicit recovery-operation failures actionable. */
 export class DesktopFatalRecovery {
   private reported = false
+  private reportState: ReportState = { kind: 'pending' }
 
   /** @param operations - Native presentation, report persistence, and application-owned shutdown operations. */
   constructor(private readonly operations: RecoveryOperations) {}
@@ -59,7 +64,7 @@ export class DesktopFatalRecovery {
   /**
    * Show the first fatal error; later reports cannot replace it or open another dialog.
    * The crash report is written first, bounded by {@link CRASH_REPORT_WAIT_MS}, so the dialog can name it;
-   * a slow or failed write shows the dialog without a path.
+   * a slow or failed write shows its status, and Copy report rechecks the same write.
    * @param error - Fatal failure, including nested diagnostic causes.
    * @param source - Where the failure surfaced, recorded in the report.
    * @returns Completion of the user's recovery action; duplicate reports resolve immediately.
@@ -68,35 +73,40 @@ export class DesktopFatalRecovery {
     if (this.reported) return
     this.reported = true
     const messages = this.operations.messages()
-    const reportPath = await this.persist(error, source)
+    const report = this.persist(error, source)
+    await this.waitForReport(report)
     let detail = desktopErrorState(error).message
     let message = messages.fatalSummary
     let copied = false
     for (;;) {
       const addressInUse = /\blisten EADDRINUSE\b/u.test(detail)
+      const offersReport = this.reportState.kind !== 'failed'
       const buttons = [
         messages.exitApplication,
         messages.restartApplication,
         ...addressInUse ? [] : [messages.disableThirdPartyPlugins],
-        ...reportPath === undefined ? [] : [messages.copyReport],
+        ...offersReport ? [messages.copyReport] : [],
       ]
       const { response } = await this.operations.show({
         type: 'error',
         title: messages.startupFailed,
         message,
         detail: `${addressInUse
-          ? `${messages.startupAddressInUse}${reportLine(messages, reportPath)}`
-          : dialogDetail(detail, messages, reportPath)}${copied ? `\n${messages.reportCopied}` : ''}`,
+          ? `${messages.startupAddressInUse}${reportLine(messages, this.reportState)}`
+          : dialogDetail(detail, messages, this.reportState)}${copied ? `\n${messages.reportCopied}` : ''}`,
         buttons,
         defaultId: 1,
         cancelId: 0,
         noLink: true,
       })
-      if (reportPath !== undefined && response === buttons.length - 1) {
-        try {
-          await this.operations.copyReport(reportPath)
-          copied = true
-        } catch (failure) { console.error(failure) }
+      if (offersReport && response === buttons.length - 1) {
+        await this.waitForReport(report)
+        if (this.reportState.kind === 'ready') {
+          try {
+            await this.operations.copyReport(this.reportState.path)
+            copied = true
+          } catch (failure) { console.error(failure) }
+        }
         continue
       }
       if (response === 0) {
@@ -117,16 +127,23 @@ export class DesktopFatalRecovery {
     }
   }
 
-  private async persist(error: unknown, source: CrashReportSource): Promise<string | undefined> {
-    let timer: ReturnType<typeof setTimeout> | undefined
+  private async persist(error: unknown, source: CrashReportSource): Promise<void> {
     try {
-      return await Promise.race([
-        this.operations.writeReport(error, source),
-        new Promise<undefined>((resolve) => { timer = setTimeout(() => { resolve(undefined) }, CRASH_REPORT_WAIT_MS) }),
-      ])
+      const path = await this.operations.writeReport(error, source)
+      this.reportState = path === undefined ? { kind: 'failed' } : { kind: 'ready', path }
     } catch (failure) {
       console.error('dsh desktop: crash report failed', failure)
-      return undefined
+      this.reportState = { kind: 'failed' }
+    }
+  }
+
+  private async waitForReport(report: Promise<void>): Promise<void> {
+    let timer: ReturnType<typeof setTimeout> | undefined
+    try {
+      await Promise.race([
+        report,
+        new Promise<void>((resolve) => { timer = setTimeout(resolve, CRASH_REPORT_WAIT_MS) }),
+      ])
     } finally {
       clearTimeout(timer)
     }

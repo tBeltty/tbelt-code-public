@@ -36,7 +36,7 @@ The Web `standard`, `ptc`, and `cordis` presets expose `present` for final files
 
 The `preview` tool row shows the recorded target with a globe icon. When a call settles successfully while its row is on screen, the row opens the target once: a file opens in the right Sidebar through the chat's file opener, and a loopback URL opens in a Browser tab, or in the system browser when no Browser tab type is composed. A row that mounts with an already settled result stays closed and offers Open. The [present tool](../../deliverables/tool-present/README.md) owns the `preview` schema and target validation.
 
-The `present` tool row retains its document icon and recorded result across progress, success, failure, and interruption. Native actions share pending state and publish progress or retryable errors on the card. Successful open or reveal feedback stays visible for five seconds, fades over 200ms, then restores the file description; failures remain visible until another attempt. Desktop metadata is loaded when cards mount and invalidated on connection replacement. Without a Host desktop, cards retain Sidebar preview but omit native controls; failed metadata reads offer Retry. Delivery cards and change review expose `deliverables.file.actions` and `deliverables.review.file.actions`, supplied by [ui-open-in-app](../ui-open-in-app/README.md). Association GET requests and native POST actions both validate the recorded file coordinates and Session filesystem mapping before using the Host desktop.
+The `present` tool row retains its document icon and recorded result across progress, success, failure, and interruption. Native actions share pending state and publish progress or retryable errors on the card. An acknowledged open or reveal immediately restores the file description; failures remain visible until another attempt. Each gesture settles on a discriminated outcome — acknowledged open, acknowledged reveal, named failure, or a request dropped because the same file was already opening or the plugin was disposed — which the contributed control reports according to the mobile success and shared failure policy in [ui-open-in-app](../ui-open-in-app/README.md). Disposing the plugin cancels pending requests and suppresses their announcements. Desktop metadata is loaded when cards mount and invalidated on connection replacement. Without a Host desktop, cards retain Sidebar preview but omit native controls; failed metadata reads offer Retry. Delivery cards and change review expose `deliverables.file.actions` and `deliverables.review.file.actions`, supplied by [ui-open-in-app](../ui-open-in-app/README.md). Association GET requests and native POST actions both validate the recorded file coordinates and Session filesystem mapping before using the Host desktop.
 
 ### The changed-files card
 
@@ -91,6 +91,8 @@ Read these pages when the deliverables surface is not enough. They move from the
 - [Client package map](../README.md) — adjacent browser UI packages.
 
 -----
+
+Delivery cards and known inline file mentions expose a [context menu](../ui-context-menu/README.md) for their declared Session file, preserving the original path and optional line.
 
 <a id="model-experience"></a>
 ## Model Experience

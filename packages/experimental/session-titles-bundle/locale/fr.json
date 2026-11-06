@@ -1,7 +1,7 @@
 {
   "meta": {
-    "title": "Titres qui suivent la conversation",
-    "description": "Actualise les titres de session à mesure que de nouveaux messages de l’utilisateur arrivent.",
+    "title": "Titres de suivi de conversation",
+    "description": "Rédige le titre d'une session à partir de tous vos messages et le met à jour lorsque la tâche principale change, au lieu de se baser uniquement sur le premier message.",
     "detail": "docs/DETAIL.md"
   }
 }

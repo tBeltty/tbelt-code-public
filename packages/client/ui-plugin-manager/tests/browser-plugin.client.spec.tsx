@@ -1,4 +1,5 @@
 // @vitest-environment jsdom
+import { contextMenuHook } from '@deepseek-ai/dsh-client-test-runtime'
 import assert from 'node:assert/strict'
 import { Context, Service } from '@deepseek-ai/cordis'
 import { afterEach, beforeEach, describe, expect, it, onTestFinished, vi } from 'vitest'
@@ -253,7 +254,7 @@ describe('ui-plugin-manager browser plugin', () => {
     const unread = () => { throw new Error('The sidebar icon must not read application state') }
     const glyph = render(<PluginsPanelIcon size={18} active={false}
       usePanelInfo={unread} useSessions={unread} useSessionStatus={unread} useSessionRetainInfo={unread}
-      useWorkspaces={unread} useResource={unread} {...allowAllAccess} />)
+      useWorkspaces={unread} useContextMenu={contextMenuHook()} useResource={unread} {...allowAllAccess} />)
     expect(glyph.container.querySelector('svg')?.getAttribute('width')).toBe('18')
     expect(icon.options).toMatchObject({ id: PANEL_ID, order: 0 })
     expect(icon.locale).toBe(NS)
@@ -298,7 +299,7 @@ describe('ui-plugin-manager browser plugin', () => {
     const loadedDetails = face.hooks.bundleDetails.getSnapshot()
     face.retryDetail('dsh-a', '1.0.0', 'en', false)
     expect(face.detailImage('dsh-a', 'README.md', 'a.png', false)).toContain('api/plugin-manager/detail-file?bundle=dsh-a')
-    expect(face.hooks.locale.getSnapshot().active).toBe('zh')
+    expect(face.hooks.locale.getSnapshot().active).toBe('es')
     b.remote.emit('plugin-manager/changed', [{ reason: 'bundle' }])
     await vi.waitFor(() => { expect(b.list).toHaveBeenCalledTimes(2) })
     expect(face.hooks.bundleDetails.getSnapshot()).toEqual(loadedDetails)

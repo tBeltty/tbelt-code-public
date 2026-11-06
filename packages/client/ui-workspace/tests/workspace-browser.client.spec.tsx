@@ -1,5 +1,8 @@
 // @vitest-environment jsdom
+import { contextMenuHook } from '@deepseek-ai/dsh-client-test-runtime'
+import { createSnapshotStore } from '@deepseek-ai/dsh-client-store'
 import type { GlobalStandardProps } from '@deepseek-ai/dsh-client-ui-slots'
+import { Profiler } from 'react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { act, cleanup, createEvent, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import { allowAllAccess, bindSnapshotSelector, makeTranslate } from '@deepseek-ai/dsh-client-test-runtime'
@@ -13,7 +16,7 @@ import type {
 import type { SessionId } from '@deepseek-ai/dsh-session/types'
 import type { MainPanelId } from '@deepseek-ai/dsh-client-ui-layout/client'
 import { es as commonEs } from '@deepseek-ai/dsh-client-locale/src/locales/es.ts'
-import type { DirectoryFlowOwnerProps, WorkspaceBrowserProps } from '../src/client/contract/slots.ts'
+import type { DirectoryFlowOwnerProps, WorkspaceActionRequest, WorkspaceBrowserProps } from '../src/client/contract/slots.ts'
 import { createWorkspaceShortcutControls } from '../src/client/shortcuts.ts'
 import { createWorkspaceViewStore, FLAT_SESSION_ORDER_KEY } from '../src/client/stores.ts'
 import { UNGROUPED_KEY } from '../src/client/tree.ts'
@@ -106,8 +109,14 @@ const renderDirectoryFlowOnly: WorkspaceBrowserProps['renderSlot'] = (name: stri
 
 function mount(overrides: Partial<WorkspaceBrowserProps> = {}) {
   const controls = createWorkspaceShortcutControls()
+  const request = createSnapshotStore<WorkspaceActionRequest | null>(null)
   const store = createWorkspaceViewStore().create()
   const props: WorkspaceBrowserProps = {
+    openWorkspaceMenu: vi.fn(),
+    useWorkspaceActionRequest: bindSnapshotSelector(request),
+    settleWorkspaceAction: () => { request.set(null) },
+    openSessionMenu: vi.fn(),
+    useContextMenuTarget: selector => selector(null),
     useShortcuts: select => select([]),
     useWorkspaceShortcuts: bindSnapshotSelector(controls.state),
     requestSearch: controls.search,
@@ -120,7 +129,9 @@ function mount(overrides: Partial<WorkspaceBrowserProps> = {}) {
     useSessions: hook(sessionState([])),
     useSessionStatus: hook(noPendingInteraction),
     useSessionRetainInfo: () => undefined,
-    usePanelInfo, useResource,
+    usePanelInfo,
+    useContextMenu: contextMenuHook(),
+    useResource,
     useWorkspaces: hook(workspaceState([])),
     ...allowAllAccess,
     useStore: bindSnapshotSelector(store),
@@ -145,7 +156,10 @@ function mount(overrides: Partial<WorkspaceBrowserProps> = {}) {
     ...overrides,
   }
   const view = render(<WorkspaceBrowser {...props} />)
-  return { view, props, store, controls }
+  return { view, props, store, controls, openDialog: (workspaceId: WorkspaceId, displayTitle: string, action: 'rename' | 'delete' | 'worktree') => {
+    const storedTitle = props.useWorkspaces(state => state.items.find(row => row.workspaceId === workspaceId)?.title ?? displayTitle)
+    act(() => { request.set({ action, workspaceId, displayTitle, storedTitle }) })
+  } }
 }
 
 /** Re-render with (possibly) changed props — WorkspaceBrowser has no side channel. */
@@ -755,7 +769,7 @@ describe('WorkspaceBrowser', () => {
     expect(requestSessionRename).toHaveBeenCalledTimes(2)
   })
 
-  it('renders both Session row lists for every visible row in the grouped tree and the flat list', () => {
+  it('renders row actions inline while Session menus belong to the global overlay', () => {
     const rendered = vi.fn()
     const renderSlot: WorkspaceBrowserProps['renderSlot'] = (name: string, owner: object) => {
       rendered(name, owner)
@@ -769,11 +783,11 @@ describe('WorkspaceBrowser', () => {
     expect(rendered).not.toHaveBeenCalledWith('sidebar.workspaces.session.menu.item', expect.anything())
     fireEvent.click(screen.getByText('alpha'))
     const owner = { sessionId: sid('alpha-s'), displayTitle: 'alpha-s' }
-    expect(rendered).toHaveBeenCalledWith('sidebar.workspaces.session.menu.item', owner)
+    expect(rendered).not.toHaveBeenCalledWith('sidebar.workspaces.session.menu.item', owner)
     expect(rendered).toHaveBeenCalledWith('sidebar.workspaces.session.row.action', owner)
     rendered.mockClear()
     act(() => { b.store.actions.setGroupBy('flat') })
-    expect(rendered).toHaveBeenCalledWith('sidebar.workspaces.session.menu.item', owner)
+    expect(rendered).not.toHaveBeenCalledWith('sidebar.workspaces.session.menu.item', owner)
     expect(rendered).toHaveBeenCalledWith('sidebar.workspaces.session.row.action', owner)
   })
 
@@ -1881,6 +1895,109 @@ describe('WorkspaceBrowser', () => {
     expect(screen.queryByRole('button', { name: 'Añadir espacio de trabajo…' })).toBeNull()
   })
 
+  it.each(['clear', 'escape', 'outside'] as const)('animates %s search dismissal without carrying spacing motion through the rail', (dismissal) => {
+    vi.useFakeTimers()
+    try {
+      const b = mount()
+      const add = screen.getByRole('button', { name: 'Añadir espacio de trabajo' })
+      const header = add.closest('[class*="sectionHeader"]')!
+      // jsdom observes the motion opt-in; the browser suite measures the resulting transitions.
+      const motionEnabled = () => header.className.includes('searchSpacingMotion')
+      expect(motionEnabled()).toBe(false)
+      fireEvent.click(screen.getByRole('button', { name: 'Buscar sesiones' }))
+      expect(motionEnabled()).toBe(true)
+      rerender(b, { wide: false })
+      expect(motionEnabled()).toBe(false)
+      rerender(b, { wide: true })
+      expect(motionEnabled()).toBe(false)
+      const input = screen.getByPlaceholderText<HTMLInputElement>('Buscar por nombre de sesión')
+      if (dismissal === 'clear') {
+        fireEvent.change(input, { target: { value: 'query' } })
+        fireEvent.click(screen.getByRole('button', { name: 'Borrar búsqueda' }))
+      } else if (dismissal === 'escape') {
+        fireEvent.change(input, { target: { value: 'query' } })
+        fireEvent.keyDown(input, { key: 'Escape' })
+      } else fireEvent.click(document.body)
+      expect(motionEnabled()).toBe(true)
+      expect(input.value).toBe('')
+      expect(screen.getByRole('button', { name: 'Buscar sesiones' }).getAttribute('aria-expanded')).toBe('false')
+      expect(screen.getByRole('button', { name: 'Añadir espacio de trabajo' })).toBe(add)
+      expect(add.closest('[class*="sectionHeader"]')).toBe(header)
+      rerender(b, { wide: false })
+      fireEvent.click(screen.getByRole('button', { name: 'Buscar sesiones' }))
+      rerender(b, { wide: true })
+      expect(motionEnabled()).toBe(false)
+      act(() => { vi.advanceTimersByTime(300) })
+      expect(document.activeElement).toBe(screen.getByPlaceholderText('Buscar por nombre de sesión'))
+      expect(screen.getByRole('button', { name: 'Añadir espacio de trabajo' })).toBe(add)
+    } finally {
+      vi.useRealTimers()
+    }
+  })
+
+  it('preserves the add button and its open directory flow across rail layout changes', () => {
+    const b = mount({ wide: false })
+    const add = screen.getByRole('button', { name: 'Añadir espacio de trabajo' })
+    fireEvent.click(add)
+    const flow = screen.getByTestId('directory-flow')
+    for (const wide of [true, false, true]) {
+      rerender(b, { wide })
+      expect(screen.getByRole('button', { name: 'Añadir espacio de trabajo' })).toBe(add)
+      expect(screen.getByTestId('directory-flow')).toBe(flow)
+    }
+  })
+
+  it.each([false, true])('commits rail search intent before synchronously expanding the shell (prior search: %s)', (usedSearch) => {
+    const layout = createSnapshotStore({ wide: usedSearch })
+    const useLayout = bindSnapshotSelector(layout)
+    const b = mount({ wide: false, expandSidebar: () => { layout.set({ wide: true }) } })
+    const committedSearchStates: boolean[] = []
+    function Shell() {
+      return <WorkspaceBrowser {...b.props} wide={useLayout(state => state.wide)} />
+    }
+    b.view.rerender(<Profiler id="rail-search" onRender={() => {
+      // The shell's external-store update can commit before state queued by a passive effect.
+      if (screen.queryByPlaceholderText('Buscar por nombre de sesión') === null) return
+      committedSearchStates.push(screen.getByRole('button', { name: 'Buscar sesiones' }).getAttribute('aria-expanded') === 'true')
+    }}><Shell /></Profiler>)
+    if (usedSearch) {
+      fireEvent.click(screen.getByRole('button', { name: 'Buscar sesiones' }))
+      fireEvent.keyDown(screen.getByPlaceholderText('Buscar por nombre de sesión'), { key: 'Escape' })
+      act(() => { layout.set({ wide: false }) })
+    }
+    committedSearchStates.length = 0
+    fireEvent.click(screen.getByRole('button', { name: 'Buscar sesiones' }))
+    expect(committedSearchStates.length).toBeGreaterThan(0)
+    expect(committedSearchStates.every(Boolean)).toBe(true)
+    expect(screen.getByRole('button', { name: 'Buscar sesiones' }).getAttribute('aria-expanded')).toBe('true')
+  })
+
+  it('treats a new shortcut source with no request as idle', () => {
+    const b = mount()
+    fireEvent.click(screen.getByRole('button', { name: 'Buscar sesiones' }))
+    fireEvent.keyDown(screen.getByPlaceholderText('Buscar por nombre de sesión'), { key: 'Escape' })
+    const controls = createWorkspaceShortcutControls()
+    rerender(b, { useWorkspaceShortcuts: bindSnapshotSelector(controls.state), requestSearch: controls.search })
+    expect(screen.getByRole('button', { name: 'Buscar sesiones' }).getAttribute('aria-expanded')).toBe('false')
+    act(() => { controls.search() })
+    expect(screen.getByRole('button', { name: 'Buscar sesiones' }).getAttribute('aria-expanded')).toBe('true')
+  })
+
+  it('expands an inert drawer with retained wide content before focusing search', () => {
+    vi.useFakeTimers()
+    try {
+      const expandSidebar = vi.fn(() => { b.view.container.removeAttribute('inert') })
+      const b = mount({ wide: true, expandSidebar })
+      b.view.container.setAttribute('inert', '')
+      act(() => { b.controls.search() })
+      expect(expandSidebar).toHaveBeenCalledOnce()
+      act(() => { vi.advanceTimersByTime(300) })
+      expect(document.activeElement).toBe(screen.getByPlaceholderText('Buscar por nombre de sesión'))
+    } finally {
+      vi.useRealTimers()
+    }
+  })
+
   it('rail state renders icon controls that request expansion', () => {
     vi.useFakeTimers()
     try {
@@ -1894,6 +2011,7 @@ describe('WorkspaceBrowser', () => {
       // The wide flip mounts the input and focuses it after the slide.
       rerender(b, { wide: true })
       const input = screen.getByPlaceholderText('Buscar por nombre de sesión')
+      expect(document.activeElement).not.toBe(input)
       act(() => { vi.advanceTimersByTime(300) })
       expect(document.activeElement).toBe(input)
       // Wide search button is decorative (tabIndex -1, no expand call).
@@ -2324,7 +2442,7 @@ describe('WorkspaceBrowser', () => {
 
   it('labels an unrenamed default Workspace in the reader’s language and every other title verbatim', () => {
     const renameWorkspace = vi.fn(async () => {})
-    mount({
+    const browser = mount({
       useWorkspaces: hook(workspaceState([
         workspace('alpha', [], 'default-workspace'),
         workspace('beta', [], 'default-workspace backup'),
@@ -2336,8 +2454,7 @@ describe('WorkspaceBrowser', () => {
     // The dialog edits the text on screen, and the stored title — not that
     // text — decides whether confirming saves. So confirming the untouched
     // prefill pins the localized name and the row stops following the language.
-    fireEvent.click(screen.getByRole('button', { name: 'Acciones del espacio de trabajo Espacio de trabajo predeterminado' }))
-    fireEvent.click(screen.getByRole('menuitem', { name: 'Renombrar' }))
+    browser.openDialog(wid('alpha'), 'Espacio de trabajo predeterminado', 'rename')
     expect(screen.getByLabelText<HTMLInputElement>('Nombre del espacio de trabajo').value).toBe('Espacio de trabajo predeterminado')
     expect(screen.queryByRole('alert')).toBeNull()
     const confirm = screen.getByRole<HTMLButtonElement>('button', { name: 'Renombrar' })
@@ -2349,12 +2466,11 @@ describe('WorkspaceBrowser', () => {
   it('renames a workspace through the row menu dialog', async () => {
     let resolveRename!: () => void
     const renameWorkspace = vi.fn(() => new Promise<void>((resolve) => { resolveRename = resolve }))
-    mount({
+    const browser = mount({
       useWorkspaces: hook(workspaceState([workspace('alpha', [], 'Alpha'), workspace('beta', [], 'Beta')])),
       renameWorkspace,
     })
-    fireEvent.click(screen.getByRole('button', { name: 'Acciones del espacio de trabajo Alpha' }))
-    fireEvent.click(screen.getByRole('menuitem', { name: 'Renombrar' }))
+    browser.openDialog(wid('alpha'), 'Alpha', 'rename')
     const input = screen.getByLabelText<HTMLInputElement>('Nombre del espacio de trabajo')
     expect(input.value).toBe('Alpha')
     // Unchanged and blank names stay blocked.
@@ -2378,18 +2494,21 @@ describe('WorkspaceBrowser', () => {
 
   it('rename via Enter, failure surfaces the error, Cancel closes', async () => {
     const renameWorkspace = vi.fn(async () => { throw new Error('rename conflict') })
-    mount({
+    const browser = mount({
       useWorkspaces: hook(workspaceState([workspace('alpha', [], 'Alpha')])),
       renameWorkspace,
     })
-    fireEvent.click(screen.getByRole('button', { name: 'Acciones del espacio de trabajo Alpha' }))
-    fireEvent.click(screen.getByRole('menuitem', { name: 'Renombrar' }))
+    browser.openDialog(wid('alpha'), 'Alpha', 'rename')
     const input = screen.getByLabelText<HTMLInputElement>('Nombre del espacio de trabajo')
     // Enter with a blocked draft (unchanged) does nothing.
     fireEvent.keyDown(input, { key: 'Enter' })
     expect(renameWorkspace).not.toHaveBeenCalled()
     fireEvent.change(input, { target: { value: 'Renamed' } })
     fireEvent.keyDown(input, { key: 'a' })
+    fireEvent.compositionStart(input)
+    fireEvent.keyDown(input, { key: 'Enter' })
+    expect(renameWorkspace).not.toHaveBeenCalled()
+    fireEvent.compositionEnd(input)
     fireEvent.keyDown(input, { key: 'Enter' })
     expect(renameWorkspace).toHaveBeenCalledWith(wid('alpha'), 'Renamed')
     await waitFor(() => { expect(screen.getByRole('alert').textContent).toBe('rename conflict') })
@@ -2402,12 +2521,11 @@ describe('WorkspaceBrowser', () => {
 
   it('reports non-Error rename failures as text', async () => {
     const renameWorkspace = vi.fn(async () => { throw 'denied' })
-    mount({
+    const browser = mount({
       useWorkspaces: hook(workspaceState([workspace('alpha', [], 'Alpha')])),
       renameWorkspace,
     })
-    fireEvent.click(screen.getByRole('button', { name: 'Acciones del espacio de trabajo Alpha' }))
-    fireEvent.click(screen.getByRole('menuitem', { name: 'Renombrar' }))
+    browser.openDialog(wid('alpha'), 'Alpha', 'rename')
     fireEvent.change(screen.getByLabelText('Nombre del espacio de trabajo'), { target: { value: 'Other' } })
     fireEvent.click(screen.getByRole('button', { name: 'Renombrar' }))
     await waitFor(() => { expect(screen.getByRole('alert').textContent).toBe('denied') })
@@ -2420,8 +2538,7 @@ describe('WorkspaceBrowser', () => {
       useWorkspaces: hook(workspaceState([workspace('alpha', ['session'], 'Alpha')])),
       deleteWorkspace,
     })
-    fireEvent.click(screen.getByRole('button', { name: 'Acciones del espacio de trabajo Alpha' }))
-    fireEvent.click(screen.getByRole('menuitem', { name: 'Eliminar espacio de trabajo' }))
+    browser.openDialog(wid('alpha'), 'Alpha', 'delete')
     const dialog = screen.getByRole('dialog', { name: 'Eliminar espacio de trabajo' })
     expect(dialog.textContent).toContain('Esto quita “Alpha” de la lista de espacios de trabajo')
     expect(dialog.textContent).toContain('La carpeta y los registros de sesión se conservan')
@@ -2451,12 +2568,11 @@ describe('WorkspaceBrowser', () => {
     const deleteWorkspace = vi.fn()
       .mockRejectedValueOnce(new Error('storage unavailable'))
       .mockRejectedValueOnce('denied')
-    mount({
+    const browser = mount({
       useWorkspaces: hook(workspaceState([workspace('alpha', [], 'Alpha')])),
       deleteWorkspace,
     })
-    fireEvent.click(screen.getByRole('button', { name: 'Acciones del espacio de trabajo Alpha' }))
-    fireEvent.click(screen.getByRole('menuitem', { name: 'Eliminar espacio de trabajo' }))
+    browser.openDialog(wid('alpha'), 'Alpha', 'delete')
     fireEvent.click(screen.getByRole('button', { name: 'Eliminar espacio de trabajo' }))
     await waitFor(() => { expect(screen.getByRole('alert').textContent).toBe('storage unavailable') })
     expect(screen.getByRole('dialog', { name: 'Eliminar espacio de trabajo' })).toBeTruthy()
@@ -2468,13 +2584,12 @@ describe('WorkspaceBrowser', () => {
 
   it('Cancel, Escape, and Close dismiss deletion without calling the action', () => {
     const deleteWorkspace = vi.fn(async () => {})
-    mount({
+    const browser = mount({
       useWorkspaces: hook(workspaceState([workspace('alpha', [], 'Alpha')])),
       deleteWorkspace,
     })
     const open = () => {
-      fireEvent.click(screen.getByRole('button', { name: 'Acciones del espacio de trabajo Alpha' }))
-      fireEvent.click(screen.getByRole('menuitem', { name: 'Eliminar espacio de trabajo' }))
+      browser.openDialog(wid('alpha'), 'Alpha', 'delete')
     }
     open()
     fireEvent.click(screen.getByRole('button', { name: 'Cancelar' }))
@@ -2486,19 +2601,16 @@ describe('WorkspaceBrowser', () => {
     expect(screen.queryByRole('dialog', { name: 'Eliminar espacio de trabajo' })).toBeNull()
   })
 
-  it('creates a worktree Workspace from the menu and starts a Session in it', async () => {
+  it('creates a worktree Workspace from its menu request and starts a Session in it', async () => {
     let resolveCreate!: (created: ReturnType<typeof workspace>) => void
     const createWorktreeWorkspace = vi.fn(() => new Promise<ReturnType<typeof workspace>>((resolve) => { resolveCreate = resolve }))
     const startSession = vi.fn()
-    mount({
+    const browser = mount({
       useWorkspaces: hook(workspaceState([workspace('alpha', [], 'Alpha')])),
       createWorktreeWorkspace,
       startSession,
     })
-    const open = () => {
-      fireEvent.click(screen.getByRole('button', { name: 'Acciones del espacio de trabajo Alpha' }))
-      fireEvent.click(screen.getByRole('menuitem', { name: 'Nueva sesión en un worktree' }))
-    }
+    const open = () => { browser.openDialog(wid('alpha'), 'Alpha', 'worktree') }
     open()
     expect(createWorktreeWorkspace).toHaveBeenCalledWith(wid('alpha'))
     expect(screen.getByRole('status').textContent).toBe('Creando worktree…')
@@ -2518,13 +2630,12 @@ describe('WorkspaceBrowser', () => {
   ])('shows a worktree creation failure and lets it be dismissed', async ({ reason, shown }) => {
     const createWorktreeWorkspace = vi.fn(async () => { throw reason })
     const startSession = vi.fn()
-    mount({
+    const browser = mount({
       useWorkspaces: hook(workspaceState([workspace('alpha', [], 'Alpha')])),
       createWorktreeWorkspace,
       startSession,
     })
-    fireEvent.click(screen.getByRole('button', { name: 'Acciones del espacio de trabajo Alpha' }))
-    fireEvent.click(screen.getByRole('menuitem', { name: 'Nueva sesión en un worktree' }))
+    browser.openDialog(wid('alpha'), 'Alpha', 'worktree')
     await waitFor(() => { expect(screen.getByRole('alert').textContent).toBe(shown) })
     expect(startSession).not.toHaveBeenCalled()
     fireEvent.keyDown(document, { key: 'Escape' })
@@ -2576,12 +2687,11 @@ describe('WorkspaceBrowser', () => {
     const inspectWorktree = vi.fn(async () => ({ linked: true, branch: 'feature', uncommitted: [] }))
     const removeWorktree = vi.fn(async () => {})
     const deleteWorkspace = vi.fn(async () => {})
-    mount({
+    const browser = mount({
       useWorkspaces: hook(workspaceState([workspace('alpha', [], 'Alpha')])),
       inspectWorktree, removeWorktree, deleteWorkspace,
     })
-    fireEvent.click(screen.getByRole('button', { name: 'Acciones del espacio de trabajo Alpha' }))
-    fireEvent.click(screen.getByRole('menuitem', { name: 'Eliminar espacio de trabajo' }))
+    browser.openDialog(wid('alpha'), 'Alpha', 'delete')
     const dialog = await screen.findByRole('dialog', { name: 'Eliminar worktree' })
     expect(inspectWorktree).toHaveBeenCalledWith(wid('alpha'))
     expect(dialog.textContent).toContain('La rama “feature” también se elimina una vez fusionada')
@@ -2594,12 +2704,11 @@ describe('WorkspaceBrowser', () => {
   it('lists uncommitted changes and discards them only through the explicit button', async () => {
     const inspectWorktree = vi.fn(async () => ({ linked: true, uncommitted: ['?? scratch.txt', ' M src/a.ts'] }))
     const removeWorktree = vi.fn(async () => {})
-    mount({
+    const browser = mount({
       useWorkspaces: hook(workspaceState([workspace('alpha', [], 'Alpha')])),
       inspectWorktree, removeWorktree,
     })
-    fireEvent.click(screen.getByRole('button', { name: 'Acciones del espacio de trabajo Alpha' }))
-    fireEvent.click(screen.getByRole('menuitem', { name: 'Eliminar espacio de trabajo' }))
+    browser.openDialog(wid('alpha'), 'Alpha', 'delete')
     const dialog = await screen.findByRole('dialog', { name: 'Eliminar worktree' })
     expect(dialog.textContent).toContain('Este worktree tiene cambios sin confirmar')
     expect(dialog.textContent).toContain('?? scratch.txt')
@@ -2612,12 +2721,11 @@ describe('WorkspaceBrowser', () => {
     const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
     const inspectWorktree = vi.fn(async () => { throw new Error('git unavailable') })
     const deleteWorkspace = vi.fn(async () => {})
-    mount({
+    const browser = mount({
       useWorkspaces: hook(workspaceState([workspace('alpha', [], 'Alpha')])),
       inspectWorktree, deleteWorkspace,
     })
-    fireEvent.click(screen.getByRole('button', { name: 'Acciones del espacio de trabajo Alpha' }))
-    fireEvent.click(screen.getByRole('menuitem', { name: 'Eliminar espacio de trabajo' }))
+    browser.openDialog(wid('alpha'), 'Alpha', 'delete')
     await waitFor(() => { expect(warn).toHaveBeenCalledWith('worktree inspection rejected:', expect.any(Error)) })
     fireEvent.click(screen.getByRole('button', { name: 'Eliminar espacio de trabajo' }))
     expect(deleteWorkspace).toHaveBeenCalledWith(wid('alpha'))
@@ -2629,16 +2737,14 @@ describe('WorkspaceBrowser', () => {
     const inspectWorktree = vi.fn(() => new Promise<{ linked: boolean; uncommitted: string[] }>((resolve) => {
       resolveInspection = resolve
     }))
-    mount({
+    const browser = mount({
       useWorkspaces: hook(workspaceState([workspace('alpha', [], 'Alpha')])),
       inspectWorktree,
     })
-    fireEvent.click(screen.getByRole('button', { name: 'Acciones del espacio de trabajo Alpha' }))
-    fireEvent.click(screen.getByRole('menuitem', { name: 'Eliminar espacio de trabajo' }))
+    browser.openDialog(wid('alpha'), 'Alpha', 'delete')
     fireEvent.click(screen.getByRole('button', { name: 'Cancelar' }))
     await act(async () => { resolveInspection({ linked: true, uncommitted: [] }) })
-    fireEvent.click(screen.getByRole('button', { name: 'Acciones del espacio de trabajo Alpha' }))
-    fireEvent.click(screen.getByRole('menuitem', { name: 'Eliminar espacio de trabajo' }))
+    browser.openDialog(wid('alpha'), 'Alpha', 'delete')
     expect(screen.getByRole('dialog', { name: 'Eliminar espacio de trabajo' })).toBeTruthy()
   })
 

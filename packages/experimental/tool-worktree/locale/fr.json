@@ -1,7 +1,7 @@
 {
   "meta": {
     "title": "Arbres de travail Git",
-    "description": "Permet à l’agent de créer une nouvelle branche et un nouveau worktree Git, puis de continuer dedans.",
+    "description": "Demandez à travailler sur une nouvelle branche, et l'agent crée un worktree Git distinct et y poursuit le travail, en laissant votre copie de travail actuelle telle quelle.",
     "detail": "docs/DETAIL.md"
   }
 }

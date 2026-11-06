@@ -117,9 +117,9 @@ describe('tabLedgerSource', () => {
     const first = source.getSnapshot()
     expect(first).toEqual([{ id: 'discover', label: 'Discover' }, { id: 'unlabelled', label: '' }])
     expect(source.getSnapshot()).toBe(first)
-    label = '发现'
+    label = 'Discover'
     b.setLocale()
-    expect(source.getSnapshot()[0]).toEqual({ id: 'discover', label: '发现' })
+    expect(source.getSnapshot()[0]).toEqual({ id: 'discover', label: 'Discover' })
     off()
     expect(b.listenerCount()).toBe(0)
   })

@@ -4,6 +4,7 @@ import type { IncomingMessage, Server, ServerResponse } from 'node:http'
 import { afterEach, expect, it, vi } from 'vitest'
 import { Context } from '@deepseek-ai/cordis'
 import LlmRuntime, { ReasoningEffortId } from '@deepseek-ai/dsh-llm'
+import { APP_IDENTITY } from '@deepseek-ai/dsh-llm'
 import type { DeepSeekAccount } from '@deepseek-ai/dsh-deepseek-account'
 import * as ApiKey from '@deepseek-ai/dsh-llm-deepseek-api-key'
 import * as Account from '../src/index.ts'
@@ -16,7 +17,7 @@ const FLASH = {
   api_capabilities: { anthropic_messages: { system_prompt_update: 'in-history' } },
 }
 const PRO = { id: 'deepseek-v4-pro', name: 'DeepSeek-V4-Pro', context_window: 1_048_576, max_output_tokens: 393_216, input_modalities: ['text'], ...MESSAGES }
-const requires = (version: string) => ({ client_requirements: { 'deepseek-harness': { min_version: version } } })
+const requires = (version: string) => ({ client_requirements: { [APP_IDENTITY.product]: { min_version: version } } })
 
 const contexts: Context[] = []
 const servers: Server[] = []
@@ -95,7 +96,45 @@ it('resolves listed capabilities with this build\'s model knowledge', async () =
   })
   await expect(ctx.llm.resolveModelInfo('deepseek-account', 'deepseek-v4-pro')).resolves.not.toHaveProperty('systemPromptUpdate')
   expect(server.requests).toHaveLength(1)
-  expect(server.requests[0]?.headers['user-agent']).toMatch(/^deepseek-harness\//)
+  expect(server.requests[0]?.headers['user-agent']).toMatch(/^tbelt-code\//)
+})
+
+it('advertises the badges its listing declares', async () => {
+  const badge = { text: { en: 'New', zh: '新' }, tone: 'success' }
+  const server = await listing(json({ data: [{ ...FLASH, client_metadata: { [APP_IDENTITY.product]: { badge } } }, PRO] }))
+  const ctx = await host(server.origin)
+  await ctx.plugin(Account, { baseURL: server.baseURL })
+  expect((await ctx.llm.listModels('deepseek-account')).map(row => [row.id, row.badge])).toEqual([
+    ['deepseek-flash', badge], ['deepseek-v4-pro', undefined],
+  ])
+})
+
+it('publishes an account badge removal after the default idle refresh interval', async () => {
+  let badge: { text: string } | undefined = { text: 'New' }
+  const server = await listing((request, response) => {
+    json({ data: [{ ...FLASH, client_metadata: { [APP_IDENTITY.product]: { badge } } }] })(request, response)
+  })
+  const ctx = await host(server.origin)
+  const refreshed = Promise.withResolvers<undefined>()
+  const changes: string[] = []
+  ctx.on('llm/models-updated', (provider) => {
+    changes.push(provider)
+    if (changes.length === 2) refreshed.resolve(undefined)
+  })
+  vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout', 'Date'] })
+  try {
+    await ctx.plugin(Account, { baseURL: server.baseURL })
+    expect((await ctx.llm.listModels('deepseek-account'))[0]?.badge?.text).toBe('New')
+    badge = undefined
+    await vi.advanceTimersByTimeAsync(600_000)
+    await refreshed.promise
+    expect(changes).toEqual(['deepseek-account', 'deepseek-account'])
+    expect((await ctx.llm.listModels('deepseek-account'))[0]).not.toHaveProperty('badge')
+    expect(server.requests).toHaveLength(2)
+  } finally {
+    try { await ctx.fiber.dispose() }
+    finally { vi.useRealTimers() }
+  }
 })
 
 it('falls back to the bundled catalog when the listing fails', async () => {

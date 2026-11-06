@@ -1,5 +1,6 @@
 tBelt Code no está disponible
 La aplicación no pudo iniciarse o se detuvo de forma inesperada.
 Hay otra instancia de DSH en ejecución (como dsh web o la app de escritorio). No pueden iniciarse a la vez. Cierra la otra instancia de DSH y reinicia.
+No se pudo guardar el informe de diagnóstico. Puedes enviar una captura de pantalla de este cuadro al pedir ayuda.
 Salir
 Reiniciar

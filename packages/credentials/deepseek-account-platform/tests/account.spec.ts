@@ -1135,11 +1135,11 @@ it.each([null, []])('rejects invalid initialization and exchange payload fields:
   await f.wait('failed')
   f.initResponse({})
   f.exchangeResponse({ token: value })
-  await f.account.startSignIn(clientMetadata('zh'), f.callbackOrigin, 'web')
+  await f.account.startSignIn(clientMetadata(), f.callbackOrigin, 'web')
   await f.wait('waiting-browser')
   const callback = await fetch(f.callback(), { redirect: 'manual' })
   expect(callback.status).toBe(200)
-  expect(await callback.text()).toContain('登录失败')
+  expect(await callback.text()).toContain('Sign-in failed. Close this tab')
   expect((await f.wait('failed')).status).toBe('signed-out')
 })
 

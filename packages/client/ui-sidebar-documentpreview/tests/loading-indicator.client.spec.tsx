@@ -8,9 +8,9 @@ afterEach(cleanup)
 
 describe('LoadingIndicator', () => {
   it('shows the localized document status with a larger spinner', () => {
-    const { getByRole } = render(<LoadingIndicator label="文档渲染中..." />)
-    const status = getByRole('status', { name: '文档渲染中...' })
-    expect(status.textContent).toBe('文档渲染中...')
+    const { getByRole } = render(<LoadingIndicator label='Rendering document...' />)
+    const status = getByRole('status', { name: 'Rendering document...' })
+    expect(status.textContent).toBe('Rendering document...')
     expect(status.querySelector('svg')?.getAttribute('width')).toBe('28')
   })
 

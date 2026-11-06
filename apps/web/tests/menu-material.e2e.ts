@@ -3,6 +3,7 @@ import { readFile } from 'node:fs/promises'
 import { fileURLToPath } from 'node:url'
 import { join } from 'node:path'
 import { chromium, type Locator } from 'playwright'
+import sharp from 'sharp'
 import { expect, it, onTestFinished } from 'vitest'
 import { captureStableAria, compareOrRefreshGolden, launchWebScaffold, seedSession, webSnapshotMode } from './scaffold.ts'
 
@@ -55,10 +56,10 @@ it('shares menu transparency and blur across platforms and follows native menu b
       document.body.appendChild(overlay)
       try { return getComputedStyle(overlay).backgroundColor } finally { overlay.remove() }
     })
-    expect(overlayFill).toBe(platform === 'darwin' ? 'rgba(48, 49, 54, 0.94)' : 'rgba(67, 69, 74, 0.45)')
+    expect(overlayFill).toBe(platform === 'darwin' ? 'rgba(48, 49, 54, 0.94)' : 'rgba(48, 49, 54, 0.64)')
     await openSessionMenu()
     const appearance = await material(sessionMenu)
-    expect(appearance).toMatchObject({ fill: 'rgba(67, 69, 74, 0.45)', blur: 'blur(40px) saturate(1.5)' })
+    expect(appearance).toMatchObject({ fill: 'rgba(48, 49, 54, 0.64)', blur: 'blur(40px) saturate(1.5)' })
     expect(appearance.shadow).toContain('rgba(255, 255, 255, 0.16) 0px 0px 0px 0.5px')
     results[platform] = appearance
     const backing = page.locator('[data-menu-backing]')
@@ -94,4 +95,57 @@ it('shares menu transparency and blur across platforms and follows native menu b
   }
   await compareOrRefreshGolden(join(expected, 'materials.expected.json'), JSON.stringify(results, null, 2), webSnapshotMode())
   await compareOrRefreshGolden(join(expected, 'modal-masks.expected.json'), JSON.stringify(masks, null, 2), webSnapshotMode())
+
+  await action.locator('xpath=ancestor::*[@role="treeitem"][1]').click({ button: 'right' })
+  await sessionMenu.waitFor()
+  const popup = page.locator('[data-context-menu]')
+  const stripes = await page.evaluateHandle(() => {
+    const element = document.createElement('div')
+    element.style.cssText = 'position:fixed;inset:0;z-index:1099;pointer-events:none;background:repeating-linear-gradient(90deg,#000 0 4px,#fff 4px 8px)'
+    document.body.appendChild(element)
+    return element
+  })
+  try {
+    // Hide text while preserving layout so pixel contrast measures only the material.
+    await popup.evaluate((node) => {
+      for (const child of node.children) {
+        if (child instanceof HTMLElement && child.getAttribute('aria-hidden') !== 'true') child.style.visibility = 'hidden'
+      }
+    })
+    const box = (await popup.boundingBox())!
+    const clip = { x: Math.floor(box.x + box.width / 2 - 32), y: Math.floor(box.y + box.height / 2 - 16), width: 64, height: 32 }
+    for (const phase of ['enter', 'dismiss', 'replace']) {
+      await popup.evaluate((node, phase) => {
+        node.removeAttribute('data-menu-phase')
+        void (node as HTMLElement).offsetWidth
+        node.setAttribute('data-menu-phase', phase)
+        for (const animation of node.getAnimations({ subtree: true })) {
+          animation.pause()
+          animation.currentTime = Number(animation.effect!.getComputedTiming().duration) / 2
+        }
+      }, phase)
+      const stats = await sharp(await page.screenshot({ clip })).stats()
+      // During a fade the unpainted fraction exposes stripes; a working blur still
+      // removes substantially more contrast than opacity without backdrop sampling.
+      expect(stats.channels[0]!.stdev, phase).toBeLessThan(90)
+    }
+    await popup.evaluate((node) => {
+      node.setAttribute('data-menu-phase', 'enter')
+      for (const animation of node.getAnimations({ subtree: true })) animation.finish()
+    })
+    const settled = await sharp(await page.screenshot({ clip })).stats()
+    expect(settled.channels[0]!.stdev).toBeLessThan(3)
+    await popup.evaluate((node) => {
+      node.style.opacity = '0.999'
+      // The negative control measures backdrop isolation independently of the theme's fill alpha.
+      const material = node.querySelector<HTMLElement>(':scope > [aria-hidden="true"]')!
+      material.style.backgroundColor = 'transparent'
+    })
+    const isolated = await sharp(await page.screenshot({ clip })).stats()
+    expect(isolated.channels[0]!.stdev).toBeGreaterThan(90)
+  } finally {
+    await stripes.evaluate((node) => { node.remove() })
+    await stripes.dispose()
+    await page.keyboard.press('Escape')
+  }
 })

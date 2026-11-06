@@ -108,7 +108,7 @@ One additional model request per supported call, without caching, retries, trunc
 
 #### KV Cache effect
 
-Each review's messages begin with all messages of the previous review, including its pending call, so routes that cache by prompt prefix, at message ends, or at a final marker with lookback reuse the policy and earlier history. Compaction, a cwd change, an earlier item leaving the surface, and the first review after a restart end that reuse once. Auto adds no dedicated runtime context or mode-switch prompt to the main agent.
+Each review's messages begin with all messages of the previous review, including its pending call, so routes that cache by prompt prefix, at message ends, or at a final marker with lookback reuse the policy and earlier history. Compaction, a cwd change, an earlier item leaving the surface, and the first review after a restart end that reuse once. Auto adds no dedicated runtime context or mode-switch prompt to the main agent. Each review request carries the reviewed Session's `sessionId` and `purpose: 'auto-review'` as model-hidden transport metadata. Routes that key prompt caching or request routing by Session, such as OpenAI `prompt_cache_key` and the `x-opencode-session` header that OpenCode requires, send reviews under that Session's key; [the DeepSeek Session-log upload](../../session/session-log-deepseek/README.md#request-field) contributes the canonical Session log when enabled and no registered exclusion matches.
 
 ### Tool denial
 
@@ -129,12 +129,11 @@ The denial appends an ordinary tool result; it does not rewrite earlier context 
 <a id="known-limitations-and-deferred-work"></a>
 
 - Auto requires this layer explicitly enabled. Default Web and Headless, General settings, and new-session defaults do not select it.
-- Mods can submit user-sourced text. The Claude Code mods bridge gives both `$.prompt.submit` and `prompt.submit` hook context user authority, including framed submissions without `asUser: true`; text framing does not reduce that authority.
+- Mods can submit user-sourced text. The [Claude Code mods bridge](../claude-code-mods/README.md#model-experience) gives both `$.prompt.submit` and `prompt.submit` hook context user authority, including framed submissions without `asUser: true`; text framing does not reduce that authority.
 - Auto provides no file sandbox. The outer `run_code` transport and direct Node effects inside a PTC program do not pass through inner-tool review.
 - Model classification can be wrong. There are no deterministic tool exemptions, persistent grants, configurable policy, or retry layer.
 - In-process Auto children review their own calls. Out-of-process children retain their native permission systems after the parent delegation call is allowed.
 - The reviewer reads the Session action history through the deprecated synchronous `snapshotEvents()` reader under a line-scoped waiver. Prior calls, PTC starts, and the direct parent's initial prompt have no projection or paged reader yet, so the migration stays deferred by the synchronous-read decision.
-- Review requests carry no `sessionId`, so OpenAI routes receive no `prompt_cache_key`. Passing it would also attach the DeepSeek session-log upload and session headers to review requests, which first needs a request-purpose decision.
 
 <a id="dev-note"></a>
 ### Dev Note

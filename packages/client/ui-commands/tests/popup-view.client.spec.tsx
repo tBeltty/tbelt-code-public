@@ -173,7 +173,7 @@ describe('PopupSelectView', () => {
       popup.open('theme', spec(), 'ctx-A', SEGMENT)
       await Promise.resolve()
     })
-    expect(document.activeElement === screen.getByRole('textbox', { name: '筛选选项' })).toBe(automatic)
+    expect(document.activeElement === screen.getByRole('textbox', { name: 'Filtrar opciones' })).toBe(automatic)
   })
 
   it('renders an optional option badge as a superscript marker', async () => {

@@ -16,14 +16,13 @@ it.each([false, true])('retains configuration diagnostics when the route is acti
   }])
 })
 
-it('places account and official before third-party providers', () => {
+it('keeps directory order without placing any provider first', () => {
   const providers = ['custom', 'deepseek-official', 'deepseek-account', 'openai']
   const directory = providers.map(provider => ({
     provider, displayName: provider, settingsNs: 'fixture', settingsPath: [],
   }))
   expect(joinProviderDirectory([], directory).map(row => row.provider))
-    .toEqual(['deepseek-account', 'deepseek-official', 'custom', 'openai'])
-  expect(directory.map(row => row.provider)).toEqual(providers)
+    .toEqual(providers)
 })
 
 let nextRpc = 0
@@ -498,16 +497,14 @@ it.each([false, true])('uses account availability without asking for an API key:
   const store = new ModelsSettingsStore(ctx, settingsSchema, mirror)
   await store.load()
   const rows = store.store.getSnapshot().rows
-  expect(rows).toHaveLength(accountAvailable ? 1 : 0)
-  if (accountAvailable) {
-    expect(rows[0]).toMatchObject({ accountAvailable: true, apiKeyEnv: undefined, credential: undefined })
-    expect(providerUsable(rows[0]!)).toBe(true)
-  }
+  expect(rows).toHaveLength(1)
+  expect(rows[0]).toMatchObject({ accountAvailable, apiKeyEnv: undefined, credential: undefined })
+  expect(providerUsable(rows[0]!)).toBe(accountAvailable)
   expect(store.store.getSnapshot().namespaces.get('llm-deepseek-account')?.ns).toBe('llm-deepseek-account')
   expect(seenRefs).toEqual([])
 })
 
-it('removes the account row after sign-out and restores it after sign-in', async () => {
+it('keeps the account row after sign-out and marks it unavailable', async () => {
   const overrides = { accountAvailable: true, providers: async () => ok({ providers: [{
     provider: 'deepseek-account', displayName: 'DeepSeek Account', settingsNs: 'llm-deepseek-account', settingsPath: [], active: true,
   }, ...DIRECTORY] }) }
@@ -517,9 +514,9 @@ it('removes the account row after sign-out and restores it after sign-in', async
   expect(store.store.getSnapshot().rows[0]?.entry.provider).toBe('deepseek-account')
   overrides.accountAvailable = false
   await store.load()
-  expect(store.store.getSnapshot().rows.map(row => row.entry.provider)).not.toContain('deepseek-account')
-  expect(store.store.getSnapshot().rows).toHaveLength(DIRECTORY.length)
+  expect(store.store.getSnapshot().rows[0]).toMatchObject({ accountAvailable: false })
+  expect(store.store.getSnapshot().rows).toHaveLength(DIRECTORY.length + 1)
   overrides.accountAvailable = true
   await store.load()
-  expect(store.store.getSnapshot().rows[0]?.entry.provider).toBe('deepseek-account')
+  expect(store.store.getSnapshot().rows[0]).toMatchObject({ accountAvailable: true })
 })

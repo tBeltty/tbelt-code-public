@@ -76,5 +76,5 @@ it('adds one named Tab stop for the overflowing line of a multiline command', ()
   const view = render(<TerminalBlock command={'echo ok\necho a-long-command-argument\necho done'} labels={terminalBlockLabels} />)
   const commands = [...view.container.querySelectorAll('[data-command-text]')]
   expect(commands.map(command => command.hasAttribute('tabindex'))).toEqual([false, true, false])
-  expect(view.getByRole('group', { name: '命令第 2 行' })).toBe(commands[1])
+  expect(view.getByRole('group', { name: 'Command line 2' })).toBe(commands[1])
 })

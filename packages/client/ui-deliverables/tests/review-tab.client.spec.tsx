@@ -164,7 +164,7 @@ describe('ReviewTab', () => {
       loadChangesSummary: vi.fn<ReviewInjected['loadChangesSummary']>(() => Promise.resolve()),
       loadChangesDiff: vi.fn<ReviewInjected['loadChangesDiff']>(() => Promise.resolve()),
       reloadPresentedHost: vi.fn<ReviewInjected['reloadPresentedHost']>(() => Promise.resolve()),
-      openChanged: vi.fn<ReviewInjected['openChanged']>(() => Promise.resolve(null)),
+      openChanged: vi.fn<ReviewInjected['openChanged']>(() => Promise.resolve({ kind: 'opened' })),
       addComment: vi.fn<ReviewInjected['addComment']>((sessionId, filePath, line, body) => { comments.add(sessionId, filePath, line, body) }),
       updateComment: vi.fn<ReviewInjected['updateComment']>((sessionId, id, body) => { comments.update(sessionId, id, body) }),
       removeComment: vi.fn<ReviewInjected['removeComment']>((sessionId, id) => { comments.remove(sessionId, id) }),
@@ -180,7 +180,7 @@ describe('ReviewTab', () => {
     const runtime = {
       renderSlot: renderFileActions,
       useTabInfo: () => ({
-        sidebar: { expanded: true, fullscreen: false }, panel: { id: 'pane-1' },
+        sidebar: { expanded: true, fullscreen: false }, panel: { id: 'pane-1', isFloating: false },
         tab: { id: TAB, kind: 'changes-review', contentId: options.address ?? ADDRESS, title: 'Review', visible: true, navigation, signal: aborter.signal, actions: tabActions },
       }),
       sessionId: SESSION,

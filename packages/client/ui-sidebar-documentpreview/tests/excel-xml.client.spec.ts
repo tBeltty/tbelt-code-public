@@ -20,7 +20,7 @@ describe.each([['Node', ExcelJS], ['browser bundle', browserExcel]] as const)('%
     const retained = archive.withoutDrawings()
     const workbook = new parser.Workbook()
     await workbook.xlsx.load(retained.buffer, { ignoreNodes: ['drawing'] })
-    const sheet = workbook.getWorksheet('数据')!
+    const sheet = workbook.getWorksheet('Data')!
     expect(sheet.getCell('A5').value).toBe(' <chart/> & 中文😀\n tail ')
     expect(sheet.getCell('A6').value).toEqual({ formula: 'SUM(B2:B3)', result: 57 })
     expect(sheet.getCell('B2').note).toMatchObject({ texts: [{ text: '生成的批注' }] })

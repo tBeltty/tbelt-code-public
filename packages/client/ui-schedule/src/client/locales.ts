@@ -15,16 +15,16 @@ export const en = {
   'list.retry': 'Retry',
   'delete.action': 'Delete',
   'delete.pending': 'Deleting…',
-  'delete.label': 'Delete reminder: {title}',
-  'list.open': 'Open reminder details: {title}',
-  'trigger.one': '{count} reminder',
-  'trigger.other': '{count} reminders',
-  'list.aria': 'Active reminders',
+  'delete.label': 'Delete automation task: {title}',
+  'list.open': 'Open automation task details: {title}',
+  'trigger.one': '{count} automation task',
+  'trigger.other': '{count} automation tasks',
+  'list.aria': 'Enabled automation tasks',
   'list.nextRun': 'Next run',
   'frequency.once': 'Once',
   'frequency.every': 'Every {value} {unit}',
   ...frequencyEn,
-  'mark.aria': '{count} scheduled tasks',
+  'mark.aria': '{count} automation tasks',
   'hover.more': '{count} more',
 } satisfies Record<string, string>
 
@@ -33,9 +33,9 @@ export type ScheduleCatalogKey = keyof typeof en
 
 /** Spanish dictionary, checked against the English keys. */
 export const es = {
-  'trigger.label': 'Recordatorios',
-  'list.loading': 'Cargando recordatorios…',
-  'list.error': 'No se pudieron cargar los recordatorios.',
+  'trigger.label': 'Tareas de automatización',
+  'list.loading': 'Cargando tareas de automatización…',
+  'list.error': 'No se pudieron cargar las tareas de automatización.',
   'list.retry': 'Reintentar',
   'delete.action': 'Eliminar',
   'delete.pending': 'Eliminando…',
@@ -75,9 +75,9 @@ export const el = {
 
 /** French dictionary, checked against the English keys. */
 export const fr = {
-  'trigger.label': 'Rappels',
-  'list.loading': 'Chargement des rappels…',
-  'list.error': 'Impossible de charger les rappels.',
+  'trigger.label': 'Tâches d\'automatisation',
+  'list.loading': 'Chargement des tâches d\'automatisation…',
+  'list.error': 'Impossible de charger les tâches d\'automatisation.',
   'list.retry': 'Réessayer',
   'delete.action': 'Supprimer',
   'delete.pending': 'Suppression…',

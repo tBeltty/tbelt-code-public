@@ -196,10 +196,10 @@ async function exercise(client: TestClient, mock: RemoteMock): Promise<void> {
   await expect(binding.session.prompt([{ type: 'text', text: 'what is this' }, picture], 'queue')).resolves.toMatchObject({ ok: true })
   expect(vi.mocked(mock.remote['session']!['prompt']!).mock.calls[1]![0]).toMatchObject({ content: [{ type: 'text' }, picture] })
 
-  await expect(binding.session.readAttachment('att-1')).resolves.toMatchObject({
+  await expect(binding.session.readAttachment({ attachmentId: 'att-1' })).resolves.toMatchObject({
     ok: true, value: { attachment: { mediaType: 'image/png' }, data: Uint8Array.from([65, 66, 67]) },
   })
-  expect(mock.remote['session']!['attachment']).toHaveBeenCalledWith({ sessionId: OLD, attachmentId: 'att-1' })
+  expect(mock.remote['session']!['attachment']).toHaveBeenCalledWith({ sessionId: OLD, attachment: { attachmentId: 'att-1' } })
 
   await expect(binding.session.rename('Fix the build')).resolves.toMatchObject({ ok: true, value: { title: 'Fix the build' } })
   expect(mock.remote['session']!['rename']).toHaveBeenCalledWith({ sessionId: OLD, title: 'Fix the build' })

@@ -26,7 +26,7 @@ import {
   assertFixtureInventory, captureStableAria, compareOrRefreshGolden,
   launchWebScaffold, watchConsole, webSnapshotMode, type WebScaffold,
 } from './scaffold.ts'
-import { openSettings, EN_BROWSER_LOCALE, saveFailureShot } from './support.ts'
+import { expectTooltipOnTop, openSettings, EN_BROWSER_LOCALE, saveFailureShot } from './support.ts'
 
 const SNAPSHOT_DIR = fileURLToPath(new URL('./expected/models-settings', import.meta.url))
 const EMPTY_EXPECTED = join(SNAPSHOT_DIR, 'empty.expected.md')
@@ -124,7 +124,7 @@ describe('web e2e: Models settings page configures a dormant provider', () => {
     expect(options).toContain('anthropic')
     expect(options).toContain('minimax-cn')
     await pick.selectOption('openai-codex')
-    await expect.poll(async () => dialog.getByRole('textbox', { name: 'API 密钥', exact: true }).count(), { timeout: 10_000 }).toBe(0)
+    await expect.poll(async () => dialog.getByRole('textbox', { name: 'API key', exact: true }).count(), { timeout: 10_000 }).toBe(0)
     expect(await dialog.getByRole('button', { name: '认证说明', exact: true }).count()).toBe(0)
     expect(await dialog.textContent()).not.toMatch(/oauth/i)
     const nativeSnapshot = await captureStableAria(page, '[role="dialog"]', scaffold.workspaceCwd)
@@ -556,6 +556,7 @@ describe('web e2e: Models settings page configures a dormant provider', () => {
         return { x: rect.left + 20, y: rect.bottom + 4 }
       })
       await page.mouse.move(insertion.x, insertion.y, { steps: 3 })
+      expect(await dialog.locator('[data-drop-target]').evaluate(element => getComputedStyle(element).zIndex)).toBe('1')
       await page.mouse.up()
       await page.locator('body > div[inert][aria-hidden="true"]:has(button[aria-label^="Reorder model "])').waitFor({ state: 'detached' })
       await expect.poll(() => dialog.getByLabel(`Model ID ${save ? '3' : '2'}`, { exact: true }).inputValue()).toBe('acme-large')
@@ -583,7 +584,21 @@ describe('web e2e: Models settings page configures a dormant provider', () => {
     const viewport = page.viewportSize()
     if (viewport === null) throw new Error('Model ordering checks require an explicit viewport')
     try {
+      const id = dialog.getByRole('textbox', { name: 'Model ID 1', exact: true })
+      const name = dialog.getByRole('textbox', { name: 'Display name 1', exact: true })
+      const toggle = dialog.getByRole('button', { name: 'Model options 1', exact: true })
+      const desktopId = await id.boundingBox()
+      const desktopName = await name.boundingBox()
+      if (desktopId === null || desktopName === null) throw new Error('Wide model identity fields are not visible')
+      expect(Math.abs(desktopId.y - desktopName.y)).toBeLessThan(1)
+      await name.focus()
       await page.setViewportSize({ width: 390, height: 844 })
+      expect(await name.evaluate(input => input.ownerDocument.activeElement === input)).toBe(true)
+      expect(await name.isVisible()).toBe(true)
+      await toggle.click()
+      await name.waitFor({ state: 'hidden' })
+      await compareOrRefreshGolden(join(SNAPSHOT_DIR, 'mobile-collapsed.expected.md'),
+        await captureStableAria(page, '[data-shortcut-modal="settings"]', scaffold.workspaceCwd), MODE)
       for (const name of ['Reorder model 1', 'Model options 1', 'Delete model 1']) {
         const box = await dialog.getByRole('button', { name, exact: true }).boundingBox()
         expect(box).not.toBeNull()
@@ -591,12 +606,142 @@ describe('web e2e: Models settings page configures a dormant provider', () => {
         expect(box.x).toBeGreaterThanOrEqual(0)
         expect(box.x + box.width).toBeLessThanOrEqual(390)
       }
+      const compactId = await id.boundingBox()
+      if (compactId === null) throw new Error('Narrow model ID is not visible')
+      await toggle.click()
+      await name.waitFor({ state: 'visible' })
+      await name.fill('Full display name on mobile')
+      await toggle.click()
+      await name.waitFor({ state: 'hidden' })
+      expect(await id.inputValue()).toBe('order-second')
+      await toggle.click()
+      expect(await name.inputValue()).toBe('Full display name on mobile')
+      const expandedName = await name.boundingBox()
+      if (expandedName === null) throw new Error('Expanded model name is not visible')
+      expect(expandedName.y).toBeGreaterThanOrEqual(compactId.y + compactId.height)
+      expect(expandedName.width).toBeGreaterThan(compactId.width)
+      expect(await dialog.getByRole('region', { name: 'Models', exact: true })
+        .evaluate(element => element.scrollWidth <= element.clientWidth)).toBe(true)
+      await compareOrRefreshGolden(join(SNAPSHOT_DIR, 'mobile-expanded.expected.md'),
+        await captureStableAria(page, '[data-shortcut-modal="settings"]', scaffold.workspaceCwd), MODE)
     } finally {
       await page.setViewportSize(viewport)
     }
     await dialog.getByRole('button', { name: 'Cancel', exact: true }).click()
     expect(tripwire.pageErrors).toEqual([])
   })
+
+  it.each([{ name: 'Chromium', engine: chromium }, { name: 'WebKit', engine: webkit }])(
+    'keeps mobile model actions, focus and keyboard order in $name', async ({ name: engineName, engine }) => {
+      const provider = `review-${engineName.toLowerCase()}`
+      let mobileBrowser: Browser | undefined
+      try {
+        await scaffold.ctx.settings.mutate('llm-pi-ai', [{
+          op: 'set', path: ['providers', provider], value: {
+            api: 'anthropic-messages', baseURL: 'https://layout.example',
+            models: [{ id: 'layout-model', name: 'Full display name' }, { id: 'next-model', name: 'Next model' }],
+          },
+        }])
+        mobileBrowser = await engine.launch()
+        const mobilePage = await mobileBrowser.newPage({ viewport: { width: 1680, height: 1000 }, locale: EN_BROWSER_LOCALE })
+        const errors = watchConsole(mobilePage)
+        onTestFailed(() => saveFailureShot(mobilePage, `web-e2e-models-mobile-${engineName.toLowerCase()}`))
+        await mobilePage.goto(scaffold.authenticatedUrl)
+        await openSettings(mobilePage)
+        const dialog = mobilePage.getByRole('dialog', { name: 'Settings' })
+        await dialog.getByRole('button', { name: 'Models', exact: true }).click()
+        const edit = dialog.getByRole('button', { name: `Edit ${provider}`, exact: true })
+        await edit.click()
+        await dialog.getByText('Customized settings').click()
+        const id = dialog.getByRole('textbox', { name: 'Model ID 1', exact: true })
+        const name = dialog.getByRole('textbox', { name: 'Display name 1', exact: true })
+        const toggle = dialog.getByRole('button', { name: 'Model options 1', exact: true })
+        const nextToggle = dialog.getByRole('button', { name: 'Model options 2', exact: true })
+        await toggle.click()
+        await assertModelInputLayout(mobilePage, dialog)
+        await dialog.getByRole('button', { name: 'Reorder model 1', exact: true }).hover()
+        const tooltip = mobilePage.getByRole('tooltip')
+        await tooltip.waitFor()
+        expect(await tooltip.evaluate(element => element.parentElement === element.ownerDocument.body)).toBe(true)
+        await expectTooltipOnTop(tooltip)
+        await id.hover()
+        await tooltip.waitFor({ state: 'hidden' })
+        await toggle.click()
+        await name.fill('Keep editing after narrowing')
+        const input = await name.elementHandle()
+        if (input === null) throw new Error('Model name input is missing')
+        await mobilePage.setViewportSize({ width: 390, height: 844 })
+        expect(await input.evaluate(element => element.isConnected && element.ownerDocument.activeElement === element)).toBe(true)
+        await nextToggle.click()
+        expect(await nextToggle.getAttribute('aria-expanded')).toBe('true')
+        expect(await toggle.getAttribute('aria-expanded')).toBe('true')
+        await nextToggle.click()
+        await name.fill('Name saved on mobile')
+        await dialog.getByRole('button', { name: 'Save', exact: true }).click()
+        await id.waitFor({ state: 'detached' })
+        expect(scaffold.ctx.settings.describe().find(row => row.ns === 'llm-pi-ai')?.value).toMatchObject({
+          providers: { [provider]: { models: [{ id: 'layout-model', name: 'Name saved on mobile' }, { id: 'next-model', name: 'Next model' }] } },
+        })
+        await dialog.getByText(`Saved ${provider}.`, { exact: true }).waitFor()
+        await edit.click()
+        await dialog.getByText('Customized settings').click()
+        await name.waitFor({ state: 'hidden' })
+        await toggle.focus()
+        await mobilePage.keyboard.press('Enter')
+        const tab = engine === webkit ? 'Alt+Tab' : 'Tab'
+        await mobilePage.keyboard.press(tab)
+        expect(await dialog.getByRole('button', { name: 'Delete model 1', exact: true })
+          .evaluate(button => button.ownerDocument.activeElement === button)).toBe(true)
+        await mobilePage.keyboard.press(tab)
+        expect(await name.evaluate(element => element.ownerDocument.activeElement === element)).toBe(true)
+        await name.fill('Kept after collapsing')
+        await toggle.click()
+        await name.waitFor({ state: 'hidden' })
+        expect(await toggle.getAttribute('aria-expanded')).toBe('false')
+        expect(await toggle.evaluate(button => button.ownerDocument.activeElement === button)).toBe(true)
+        await toggle.click()
+        expect(await name.inputValue()).toBe('Kept after collapsing')
+        const region = dialog.getByRole('region', { name: 'Models', exact: true })
+        expect(await region.evaluate(element => element.scrollWidth <= element.clientWidth)).toBe(true)
+        await dialog.getByRole('button', { name: 'Cancel', exact: true }).click()
+        expect(errors.pageErrors).toEqual([])
+
+        const touchPage = await mobileBrowser.newPage({
+          viewport: { width: 390, height: 844 }, locale: EN_BROWSER_LOCALE, isMobile: true, hasTouch: true,
+        })
+        const touchErrors = watchConsole(touchPage)
+        await touchPage.goto(scaffold.authenticatedUrl)
+        await openSettings(touchPage)
+        const touchDialog = touchPage.getByRole('dialog', { name: 'Settings' })
+        await touchDialog.getByRole('button', { name: 'Models', exact: true }).tap()
+        await touchDialog.getByRole('button', { name: `Edit ${provider}`, exact: true }).tap()
+        await touchDialog.getByText('Customized settings').tap()
+        const touchToggle = touchDialog.getByRole('button', { name: 'Model options 1', exact: true })
+        const touchName = touchDialog.getByRole('textbox', { name: 'Display name 1', exact: true })
+        await touchToggle.tap()
+        expect(await touchName.evaluate(element => element.ownerDocument.activeElement === element)).toBe(false)
+        await touchName.fill('Name edited by touch')
+        await touchToggle.tap()
+        await touchName.waitFor({ state: 'hidden' })
+        expect(await touchToggle.getAttribute('aria-expanded')).toBe('false')
+        await touchToggle.tap()
+        expect(await touchName.inputValue()).toBe('Name edited by touch')
+        await touchName.fill('Name saved by touch')
+        const touchNext = touchDialog.getByRole('button', { name: 'Model options 2', exact: true })
+        await touchNext.tap()
+        expect(await touchNext.getAttribute('aria-expanded')).toBe('true')
+        await touchDialog.getByRole('button', { name: 'Save', exact: true }).tap()
+        await touchName.waitFor({ state: 'detached' })
+        expect(scaffold.ctx.settings.describe().find(row => row.ns === 'llm-pi-ai')?.value).toMatchObject({
+          providers: { [provider]: { models: [{ id: 'layout-model', name: 'Name saved by touch' }, { id: 'next-model', name: 'Next model' }] } },
+        })
+        expect(touchErrors.pageErrors).toEqual([])
+      } finally {
+        await mobileBrowser?.close()
+        await scaffold.ctx.settings.mutate('llm-pi-ai', [{ op: 'unset', path: ['providers', provider] }])
+      }
+    }, 60_000,
+  )
 
   it.each([{ name: 'Chromium', engine: chromium }, { name: 'WebKit', engine: webkit }])(
     'keeps keyboard reorder focus and visibility in $name', async ({ engine }) => {
@@ -684,6 +829,7 @@ describe('web e2e: Models settings page configures a dormant provider', () => {
       'configured.expected.md', 'declared-edit.expected.md', 'declared.expected.md',
       'delete.expected.md', 'empty.expected.md', 'model-picker.expected.md',
       'native-delete.expected.md', 'native-keyless.expected.md', 'catalog-inputs.expected.md',
+      'mobile-collapsed.expected.md', 'mobile-expanded.expected.md',
       'refreshing.expected.md', 'image-only.expected.md',
     ])
   })

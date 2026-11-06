@@ -22,7 +22,7 @@ describe.each([['Node', ExcelJS], ['browser bundle', browserExcel]] as const)('%
     const input = archive.withoutDrawings()
     const workbook = new parser.Workbook()
     await workbook.xlsx.load(input.buffer, { ignoreNodes: ['drawing'] })
-    const sheet = workbook.getWorksheet('数据')!
+    const sheet = workbook.getWorksheet('Data')!
     expect(sheet.getCell('A1').value).toBe('Item')
     expect(sheet.getCell('B2').value).toBe(42)
     if (name === 'comments' || name === 'combined') {
@@ -46,7 +46,7 @@ describe.each([['Node', ExcelJS], ['browser bundle', browserExcel]] as const)('%
     files[relsPath] = strToU8(xml.replace(relations.join(''), [...relations].reverse().join('')))
     const workbook = new parser.Workbook()
     await workbook.xlsx.load(new Uint8Array(zipSync(Object.fromEntries(Object.entries(files).reverse()))).buffer, { ignoreNodes: ['drawing'] })
-    expect(workbook.getWorksheet('数据')!.getCell('B2').note).toMatchObject({
+    expect(workbook.getWorksheet('Data')!.getCell('B2').note).toMatchObject({
       texts: [{ text: '生成的批注', font: { bold: true } }], margins: { insetmode: 'custom' },
     })
   })
@@ -56,7 +56,7 @@ it('retains styles, formulas, hidden sheets and notices in the combined workbook
   const source = await excelOpcFixture('combined')
   const result = await convertExcel(source, 'xlsx', limits)
   const sheet = result.sheets[0]!
-  expect(result.sheets.map(sheet => [sheet.name, sheet.hide])).toEqual([['数据', 0], ['隐藏页', 1]])
+  expect(result.sheets.map(sheet => [sheet.name, sheet.hide])).toEqual([['Data', 0], ['隐藏页', 1]])
   expect(sheet.celldata!.find(cell => cell.r === 1 && cell.c === 1)!.v).toMatchObject({ v: 42, bl: 1, fc: '#112233', bg: '#FFFF00' })
   expect(sheet.celldata!.find(cell => cell.r === 4 && cell.c === 0)!.v?.v).toBe(' <s:pic/> & 中文😀\n  tail ')
   expect(sheet.celldata!.find(cell => cell.r === 5 && cell.c === 0)!.v?.f).toBe('=SUM(B2:B3)')
@@ -65,7 +65,7 @@ it('retains styles, formulas, hidden sheets and notices in the combined workbook
   expect(result.unsupportedFeatures).toEqual(['charts', 'conditionalFormatting'])
   const workbook = new ExcelJS.Workbook()
   await workbook.xlsx.load(new XlsxPreviewArchive(source).withoutDrawings().buffer, { ignoreNodes: ['drawing'] })
-  expect(workbook.getWorksheet('数据')!.getCell('A2').hyperlink).toBe('https://example.com/?a=1&b=2')
+  expect(workbook.getWorksheet('Data')!.getCell('A2').hyperlink).toBe('https://example.com/?a=1&b=2')
 })
 
 it.each([excelFixture, excelHtmlFixture])('preserves cells and attributes under equivalent namespace aliases', async (fixture) => {

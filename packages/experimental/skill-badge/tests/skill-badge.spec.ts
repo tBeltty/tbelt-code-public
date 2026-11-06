@@ -34,9 +34,10 @@ describe('dsh-skill-badge', () => {
       icon: './icon.svg',
       exports: { './locale/*.json': './locale/*.json' },
     })
-    for (const language of ['en', 'zh']) {
+    const titles = { en: 'DSH', es: 'DSH', el: 'tBelt Code', fr: 'DSH' }
+    for (const [language, title] of Object.entries(titles)) {
       expect(JSON.parse(await readFile(new URL(`../locale/${language}.json`, import.meta.url), 'utf8')))
-        .toMatchObject({ meta: { title: 'DSH' } })
+        .toMatchObject({ meta: { title } })
     }
     expect(await readFile(new URL('../icon.svg', import.meta.url), 'utf8'))
       .toBe(await readFile(new URL('../../badge-skill-bundle/icon.svg', import.meta.url), 'utf8'))

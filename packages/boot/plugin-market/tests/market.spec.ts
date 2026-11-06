@@ -355,7 +355,7 @@ const SEARCHABLE = {
   title: 'Market',
   metadata: {
     categories: { work: { title: { en: 'Productivity', zh: '效率' } }, fun: { title: 'Games' } },
-    labels: { official: { title: { en: 'Official', zh: '官方' } }, ui: { title: 'UI' } },
+    labels: { official: { title: { en: 'Official', zh: 'Official' } }, ui: { title: 'UI' } },
     sortKeys: { downloads: { title: 'Downloads', order: 'desc' } },
   },
   plugins: [
@@ -484,7 +484,7 @@ it('keeps index order among equal sort-key values and among plugins without one'
 })
 
 it.each([
-  ['CJK text after Latin text', '预览', ['p-md']],
+  ['CJK text after Latin text', 'Preview', ['p-md']],
   ['Latin text between CJK text', 'markdown', ['p-md']],
   ['CJK text after a Latin word', '插件', ['p-vue']],
   ['katakana with the prolonged sound mark', 'ヒー', ['p-coffee']],

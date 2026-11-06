@@ -340,7 +340,7 @@ it('rebuilds a claimed command chip from the stored draft after reload without s
 it('restores repeated file, folder and Session capsules across edits, Workspace switches and reload without submitting', async () => {
   const { scaffold, page, console, first, firstId, second } = await launchDraftFixture()
   for (const workspace of [first, second]) {
-    await mkdir(join(workspace.path, '目录'))
+    await mkdir(join(workspace.path, 'Directory'))
     await writeFile(join(workspace.path, FILE_NAME), FILE_BODY)
   }
   await initialize(page, '', second.id)
@@ -570,7 +570,7 @@ it('rematches the current draft after a delayed real skills catalog without repl
 it('carries all reference capsules through the real Workspace picker and leaves the source draft empty', async () => {
   const { scaffold, page, console, first, firstId, second } = await launchDraftFixture()
   for (const workspace of [first, second]) {
-    await mkdir(join(workspace.path, '目录'))
+    await mkdir(join(workspace.path, 'Directory'))
     await writeFile(join(workspace.path, FILE_NAME), FILE_BODY)
   }
   const draft = structuredDraft(firstId, '切换工作区携带')

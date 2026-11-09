@@ -267,7 +267,7 @@ Notable changes to tBelt Code, newest first. The format follows [Keep a Changelo
 ### Changed
 
 - The download site is now at code.tbelt.online.
-- The Web app no longer offers DeepSeek sign-in. Add every provider in Settings with its own key.
+- The Web app no longer offers a sign-in tied to one provider. Add every provider in Settings with its own key.
 - Quote opens a comment box next to the selected text. Enter adds the quote and your comment above the message box. Escape cancels.
 - Saved API keys show "API key configured" with a Replace API button, in Web search and on provider cards. The key field opens only when you press Replace.
 - Provider cards show the model list and Fetch available models. "Edit model list" folds the rows, and "Customized settings" keeps the base URL and other advanced settings.

@@ -1,7 +1,8 @@
 # Creates the GitHub Release for a version tag, with that version's
 # CHANGELOG.md section as its notes. Runs on each pushed v* tag, or by hand
 # for an existing tag whose release did not run. Versions with a pre-release
-# suffix (for example 0.2.0-rc.2.20261002) are marked as pre-releases.
+# suffix (for example 0.2.0-rc.2.20261002) are marked as pre-releases. A tag
+# whose release already exists ends the run without changes.
 name: Release
 
 on:
@@ -32,6 +33,10 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           TAG: ${{ inputs.tag || github.ref_name }}
         run: |
+          if gh release view "$TAG" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+            echo "A release for $TAG already exists; nothing to do."
+            exit 0
+          fi
           version=${TAG#v}
           scripts/release-notes.sh notes "$version" > "$RUNNER_TEMP/notes.md"
           printf '\nDownload tBelt Code from https://code.tbelt.online.\n' >> "$RUNNER_TEMP/notes.md"

@@ -1,0 +1,1 @@
+¿Cuánto detalle quieres ver?Esto solo cambia cómo se muestra el progreso, no lo que tBelt Code puede hacer.Solo resultadosVer solo los resultados en una interfaz limpia y sencillaDetalles claveCentrado en los resultados, con solo los pasos y acciones más importantesTodos los detallesVer el proceso completo para depurar y diagnosticar con más facilidadAtrásOmitir

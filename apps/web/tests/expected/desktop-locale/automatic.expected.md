@@ -1,0 +1,39 @@
+- dialog "Ajustes":
+  - text: Ajustes
+  - navigation:
+    - button "General"
+    - button "Modelos"
+    - button "Gasto"
+    - button "Inspector del sistema"
+    - button "Preajustes de agente"
+  - button "Abrir archivo de configuración"
+  - button "Cerrar"
+  - text: Permisos Edita archivos dentro del espacio de trabajo y pregunta antes de salir de él.
+  - button "Escritura en el espacio de trabajo"
+  - text: Idioma
+  - button "Automático"
+  - text: Apariencia
+  - button "Claro"
+  - button "Oscuro" [pressed]
+  - button "Sistema"
+  - text: Tamaño de letra Solo afecta al contenido de la conversación 14
+  - button "Aumentar el tamaño de letra"
+  - button "Reducir el tamaño de letra"
+  - text: px
+  - button "Más ajustes de fuente"
+  - text: Detalle de llamadas a herramientas Elige cuánto detalle mostrar en las llamadas a herramientas
+  - button "Estándar"
+  - text: Cuándo contraer el detalle del trabajo Elige cuándo contraer automáticamente el detalle del trabajo
+  - button "Al terminar"
+  - text: Respuestas después del plegado Elija qué respuestas del asistente permanecen visibles cuando los detalles del trabajo colapsan
+  - button "Todas las respuestas"
+  - text: Mostrar la vista de código Muestra la trayectoria, los diffs de código y todos los preajustes de agente
+  - switch "Mostrar la vista de código" [checked]
+  - text: Atajos de teclado
+  - paragraph: Consulta y edita los atajos y las acciones de entrada disponibles
+  - button "Editar atajos"
+  - text: Envío mientras el agente trabaja En cola retiene tu mensaje hasta que el agente termine. Dirigir lo envía al turno en curso. Cmd/Ctrl+Enter hace lo contrario.
+  - button "En cola"
+  - text: Tiempos y uso de tokens Elige cuánto detalle de tiempos y tokens mostrar bajo las respuestas
+  - button "Detallado"
+  - text: "Versión actual: {{version}}"

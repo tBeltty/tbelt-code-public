@@ -1,0 +1,496 @@
+/**
+ * The client services the terminal runtime uses, described by the members it
+ * calls. The client tree is built from browser-format bundles whose Context
+ * declarations cannot share a TypeScript program with the Host's, so these
+ * interfaces are the whole contract; the contract suite runs the real services
+ * against them.
+ * @module @deepseek-ai/dsh-terminal-client/ports
+ */
+import type { TranscriptEvent } from '@deepseek-ai/dsh-terminal-views'
+import type { ApprovalChoice } from '@deepseek-ai/dsh-presentation-approval'
+import type {
+  CommandsRemotePort, FileReferencesRemotePort, FileUploadPort, GoalsRemotePort, JobsPort, MessageFeedbackRemotePort,
+  PathApplicationPort, ScheduleRemotePort, SessionFeedbackRemotePort, SessionReferencesRemotePort, SkillsRemotePort,
+  SpendBudgetRemotePort, SubagentsRemotePort, UserQuestionsRemotePort, WorkspacesPort,
+} from './panel-ports.ts'
+
+/** A value with a synchronous snapshot and change notification. */
+export interface ObservablePort<T> {
+  getSnapshot(): T
+  subscribe(listener: () => void): () => void
+}
+
+/** The fields of a session list row the terminal reads. */
+export interface SessionSummaryPort {
+  readonly id: string
+  /** Host-computed or user-set title; absent for an unnamed session. */
+  readonly title?: string | undefined
+  readonly cwd?: string | undefined
+  readonly origin?: 'subagent' | undefined
+  readonly blank: boolean
+  readonly updatedAt: number
+}
+
+/** The session list. */
+export interface SessionListPort {
+  readonly phase: string
+  readonly ids: readonly string[]
+  readonly byId: Readonly<Record<string, SessionSummaryPort>>
+}
+
+/** A Remote result: the value, or the failure with its stable code. */
+export type RemoteResultPort<T> =
+  | { readonly ok: true; readonly value: T }
+  | {
+    readonly ok: false
+    readonly error: { readonly code: string; readonly message: string; readonly details?: { readonly code?: string } | undefined }
+  }
+
+/** The lifecycle fields of one session. */
+export interface SessionSnapshotPort {
+  readonly running: boolean
+  readonly openState: 'cold' | 'loading' | 'open' | 'error'
+  readonly openError: { readonly message: string } | null
+}
+
+/** One part of a prompt: text, or an image the Host promotes to a stored attachment. */
+export type PromptPartPort =
+  | { readonly type: 'text'; readonly text: string }
+  | { readonly type: 'image'; readonly mediaType: string; readonly data: string; readonly name?: string }
+  | { readonly type: 'file'; readonly receiptId: string }
+
+/** The stored-image reference a user message carries; the Host verifies it against storage. */
+export interface ImageRefPort {
+  readonly attachmentId: string
+}
+
+/** A stored image read back from the Host. */
+export interface StoredImagePort {
+  readonly attachment: {
+    readonly mediaType: string
+    readonly bytes: number
+    readonly width: number
+    readonly height: number
+    readonly name?: string | undefined
+  }
+  readonly data: Uint8Array
+}
+
+/** The behavior of one session. */
+export interface SessionFacePort extends ObservablePort<SessionSnapshotPort> {
+  prompt(
+    content: readonly PromptPartPort[],
+    mode: 'queue' | 'steer',
+  ): Promise<RemoteResultPort<{ readonly accepted: true }>>
+  rename(title: string): Promise<RemoteResultPort<{ readonly title: string }>>
+  readAttachment(attachment: ImageRefPort): Promise<RemoteResultPort<StoredImagePort>>
+  cancel(): Promise<RemoteResultPort<{ readonly accepted: true }>>
+  command(line: string): Promise<RemoteResultPort<{ readonly matched: boolean }>>
+  /** Apply one edit, removal or steer to a message still waiting in the queue. */
+  updateQueue(itemId: string, action: QueueActionPort): Promise<RemoteResultPort<{ readonly accepted: true }>>
+  /** Values the Host computes from the session log, by projection key. */
+  readonly projections: { faceOf(key: string): ObservablePort<unknown> }
+}
+
+/** What can be done to a queued message. */
+export type QueueActionPort =
+  | { readonly kind: 'edit'; readonly content: readonly { readonly type: 'text'; readonly text: string }[] }
+  | { readonly kind: 'remove' }
+  | { readonly kind: 'steer' }
+
+/** One row of a session's event window. */
+export interface EventEntryPort {
+  readonly type: 'event' | 'transient'
+  readonly event: TranscriptEvent
+}
+
+/** The latest change to a session's event window. */
+export type EventChangePort =
+  | { readonly kind: 'replace' | 'prepend' | 'append'; readonly entries: readonly EventEntryPort[] }
+  | { readonly kind: 'settle-assistant'; readonly entry?: EventEntryPort }
+
+/** A session's contiguous event window. */
+export interface EventWindowPort {
+  readonly entries: readonly EventEntryPort[]
+  readonly revision: number
+  readonly change: EventChangePort
+}
+
+/** A retained session. */
+export interface SessionBindingPort {
+  readonly sessionId: string
+  readonly session: SessionFacePort
+  readonly eventSource: ObservablePort<EventWindowPort>
+}
+
+/** Ownership of a session for as long as it is not released. */
+export interface SessionReferencePort {
+  readonly sessionId: string
+  readonly ready: Promise<SessionBindingPort>
+  release(): void
+}
+
+/** The session service. */
+export interface SessionsPort {
+  readonly list: ObservablePort<SessionListPort>
+  create(options: { readonly cwd?: string }): Promise<string>
+  retain(target: string, options: { readonly source: string }): SessionReferencePort
+  scopeOf(context: unknown): string | undefined
+}
+
+/** A permission request forwarded from the Host. */
+export interface ApprovalRequestPort {
+  readonly toolName: string
+  readonly callId?: string | undefined
+  readonly reason?: string | undefined
+  readonly signal?: AbortSignal | undefined
+}
+
+/** The Host answer to a permission request. */
+export type ApprovalOutcomePort = 'allowed-once' | 'rejected'
+
+/** A listener for forwarded Host waterfalls; `this` is the Agent-scoped context that raised the event. */
+export type ApprovalListenerPort = (
+  this: unknown,
+  request: ApprovalRequestPort,
+  next: () => Promise<ApprovalOutcomePort>,
+) => Promise<ApprovalOutcomePort>
+
+/** One option of a question the agent asks. */
+export interface QuestionOptionPort {
+  readonly label: string
+  readonly description?: string | undefined
+}
+
+/** One question of a batch forwarded from the Host. */
+export interface QuestionItemPort {
+  readonly id: string
+  readonly question: string
+  readonly detail?: string | undefined
+  readonly header?: string | undefined
+  readonly options?: readonly QuestionOptionPort[] | undefined
+  readonly multiSelect?: boolean | undefined
+  readonly intent?: { readonly kind: 'plan-review' } | undefined
+}
+
+/** The agent's questions, forwarded from the Host while a tool call waits for them. */
+export interface QuestionRequestPort {
+  readonly questions: readonly QuestionItemPort[]
+  /** The tool call that waits; `timed` marks a wait that needs a claim from the answering client. */
+  readonly wait?: { readonly callId: string; readonly timed?: boolean | undefined } | undefined
+  readonly signal?: AbortSignal | undefined
+}
+
+/** The person's answer to a batch, one entry per question. */
+export interface QuestionAnswerPort {
+  readonly answers: readonly { readonly id: string; readonly selected: string[]; readonly custom?: string }[]
+}
+
+/** A listener for the question waterfall; `this` is the Agent-scoped context that raised the event. */
+export type QuestionListenerPort = (
+  this: unknown,
+  request: QuestionRequestPort,
+  next: () => Promise<QuestionAnswerPort>,
+) => Promise<QuestionAnswerPort>
+
+/** The model catalog fields the terminal reads. */
+export interface ModelCatalogPort {
+  readonly default: { readonly provider: string; readonly model: string }
+  readonly groups: readonly {
+    readonly id: string
+    readonly name: string
+    readonly models: readonly { readonly id: string; readonly name: string }[]
+  }[]
+}
+
+/** The `session` Remote namespace calls the terminal makes. */
+export interface SessionRemotePort {
+  modelCatalog(): Promise<RemoteResultPort<ModelCatalogPort>>
+  selectModel(request: {
+    readonly sessionId: string
+    readonly provider: string
+    readonly model: string
+  }): Promise<RemoteResultPort<{ readonly selected: { readonly provider: string; readonly model: string } }>>
+  setDefaultModel(request: {
+    readonly provider: string
+    readonly model: string
+  }): Promise<RemoteResultPort<unknown>>
+  /** Copy the session up to an event into a new session. */
+  fork(request: { readonly sessionId: string; readonly atSeq?: number }): Promise<RemoteResultPort<{ readonly sessionId: string }>>
+  /** Whether this installation can hand a path to the desktop's opener. */
+  canOpenWorkspacePath(): Promise<RemoteResultPort<boolean>>
+  openWorkspacePath(request: {
+    readonly path: string
+    readonly action?: 'reveal'
+    readonly application?: string
+  }): Promise<RemoteResultPort<{ readonly opened: true }>>
+  workspacePathApplications(request: { readonly path: string }): Promise<RemoteResultPort<readonly PathApplicationPort[]>>
+}
+
+/** A model a provider disclosed when asked. */
+export interface DiscoveredModelPort {
+  readonly id: string
+  readonly name?: string | undefined
+  readonly contextWindow?: number | undefined
+  readonly maxTokens?: number | undefined
+  readonly inputModalities?: readonly string[] | undefined
+  readonly pricing?: {
+    readonly input: number
+    readonly output: number
+    readonly cacheRead?: number | undefined
+    readonly cacheWrite?: number | undefined
+  } | undefined
+}
+
+/** The `llm` Remote namespace calls the terminal makes. */
+export interface LlmRemotePort {
+  listProviders(): Promise<RemoteResultPort<readonly { readonly id: string; readonly name: string }[]>>
+  listConfigurableProviders(): Promise<RemoteResultPort<readonly {
+    readonly provider: string
+    readonly displayName: string
+    readonly settingsNs: string
+    readonly settingsPath: readonly string[]
+    readonly declared?: boolean | undefined
+    readonly error?: string | undefined
+  }[]>>
+  discoverModels(settingsNs: string, request: {
+    readonly provider?: string
+    readonly baseURL?: string
+    readonly api?: string
+    readonly apiKey?: string
+    readonly live?: boolean
+  }): Promise<RemoteResultPort<readonly DiscoveredModelPort[]>>
+}
+
+/** What the Host knows about one credential reference; never the value. */
+export interface CredentialInfoPort {
+  readonly configured: boolean
+  readonly writable: boolean
+}
+
+/** The `credentials` Remote namespace. */
+export interface CredentialsRemotePort {
+  describe(refs: readonly string[]): Promise<RemoteResultPort<Readonly<Record<string, CredentialInfoPort>>>>
+  set(ref: string, value: string): Promise<RemoteResultPort<unknown>>
+  unset(ref: string): Promise<RemoteResultPort<unknown>>
+}
+
+/** A sign-in flow the Host offers. */
+export interface SignInFlowPort {
+  /** Credential record the flow writes, `<scope>/<id>`. */
+  readonly key: string
+  /** Name of what is being signed in to. */
+  readonly label: string
+  readonly methods: readonly { readonly id: string; readonly label: string }[]
+}
+
+/** A question a running sign-in waits on. */
+export type SignInPromptPort = {
+  readonly id: string
+  readonly message: string
+} & ({
+  readonly kind: 'text' | 'secret'
+} | {
+  readonly kind: 'select'
+  readonly options: readonly { readonly id: string; readonly label: string }[]
+})
+
+/** Progress of one sign-in attempt. */
+export interface SignInAttemptPort {
+  readonly id: string
+  readonly status: 'running' | 'authorized' | 'cancelled' | 'failed'
+  readonly notice?: { readonly message: string; readonly url?: string | undefined; readonly code?: string | undefined } | undefined
+  readonly prompt?: SignInPromptPort | undefined
+  readonly failure?: string | undefined
+}
+
+/** The `authorization` Remote namespace. */
+export interface AuthorizationRemotePort {
+  flows(): Promise<RemoteResultPort<readonly SignInFlowPort[]>>
+  begin(key: string, method?: string): Promise<RemoteResultPort<SignInAttemptPort>>
+  read(key: string, id: string): Promise<RemoteResultPort<SignInAttemptPort | undefined>>
+  answer(key: string, id: string, promptId: string, answer: string | null): Promise<RemoteResultPort<boolean>>
+  cancel(key: string): Promise<RemoteResultPort<unknown>>
+}
+
+/** One settings namespace as the Host describes it, without secret values. */
+export interface SettingsNamespacePort {
+  readonly ns: string
+  /** The namespace's schema in the form `schema.toJSON()` returns. */
+  readonly schema: unknown
+  /** The effective value after every layer. */
+  readonly value: unknown
+  /** The part of the value stored in the user layer. */
+  readonly user?: unknown
+  /** The value the layers below the user layer give. */
+  readonly base?: unknown
+  readonly secrets: readonly { readonly path: readonly string[]; readonly set: boolean }[]
+  readonly revision: number
+}
+
+/** An edit to one namespace's user layer. */
+export type SettingsOpPort =
+  | { readonly op: 'set'; readonly path: readonly string[]; readonly value: unknown }
+  | { readonly op: 'unset'; readonly path: readonly string[] }
+
+/** The `settings` Remote namespace. */
+export interface SettingsRemotePort {
+  describe(): Promise<RemoteResultPort<{ readonly writable: boolean; readonly namespaces: readonly SettingsNamespacePort[] }>>
+  update(
+    ns: string,
+    patch: Readonly<Record<string, unknown>>,
+    expectedRevision: number | undefined,
+  ): Promise<RemoteResultPort<SettingsNamespacePort>>
+  mutate(
+    ns: string,
+    ops: readonly SettingsOpPort[],
+    expectedRevision: number | undefined,
+  ): Promise<RemoteResultPort<SettingsNamespacePort>>
+  openSettingsDocument(): Promise<RemoteResultPort<{ readonly opened: true }>>
+}
+
+/** The `web` Remote namespace. */
+export interface WebRemotePort {
+  searchProviders(): Promise<RemoteResultPort<readonly { readonly id: string; readonly credentialRef: string }[]>>
+  checkSearchKey(providerId: string, apiKey: string): Promise<RemoteResultPort<
+    | { readonly ok: true }
+    | { readonly ok: false; readonly reason: 'auth' | 'quota' | 'error'; readonly message: string }
+  >>
+}
+
+/** One bundle of plugins the profile installs or the installation supplies. */
+export interface BundlePort {
+  readonly name: string
+  readonly version?: string | undefined
+  readonly description?: string | undefined
+  readonly enabled: boolean
+  readonly installed: boolean
+  readonly optional: boolean
+  readonly removable: boolean
+  readonly readOnlyReason?: string | undefined
+  readonly error?: { readonly code: string; readonly diagnostic?: string | undefined } | undefined
+}
+
+/** One plugin entry of the running profile. */
+export interface PluginPort {
+  readonly entryId: string
+  readonly moduleName: string
+  readonly enabled: boolean
+  readonly readOnlyReason?: string | undefined
+}
+
+/** How a plugin change ended. */
+export interface ChangeResultPort {
+  readonly changed: boolean
+  readonly application: 'applied' | 'restart-required' | 'overridden' | 'failed' | 'cancelled'
+  readonly target: string
+  readonly error?: { readonly code: string; readonly diagnostic?: string | undefined } | undefined
+  readonly warnings?: readonly string[] | undefined
+  readonly pendingBuilds?: readonly string[] | undefined
+}
+
+/** What a package spec names, read before installing it. */
+export type SpecInspectionPort =
+  | {
+    readonly status: 'accepted'
+    readonly kind: string
+    readonly name?: string | undefined
+    readonly version?: string | undefined
+    readonly description?: string | undefined
+    readonly bundle: boolean | null
+  }
+  | { readonly status: 'refused'; readonly problem: string; readonly reason: string }
+
+/** The `pluginManager` Remote namespace. */
+export interface PluginManagerRemotePort {
+  listBundles(): Promise<RemoteResultPort<readonly BundlePort[]>>
+  listPlugins(): Promise<RemoteResultPort<readonly PluginPort[]>>
+  inspect(spec: string): Promise<RemoteResultPort<SpecInspectionPort>>
+  setBundleEnabled(name: string, enabled: boolean): Promise<RemoteResultPort<ChangeResultPort>>
+  setPluginEnabled(id: string, enabled: boolean): Promise<RemoteResultPort<ChangeResultPort>>
+  installBundle(spec: string, options?: { readonly enabled?: boolean }): Promise<RemoteResultPort<ChangeResultPort>>
+  removeBundle(name: string): Promise<RemoteResultPort<ChangeResultPort>>
+}
+
+/** One agent preset, including the ones defined as Markdown files. */
+export interface AgentPresetPort {
+  readonly id: string
+  readonly name?: string | undefined
+  readonly description?: string | undefined
+  readonly isDefault: boolean
+  readonly broken?: string | undefined
+}
+
+/** One agent file of the authoring folder and why it did not load, when it did not. */
+export interface AgentFilePort {
+  readonly id: string
+  readonly error?: string | undefined
+}
+
+/** The `agentPresets` Remote namespace. */
+export interface AgentPresetsRemotePort {
+  list(): Promise<RemoteResultPort<{ readonly presets: readonly AgentPresetPort[] }>>
+  read(agentPreset: string): Promise<RemoteResultPort<{ readonly content: string }>>
+  select(sessionId: string, agentPreset: string): Promise<RemoteResultPort<unknown>>
+  listFiles(): Promise<RemoteResultPort<{ readonly files: readonly AgentFilePort[] }>>
+  readFile(agentPreset: string): Promise<RemoteResultPort<{ readonly id: string; readonly text: string }>>
+  writeFile(agentPreset: string, text: string): Promise<RemoteResultPort<AgentFilePort>>
+  deleteFile(agentPreset: string): Promise<RemoteResultPort<unknown>>
+}
+
+/** One permission preset a session can run under. */
+export interface PermissionOptionPort {
+  readonly value: string
+  readonly name: string
+  readonly description?: string | undefined
+}
+
+/** The `permissionPresets` Remote namespace. */
+export interface PermissionPresetsRemotePort {
+  catalog(): Promise<RemoteResultPort<{
+    readonly options: readonly PermissionOptionPort[]
+    readonly defaultOptions: readonly PermissionOptionPort[]
+    readonly defaultPreset: string
+  }>>
+}
+
+/** Forwarded Host events and Remote calls. */
+export interface RemotePort {
+  readonly session: SessionRemotePort
+  readonly llm: LlmRemotePort
+  readonly authorization: AuthorizationRemotePort
+  readonly credentials: CredentialsRemotePort
+  readonly settings: SettingsRemotePort
+  readonly web: WebRemotePort
+  readonly pluginManager: PluginManagerRemotePort
+  readonly agentPresets: AgentPresetsRemotePort
+  readonly permissionPresets: PermissionPresetsRemotePort
+  readonly skills: SkillsRemotePort
+  readonly schedule: ScheduleRemotePort
+  readonly goals: GoalsRemotePort
+  readonly subagents: SubagentsRemotePort
+  readonly commands: CommandsRemotePort
+  readonly fileReferences: FileReferencesRemotePort
+  readonly sessionReferenceResolver: SessionReferencesRemotePort
+  readonly messageFeedback: MessageFeedbackRemotePort
+  readonly sessionFeedback: SessionFeedbackRemotePort
+  readonly spendBudget: SpendBudgetRemotePort
+  readonly userQuestions: UserQuestionsRemotePort
+  $on(event: 'approval/request', listener: ApprovalListenerPort): () => void
+  $on(event: 'user-questions/request', listener: QuestionListenerPort): () => void
+}
+
+/** The services of the client tree. */
+export interface ClientServicesPort {
+  readonly sessions: SessionsPort
+  readonly remote: RemotePort
+  /** Background job rosters and output. */
+  readonly jobs: JobsPort
+  /** Workspace registry, worktrees, archive and pin sets. */
+  readonly workspaces: WorkspacesPort
+  /** Staged uploads of files to attach. */
+  readonly fileUpload: FileUploadPort
+}
+
+/** Result of asking the person for a decision. */
+export type ApprovalDecision = ApprovalChoice

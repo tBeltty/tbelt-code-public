@@ -1,0 +1,6 @@
+{
+  "meta": {
+    "title": "Hooks του Codex",
+    "description": "Εκτελεί hooks από το hooks.json του Codex στα σημεία παρεμβολής του Harness."
+  }
+}

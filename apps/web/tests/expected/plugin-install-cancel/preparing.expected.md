@@ -1,0 +1,8 @@
+- dialog "Preparing installation…":
+  - button "Cancel installation and return to editing"
+  - button "Cancel install and close"
+  - status: Preparing installation…
+  - paragraph: slow-package
+  - paragraph: Version 1.0.0
+  - button "Show install details"
+  - button "Cancel install"

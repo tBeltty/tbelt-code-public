@@ -1,0 +1,27 @@
+- banner:
+  - navigation "Session hierarchy": Begin your reply with the
+  - text: Standard mode
+  - button "Show this session’s artifacts"
+  - button "More actions"
+  - button "Open right sidebar"
+  - tablist:
+    - tab "Chat" [selected]
+    - tab "Trajectory"
+  - button "More conversation views"
+- text: Begin your reply with the plain sentence "Reading the workspace now." as text, and in that same message call the bash tool with the command "echo alpha". After the tool result, reply with the single word DONE and stop. {{clock}}
+- button "Copy"
+- tooltip "Copy"
+- button "Think The user wants me to begin with \"Reading the workspace now.\" and call bash with \"echo alpha\" in the same message. Then after the tool result, reply with the single word DONE and stop."
+- paragraph: Reading the workspace now.
+- 'button "Failed Bash Error: sandbox mode \"workspace-write\" is requested but no sandbox backend is usable on this host; refusing to run the command unconfined. Install bubblewrap or run a Landlock-enforcing kernel (Linux), ensure sandbox-exec is usable (macOS), or ensure the ACL restricted-token runner can start (Windows) — otherwise switch the consumer to danger-full-access."'
+- paragraph: partial
+- status: Deep diving
+- text: Deep diving for {{duration}} ···
+- textbox "Message or run a task, / commands, @ files or sessions"
+- button "Add files or run commands"
+- 'button "Access mode, current: Workspace Write"': Workspace Write
+- button "Select model, current DeepSeek-V4-Flash": DeepSeek-V4-Flash
+- button "Stop generating"
+- button "1 turns 1 steps · 1,{{throughput}} tok/s": 1 turns 1 steps1,{{throughput}} tok/s
+- button "7.9K tok · Cache hit 0%": 7.9K tokCache hit 0%
+- button "6% of context used": 6%

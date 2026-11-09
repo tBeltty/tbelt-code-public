@@ -1,0 +1,43 @@
+/** Markdown implementation labels and primitive chrome. */
+
+/** Markdown namespace keys. */
+export type MarkdownPreviewKey = keyof typeof en
+
+/** English dictionary and key-set source of truth. */
+export const en = {
+  'viewer.label': 'Markdown',
+  'code.copy': 'Copy',
+  'code.copied': 'Copied',
+  'footnotes': 'Footnotes',
+} satisfies Record<string, string>
+
+declare module '@deepseek-ai/dsh-client-ui-slots' {
+  interface LocaleNamespaceMap {
+    /** Markdown document renderer and its code/footnote controls. */
+    documentMarkdown: MarkdownPreviewKey
+  }
+}
+
+/** Spanish dictionary, checked against the English keys. */
+export const es = {
+  'viewer.label': 'Markdown',
+  'code.copy': 'Copiar',
+  'code.copied': 'Copiado',
+  'footnotes': 'Notas al pie',
+} satisfies Record<keyof typeof en, string>
+
+/** Greek dictionary, checked complete against the English key set. */
+export const el = {
+  'viewer.label': 'Markdown',
+  'code.copy': 'Αντιγραφή',
+  'code.copied': 'Αντιγράφηκε',
+  'footnotes': 'Υποσημειώσεις',
+} satisfies Record<keyof typeof en, string>
+
+/** French dictionary, checked against the English keys. */
+export const fr = {
+  'viewer.label': 'Markdown',
+  'code.copy': 'Copier',
+  'code.copied': 'Copié',
+  'footnotes': 'Notes de bas de page',
+} satisfies Record<keyof typeof en, string>

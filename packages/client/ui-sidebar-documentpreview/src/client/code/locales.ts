@@ -1,0 +1,37 @@
+/** Locale-owned code renderer name and CodeBlock controls. */
+import type {} from '@deepseek-ai/dsh-client-ui-slots'
+
+declare module '@deepseek-ai/dsh-client-ui-slots' {
+  interface LocaleNamespaceMap {
+    /** Code document implementation name and copy controls. */
+    sidebarCodePreview: keyof typeof en
+  }
+}
+
+/** English dictionary with the same keys. */
+export const en = {
+  title: 'Code',
+  copy: 'Copy',
+  copied: 'Copied',
+} satisfies Record<string, string>
+
+/** Spanish dictionary, checked against the English keys. */
+export const es = {
+  title: 'Código',
+  copy: 'Copiar',
+  copied: 'Copiado',
+} satisfies Record<keyof typeof en, string>
+
+/** Greek dictionary, checked complete against the English key set. */
+export const el = {
+  title: 'Κώδικας',
+  copy: 'Αντιγραφή',
+  copied: 'Αντιγράφηκε',
+} satisfies Record<keyof typeof en, string>
+
+/** French dictionary, checked against the English keys. */
+export const fr = {
+  title: 'Code',
+  copy: 'Copier',
+  copied: 'Copié',
+} satisfies Record<keyof typeof en, string>

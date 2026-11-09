@@ -1,0 +1,6 @@
+{
+  "meta": {
+    "title": "Webhooks GitHub",
+    "description": "Επαληθεύει υπογεγραμμένα webhooks HTTP του GitHub και τα προωθεί στην υπηρεσία Webhook."
+  }
+}

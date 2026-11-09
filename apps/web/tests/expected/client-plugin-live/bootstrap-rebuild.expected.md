@@ -1,0 +1,4 @@
+- alert: Some plugins could not sync on this page. Host enablement is unchanged.
+- list:
+  - listitem: "@deepseek-ai/dsh-client-modules: Error: client-modules: replacing bootstrap module @deepseek-ai/dsh-client-modules requires a page reload"
+- button "Retry this page"

@@ -1,0 +1,123 @@
+/** Agent Teams Web dictionaries. */
+
+/** Locale namespace owned by the Agent Teams Web UI. */
+export const NS = 'agent-team'
+
+/** Agent Teams locale key union. */
+export type TeamKey = keyof typeof en
+
+/** English dictionary and key-set source of truth. */
+export const en = {
+  trigger: 'Agent team',
+  loading: 'Loading team…',
+  unavailable: 'Team is unavailable',
+  failure: 'Invalid persisted team record: {message}',
+  empty: 'No shared tasks yet. Create them through the conversation.',
+  roster: 'Members',
+  tasks: 'Shared tasks',
+  model: 'Model',
+  open: 'Open member conversation',
+  current: 'Current chat',
+  owner: 'Owner',
+  unowned: 'Unowned',
+  blockedBy: 'Blocked by',
+  writeScopes: 'Write scopes',
+  ready: 'Ready',
+  blocked: 'Blocked by dependencies',
+  'task.expand': 'Show more',
+  'task.collapse': 'Show less',
+  'memberStatus.running': 'Running',
+  'memberStatus.inactive': 'Inactive',
+  'memberStatus.provisioning': 'Provisioning',
+  'memberStatus.failed': 'Failed',
+  'status.pending': 'Pending',
+  'status.in_progress': 'In progress',
+  'status.completed': 'Completed',
+} satisfies Record<string, string>
+
+/** Spanish dictionary, checked against the English keys. */
+export const es = {
+  trigger: 'equipo de agentes',
+  loading: 'Cargando equipo…',
+  unavailable: 'El equipo no está disponible',
+  failure: 'Registro de equipo persistente no válido: {message}',
+  empty: 'Todavía no hay tareas compartidas. Créalas desde la conversación.',
+  roster: 'Miembros',
+  tasks: 'Tareas compartidas',
+  model: 'Modelo',
+  open: 'Abrir la conversación del miembro',
+  current: 'Chat actual',
+  owner: 'Responsable',
+  unowned: 'Sin responsable',
+  blockedBy: 'Bloqueada por',
+  writeScopes: 'Ámbitos de escritura',
+  ready: 'Lista',
+  blocked: 'Bloqueada por dependencias',
+  'task.expand': 'Mostrar más',
+  'task.collapse': 'Mostrar menos',
+  'memberStatus.running': 'En ejecución',
+  'memberStatus.inactive': 'Inactivo',
+  'memberStatus.provisioning': 'Preparándose',
+  'memberStatus.failed': 'Con error',
+  'status.pending': 'Pendiente',
+  'status.in_progress': 'En curso',
+  'status.completed': 'Completada',
+} satisfies Record<keyof typeof en, string>
+
+/** Greek dictionary, checked complete against the English key set. */
+export const el = {
+  trigger: 'Ομάδα πρακτόρων',
+  loading: 'Φόρτωση ομάδας…',
+  unavailable: 'Η ομάδα δεν είναι διαθέσιμη',
+  failure: 'Μη έγκυρη αποθηκευμένη εγγραφή ομάδας: {message}',
+  empty: 'Δεν υπάρχουν κοινές εργασίες ακόμη. Δημιουργήστε τις μέσα από τη συζήτηση.',
+  roster: 'Μέλη',
+  tasks: 'Κοινές εργασίες',
+  model: 'Μοντέλο',
+  open: 'Άνοιγμα συζήτησης μέλους',
+  current: 'Τρέχουσα συζήτηση',
+  owner: 'Κάτοχος',
+  unowned: 'Χωρίς κάτοχο',
+  blockedBy: 'Αποκλείεται από',
+  writeScopes: 'Πεδία εγγραφής',
+  ready: 'Έτοιμο',
+  blocked: 'Αποκλείεται από εξαρτήσεις',
+  'task.expand': 'Εμφάνιση περισσότερων',
+  'task.collapse': 'Εμφάνιση λιγότερων',
+  'memberStatus.running': 'Σε εκτέλεση',
+  'memberStatus.inactive': 'Ανενεργό',
+  'memberStatus.provisioning': 'Σε προετοιμασία',
+  'memberStatus.failed': 'Απέτυχε',
+  'status.pending': 'Σε αναμονή',
+  'status.in_progress': 'Σε εξέλιξη',
+  'status.completed': 'Ολοκληρώθηκε',
+} satisfies Record<keyof typeof en, string>
+
+/** French dictionary, checked against the English keys. */
+export const fr = {
+  trigger: "Équipe d'agents",
+  loading: "Chargement de l'équipe…",
+  unavailable: 'L’équipe est indisponible',
+  failure: "Enregistrement d'équipe persistant non valide : {message}",
+  empty: 'Aucune tâche partagée pour le moment. Créez-en dans la conversation.',
+  roster: 'Membres',
+  tasks: 'Tâches partagées',
+  model: 'Modèle',
+  open: 'Ouvrir la conversation du membre',
+  current: 'Conversation actuelle',
+  owner: 'Responsable',
+  unowned: 'Sans responsable',
+  blockedBy: 'Bloquée par',
+  writeScopes: 'Périmètres d’écriture',
+  ready: 'Prête',
+  blocked: 'Bloquée par des dépendances',
+  'task.expand': 'Afficher plus',
+  'task.collapse': 'Afficher moins',
+  'memberStatus.running': 'En cours',
+  'memberStatus.inactive': 'Inactif',
+  'memberStatus.provisioning': 'Préparation',
+  'memberStatus.failed': 'Échec',
+  'status.pending': 'En attente',
+  'status.in_progress': 'En cours',
+  'status.completed': 'Terminée',
+} satisfies Record<keyof typeof en, string>

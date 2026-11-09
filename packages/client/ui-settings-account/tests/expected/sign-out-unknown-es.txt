@@ -1,0 +1,1 @@
+Cerrar sesiónNo se pudieron verificar las tareas en ejecución. Cerrar sesión puede interrumpir las tareas que utilizan esta cuenta. ¿Cerrar sesión ahora?CancelarCerrar sesión

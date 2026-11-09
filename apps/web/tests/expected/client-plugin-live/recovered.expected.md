@@ -1,0 +1,1 @@
+- text: Live plugin r1 enabled

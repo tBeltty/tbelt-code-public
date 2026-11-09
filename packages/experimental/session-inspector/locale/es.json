@@ -1,0 +1,6 @@
+{
+  "meta": {
+    "title": "Registro de sesión",
+    "description": "Habilita el análisis de los datos sin procesar de la sesión actual y de los mensajes de chat agrupados en la barra lateral de sesión."
+  }
+}

@@ -1,0 +1,8 @@
+- dialog "Installation result unavailable":
+  - button "Back to editing": Edit
+  - button "Close"
+  - status: Installation result unavailable
+  - paragraph: The Host has no active installation with this request id. Check the plugin list before trying again.
+  - paragraph: recovered-package
+  - paragraph: Version 1.0.0
+  - button "Show install details"

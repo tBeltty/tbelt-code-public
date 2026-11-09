@@ -1,0 +1,463 @@
+# Changelog
+
+Notable changes to tBelt Code, newest first. The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and versions follow [Semantic Versioning](https://semver.org/).
+
+## [Unreleased]
+
+## [0.2.2-alpha.2.20261106] - 2026-11-06
+
+### Added
+
+- When you open an image in a conversation, you can save the original file or copy the image to the clipboard.
+- The agent can edit a file by applying a patch, and the conversation shows each patch as its own row.
+- The agent can list and edit your scheduled tasks when you ask it to.
+- In the app, saving the original file of an image can ask where to put it, and images hosted on other sites can be copied.
+- The app menu has a Developer tools item.
+
+### Changed
+
+- When tBelt Code fails to start, the error window appears in the language you last chose instead of the system language.
+- When tBelt Code fails to start and its report is still being saved, the error window says so and the Copy report button waits for the report.
+- In Settings, the Models page always lists the provider that signs in with an account and gives it its own Sign in button.
+- Model lists show providers in the same order as the catalog, with no provider placed first.
+
+### Fixed
+
+- In the sidebar, the Settings button at the bottom now lines up with the conversation rows above it.
+
+## [0.2.1-rc.3.20261030.2] - 2026-10-30
+
+### Added
+
+- When tBelt Code fails to start, the error window has a Copy report button that copies your system details to attach to a bug report.
+
+## [0.2.1-rc.3.20261030] - 2026-10-30
+
+### Added
+
+- Web search works without an account or an API key.
+- When the free web search refuses a query, tBelt Code retries it through DuckDuckGo.
+
+### Changed
+
+- Web pages the agent fetches no longer include navigation menus, footers and sidebars.
+- When you add an API key for a provider, the agent searches the web through that provider without further setup.
+
+### Fixed
+
+- In Settings, a provider whose API key is set in an environment variable such as `OPENAI_API_KEY` no longer shows a missing key, and each provider shows its default endpoint.
+
+## [0.2.1-rc.3.20261026] - 2026-10-26
+
+### Added
+
+- Image and PDF previews can be zoomed in and out.
+- The scheduled tasks list has a Clear all inactive tasks action that removes every task that is not active.
+- You can copy a whole session as Markdown from its menu.
+- In Settings, a model on a custom provider can define which reasoning levels it supports.
+
+### Changed
+
+- The model lists for OpenCode, OpenRouter, Fireworks, MiniMax and Google include their newest models.
+- Your answers to an agent's questions appear together as one message.
+
+### Fixed
+
+- Display math written across several lines renders as a formula.
+
+## [0.2.1-rc.2.20261020.4] - 2026-10-20
+
+### Added
+
+- An agent definition file can set the agent's provider, model, reasoning effort and skills.
+- Changes to agent definition files apply without a restart, and the agent can delegate tasks to each defined agent.
+- You can create, edit and delete agents in Settings and in `dsh terminal`.
+
+### Changed
+
+- An agent defined in a file and started by another agent runs one task and ends after its final answer.
+
+## [0.2.1-rc.2.20261020.3] - 2026-10-20
+
+### Fixed
+
+- New sessions open again. The previous release failed to start them.
+
+## [0.2.1-rc.2.20261020.2] - 2026-10-20
+
+### Fixed
+
+- The OpenCode model list includes its newest free model.
+
+## [0.2.1-rc.2.20261020] - 2026-10-20
+
+### Added
+
+- Keys, tokens and passwords you paste into a message are hidden until you click the eye icon next to them.
+
+### Fixed
+
+- When tBelt Code exits while the agent is working, the session shows after the restart that the turn did not finish and that unfinished tool calls have unknown outcomes.
+
+## [0.2.1-alpha.2.20261015.2] - 2026-10-15
+
+### Fixed
+
+- Signing in to ChatGPT no longer fails with a missing `credentials` error.
+
+## [0.2.1-alpha.2.20261015] - 2026-10-15
+
+### Added
+
+- Sign in to a provider with your browser instead of an API key. ChatGPT is available for OpenAI, in the app and in `dsh terminal`.
+
+### Fixed
+
+- Workflow subagents run when tBelt Code is installed as an AppImage on Linux.
+- Answers in the `/btw` side question dialog show formatting, such as bold text, code and headings, instead of raw Markdown symbols.
+
+## [0.2.1-alpha.2.20261014.4] - 2026-10-14
+
+### Fixed
+
+- The model search box in provider setup is one line tall instead of filling the dialog.
+- When the app's background process stops, the error names the signal that ended it and the log says whether the app or the process itself asked to stop.
+
+## [0.2.1-alpha.2.20261014.3] - 2026-10-14
+
+### Added
+
+- Manual audit mode and Autonomous audit mode split multi-phase work into numbered tasks with checks. The agent approves a task only after re-running its checks. In the manual mode you launch each implementer yourself. The autonomous mode launches them for you and reports once per finished phase. Neither is selected by default.
+
+## [0.2.1-alpha.2.20261014.2] - 2026-10-14
+
+### Fixed
+
+- Greek translation corrections in the app and `dsh terminal`.
+- French translation corrections in the app and `dsh terminal`.
+
+## [0.2.1-alpha.2.20261014] - 2026-10-14
+
+### Added
+
+- `/btw` asks the model a side question while the agent keeps working. Send context to chat hands the conversation to the agent, which reads it at its next step. In the terminal, `/btw --send` does the same.
+- The app and `dsh terminal` are available in Greek and French. Pick one in Settings, or leave Automatic to follow your system language.
+
+## [0.2.1-alpha.2.20261013.2] - 2026-10-13
+
+### Fixed
+
+- The Windows installer builds again. The previous release shipped without it.
+
+## [0.2.1-alpha.2.20261013] - 2026-10-13
+
+### Added
+
+- Fast mode sends about a quarter of Standard's prompt and tool schemas. The agent turns on search, web, subagents and other tool groups when a task needs them.
+
+### Fixed
+
+- The macOS, Windows and Linux installers build again. The previous release shipped without them.
+
+## [0.2.1-alpha.2.20261012] - 2026-10-12
+
+### Added
+
+- An Automation tasks page lists the tasks and reminders agents schedule. Search them, edit when they run, or open the conversation they came from.
+- Choose the font for text, code and the terminal in Settings.
+- An agent can switch its working directory during a session.
+
+## [0.2.0-rc.2.20261012.4] - 2026-10-12
+
+### Fixed
+
+- The Windows installer builds again. The previous release shipped without it.
+
+## [0.2.0-rc.2.20261012.3] - 2026-10-12
+
+### Added
+
+- Settings > General > Language has an Automatic option that follows the system language.
+- The desktop menus, dialogs and Windows installer are available in Spanish.
+- `dsh terminal` is available in Spanish. It follows the terminal language, and `/language` saves a choice that the app shares.
+- Spanish uses its own decimal and thousands separators, clock times and plural forms.
+
+### Removed
+
+- Chinese as an app language. A saved Chinese choice falls back to Automatic.
+
+## [0.2.0-rc.2.20261012.2] - 2026-10-12
+
+### Added
+
+- A light theme. Choose Light, Dark or System in Settings > General. Dark is the default.
+- A worktree's row in the sidebar shows its branch.
+
+## [0.2.0-rc.2.20261012] - 2026-10-12
+
+### Added
+
+- Spanish as an app language, selectable in Settings > General.
+
+### Changed
+
+- Settings, presets, plugin messages and errors say tBelt Code wherever they said DSH.
+- The first-run balance step no longer names a provider or credits.
+- The preset list shows a short Default tag and hides the ids of built-in presets.
+- Spending has its own icon in Settings.
+- The first-run provider list shows readable names, popular providers first, then local servers and the rest.
+- The empty welcome screen has an Open folder button.
+- The send button looks disabled until a message can be sent.
+- Notifications stay above every dialog and move to the top edge while one is open.
+- "Show hidden files" in the folder picker has a visible checkbox.
+- Settings > Built-in plugins is now System inspector.
+- Three Settings rows have plainer names and descriptions: Timing and token usage, Tool call details, and Sending while the agent works.
+- A disabled Save button in Settings is outlined, not grey on grey, and Open configuration file has no filled background.
+- Menus, job lists and preset cards use 12 px text, and the sidebar and composer icon buttons have a larger click area.
+- The sidebar logo no longer takes a Tab stop next to New session.
+
+### Removed
+
+- The session log upload switch in Settings > General.
+- The second Preview badge on the welcome screen. The sidebar keeps one.
+
+## [0.2.0-rc.2.20261011] - 2026-10-11
+
+### Added
+
+- Questions with a time limit appear in `dsh terminal`, with the seconds the agent waits.
+
+## [0.2.0-rc.2.20261009.2] - 2026-10-09
+
+### Added
+
+- `dsh terminal` asks the questions the agent asks, one at a time. Enter answers and Escape declines.
+- `--resume <id>` and `--model <provider/model>` work with `dsh --profile headless`.
+- `/queue` in `dsh terminal` edits queued messages.
+- `/jobs` shows background jobs and `/subagents` opens subagent sessions.
+- `/schedule` lists scheduled follow-ups.
+- `/goal` sets the session goal and `/skills` runs a skill.
+- `/feedback` rates a reply.
+- `/budget` shows spend and `/status` reports the session.
+- `/deliverables` lists the files each turn changed.
+- `/trajectory` shows the turns with their timing.
+- `/workspaces` and `/worktrees` manage workspaces and git worktrees.
+- `/fork`, `/organize` and `/open` work on sessions.
+- `/commands` lists every command and `/plan show` prints the latest plan.
+- Tab after `@` completes a file, directory or session name.
+- `/attach` adds files of any type.
+
+### Fixed
+
+- Plan mode in `dsh terminal` no longer waits until Ctrl+C. It shows the plan and waits for Approve or Keep planning.
+- `dsh terminal` prints what a slash command answers and says when a command does not exist.
+
+## [0.2.0-rc.2.20261009] - 2026-10-09
+
+### Added
+
+- `dsh terminal` runs sessions in your terminal. It streams replies, shows tool calls as short lines and asks for permission in plain words. Ctrl+C cancels the running turn. It sends no telemetry.
+- `dsh terminal` reopens earlier sessions with `--resume <id>` and `--continue`. `/sessions` switches between them, `/rename` names one and `/new [directory]` starts one elsewhere. `--cwd` sets the directory at launch.
+- `/attach <image>` adds an image to your next message. Kitty, Ghostty, iTerm2 and WezTerm draw images inline.
+- `dsh terminal` sets up a fresh install without the app. `/providers` adds a provider or a local server such as Ollama and checks its key. `/model`, `/web-search`, `/settings`, `/plugins`, `/agents` and `/permissions` cover the rest.
+- `dsh terminal` shows the session name and a spinner in the window title while a turn runs. In Orca it reports its status, and `dsh terminal .` starts in the current directory.
+- Manage dsh Command works on Linux AppImage installs. It adds `tbelt` and `dsh-tui` next to `dsh` on macOS, Windows and Linux. The npm package installs the same two names.
+- The built-in skill `tbelt-skill-authoring` teaches agents to write, install and fix skills. Run `/tbelt-skill-authoring` or ask the agent to add a skill. A skill with the same name in your skills folder replaces it.
+
+### Changed
+
+- The download site is now at code.tbelt.online.
+- The Web app no longer offers DeepSeek sign-in. Add every provider in Settings with its own key.
+- Quote opens a comment box next to the selected text. Enter adds the quote and your comment above the message box. Escape cancels.
+- Saved API keys show "API key configured" with a Replace API button, in Web search and on provider cards. The key field opens only when you press Replace.
+- Provider cards show the model list and Fetch available models. "Edit model list" folds the rows, and "Customized settings" keeps the base URL and other advanced settings.
+- A new API key is checked with the provider. A rejected key or an empty balance shows a warning, and you can still save.
+- The Add provider list gets a search box above eight providers.
+- The permission menu describes each mode under its name, in Settings and in the message box.
+- Permission prompts say in plain words what the agent wants to do and why. The tool name, command and file sit in a collapsed "Technical details" block.
+- "Allow for this session", in the arrow beside Allow once, allows the same request from the same tool until the session ends.
+- The sidebar's empty session list offers Add workspace.
+- The Artifacts tab lists only delivered files. Code changes show as line counts on the tool row.
+- `dsh --version` prints `tBelt Code` and the version.
+- The `dsh` command from the desktop app uses `~/.tbelt-code` unless `DSH_HOME` is set.
+
+### Fixed
+
+- `remember_fact` and `/remember` save memories again.
+
+## [0.2.0-rc.2.20261008.2] - 2026-10-08
+
+### Changed
+
+- Adding a provider in Settings now works like first-run setup: paste the API key, the models it can use appear right away, and you tick the ones to add. The "Customized settings" section and the Fetch models button are no longer needed for this. Providers that need no key have a "Set up without an API key" option.
+
+### Fixed
+
+- `/clear` no longer fails with `cannot get property "tokenMeter" without inject`.
+
+## [0.2.0-rc.2.20261008] - 2026-10-08
+
+### Added
+
+- Pasting more than 8000 characters into the message box attaches the text as a file instead. The card shows the first lines, and Insert as text puts it back in the message. `pasteToFileChars` in `cordis.yml` sets the limit; 0 turns it off.
+- An image larger than 30 MB is attached as a file instead of being refused: it uploads in the background and the agent receives its path. The limit is `maxImageBytes` in `cordis.yml`.
+- Uploading file cards show the upload percentage.
+
+## [0.2.0-rc.2.20261007] - 2026-10-07
+
+### Added
+
+- Define an agent in a Markdown file. Each `.md` file in `~/.dsh/presets` becomes an agent preset: the front matter sets its name, description, base preset and permissions, and the text becomes its instructions.
+- Model context windows, output limits and prices can be refreshed from a JSON directory you name in `cordis.yml` (`modelMetadata`). It is off by default, has no built-in source, and never overrides a price you set by hand.
+- Permission rules can be limited to one agent preset, so a reviewer can be kept from running `git push` while other agents run it freely.
+
+### Changed
+
+- A permission rule for a command such as `git push*` now also catches it inside a longer line like `git status && git push origin main`. An allow rule only applies when every command in the line matches.
+
+## [0.2.0-rc.2.20261006.5] - 2026-10-06
+
+### Changed
+
+- The update dialog lists what changed in the new version and links its release page.
+
+## [0.2.0-rc.2.20261006.4] - 2026-10-06
+
+### Added
+
+- Point at an element in the side panel browser: click the pick button, click the element, and your next message tells the agent exactly which one.
+
+## [0.2.0-rc.2.20261006.3] - 2026-10-06
+
+### Added
+
+- The spend reading under the composer turns amber at 80% of the session or monthly limit, before the limit stops the agent.
+
+## [0.2.0-rc.2.20261006.2] - 2026-10-06
+
+### Added
+
+- Select text in an assistant message and press Command+L (Control+L elsewhere) to quote it. Quotes wait above the composer and go with your next message.
+- An Artifacts page in the right sidebar lists the files each turn delivered or changed. A button in the session header opens it and shows the count.
+- Start a session in a new git worktree from the workspace menu. Removing a worktree lists its uncommitted changes first.
+- Line comments in the change review: click the + next to a line number to leave a note, and send the notes to the agent from the review header or with your next message.
+
+## [0.2.0-rc.2.20261006] - 2026-10-06
+
+### Added
+
+- Native notifications when an agent finishes a turn or waits for your approval. They are skipped while the window is focused, and Settings > General has switches for them.
+- The computer stays awake while agents run. A General setting turns it off.
+- The session list has an attention filter with a count of sessions that wait for you or finished while you were away.
+- A worktree plugin creates, lists and removes git worktrees for sessions, so several agents can edit one repository in parallel. Settings are per project in `cordis.yml`.
+- Plugins can add writable folders to `workspace-write`, so a confined `git commit` works inside a linked worktree.
+- Bug and feedback issue forms for beta testers.
+
+### Changed
+
+- The site explains how to open the unsigned builds on each system and how updates work.
+- The README accepts issues and pull requests.
+- The app no longer ships with usage analytics or feedback upload turned on, and no collector address is built in. Nothing but model requests, your configured web search and update checks leaves your computer.
+
+## [0.2.0-rc.2.20261004] - 2026-10-04
+
+### Added
+
+- Shell commands in the chat have a Run button. The command runs in a terminal in the side panel with your permissions, so you can type a password if it asks for one, and the agent reads the output when it finishes. The agent offers these when its sandbox blocks a command or the command needs sudo.
+- Skills in a project's `.claude/skills` folder load on their own. A skill whose header leaves out its name or description still loads, named after its folder and described by its first paragraph.
+
+### Changed
+
+- The agent checks your skills before it starts each task and follows the ones that apply. When it hands work to a subagent, it tells the subagent which skills to use.
+- Plans and plain-text files have their own icons in tabs and cards.
+- Every screen and message in the app says tBelt Code.
+- New installs keep their default workspace in `~/Documents/tbelt-code`. App data and logs from an earlier version move to tBelt Code folders on first launch.
+
+### Fixed
+
+- `/clear` no longer fails in every session with an error saying an operation is still active.
+- Automatic compaction no longer stops after its first warning on models with a small context window, such as many local models.
+
+## [0.2.0-rc.2.20261003] - 2026-10-03
+
+### Added
+
+- Web search through Exa, Perplexity, Brave or Tavily. Pick one in Settings > Plugins > Web search and paste its API key. The app checks the key with that provider before saving it and sends it to no other service.
+- Provider setup has a search field and lists every provider in one place.
+- Entering an API key checks it with the provider and lists that provider's models right away, with none selected.
+- The model picker has an "Add model…" entry that opens the model settings.
+- What the current chat has spent shows under the message box. Hover it for this month's total; click it to open the spending settings.
+- Settings has a Spending page with this month's spend and a monthly limit. There is no limit unless you set one.
+- Each model in the model settings can have its own price per million tokens, so spend also counts for models from any provider.
+- Fetching models from OpenRouter and compatible gateways keeps the price they publish.
+- A custom provider whose address uses plain `http:` on another machine shows a warning that the key would travel unencrypted.
+- The agent shows HTML pages, images, PDFs and local dev servers in the side panel instead of opening your browser. The page shows first, and the code is one click away.
+
+### Changed
+
+- When a search fails, the message says whether the provider rejected the key or the key ran out of quota.
+- tBelt Code is now free software under the GNU AGPL v3.0.
+- Settings has its own button in the sidebar instead of sitting inside the "More" menu.
+
+### Fixed
+
+- Long text in plan comments and in the plan review card no longer overflows its box.
+- Arrow keys keep moving through the model picker after the first step.
+
+## [0.2.0-rc.2.20261002] - 2026-10-02
+
+### Added
+
+- First public release of the source, for review and audit.
+- Setup on first launch: pick a provider, enter its API key, then pick a model.
+- Memory, `/undo` and the repository map are on by default.
+- The model picker shows each model's price per million tokens when the provider publishes one.
+- `/budget` sets a spending limit for the month or for one session. When a limit is reached, the model stops and the app says which limit and how much was spent.
+- You can select text in a plan and comment on it before you approve the plan.
+
+### Changed
+
+- The welcome screen no longer favors a provider.
+
+### Fixed
+
+- New sessions no longer fail on their first message.
+- Downloads no longer return an older installer.
+- A key that ran out of credit or hit its spending limit is reported as a quota problem instead of an invalid API key.
+
+[Unreleased]: https://github.com/tBeltty/tbelt-code-public/compare/v0.2.2-alpha.2.20261106...HEAD
+[0.2.2-alpha.2.20261106]: https://github.com/tBeltty/tbelt-code-public/releases/tag/v0.2.2-alpha.2.20261106
+[0.2.1-rc.3.20261030.2]: https://github.com/tBeltty/tbelt-code-public/releases/tag/v0.2.1-rc.3.20261030.2
+[0.2.1-rc.3.20261030]: https://github.com/tBeltty/tbelt-code-public/releases/tag/v0.2.1-rc.3.20261030
+[0.2.1-rc.3.20261026]: https://github.com/tBeltty/tbelt-code-public/releases/tag/v0.2.1-rc.3.20261026
+[0.2.1-rc.2.20261020.4]: https://github.com/tBeltty/tbelt-code-public/releases/tag/v0.2.1-rc.2.20261020.4
+[0.2.1-rc.2.20261020.3]: https://github.com/tBeltty/tbelt-code-public/releases/tag/v0.2.1-rc.2.20261020.3
+[0.2.1-rc.2.20261020.2]: https://github.com/tBeltty/tbelt-code-public/releases/tag/v0.2.1-rc.2.20261020.2
+[0.2.1-rc.2.20261020]: https://github.com/tBeltty/tbelt-code-public/releases/tag/v0.2.1-rc.2.20261020
+[0.2.1-alpha.2.20261015.2]: https://github.com/tBeltty/tbelt-code-public/releases/tag/v0.2.1-alpha.2.20261015.2
+[0.2.1-alpha.2.20261015]: https://github.com/tBeltty/tbelt-code-public/releases/tag/v0.2.1-alpha.2.20261015
+[0.2.1-alpha.2.20261014.4]: https://github.com/tBeltty/tbelt-code-public/releases/tag/v0.2.1-alpha.2.20261014.4
+[0.2.1-alpha.2.20261014.3]: https://github.com/tBeltty/tbelt-code-public/releases/tag/v0.2.1-alpha.2.20261014.3
+[0.2.1-alpha.2.20261014.2]: https://github.com/tBeltty/tbelt-code-public/releases/tag/v0.2.1-alpha.2.20261014.2
+[0.2.1-alpha.2.20261014]: https://github.com/tBeltty/tbelt-code-public/releases/tag/v0.2.1-alpha.2.20261014
+[0.2.1-alpha.2.20261013.2]: https://github.com/tBeltty/tbelt-code-public/releases/tag/v0.2.1-alpha.2.20261013.2
+[0.2.1-alpha.2.20261013]: https://github.com/tBeltty/tbelt-code-public/releases/tag/v0.2.1-alpha.2.20261013
+[0.2.1-alpha.2.20261012]: https://github.com/tBeltty/tbelt-code-public/releases/tag/v0.2.1-alpha.2.20261012
+[0.2.0-rc.2.20261012.4]: https://github.com/tBeltty/tbelt-code-public/releases/tag/v0.2.0-rc.2.20261012.4
+[0.2.0-rc.2.20261012.3]: https://github.com/tBeltty/tbelt-code-public/releases/tag/v0.2.0-rc.2.20261012.3
+[0.2.0-rc.2.20261012.2]: https://github.com/tBeltty/tbelt-code-public/releases/tag/v0.2.0-rc.2.20261012.2
+[0.2.0-rc.2.20261012]: https://github.com/tBeltty/tbelt-code-public/releases/tag/v0.2.0-rc.2.20261012
+[0.2.0-rc.2.20261011]: https://github.com/tBeltty/tbelt-code-public/releases/tag/v0.2.0-rc.2.20261011
+[0.2.0-rc.2.20261009.2]: https://github.com/tBeltty/tbelt-code-public/releases/tag/v0.2.0-rc.2.20261009.2
+[0.2.0-rc.2.20261009]: https://github.com/tBeltty/tbelt-code-public/releases/tag/v0.2.0-rc.2.20261009
+[0.2.0-rc.2.20261008.2]: https://github.com/tBeltty/tbelt-code-public/releases/tag/v0.2.0-rc.2.20261008.2
+[0.2.0-rc.2.20261008]: https://github.com/tBeltty/tbelt-code-public/releases/tag/v0.2.0-rc.2.20261008
+[0.2.0-rc.2.20261007]: https://github.com/tBeltty/tbelt-code-public/releases/tag/v0.2.0-rc.2.20261007
+[0.2.0-rc.2.20261006.5]: https://github.com/tBeltty/tbelt-code-public/releases/tag/v0.2.0-rc.2.20261006.5
+[0.2.0-rc.2.20261006.4]: https://github.com/tBeltty/tbelt-code-public/releases/tag/v0.2.0-rc.2.20261006.4
+[0.2.0-rc.2.20261006.3]: https://github.com/tBeltty/tbelt-code-public/releases/tag/v0.2.0-rc.2.20261006.3
+[0.2.0-rc.2.20261006.2]: https://github.com/tBeltty/tbelt-code-public/releases/tag/v0.2.0-rc.2.20261006.2
+[0.2.0-rc.2.20261006]: https://github.com/tBeltty/tbelt-code-public/releases/tag/v0.2.0-rc.2.20261006
+[0.2.0-rc.2.20261004]: https://github.com/tBeltty/tbelt-code-public/releases/tag/v0.2.0-rc.2.20261004
+[0.2.0-rc.2.20261003]: https://github.com/tBeltty/tbelt-code-public/releases/tag/v0.2.0-rc.2.20261003
+[0.2.0-rc.2.20261002]: https://github.com/tBeltty/tbelt-code-public/releases/tag/v0.2.0-rc.2.20261002

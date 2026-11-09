@@ -1,0 +1,1 @@
+- alert: "New session failed: agent-preset/invalid: ghost (@deepseek-ai/dsh-no-such-plugin): never started"

@@ -1,0 +1,6 @@
+- dialog "Set up computer use before use":
+  - heading "Set up computer use before use" [level=2]
+  - button "Close"
+  - paragraph: Computer use is enabled, but system permissions could not be checked. Open the plugin details to see the error and retry.
+  - button "Later"
+  - button "Open settings"

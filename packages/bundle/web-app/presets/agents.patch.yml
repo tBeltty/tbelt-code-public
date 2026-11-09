@@ -1,0 +1,9 @@
+# Agent definition files: every `*.md` in the user's presets directory becomes
+# one preset that extends `standard`. The row follows the shipped presets
+# because it reads their declarations when it loads.
+- insert:
+    - id: agent-presets-markdown
+      name: '@deepseek-ai/dsh-agent-preset/markdown'
+      config:
+        extends: standard
+        dirs: !!js '[`${process.env.HOME ?? process.env.USERPROFILE}/.dsh/presets`]'

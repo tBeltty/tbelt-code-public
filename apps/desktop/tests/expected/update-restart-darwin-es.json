@@ -1,0 +1,7 @@
+{
+  "message": "La versión 0.1.7-alpha.2 está lista para instalarse",
+  "detail": "La app se cerrará durante la actualización y se abrirá sola al terminar.",
+  "buttons": [
+    "Instalar y reiniciar"
+  ]
+}

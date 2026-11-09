@@ -1,0 +1,24 @@
+- tablist:
+  - tab "Files Close":
+    - text: Files
+    - button "Close"
+  - tab "bash Close" [selected]:
+    - text: bash
+    - button "Close"
+  - button "New tab"
+  - button "Split" [disabled]
+  - button "Fullscreen"
+  - button "Collapse right sidebar"
+- textbox "Terminal"
+- tablist:
+  - tab "Files Close" [selected]:
+    - text: Files
+    - button "Close"
+  - button "New tab"
+  - button "Split" [disabled]
+- text: {{cwd}}/workspace
+- button "Reload"
+- complementary "Workspace files":
+  - list:
+    - listitem:
+      - button "t6-refresh.txt"

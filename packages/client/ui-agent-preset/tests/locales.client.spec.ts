@@ -1,0 +1,36 @@
+/** Web-localized copy for the seven shipped presets and declared copy for every other row. */
+
+import { describe, expect, it } from 'vitest'
+import { en, presetDisplayText, es } from '../src/client/locales.ts'
+
+const translate = (bundle: typeof en) => (key: keyof typeof en): string => bundle[key]
+
+describe('preset display copy', () => {
+  it.each([
+    ['standard', 'presetStandardName', 'presetStandardDescription'],
+    ['ptc', 'presetPtcName', 'presetPtcDescription'],
+    ['minimal', 'presetMinimalName', 'presetMinimalDescription'],
+    ['fast', 'presetFastName', 'presetFastDescription'],
+    ['audit-manual', 'presetAuditManualName', 'presetAuditManualDescription'],
+    ['audit-autonomous', 'presetAuditAutoName', 'presetAuditAutoDescription'],
+    ['cordis', 'presetCordisName', 'presetCordisDescription'],
+  ] as const)('localizes the shipped %s preset in English and Spanish', (id, nameKey, descriptionKey) => {
+    const preset = { id }
+
+    expect(presetDisplayText(preset, translate(en)))
+      .toEqual({ name: en[nameKey], description: en[descriptionKey] })
+    expect(presetDisplayText(preset, translate(es)))
+      .toEqual({ name: es[nameKey], description: es[descriptionKey] })
+  })
+
+  it('keeps declared metadata untranslated for named and unknown presets', () => {
+    const fileCopy = { name: '我的标准', description: '团队自己的 preset。' }
+
+    expect(presetDisplayText({ id: 'standard', ...fileCopy }, translate(en)))
+      .toEqual(fileCopy)
+    expect(presetDisplayText({ id: 'deployment-extra', ...fileCopy }, translate(en)))
+      .toEqual(fileCopy)
+    expect(presetDisplayText({ id: 'bare' }, translate(en)))
+      .toEqual({ name: 'bare' })
+  })
+})

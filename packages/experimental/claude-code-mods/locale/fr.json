@@ -1,0 +1,6 @@
+{
+  "meta": {
+    "title": "Mods Claude Code",
+    "description": "Exécute les mods Claude Code et leurs hooks pendant les exécutions de l’agent."
+  }
+}

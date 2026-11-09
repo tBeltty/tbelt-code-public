@@ -1,0 +1,61 @@
+import { describe, expect, it } from 'vitest'
+import { deriveKeyRef, joinProviderDirectory, providerKeyRef } from '../src/index.ts'
+
+describe('joinProviderDirectory', () => {
+  const directory = [
+    { provider: 'anthropic', displayName: 'Anthropic', settingsNs: 'llm-pi-ai', settingsPath: ['providers', 'anthropic'] },
+    { provider: 'deepseek-official', displayName: 'DeepSeek', settingsNs: 'llm-deepseek', settingsPath: [], declared: false },
+    { provider: 'broken', displayName: 'Broken', settingsNs: 'llm-pi-ai', settingsPath: ['providers', 'broken'], error: 'bad base URL' },
+  ]
+
+  it('marks configurable providers active when their route is live and keeps the Host diagnostics', () => {
+    const rows = joinProviderDirectory([{ id: 'anthropic', name: 'Anthropic' }], directory)
+    expect(rows.map(row => [row.provider, row.active])).toEqual([
+      ['anthropic', true], ['deepseek-official', false], ['broken', false],
+    ])
+    expect(rows.find(row => row.provider === 'deepseek-official')).toMatchObject({ declared: false })
+    expect(rows.find(row => row.provider === 'broken')).toMatchObject({ error: 'bad base URL' })
+    expect(rows.find(row => row.provider === 'anthropic')).not.toHaveProperty('error')
+  })
+
+  it('carries the default endpoint and native authentication without sharing the env list', () => {
+    const env = ['OPENAI_API_KEY']
+    const [row] = joinProviderDirectory([], [{
+      provider: 'openai', displayName: 'OpenAI', settingsNs: 'llm-pi-ai', settingsPath: ['providers', 'openai'],
+      defaultBaseURL: 'https://api.openai.com/v1', nativeAuth: { env, oauth: false },
+    }])
+    env.push('mutated')
+    expect(row).toMatchObject({ defaultBaseURL: 'https://api.openai.com/v1', nativeAuth: { env: ['OPENAI_API_KEY'], oauth: false } })
+    expect(joinProviderDirectory([], directory)[0]).not.toHaveProperty('nativeAuth')
+  })
+
+  it('adds a live route that no adapter declares as configurable, without a settings address', () => {
+    const rows = joinProviderDirectory([{ id: 'custom', name: 'Custom' }], [])
+    expect(rows).toEqual([{ provider: 'custom', displayName: 'Custom', settingsNs: '', settingsPath: [], active: true }])
+  })
+
+  it('keeps declaration order without placing any route first', () => {
+    const rows = joinProviderDirectory([], [
+      { provider: 'zed', displayName: 'Zed', settingsNs: 'n', settingsPath: [] },
+      { provider: 'deepseek-official', displayName: 'Official', settingsNs: 'n', settingsPath: [] },
+      { provider: 'deepseek-account', displayName: 'Account', settingsNs: 'n', settingsPath: [] },
+    ])
+    expect(rows.map(row => row.provider)).toEqual(['zed', 'deepseek-official', 'deepseek-account'])
+  })
+})
+
+describe('credential references', () => {
+  it('derives an upper-case reference from a route id', () => {
+    expect(deriveKeyRef('anthropic')).toBe('ANTHROPIC_API_KEY')
+    expect(deriveKeyRef('minimax-cn')).toBe('MINIMAX_CN_API_KEY')
+  })
+
+  it('uses the reference a profile names and derives one otherwise', () => {
+    expect(providerKeyRef({ apiKeyEnv: 'MY_KEY' }, 'acme')).toBe('MY_KEY')
+    expect(providerKeyRef({ apiKeyEnv: '' }, 'acme')).toBe('ACME_API_KEY')
+    expect(providerKeyRef({ apiKeyEnv: 3 }, 'acme')).toBe('ACME_API_KEY')
+    expect(providerKeyRef({}, 'acme')).toBe('ACME_API_KEY')
+    expect(providerKeyRef(undefined, 'acme')).toBe('ACME_API_KEY')
+    expect(providerKeyRef(null, 'acme')).toBe('ACME_API_KEY')
+  })
+})

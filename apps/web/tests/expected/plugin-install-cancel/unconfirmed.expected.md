@@ -1,0 +1,9 @@
+- dialog "Installation status unconfirmed":
+  - button "Cancel installation and return to editing"
+  - button "Cancel install and close"
+  - status: Installation status unconfirmed
+  - alert: Waiting for the Host to accept installation. Cancellation will retry automatically after confirmation.
+  - paragraph: slow-package
+  - paragraph: Version 1.0.0
+  - button "Show install details"
+  - button "Cancel install"

@@ -1,0 +1,41 @@
+# Git hooks (lefthook). Keep these local checkpoints fast; CI owns the full
+# repository-wide gate matrix.
+# Install: `node scripts/install-lefthook.mjs` (runs automatically via postinstall).
+
+pre-commit:
+  jobs:
+    - name: lint (staged)
+      glob: '*.{ts,tsx,mts,cts,mjs}'
+      exclude:
+        - 'vendor/*/src/**'
+      run: node_modules/.bin/tsx scripts/run-oxlint.ts --config .oxlintrc.staged.json --fix --no-error-on-unmatched-pattern {staged_files}
+      stage_fixed: true
+
+    - name: whitespace (staged)
+      run: git diff --cached --check
+
+    - name: pi-ai provider metadata
+      glob: '{pnpm-lock.yaml,packages/llm/llm-pi-ai/package.json,packages/llm/llm-pi-ai/scripts/gen-provider-data.ts,packages/llm/llm-pi-ai/src/provider-data.generated.ts}'
+      run: node_modules/.bin/tsx packages/llm/llm-pi-ai/scripts/gen-provider-data.ts --check --cached
+
+    - name: vendor manifest guard
+      run: scripts/check-vendor-manifest.sh
+
+pre-push:
+  jobs:
+    # A new "Added" changelog entry needs a README Features change in the same
+    # branch, or the release script refuses to publish. Cheap git-only check.
+    - name: changelog needs README
+      run: scripts/release-notes.sh features-pr origin/main
+
+    # Style rules for [Unreleased] lines, see docs/changelog-standard.md.
+    - name: changelog style
+      run: scripts/release-notes.sh lint
+
+    # Reads one YAML file and a directory listing; no build needed.
+    - name: surface parity
+      glob: '{docs/product/surface-parity-manifest.yml,packages/client/ui-*/**,packages/terminal-client/views/src/**,scripts/verify-surface-parity.ts}'
+      run: node_modules/.bin/tsx scripts/verify-surface-parity.ts
+
+    - name: typecheck
+      run: pnpm run typecheck

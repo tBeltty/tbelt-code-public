@@ -1,0 +1,37 @@
+- dialog "Settings":
+  - text: Settings
+  - navigation:
+    - button "General"
+    - button "Models"
+    - button "Spending"
+    - button "System inspector"
+    - button "Agent presets"
+  - button "Open configuration file"
+  - button "Close"
+  - text: Permission Choose the default permission mode for new sessions
+  - button "Workspace Write"
+  - text: Language
+  - button "English"
+  - text: Font size Only affects conversation content 14
+  - button "Increase font size"
+  - button "Decrease font size"
+  - text: px
+  - button "More font settings"
+  - text: Work details Choose how much detail to show for tool calls
+  - button "Detailed"
+  - text: When to Collapse Work Details Choose when to automatically collapse work details
+  - button "On completion"
+  - text: Replies After Collapse Choose which assistant replies stay visible when work details collapse
+  - button "All replies"
+  - text: Show coding view Shows trajectory, code diffs, and all Agent presets
+  - switch "Show coding view"
+  - text: Keyboard shortcuts
+  - paragraph: View and edit available shortcuts and input actions
+  - button "Edit shortcuts"
+  - text: Sending while the agent works Queue holds your message until the agent finishes. Steer sends it into the current turn. Cmd/Ctrl+Enter does the other one.
+  - button "Queue"
+  - text: Timing and token usage Choose how much timing and token usage to show under replies
+  - button "Detailed"
+  - text: Upload Session Log when using the official model API Help improve DeepSeek models and products.
+  - switch "Upload Session Log when using the official model API"
+  - text: "Current version: {{version}}"

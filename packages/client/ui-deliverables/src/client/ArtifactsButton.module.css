@@ -1,0 +1,4 @@
+/* Matches the compact header Buttons beside it; the count widens it only while delivered files exist. */
+.button { flex: none; gap: 4px; min-width: 28px; padding: 0 6px; color: var(--dsw-alias-label-secondary); }
+.icon { flex: none; width: 15px; height: 15px; }
+.count { font-size: 12px; font-variant-numeric: tabular-nums; line-height: 18px; }

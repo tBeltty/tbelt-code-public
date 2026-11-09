@@ -1,0 +1,67 @@
+{
+  "dialogs": [
+    {
+      "type": "info",
+      "title": "Administrar el comando dsh",
+      "message": "Añade el comando de escritorio a tu terminal.",
+      "detail": "Comando de escritorio: C:\\Users\\user\\AppData\\Local\\Programs\\tBelt Code\\resources\\runtime\\cli\\bin\\dsh.cmd",
+      "buttons": [
+        "Instalar",
+        "Cancelar"
+      ],
+      "defaultId": 0,
+      "cancelId": 1
+    },
+    {
+      "type": "info",
+      "title": "Administrar el comando dsh",
+      "message": "El comando de escritorio está instalado.",
+      "detail": "Comando de escritorio: C:\\Users\\user\\AppData\\Local\\Programs\\tBelt Code\\resources\\runtime\\cli\\bin\\dsh.cmd\n\nComando dsh actual: C:\\Users\\user\\AppData\\Local\\Programs\\tBelt Code\\resources\\runtime\\cli\\bin\\dsh.cmd",
+      "buttons": [
+        "Cerrar",
+        "Reparar",
+        "Quitar"
+      ],
+      "defaultId": 0,
+      "cancelId": 0
+    },
+    {
+      "type": "info",
+      "title": "Administrar el comando dsh",
+      "message": "El comando de escritorio necesita reparación.",
+      "detail": "Comando de escritorio: C:\\Users\\user\\AppData\\Local\\Programs\\tBelt Code\\resources\\runtime\\cli\\bin\\dsh.cmd",
+      "buttons": [
+        "Cerrar",
+        "Reparar",
+        "Quitar"
+      ],
+      "defaultId": 0,
+      "cancelId": 0
+    },
+    {
+      "type": "warning",
+      "title": "Administrar el comando dsh",
+      "message": "El comando de escritorio está instalado.",
+      "detail": "Comando de escritorio: C:\\Users\\user\\AppData\\Local\\Programs\\tBelt Code\\resources\\runtime\\cli\\bin\\dsh.cmd\n\nComando dsh actual: C:\\Program Files\\nodejs\\dsh.cmd\n\nOtro dsh tiene prioridad. Quita o reordena esa instalación para usar el comando de escritorio por defecto. También puedes ejecutar el comando de escritorio con su ruta completa.",
+      "buttons": [
+        "Cerrar",
+        "Reparar",
+        "Quitar"
+      ],
+      "defaultId": 0,
+      "cancelId": 0
+    },
+    {
+      "type": "info",
+      "title": "Administrar el comando dsh",
+      "message": "Añade el comando de escritorio a tu terminal.",
+      "detail": "Comando de escritorio: C:\\Users\\user\\AppData\\Local\\Programs\\tBelt Code\\resources\\runtime\\cli\\bin\\dsh.cmd\n\nNo se pudo verificar el comando de tu shell. Un alias u otra instalación de dsh puede tener prioridad.",
+      "buttons": [
+        "Instalar",
+        "Cancelar"
+      ],
+      "defaultId": 0,
+      "cancelId": 1
+    }
+  ]
+}

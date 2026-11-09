@@ -1,0 +1,30 @@
+- banner:
+  - navigation "Session hierarchy": 只回复 MESSAGES_WEB_READY，不调用
+  - text: Standard mode
+  - button "Show this session’s artifacts"
+  - button "More actions"
+  - button "Open right sidebar"
+  - tablist:
+    - tab "Chat" [selected]
+    - tab "Trajectory"
+  - button "More session views"
+- text: 只回复 MESSAGES_WEB_READY，不调用工具。 {{clock}}
+- button "Copy"
+- status: Completed
+- button "Completed in {{duration}}" [disabled]
+- paragraph: MESSAGES_WEB_READY
+- button "Copy"
+- button "Good response"
+- button "Bad response"
+- button "Branch into a new conversation"
+- button "Usage 8.2K tok"
+- text: {{clock}}
+- textbox "Message or run a task, / commands, @ files or sessions"
+- button "Add files or run commands"
+- 'button "Access mode, current: Workspace Write"': Workspace Write
+- button "Select model, current DeepSeek-V4-Flash, reasoning effort high": DeepSeek-V4-Flash high
+- button "Send message" [disabled]
+- button "1 turns 1 steps · {{throughput}} tok/s": 1 turns 1 steps{{throughput}} tok/s
+- button "8.2K tok · Cache hit 16%": 8.2K tokCache hit 16%
+- button "This session $0.00 · This month $0.00 · 1 calls used a model with no price and are not counted": $0.00
+- button "1% of context used": 1%

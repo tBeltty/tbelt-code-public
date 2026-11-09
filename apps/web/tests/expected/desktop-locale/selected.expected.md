@@ -1,0 +1,39 @@
+- dialog "Settings":
+  - text: Settings
+  - navigation:
+    - button "General"
+    - button "Models"
+    - button "Spending"
+    - button "System inspector"
+    - button "Agent presets"
+  - button "Open configuration file"
+  - button "Close"
+  - text: Permission Edits files inside the workspace and asks before going outside it.
+  - button "Workspace Write"
+  - text: Language
+  - button "English"
+  - text: Appearance
+  - button "Light"
+  - button "Dark" [pressed]
+  - button "System"
+  - text: Font size Only affects conversation content 14
+  - button "Increase font size"
+  - button "Decrease font size"
+  - text: px
+  - button "More font settings"
+  - text: Tool call details Choose how much detail to show for tool calls
+  - button "Standard"
+  - text: When to Collapse Work Details Choose when to automatically collapse work details
+  - button "On completion"
+  - text: Replies After Collapse Choose which assistant replies stay visible when work details collapse
+  - button "All replies"
+  - text: Show coding view Shows trajectory, code diffs, and all Agent presets
+  - switch "Show coding view" [checked]
+  - text: Keyboard shortcuts
+  - paragraph: View and edit available shortcuts and input actions
+  - button "Edit shortcuts"
+  - text: Sending while the agent works Queue holds your message until the agent finishes. Steer sends it into the current turn. Cmd/Ctrl+Enter does the other one.
+  - button "Queue"
+  - text: Timing and token usage Choose how much timing and token usage to show under replies
+  - button "Detailed"
+  - text: "Current version: {{version}}"

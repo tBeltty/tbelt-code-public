@@ -1,0 +1,51 @@
+import { zoomEn, zoomEs, zoomEl, zoomFr } from '../zoom/locales.ts'
+
+/** Image renderer dictionary keys. */
+export type ImagePreviewKey = keyof typeof en
+
+/** English dictionary and key-set source of truth. */
+export const en = {
+  ...zoomEn,
+  title: 'Image',
+  preview: 'Image preview: {name}',
+  loading: 'Rendering document...',
+  failed: 'This image could not be displayed.',
+  unsupported: 'Image preview requires the complete file contents.',
+} satisfies Record<string, string>
+
+declare module '@deepseek-ai/dsh-client-ui-slots' {
+  interface LocaleNamespaceMap {
+    /** Image preview selection, accessible name, and status text. */
+    sidebarImage: ImagePreviewKey
+  }
+}
+
+/** Spanish dictionary, checked against the English keys. */
+export const es = {
+  ...zoomEs,
+  title: 'Imagen',
+  preview: 'Vista previa de imagen: {name}',
+  loading: 'Renderizando documento...',
+  failed: 'No se pudo mostrar esta imagen.',
+  unsupported: 'La vista previa de imágenes necesita el contenido completo del archivo.',
+} satisfies Record<keyof typeof en, string>
+
+/** Greek dictionary, checked complete against the English key set. */
+export const el = {
+  ...zoomEl,
+  title: 'Εικόνα',
+  preview: 'Προεπισκόπηση εικόνας: {name}',
+  loading: 'Απόδοση εγγράφου...',
+  failed: 'Δεν ήταν δυνατή η εμφάνιση αυτής της εικόνας.',
+  unsupported: 'Η προεπισκόπηση εικόνας απαιτεί το πλήρες περιεχόμενο του αρχείου.',
+} satisfies Record<keyof typeof en, string>
+
+/** French dictionary, checked against the English keys. */
+export const fr = {
+  ...zoomFr,
+  title: 'Image',
+  preview: 'Aperçu de l’image\u00a0: {name}',
+  loading: 'Rendu du document...',
+  failed: 'Impossible d’afficher cette image.',
+  unsupported: 'L’aperçu de l’image nécessite le contenu complet du fichier.',
+} satisfies Record<keyof typeof en, string>

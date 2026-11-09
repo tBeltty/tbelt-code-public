@@ -1,0 +1,89 @@
+name: CI
+
+# The full quality gate needs more than a standard GitHub-hosted runner, so it
+# only runs when started by hand (Actions > CI > Run workflow). Pushes and pull
+# requests run the light checks, which install nothing beyond the TypeScript
+# compiler for the locale check. Every job is skipped in private repositories.
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  light:
+    name: Light checks
+    if: ${{ !github.event.repository.private }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+
+      # On a pull request HEAD is the merge commit, so HEAD~1 is the base branch.
+      # A root commit is checked against the empty tree.
+      - name: Whitespace in the change
+        run: |
+          base=$(git rev-parse -q --verify HEAD~1 || git hash-object -t tree /dev/null)
+          git diff --check "$base" HEAD
+
+      - name: Shell script syntax
+        run: for f in scripts/*.sh; do bash -n "$f"; done
+
+      - name: Filenames
+        run: scripts/check-expected-filenames.sh
+
+      - name: No telemetry by default
+        run: scripts/check-no-default-telemetry.sh
+
+      - name: Exact workspace ranges
+        run: scripts/check-workspace-ranges.sh
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      # Every locale dictionary must declare the keys English declares. Only
+      # the compiler is installed; the check reads dictionaries from the AST.
+      - name: Locale dictionaries match English
+        run: |
+          ts=$(sed -nE 's#.*"typescript": "\^?([0-9.]+)".*#\1#p' package.json)
+          npm install --no-save --no-package-lock --ignore-scripts --prefix "$RUNNER_TEMP/ts" "typescript@$ts"
+          ln -s "$RUNNER_TEMP/ts/node_modules" node_modules
+          node scripts/verify-locale-parity.ts
+
+  primary:
+    name: Quality gate (Linux)
+    if: ${{ github.event_name == 'workflow_dispatch' && !github.event.repository.private }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install bubblewrap
+        run: sudo apt-get update && sudo apt-get install -y bubblewrap
+
+      - name: Allow unprivileged user namespaces (bubblewrap sandboxing)
+        run: sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Dependency security audit
+        run: pnpm run security:audit
+
+      - name: Quality gate
+        run: pnpm run check:ci:linux-primary

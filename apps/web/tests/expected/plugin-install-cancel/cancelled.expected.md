@@ -1,0 +1,11 @@
+- dialog "Add plugin":
+  - heading "Add plugin" [level=2]
+  - button "Close"
+  - paragraph: Enter the plugin's package name, GitHub repository address, or local directory path.
+  - textbox "Package name or address":
+    - /placeholder: for example dsh-plugin-whale-pet
+    - text: slow-package
+  - button "Install guide and examples"
+  - button "Registry Default registry"
+  - note: "Install only plugins you trust: they run with your permissions and can damage tBelt Code or leak your data. On-demand Official plugins offer Update when their version differs from tBelt Code. To update other plugins, uninstall and reinstall them."
+  - button "Install"

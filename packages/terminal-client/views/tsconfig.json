@@ -1,0 +1,21 @@
+{
+  "extends": "../../../tsconfig.base.json",
+  "compilerOptions": {
+    "rootDir": "src",
+    "outDir": "lib/types"
+  },
+  "include": [
+    "src"
+  ],
+  "references": [
+    { "path": "../../context/file-reference" },
+    { "path": "../../presentation/approval" },
+    { "path": "../../presentation/plan" },
+    { "path": "../../presentation/tool-call" },
+    { "path": "../../presentation/tool-card" },
+    { "path": "../../util/values" },
+    { "path": "../../util/workspace-path" },
+    { "path": "../../llm/llm" },
+    { "path": "../../core/session" }
+  ]
+}

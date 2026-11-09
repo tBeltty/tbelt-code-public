@@ -1,0 +1,10 @@
+- group "The npm registry the plugin is downloaded from":
+  - radio "Official npm registry registry.npmjs.org"
+  - text: Official npm registry registry.npmjs.org
+  - radio "Mainland China mirror registry.npmmirror.com" [checked]
+  - text: Mainland China mirror registry.npmmirror.com
+  - radio "Custom address"
+  - text: Custom address
+  - textbox "Custom address":
+    - /placeholder: https://npm.example.com/
+  - text: Enter an internal or private npm registry address starting with http:// or https://. If it requires a login, store the credentials in ~/.npmrc on this machine.

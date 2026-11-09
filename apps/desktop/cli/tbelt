@@ -1,0 +1,17 @@
+#!/bin/sh
+# `tbelt [args]` runs `dsh terminal [args]`; `tbelt --version` prints the launcher version.
+set -e
+launcher=$0
+while [ -L "$launcher" ]; do
+  directory=$(CDPATH= cd -- "$(dirname -- "$launcher")" && pwd -P)
+  target=$(readlink "$launcher")
+  case "$target" in
+    /*) launcher=$target ;;
+    *) launcher=$directory/$target ;;
+  esac
+done
+directory=$(CDPATH= cd -- "$(dirname -- "$launcher")" && pwd -P)
+case ${1:-} in
+  -V|--version) exec "$directory/dsh" --version ;;
+esac
+exec "$directory/dsh" terminal "$@"

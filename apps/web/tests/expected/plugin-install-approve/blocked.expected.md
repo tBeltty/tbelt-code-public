@@ -1,0 +1,17 @@
+- dialog "The plugin could not be installed":
+  - button "Back to editing": Edit
+  - button "Close"
+  - alert: The plugin could not be installed
+  - paragraph: A dependency's install scripts need your permission before the install can continue
+  - paragraph: native-package
+  - paragraph: Version 1.0.0
+  - group "Install scripts need permission":
+    - heading "Install scripts need permission" [level=3]
+    - paragraph: These packages have install scripts that pnpm did not run.
+    - list:
+      - listitem:
+        - code: native-package
+    - paragraph: Once allowed, the scripts run here with your permissions, and the permission is saved in this profile.
+    - paragraph: Allow only packages you trust.
+    - button "Allow these scripts and retry"
+  - button "Show install details"

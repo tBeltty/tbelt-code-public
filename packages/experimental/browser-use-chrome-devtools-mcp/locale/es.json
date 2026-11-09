@@ -1,0 +1,6 @@
+{
+  "meta": {
+    "title": "Uso del navegador (Chrome DevTools)",
+    "description": "Permite al modelo inspeccionar y manejar páginas web mediante Chrome DevTools MCP en un Chrome lanzado."
+  }
+}

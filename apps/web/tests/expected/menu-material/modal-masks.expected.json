@@ -1,0 +1,10 @@
+{
+  "web": {
+    "fill": "rgba(0, 0, 0, 0.6)",
+    "blur": "none"
+  },
+  "darwin": {
+    "fill": "rgba(0, 0, 0, 0.6)",
+    "blur": "none"
+  }
+}

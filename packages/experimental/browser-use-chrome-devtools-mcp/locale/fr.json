@@ -1,0 +1,6 @@
+{
+  "meta": {
+    "title": "Utilisation du navigateur (Chrome DevTools)",
+    "description": "Permet au modèle d’inspecter et de manipuler des pages web via Chrome DevTools MCP dans un Chrome lancé."
+  }
+}

@@ -1,0 +1,6 @@
+{
+  "meta": {
+    "title": "Planification des tâches",
+    "description": "Enregistre les tâches d’automatisation, exécute chacune dans sa session d’origine à l’échéance et donne à l’agent des outils pour les gérer."
+  }
+}

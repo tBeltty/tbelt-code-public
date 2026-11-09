@@ -1,0 +1,10 @@
+- region "Account":
+  - text: Radius example
+  - status: r***@example.com
+  - link "More account information":
+    - /url: https://platform.deepseek.com/
+  - text: Topped-up balance ¥128.50 Granted balance ¥12.00 More
+  - link "View usage":
+    - /url: https://platform.deepseek.com/usage
+  - link "Top up":
+    - /url: https://platform.deepseek.com/top_up

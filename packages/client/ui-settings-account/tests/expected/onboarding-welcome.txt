@@ -1,0 +1,1 @@
+Te damos la bienvenida a tBelt CodetBelt Code trabaja en una carpeta local y usa herramientas para leer y escribir archivos en tu equipo. Puede ayudarte a investigar y organizar información, crear documentos y hojas de cálculo, escribir código, diagnosticar problemas y más.Empezar

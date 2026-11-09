@@ -1,0 +1,20 @@
+#!/bin/sh
+# Run the installed CLI without changing the invoking shell or working directory.
+set -e
+# The installed application keeps its data in ~/.tbelt-code (see `INSTALLED_APP_HOME_DIR_NAME` in src/main.ts);
+# the command must read the same home so it sees the Desktop profile, sessions and credentials.
+case ${DSH_HOME:-} in
+  *[![:space:]]*) ;;
+  *) DSH_HOME=$HOME/.tbelt-code; export DSH_HOME ;;
+esac
+launcher=$0
+while [ -L "$launcher" ]; do
+  directory=$(CDPATH= cd -- "$(dirname -- "$launcher")" && pwd -P)
+  target=$(readlink "$launcher")
+  case "$target" in
+    /*) launcher=$target ;;
+    *) launcher=$directory/$target ;;
+  esac
+done
+resources=$(CDPATH= cd -- "$(dirname -- "$launcher")/../../.." && pwd -P)
+ELECTRON_RUN_AS_NODE=1 exec "$resources/../tbelt-code" --expose-internals "$resources/app.asar/dsh/node_modules/@deepseek-ai/dsh-desktop-host/lib/cli.js" "$@"

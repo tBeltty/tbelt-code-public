@@ -24,52 +24,29 @@ afterEach(async () => { for (const dispose of cleanup.splice(0).reverse()) await
 async function setup(enabled: boolean) {
   const ctx = new Context()
   cleanup.push(() => ctx.fiber.dispose())
-  const getDeviceIdentity = vi.fn().mockResolvedValue({ deviceId: 'login-device', userId: 'user-1', osVersion: 'fixture-os', ignored: 'private-field' })
   const emit = vi.fn<(record: ProductTelemetryRecord) => void>()
-  ctx.provide('deepseekAccount', { getDeviceIdentity } as never)
   ctx.provide('webServer', {} as never)
   ctx.provide('productTelemetry', { emit } as never)
   const fiber = await ctx.plugin(Analytics, { enabled, appVersion: 'test-version' })
-  return { ctx, fiber, getDeviceIdentity, emit }
+  return { ctx, fiber, emit }
 }
 
-it('disabled collection does not read identity or submit an event', async () => {
+it('disabled collection does not submit an event', async () => {
   const b = await setup(false)
   expect(b.ctx.productAnalytics.enabled()).toBe(false)
   await b.ctx.productAnalytics.report({ eventName: 'desktop_app_launch', timestamp: 100, attributes: {} })
   expect(collectEnvironment).not.toHaveBeenCalled()
-  expect(b.getDeviceIdentity).not.toHaveBeenCalled()
   expect(b.emit).not.toHaveBeenCalled()
 })
 
-it('reuses login identity and copies only approved common fields', async () => {
+it('copies only approved common fields', async () => {
   const b = await setup(true)
   await b.ctx.productAnalytics.report({ eventName: 'auth_page_click', timestamp: 100, attributes: { button_name: 'sign_in' } })
-  expect(b.getDeviceIdentity).toHaveBeenCalledWith()
   expect(b.emit).toHaveBeenCalledExactlyOnceWith({
     eventName: 'auth_page_click', body: 'auth_page_click', timestamp: 100,
-    attributes: { ...commonEnvironment, button_name: 'sign_in', device_id: 'login-device', user_id: 'user-1', app_version: 'test-version' },
+    attributes: { ...commonEnvironment, button_name: 'sign_in', app_version: 'test-version' },
   })
-  expect(JSON.stringify(b.emit.mock.calls)).not.toContain('private-')
   expect(b.emit.mock.calls[0]![0].attributes).not.toHaveProperty('missing_fields')
-})
-
-it('missing identity does not discard an otherwise valid event', async () => {
-  const b = await setup(true)
-  b.getDeviceIdentity.mockRejectedValueOnce(new Error('credential store unavailable'))
-  await b.ctx.productAnalytics.report({ eventName: 'plugin_add_button_click', timestamp: 100, attributes: {} })
-  expect(b.emit.mock.calls[0]?.[0].attributes).toEqual({ ...commonEnvironment, app_version: 'test-version' })
-})
-
-it('unload suppresses an identity lookup that settles after disposal', async () => {
-  const b = await setup(true)
-  const pending = Promise.withResolvers<undefined>()
-  b.getDeviceIdentity.mockReturnValueOnce(pending.promise)
-  const reporting = b.ctx.productAnalytics.report({ eventName: 'desktop_app_launch', timestamp: 100, attributes: {} })
-  await b.fiber.dispose()
-  pending.resolve(undefined)
-  await reporting
-  expect(b.emit).not.toHaveBeenCalled()
 })
 
 it('writes the selected event through the real exporter to an isolated collector', async () => {
@@ -87,7 +64,6 @@ it('writes the selected event through the real exporter to an isolated collector
   const ctx = new Context()
   cleanup.push(() => ctx.fiber.dispose())
   ctx.provide('credentials', { readRecord: async () => undefined } as never)
-  ctx.provide('deepseekAccount', { getDeviceIdentity: async () => undefined } as never)
   ctx.provide('webServer', {} as never)
   await ctx.plugin(OTel)
   const exporter = await ctx.plugin(ProductTelemetry, TelemetryConfig({ endpoint: `http://127.0.0.1:${address.port}/v1/logs`, serviceName: 'test', serviceVersion: '1', compression: 'none' }))
@@ -125,14 +101,10 @@ it.each([true, false])('collects live manual and automatic compaction only when 
   }
   if (enabled) await vi.waitFor(() => { expect(b.emit).toHaveBeenCalledTimes(2) })
   expect(b.emit.mock.calls.map(([event]) => event.attributes?.trigger_type)).toEqual(enabled ? ['manual', 'auto'] : [])
-  expect(b.getDeviceIdentity).toHaveBeenCalledTimes(enabled ? 2 : 0)
 })
 
-it('omits an unavailable account and isolates exporter submission failure', async () => {
+it('isolates exporter submission failure', async () => {
   const b = await setup(true)
-  b.getDeviceIdentity.mockRejectedValueOnce(new Error('account unavailable'))
-  await b.ctx.productAnalytics.report({ eventName: 'desktop_app_launch', timestamp: 1, attributes: {} })
-  expect(b.emit.mock.calls[0]![0].attributes).not.toHaveProperty('user_id')
   b.emit.mockImplementationOnce(() => { throw new Error('exporter unavailable') })
   await expect(b.ctx.productAnalytics.report({ eventName: 'desktop_app_launch', timestamp: 2, attributes: {} })).resolves.toBeUndefined()
 })
@@ -141,7 +113,6 @@ it('omits an unavailable account and isolates exporter submission failure', asyn
 it('requires the exporter even when collection is disabled', async () => {
   const ctx = new Context()
   cleanup.push(() => ctx.fiber.dispose())
-  ctx.provide('deepseekAccount', { getDeviceIdentity: async () => undefined } as never)
   const fiber = ctx.plugin(Analytics, { enabled: false })
   await Promise.resolve()
   expect(ctx.get('productAnalytics')).toBeUndefined()
@@ -150,13 +121,13 @@ it('requires the exporter even when collection is disabled', async () => {
   expect(ctx.productAnalytics.enabled()).toBe(false)
 })
 
-it('streams live policy changes and rejects intake disabled during identity lookup', async () => {
+it('streams live policy changes and rejects intake disabled during the environment query', async () => {
   const b = await setup(true)
   const lifetime = new AbortController()
   const iterator = b.ctx.productAnalytics.watchPolicy(lifetime.signal)[Symbol.asyncIterator]()
   expect(await iterator.next()).toEqual({ value: true, done: false })
-  const identity = Promise.withResolvers<undefined>()
-  b.getDeviceIdentity.mockReturnValueOnce(identity.promise)
+  const query = Promise.withResolvers<EnvironmentAttributes>()
+  vi.mocked(collectEnvironment).mockReturnValueOnce(query.promise)
   const report = b.ctx.productAnalytics.report({ eventName: 'auth_page_view', timestamp: 1, attributes: {} })
   const next = iterator.next()
   // Loader commits the stable Config reference before publishing this notification.
@@ -165,7 +136,7 @@ it('streams live policy changes and rejects intake disabled during identity look
   updateVolatile(config.enabled, createVolatile(false))
   b.fiber.ctx.emit('loader/volatile-update', [['enabled']])
   expect(await next).toEqual({ value: false, done: false })
-  identity.resolve(undefined)
+  query.resolve(environment)
   await report
   expect(b.emit).not.toHaveBeenCalled()
   const closed = iterator.next()
@@ -187,23 +158,20 @@ it('wakes pending policy readers on disposal and registers hidden settings prese
   expect(dispose).toHaveBeenCalledOnce()
 })
 
-it('shares one environment query across concurrent events and keeps identity fresh', async () => {
+it('shares one environment query across concurrent events', async () => {
   const b = await setup(true)
   const pending = Promise.withResolvers<EnvironmentAttributes>()
   vi.mocked(collectEnvironment).mockReturnValueOnce(pending.promise)
   const first = b.ctx.productAnalytics.report({ eventName: 'auth_page_view', timestamp: 1, attributes: {} })
-  b.getDeviceIdentity.mockResolvedValueOnce({ userId: 'user-2', osVersion: 'untrusted-os' })
   const second = b.ctx.productAnalytics.report({ eventName: 'desktop_app_launch', timestamp: 2, attributes: {} })
   expect(collectEnvironment).toHaveBeenCalledTimes(1)
   expect(b.emit).not.toHaveBeenCalled()
   pending.resolve(environment)
   await Promise.all([first, second])
-  expect(b.emit.mock.calls.map(([record]) => record.attributes?.user_id)).toEqual(['user-1', 'user-2'])
   expect(b.emit.mock.calls.map(([record]) => record.attributes?.os_version_full)).toEqual(['10.0.26300.9457', '10.0.26300.9457'])
   expect(b.emit.mock.calls).toHaveLength(2)
   await b.ctx.productAnalytics.report({ eventName: 'auth_page_view', timestamp: 3, attributes: {} })
   expect(collectEnvironment).toHaveBeenCalledTimes(1)
-  expect(b.getDeviceIdentity).toHaveBeenCalledTimes(3)
 })
 
 it('caches failed environment fields without discarding the event or retrying each interaction', async () => {

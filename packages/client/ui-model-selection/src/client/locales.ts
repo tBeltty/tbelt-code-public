@@ -13,7 +13,6 @@ export type ModelKey = keyof typeof en
 
 /** English dictionary and key-set source of truth. */
 export const en = {
-  'provider.account': 'DeepSeek Account',
   'command.label': 'Model',
   'command.description': 'Select the model for this conversation',
   'option.loadError': 'Catalog failed to load: {message}',
@@ -50,7 +49,6 @@ export const en = {
 
 /** Spanish dictionary, checked against the English keys. */
 export const es = {
-  'provider.account': 'Cuenta de DeepSeek',
   'command.label': 'Modelo',
   'command.description': 'Elige el modelo de esta conversación',
   'option.loadError': 'No se pudo cargar el catálogo: {message}',
@@ -87,7 +85,6 @@ export const es = {
 
 /** Greek dictionary, checked complete against the English key set. */
 export const el = {
-  'provider.account': 'Λογαριασμός DeepSeek',
   'command.label': 'Μοντέλο',
   'command.description': 'Επιλέξτε το μοντέλο για αυτή τη συζήτηση',
   'option.loadError': 'Η φόρτωση του καταλόγου απέτυχε: {message}',
@@ -124,7 +121,6 @@ export const el = {
 
 /** French dictionary, checked against the English keys. */
 export const fr = {
-  'provider.account': 'Compte DeepSeek',
   'command.label': 'Modèle',
   'command.description': 'Sélectionner le modèle de cette conversation',
   'option.loadError': 'Échec du chargement du catalogue\u00a0: {message}',

@@ -38,9 +38,9 @@ describe('joinProviderDirectory', () => {
     const rows = joinProviderDirectory([], [
       { provider: 'zed', displayName: 'Zed', settingsNs: 'n', settingsPath: [] },
       { provider: 'deepseek-official', displayName: 'Official', settingsNs: 'n', settingsPath: [] },
-      { provider: 'deepseek-account', displayName: 'Account', settingsNs: 'n', settingsPath: [] },
+      { provider: 'anthropic', displayName: 'Anthropic', settingsNs: 'n', settingsPath: [] },
     ])
-    expect(rows.map(row => row.provider)).toEqual(['zed', 'deepseek-official', 'deepseek-account'])
+    expect(rows.map(row => row.provider)).toEqual(['zed', 'deepseek-official', 'anthropic'])
   })
 })
 

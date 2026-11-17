@@ -511,7 +511,7 @@ describe('package payload constraints', () => {
     ])
   })
 
-  it.each(['ui-chat', 'ui-settings-account'])(
+  it.each(['ui-chat'])(
     'accepts the published package assets for %s and rejects their omission', (name) => {
       const dir = `packages/client/${name}`
       const manifest = JSON.parse(readFileSync(new URL(`../${dir}/package.json`, import.meta.url), 'utf8')) as WorkspaceManifest['manifest']

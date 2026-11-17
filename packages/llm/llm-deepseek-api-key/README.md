@@ -33,13 +33,13 @@ Authentication resolution returns the validated API key in `x-api-key` for both 
     apiKeyEnv: DEEPSEEK_API_KEY
 ```
 
-The endpoint and credential reference come from one configuration resolution. In-flight requests retain that snapshot; subsequent updates affect subsequent calls. Account login state cannot change this route’s credential.
+The endpoint and credential reference come from one configuration resolution. In-flight requests retain that snapshot; subsequent updates affect subsequent calls.
 
 `models` is an independently configurable catalog for this provider; defaults and protocol capabilities come from the shared transport. While `models` equals the built-in catalog and the Messages origin is the official API, `https://api.deepseek.com`, the route serves the official `GET https://api.deepseek.com/models` listing instead. Listing requests carry the API key in `x-api-key` and the harness `User-Agent`, and reject redirects; without an API key the route requests nothing. Any other endpoint, including one named by `baseURL` or `$DEEPSEEK_BASE_URL`, serves `models` and requests no listing. Discovery does not probe inference endpoints.
 
 The first access waits for the listing up to `modelsTimeoutMs`. After first use, the Host refreshes automatically every `modelsMaxAgeMs` (ten minutes by default), including while the page is idle. Later accesses return the cached listing while a refresh runs. A failed or empty listing retains the previous listing, including badges; before any listing loads, the route serves the built-in catalog of the current version (`deepseek-flash` and `deepseek-v4-pro`). A listing HTTP 401 fails only that load. Each loaded listing, the first failure of a failing streak with the catalog it falls back to, each listing entry hidden because its declarations are unreadable or unusable, and each dropped badge are written to stderr with the `[llm-deepseek-api-key]` tag; stdout remains available for protocol messages, and secrets are never logged. Changed listings emit `llm/models-updated`, so open selectors reload without a page refresh. Omitted or `null` badge metadata clears a previous badge; no separate clear operation is needed. Plugin disposal stops refreshes and waits for active loads.
 
-Listed models are offered, merged with this build's entries, and refused before network I/O with `CLIENT_UPGRADE_REQUIRED` or `MODEL_UNSUPPORTED` by the [account route's rules](../llm-deepseek-account/README.md#use-this-package); model ids the listing does not name pass through unchanged.
+Listed models are offered, merged with this build's entries, and refused before network I/O with `CLIENT_UPGRADE_REQUIRED` or `MODEL_UNSUPPORTED` by the route's model rules; model ids the listing does not name pass through unchanged.
 
 A `models` list that differs from the built-in catalog replaces the catalog and stops listing requests; the Models page stores an edited catalog there. Removing that list, as **Restore defaults** on the Models page does, returns the route to the listing, and the next access loads the listing again even when the cached one is still fresh. A list identical to the built-in catalog counts as uncustomized.
 
@@ -48,7 +48,7 @@ A `models` list that differs from the built-in catalog replaces the catalog and 
 | `modelsTimeoutMs` | `5,000` | Deadline of one listing request and of a first-access wait |
 | `modelsMaxAgeMs` | `600,000` | Automatic refresh interval after first use, also used after failure; `0` refreshes on access only |
 
-The settings namespace is the Cordis entry id, or the plugin name without an entry. Product profiles retain the official entry id `llm-deepseek` and use `llm-deepseek-account` for the account route.
+The settings namespace is the Cordis entry id, or the plugin name without an entry. Product profiles retain the official entry id `llm-deepseek`.
 
 <a id="understand-the-implementation"></a>
 ## Understand the implementation

@@ -122,14 +122,10 @@ export function ModelSelect(
   const itemRefs = useRef<(HTMLButtonElement | null)[]>([])
   const id = useId()
 
-  const accountProviderName = t('provider.account')
   const groups = useMemo(() => state.groups.map(group => ({
     ...group,
-    provider: {
-      id: group.id,
-      name: group.id === 'deepseek-account' ? accountProviderName : group.name,
-    },
-  })), [state.groups, accountProviderName])
+    provider: { id: group.id, name: group.name },
+  })), [state.groups])
   const choices = useMemo(() => groups.flatMap(group =>
     group.models.map(model => ({
       group,
@@ -623,7 +619,7 @@ export function ModelSelect(
               )}
               {state.failures.map(failure => (
                 <div className={css.warning} key={failure.id}>
-                  <span>{t('warning.groupLoad', { name: failure.id === 'deepseek-account' ? t('provider.account') : failure.name, message: failure.message })}</span>
+                  <span>{t('warning.groupLoad', { name: failure.name, message: failure.message })}</span>
                   <button type="button" className={css.retry} onClick={reload}>{t('retry')}</button>
                 </div>
               ))}

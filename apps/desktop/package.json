@@ -76,7 +76,6 @@
     "pnpm": "11.28.5",
     "sharp": "^0.35.3",
     "typescript": "^6.0.3",
-    "@deepseek-ai/dsh-deepseek-account": "workspace:*",
     "@types/ws": "^8.18.1",
     "@deepseek-ai/dsh-client-ui-primitives": "workspace:*",
     "react": "^18.2.0",

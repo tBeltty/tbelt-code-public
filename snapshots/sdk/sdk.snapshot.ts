@@ -699,7 +699,6 @@ const legacySdkCompositions = new Set([
   'dynamic-tool-updates',
   'image',
   'ptc',
-  'sdk-account-provider-signout',
   'sdk-default',
   'sdk-dsh-sdk-diagnostic',
   'sdk-dsh-sdk-dynamic-route',

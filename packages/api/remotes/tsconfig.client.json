@@ -116,12 +116,6 @@
     },
     {
       "path": "../../web/web"
-    },
-    {
-      "path": "../account-controller"
-    },
-    {
-      "path": "../../credentials/deepseek-account"
     }
   ]
 }

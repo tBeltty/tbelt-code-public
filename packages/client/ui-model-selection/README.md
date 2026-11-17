@@ -25,7 +25,7 @@ The Web GUI lets users switch the model and reasoning effort for an existing ses
 <a id="use-this-package"></a>
 ## Use this package
 
-DeepSeek account and API-key routes appear as separate provider groups, each exposing the same configured model catalog.
+Each configured provider route appears as its own provider group.
 
 When no model is selected or the saved selection is absent from the catalog, the composer shows “Select model” in regular weight and hides the reasoning effort caption. Clicking it opens the model list directly; Escape and Shift+Tab close it. An empty catalog displays “No models available.”
 

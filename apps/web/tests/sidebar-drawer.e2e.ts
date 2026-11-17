@@ -437,7 +437,7 @@ it('overlays the conversation and closes after navigation without losing its sid
       await drawer.getByRole('button', { name: 'Search sessions', exact: true }).tap()
       await searchWithKeyboard.tap()
       await searchWithKeyboard.fill('retained search')
-      await drawer.getByRole('button', { name: 'Account menu', exact: true }).tap()
+      await drawer.getByRole('button', { name: 'Settings', exact: true }).tap()
       await page.getByRole('menuitem', { name: 'Settings', exact: true }).tap()
       const settings = page.getByRole('dialog', { name: 'Settings', exact: true })
       await settings.waitFor()

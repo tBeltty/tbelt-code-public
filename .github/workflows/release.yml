@@ -42,5 +42,9 @@ jobs:
           printf '\nDownload tBelt Code from https://code.tbelt.online.\n' >> "$RUNNER_TEMP/notes.md"
           prerelease=()
           [[ "$version" == *-* ]] && prerelease=(--prerelease)
-          gh release create "$TAG" --verify-tag --title "tBelt Code $version" \
-            --notes-file "$RUNNER_TEMP/notes.md" "${prerelease[@]}"
+          if ! gh release create "$TAG" --verify-tag --title "tBelt Code $version" \
+            --notes-file "$RUNNER_TEMP/notes.md" "${prerelease[@]}"; then
+            # A release created together with its tag can appear after this run starts.
+            gh release view "$TAG" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1 || exit 1
+            echo "A release for $TAG already exists; nothing to do."
+          fi

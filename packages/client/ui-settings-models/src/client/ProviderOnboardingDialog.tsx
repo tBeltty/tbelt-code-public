@@ -7,6 +7,11 @@
  * routes alphabetically and the custom-provider form, with nothing preselected. A pi-ai catalog route is set up on the same
  * screen: the key is checked as it is typed and the models it can use are
  * listed below it, none selected.
+ *
+ * The step opens on a short question, "do you already have an account or
+ * key?", whose answers weigh the same. A person with a key picks its provider
+ * or opens the full list; a person with none sees the providers that offer a
+ * free key, each with a link to create one.
  */
 
 import { useEffect, useId, useState } from 'react'
@@ -20,7 +25,7 @@ import type { SettingsSchemaOperations } from './schema-operations.ts'
 import { CustomProviderCard } from './CustomProviderCard.tsx'
 import { ProviderEditor } from './ProviderEditor.tsx'
 import { LOCAL_PROVIDER_TEMPLATES } from './provider-templates.ts'
-import { POPULAR_PROVIDERS, providerDisplayName } from './provider-names.ts'
+import { FREE_KEY_PROVIDERS, HAVE_KEY_PROVIDERS, POPULAR_PROVIDERS, providerDisplayName } from './provider-names.ts'
 import type { ProviderTemplate } from './provider-templates.ts'
 import type { en } from './locales.ts'
 import { OnboardingModal } from './OnboardingModal.tsx'
@@ -50,6 +55,9 @@ export type ProviderOnboardingDialogProps =
 
 /** Order of the list groups. */
 const GROUPS = ['popular', 'local', 'other', 'custom'] as const
+
+/** Which screen of the step is showing. */
+type OnboardingStage = 'have' | 'none' | 'all'
 
 /** A list group. */
 type OnboardingGroup = typeof GROUPS[number]
@@ -110,6 +118,7 @@ export function ProviderOnboardingDialog(props: ProviderOnboardingDialogProps): 
   const [customOpen, setCustomOpen] = useState(false)
   const [picked, setPicked] = useState<string | undefined>(undefined)
   const [query, setQuery] = useState('')
+  const [stage, setStage] = useState<OnboardingStage>('have')
   const listId = useId()
 
   useEffect(() => {
@@ -197,6 +206,156 @@ export function ProviderOnboardingDialog(props: ProviderOnboardingDialogProps): 
       ] satisfies OnboardingChoice[])
       : [],
   ]
+  const setup = chosen === undefined
+    ? null
+    : chosen.namespace.ns === 'llm-pi-ai'
+      ? (
+        <OnboardingProviderSetup
+          key={chosen.row.entry.provider}
+          provider={chosen.row.entry.provider}
+          namespace={chosen.namespace}
+          settingsPath={chosen.row.entry.settingsPath}
+          schema={schema}
+          operations={operations}
+          t={t}
+          readOnly={!state.writable}
+          setDefault
+          submitLabelKey="onboardingStart"
+          onDone={() => {
+            setPicked(undefined)
+            void controller.load()
+          }}
+        />
+      )
+      : (
+        <ProviderEditor
+          key={chosen.row.entry.provider}
+          provider={chosen.row.entry.provider}
+          displayName={chosen.row.entry.displayName}
+          hideTitle
+          {...chosen.row.entry.defaultBaseURL === undefined ? {} : { defaultBaseURL: chosen.row.entry.defaultBaseURL }}
+          {...chosen.row.nativeEnv === undefined ? {} : { nativeEnv: chosen.row.nativeEnv }}
+          namespace={chosen.namespace}
+          schema={schema}
+          settingsPath={chosen.row.entry.settingsPath}
+          operations={operations}
+          t={t}
+          readOnly={!state.writable}
+          credentialRequired
+          autoFocusCredential
+          onClose={(changed) => {
+            setPicked(undefined)
+            if (changed) void controller.load()
+          }}
+        />
+      )
+  const later = (
+    <button
+      type="button"
+      className={`${styles['secondaryButton']} ${onboardingStyles['later']}`}
+      onClick={() => { complete() }}
+    >
+      {t('onboardingLater')}
+    </button>
+  )
+  const go = (next: OnboardingStage): void => {
+    setPicked(undefined)
+    setQuery('')
+    setStage(next)
+  }
+
+  if (stage === 'have') {
+    const offered = HAVE_KEY_PROVIDERS.flatMap(provider => addable.filter(candidate => candidate.row.entry.provider === provider))
+    return (
+      <OnboardingModal title={t('onboardingHaveTitle')} focusTitle>
+        <p className={onboardingStyles.description}>{t('onboardingHaveDescription')}</p>
+        <ul className={onboardingStyles['providerList']} aria-label={t('provider')}>
+          {offered.map(({ row }) => (
+            <li key={row.entry.provider}>
+              <button
+                type="button"
+                className={`${onboardingStyles['providerItem']} ${row.entry.provider === picked ? onboardingStyles['providerItemActive'] : ''}`}
+                aria-label={nameOf(row.entry)}
+                aria-pressed={row.entry.provider === picked}
+                disabled={!state.writable}
+                onClick={() => { setPicked(row.entry.provider) }}
+              >
+                <span className={onboardingStyles['providerName']}>{nameOf(row.entry)}</span>
+              </button>
+            </li>
+          ))}
+          <li>
+            <button
+              type="button"
+              className={onboardingStyles['providerItem']}
+              aria-label={t('onboardingAnother')}
+              disabled={!state.writable}
+              onClick={() => { go('all') }}
+            >
+              <span className={onboardingStyles['providerName']}>{t('onboardingAnother')}</span>
+              <span className={onboardingStyles['providerDetail']}>{t('onboardingAnotherTag')}</span>
+            </button>
+          </li>
+        </ul>
+        {setup}
+        <div className={onboardingStyles['stepLinks']}>
+          <button type="button" className={styles['secondaryButton']} disabled={!state.writable} onClick={() => { go('none') }}>
+            {t('onboardingNoKey')}
+          </button>
+          {later}
+        </div>
+      </OnboardingModal>
+    )
+  }
+
+  if (stage === 'none') {
+    const offered = FREE_KEY_PROVIDERS.flatMap(free => addable
+      .filter(candidate => candidate.row.entry.provider === free.provider)
+      .map(candidate => ({ free, row: candidate.row })))
+    return (
+      <OnboardingModal title={t('onboardingNoneTitle')} focusTitle>
+        <p className={onboardingStyles.description}>{t('onboardingNoneDescription')}</p>
+        <ul className={onboardingStyles['providerList']} aria-label={t('provider')}>
+          {offered.map(({ free, row }) => (
+            <li key={free.provider} className={onboardingStyles['freeItem']}>
+              <button
+                type="button"
+                className={`${onboardingStyles['providerItem']} ${free.provider === picked ? onboardingStyles['providerItemActive'] : ''}`}
+                aria-label={nameOf(row.entry)}
+                aria-pressed={free.provider === picked}
+                aria-describedby={`${listId}-${free.provider}`}
+                disabled={!state.writable}
+                onClick={() => { setPicked(free.provider) }}
+              >
+                <span id={`${listId}-${free.provider}-name`} className={onboardingStyles['providerName']}>{nameOf(row.entry)}</span>
+                <span id={`${listId}-${free.provider}`} className={onboardingStyles['freeLimit']}>
+                  {t(free.limitKey)}
+                  {free.privacyKey === undefined ? null : ` ${t(free.privacyKey)}`}
+                </span>
+              </button>
+              <a
+                className={onboardingStyles['freeLink']}
+                href={free.keyUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-describedby={`${listId}-${free.provider}-name`}
+              >
+                {t('onboardingGetKey')}
+              </a>
+            </li>
+          ))}
+        </ul>
+        {setup}
+        <div className={onboardingStyles['stepLinks']}>
+          <button type="button" className={styles['secondaryButton']} onClick={() => { go('have') }}>
+            {t('onboardingBack')}
+          </button>
+          {later}
+        </div>
+      </OnboardingModal>
+    )
+  }
+
   const needle = query.trim().toLowerCase()
   const visible = needle.length === 0
     ? choices
@@ -258,56 +417,13 @@ export function ProviderOnboardingDialog(props: ProviderOnboardingDialogProps): 
             })}
           </ul>
         )}
-      {chosen === undefined
-        ? null
-        : chosen.namespace.ns === 'llm-pi-ai'
-          ? (
-            <OnboardingProviderSetup
-              key={chosen.row.entry.provider}
-              provider={chosen.row.entry.provider}
-              namespace={chosen.namespace}
-              settingsPath={chosen.row.entry.settingsPath}
-              schema={schema}
-              operations={operations}
-              t={t}
-              readOnly={!state.writable}
-              setDefault
-              submitLabelKey="onboardingStart"
-              onDone={() => {
-                setPicked(undefined)
-                void controller.load()
-              }}
-            />
-          )
-          : (
-            <ProviderEditor
-              key={chosen.row.entry.provider}
-              provider={chosen.row.entry.provider}
-              displayName={chosen.row.entry.displayName}
-              hideTitle
-              {...chosen.row.entry.defaultBaseURL === undefined ? {} : { defaultBaseURL: chosen.row.entry.defaultBaseURL }}
-              {...chosen.row.nativeEnv === undefined ? {} : { nativeEnv: chosen.row.nativeEnv }}
-              namespace={chosen.namespace}
-              schema={schema}
-              settingsPath={chosen.row.entry.settingsPath}
-              operations={operations}
-              t={t}
-              readOnly={!state.writable}
-              credentialRequired
-              autoFocusCredential
-              onClose={(changed) => {
-                setPicked(undefined)
-                if (changed) void controller.load()
-              }}
-            />
-          )}
-      <button
-        type="button"
-        className={`${styles['secondaryButton']} ${onboardingStyles['later']}`}
-        onClick={() => { complete() }}
-      >
-        {t('onboardingLater')}
-      </button>
+      {setup}
+      <div className={onboardingStyles['stepLinks']}>
+        <button type="button" className={styles['secondaryButton']} onClick={() => { go('have') }}>
+          {t('onboardingBack')}
+        </button>
+        {later}
+      </div>
     </OnboardingModal>
   )
 }

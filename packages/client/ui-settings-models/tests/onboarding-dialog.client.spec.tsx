@@ -198,17 +198,26 @@ function harness(options: {
   }
 }
 
+/** Render the step and open the full provider list behind "Another provider". */
+async function renderAll(props: ProviderOnboardingDialogProps) {
+  const view = render(<ProviderOnboardingDialog {...props} />)
+  fireEvent.click(await screen.findByRole('button', { name: en.onboardingAnother }))
+  return view
+}
+
 describe('ProviderOnboardingDialog', () => {
   it('renders when the shell root is absent', async () => {
     const h = harness()
     document.getElementById('root')!.remove()
     render(<ProviderOnboardingDialog {...h.props} />)
-    expect(await screen.findByRole('dialog', { name: en.onboardingTitle })).toBeTruthy()
+    expect(await screen.findByRole('dialog', { name: en.onboardingHaveTitle })).toBeTruthy()
   })
 
   it('offers the local-server templates and the custom-provider button, inerting the product', async () => {
     const h = harness()
     render(<ProviderOnboardingDialog {...h.props} />)
+    expect(await screen.findByRole('dialog', { name: en.onboardingHaveTitle })).toBeTruthy()
+    fireEvent.click(screen.getByRole('button', { name: en.onboardingAnother }))
     expect(await screen.findByRole('dialog', { name: en.onboardingTitle })).toBeTruthy()
     expect(document.getElementById('root')?.inert).toBe(true)
     expect(screen.getByText(en.onboardingDescription)).toBeTruthy()
@@ -227,7 +236,7 @@ describe('ProviderOnboardingDialog', () => {
       { provider: 'openai', displayName: 'openai' },
       { provider: 'amazon-bedrock', displayName: 'amazon-bedrock' },
     ] })
-    render(<ProviderOnboardingDialog {...h.props} />)
+    await renderAll(h.props)
     const list = await screen.findByRole('list', { name: en.provider })
     const names = [...list.querySelectorAll('button')].map(button => button.getAttribute('aria-label'))
     expect(names).toEqual([
@@ -251,12 +260,86 @@ describe('ProviderOnboardingDialog', () => {
     expect(await screen.findByLabelText(en.keyInput)).toBeTruthy()
   })
 
+  describe('first question', () => {
+    const catalog = ['deepseek', 'groq', 'openrouter', 'google', 'anthropic', 'openai', 'acme']
+      .map(provider => ({ provider, displayName: provider }))
+
+    it('offers the providers a person may already have, with equal weight and none picked', async () => {
+      const h = harness({ catalog })
+      render(<ProviderOnboardingDialog {...h.props} />)
+      const list = await screen.findByRole('list', { name: en.provider })
+      const names = [...list.querySelectorAll('button')].map(button => button.getAttribute('aria-label'))
+      expect(names).toEqual(['OpenAI', 'Anthropic', 'Google Gemini', 'OpenRouter', en.onboardingAnother])
+      expect(list.querySelector('[aria-pressed="true"]')).toBeNull()
+      expect(screen.getByText(en.onboardingHaveDescription)).toBeTruthy()
+      expect(screen.queryByLabelText(en.keyInput)).toBeNull()
+    })
+
+    it('asks for the key of the provider the person picked', async () => {
+      const h = harness({ catalog })
+      render(<ProviderOnboardingDialog {...h.props} />)
+      fireEvent.click(await screen.findByRole('button', { name: 'Anthropic' }))
+      expect(screen.getByRole('button', { name: 'Anthropic' }).getAttribute('aria-pressed')).toBe('true')
+      expect(await screen.findByLabelText(en.keyInput)).toBeTruthy()
+    })
+
+    it('shows the free providers with a key link, a limits line and the Google privacy notice', async () => {
+      const h = harness({ catalog })
+      render(<ProviderOnboardingDialog {...h.props} />)
+      fireEvent.click(await screen.findByRole('button', { name: en.onboardingNoKey }))
+      expect(await screen.findByRole('dialog', { name: en.onboardingNoneTitle })).toBeTruthy()
+      const list = screen.getByRole('list', { name: en.provider })
+      expect([...list.querySelectorAll('button')].map(button => button.getAttribute('aria-label')))
+        .toEqual(['OpenRouter', 'Groq', 'Google Gemini'])
+      expect([...list.querySelectorAll('a')].map(link => link.getAttribute('href'))).toEqual([
+        'https://openrouter.ai/settings/keys', 'https://console.groq.com/keys', 'https://aistudio.google.com/apikey',
+      ])
+      for (const link of list.querySelectorAll('a')) {
+        expect(link.getAttribute('target')).toBe('_blank')
+        expect(link.getAttribute('rel')).toBe('noopener noreferrer')
+      }
+      expect(screen.getByText(en.onboardingLimitOpenrouter)).toBeTruthy()
+      expect(screen.getByText(en.onboardingLimitGroq)).toBeTruthy()
+      expect(screen.getByText(`${en.onboardingLimitGoogle} ${en.onboardingPrivacyGoogle}`)).toBeTruthy()
+      expect(screen.queryByText(/DeepSeek/i)).toBeNull()
+      fireEvent.click(screen.getByRole('button', { name: 'Groq' }))
+      expect(await screen.findByLabelText(en.keyInput)).toBeTruthy()
+    })
+
+    it('goes back from the free providers to the first question', async () => {
+      const h = harness({ catalog })
+      render(<ProviderOnboardingDialog {...h.props} />)
+      fireEvent.click(await screen.findByRole('button', { name: en.onboardingNoKey }))
+      fireEvent.click(await screen.findByRole('button', { name: en.onboardingBack }))
+      expect(await screen.findByRole('dialog', { name: en.onboardingHaveTitle })).toBeTruthy()
+    })
+
+    it('goes back from the full list to the first question', async () => {
+      const h = harness({ catalog })
+      await renderAll(h.props)
+      fireEvent.click(await screen.findByRole('button', { name: en.onboardingBack }))
+      expect(await screen.findByRole('dialog', { name: en.onboardingHaveTitle })).toBeTruthy()
+    })
+
+    it('has the same copy keys with no figures in every language', async () => {
+      const { es, el, fr } = await import('../src/client/locales.ts')
+      const keys = Object.keys(en).filter(key => /^onboarding(Have|None|Limit|Privacy|GetKey|Another|NoKey|Back)/.test(key))
+      for (const dictionary of [en, es, el, fr] as Record<string, string>[]) {
+        for (const key of keys) {
+          expect(dictionary[key], key).toBeTruthy()
+          if (key.startsWith('onboardingLimit') || key.startsWith('onboardingPrivacy')) expect(dictionary[key]).not.toMatch(/\d/)
+          expect(dictionary[key]).not.toMatch(/deepseek/i)
+        }
+      }
+    })
+  })
+
   it('checks a typed key and lists its models below, none selected, then stores the choice', async () => {
     const h = harness({
       catalog: [{ provider: 'acme', displayName: 'Acme Models' }],
       discovery: remoteOk([{ id: 'acme-large' }, { id: 'acme-small' }]),
     })
-    render(<ProviderOnboardingDialog {...h.props} />)
+    await renderAll(h.props)
     fireEvent.click(await screen.findByRole('button', { name: 'Acme Models' }))
     fireEvent.change(await screen.findByLabelText(en.keyInput), { target: { value: ' sk-acme ' } })
     expect(screen.getByText(en.onboardingKeyChecking)).toBeTruthy()
@@ -289,7 +372,7 @@ describe('ProviderOnboardingDialog', () => {
 
     it('offers no sign-in for a provider without a flow', async () => {
       const h = harness({ catalog: [{ provider: 'acme', displayName: 'Acme Models' }] })
-      render(<ProviderOnboardingDialog {...h.props} />)
+      await renderAll(h.props)
       fireEvent.click(await screen.findByRole('button', { name: 'Acme Models' }))
       await screen.findByLabelText(en.keyInput)
       expect(screen.queryByRole('button', { name: 'Sign in with Acme' })).toBeNull()
@@ -309,7 +392,7 @@ describe('ProviderOnboardingDialog', () => {
           { id: 'attempt-1', key: flow.key, status: 'authorized' },
         ],
       })
-      render(<ProviderOnboardingDialog {...h.props} />)
+      await renderAll(h.props)
       fireEvent.click(await screen.findByRole('button', { name: 'Acme Models' }))
       fireEvent.click(await screen.findByRole('button', { name: 'Sign in with Acme' }))
       expect(h.authorization.begin).toHaveBeenCalledWith(flow.key, 'oauth')
@@ -343,7 +426,7 @@ describe('ProviderOnboardingDialog', () => {
         signInFlows: [flow],
         signInReads: [{ id: 'attempt-1', key: flow.key, status: 'authorized' }],
       })
-      render(<ProviderOnboardingDialog {...h.props} />)
+      await renderAll(h.props)
       fireEvent.click(await screen.findByRole('button', { name: 'Acme Models' }))
       fireEvent.click(await screen.findByRole('button', { name: 'Sign in with Acme' }))
       expect(await screen.findByText('catalog is down', {}, { timeout: 3000 })).toBeTruthy()
@@ -357,7 +440,7 @@ describe('ProviderOnboardingDialog', () => {
         signInReads: [{ id: 'attempt-1', key: flow.key, status: 'authorized' }],
       })
       h.discover.mockReturnValueOnce(slow.promise)
-      render(<ProviderOnboardingDialog {...h.props} />)
+      await renderAll(h.props)
       fireEvent.click(await screen.findByRole('button', { name: 'Acme Models' }))
       fireEvent.click(await screen.findByRole('button', { name: 'Sign in with Acme' }))
       await waitFor(() => { expect(h.discover).toHaveBeenCalledTimes(1) }, { timeout: 3000 })
@@ -372,7 +455,7 @@ describe('ProviderOnboardingDialog', () => {
         signInFlows: [flow],
         signInReads: [{ id: 'attempt-1', key: flow.key, status: 'failed', failure: 'The browser was closed' }],
       })
-      render(<ProviderOnboardingDialog {...h.props} />)
+      await renderAll(h.props)
       fireEvent.click(await screen.findByRole('button', { name: 'Acme Models' }))
       fireEvent.click(await screen.findByRole('button', { name: 'Sign in with Acme' }))
       expect(await screen.findByText('The browser was closed', {}, { timeout: 3000 })).toBeTruthy()
@@ -385,7 +468,7 @@ describe('ProviderOnboardingDialog', () => {
         signInFlows: [flow],
         signInReads: [{ id: 'attempt-1', key: flow.key, status: 'running' }],
       })
-      render(<ProviderOnboardingDialog {...h.props} />)
+      await renderAll(h.props)
       fireEvent.click(await screen.findByRole('button', { name: 'Acme Models' }))
       fireEvent.click(await screen.findByRole('button', { name: 'Sign in with Acme' }))
       fireEvent.click(await screen.findByRole('button', { name: en.signInCancel }))
@@ -408,7 +491,7 @@ describe('ProviderOnboardingDialog', () => {
         }),
       },
     })
-    render(<ProviderOnboardingDialog {...h.props} />)
+    await renderAll(h.props)
     fireEvent.click(await screen.findByRole('button', { name: 'Acme Models' }))
     fireEvent.change(await screen.findByLabelText(en.keyInput), { target: { value: 'sk-bad' } })
     expect((await screen.findByRole('alert')).textContent).toBe(shown)
@@ -418,7 +501,7 @@ describe('ProviderOnboardingDialog', () => {
 
   it('does not ask the provider about a key it can already refuse locally', async () => {
     const h = harness({ catalog: [{ provider: 'acme', displayName: 'Acme Models' }] })
-    render(<ProviderOnboardingDialog {...h.props} />)
+    await renderAll(h.props)
     fireEvent.click(await screen.findByRole('button', { name: 'Acme Models' }))
     fireEvent.change(await screen.findByLabelText(en.keyInput), { target: { value: 'sk\u00e9' } })
     await new Promise(resolve => setTimeout(resolve, 700))
@@ -434,7 +517,7 @@ describe('ProviderOnboardingDialog', () => {
     h.discover.mockImplementationOnce(() => new Promise((resolve) => {
       answerStale = (models) => { resolve(remoteOk(models)) }
     }))
-    render(<ProviderOnboardingDialog {...h.props} />)
+    await renderAll(h.props)
     fireEvent.click(await screen.findByRole('button', { name: 'Acme Models' }))
     const keyInput = await screen.findByLabelText(en.keyInput)
     fireEvent.change(keyInput, { target: { value: 'sk-old' } })
@@ -455,7 +538,7 @@ describe('ProviderOnboardingDialog', () => {
       catalog: [{ provider: 'acme', displayName: 'Acme Models' }],
       discovery: remoteOk([{ id: 'acme-large', name: 'Acme Large' }, { id: 'acme-small' }, { id: 'a-3', name: 'Turbo' }]),
     })
-    render(<ProviderOnboardingDialog {...h.props} />)
+    await renderAll(h.props)
     fireEvent.click(await screen.findByRole('button', { name: 'Acme Models' }))
     fireEvent.change(await screen.findByLabelText(en.keyInput), { target: { value: 'sk-acme' } })
     await screen.findByRole('checkbox', { name: 'acme-large' })
@@ -476,7 +559,7 @@ describe('ProviderOnboardingDialog', () => {
       catalog: [{ provider: 'acme', displayName: 'Acme Models' }],
       discovery: remoteOk([{ id: 'acme-large' }]),
     })
-    render(<ProviderOnboardingDialog {...h.props} />)
+    await renderAll(h.props)
     fireEvent.click(await screen.findByRole('button', { name: 'Acme Models' }))
     fireEvent.change(await screen.findByLabelText(en.keyInput), { target: { value: 'sk-acme' } })
     const large = await screen.findByRole<HTMLInputElement>('checkbox', { name: 'acme-large' })
@@ -496,7 +579,7 @@ describe('ProviderOnboardingDialog', () => {
       catalog: [{ provider: 'acme', displayName: 'Acme Models' }],
       discovery: remoteOk([]),
     })
-    render(<ProviderOnboardingDialog {...h.props} />)
+    await renderAll(h.props)
     fireEvent.click(await screen.findByRole('button', { name: 'Acme Models' }))
     fireEvent.change(await screen.findByLabelText(en.keyInput), { target: { value: 'sk-acme' } })
     expect(await screen.findByText(en.fetchEmpty)).toBeTruthy()
@@ -506,7 +589,7 @@ describe('ProviderOnboardingDialog', () => {
 
   /** Pick acme, type a key, choose its one listed model and start. */
   async function startWithAcme(h: ReturnType<typeof harness>): Promise<void> {
-    render(<ProviderOnboardingDialog {...h.props} />)
+    await renderAll(h.props)
     fireEvent.click(await screen.findByRole('button', { name: 'Acme Models' }))
     fireEvent.change(await screen.findByLabelText(en.keyInput), { target: { value: 'sk-acme' } })
     fireEvent.click(await screen.findByRole('checkbox', { name: 'acme-large' }))
@@ -600,7 +683,7 @@ describe('ProviderOnboardingDialog', () => {
 
   it('refuses a custom route a catalog provider uses and reloads once a custom provider is created', async () => {
     const h = harness({ catalog: [{ provider: 'acme', displayName: 'Acme Models' }] })
-    render(<ProviderOnboardingDialog {...h.props} />)
+    await renderAll(h.props)
     fireEvent.click(await screen.findByRole('button', { name: en.addCustom }))
     fireEvent.change(await screen.findByLabelText(en.customRoute), { target: { value: 'acme' } })
     expect(screen.getByText(en.customRouteTaken)).toBeTruthy()
@@ -627,7 +710,7 @@ describe('ProviderOnboardingDialog', () => {
       ],
       extraNamespaces: [deepSeekNamespace],
     })
-    render(<ProviderOnboardingDialog {...h.props} />)
+    await renderAll(h.props)
     fireEvent.click(await screen.findByRole('button', { name: 'DeepSeek' }))
     expect(screen.queryByRole('button', { name: 'Ghost' })).toBeNull()
     const load = vi.spyOn(h.controller, 'load')
@@ -647,7 +730,7 @@ describe('ProviderOnboardingDialog', () => {
 
   it('warns that a custom endpoint on another machine over http would send the key in plain text', async () => {
     const h = harness()
-    render(<ProviderOnboardingDialog {...h.props} />)
+    await renderAll(h.props)
     fireEvent.click(await screen.findByRole('button', { name: en.addCustom }))
     const baseUrl = await screen.findByLabelText<HTMLInputElement>(en.baseUrl)
     fireEvent.change(baseUrl, { target: { value: 'http://192.168.1.5:11434/v1' } })
@@ -660,7 +743,7 @@ describe('ProviderOnboardingDialog', () => {
 
   it('hides the templates and the custom-provider button when no declarable namespace exists', async () => {
     const h = harness({ namespacePresent: false })
-    render(<ProviderOnboardingDialog {...h.props} />)
+    await renderAll(h.props)
     await screen.findByRole('dialog')
     for (const template of LOCAL_PROVIDER_TEMPLATES) {
       expect(screen.queryByRole('button', { name: template.displayName })).toBeNull()
@@ -687,7 +770,7 @@ describe('ProviderOnboardingDialog', () => {
 
   it('opens the custom-provider card pre-filled from a chosen local template', async () => {
     const h = harness()
-    render(<ProviderOnboardingDialog {...h.props} />)
+    await renderAll(h.props)
     await screen.findByRole('dialog')
     const template = LOCAL_PROVIDER_TEMPLATES[0]!
     fireEvent.click(screen.getByRole('button', { name: template.displayName }))
@@ -699,7 +782,7 @@ describe('ProviderOnboardingDialog', () => {
 
   it('opens a blank custom-provider card from the custom-provider button', async () => {
     const h = harness()
-    render(<ProviderOnboardingDialog {...h.props} />)
+    await renderAll(h.props)
     await screen.findByRole('dialog')
     fireEvent.click(screen.getByRole('button', { name: en.addCustom }))
     expect(await screen.findByLabelText(en.customRoute)).toBeTruthy()
@@ -709,7 +792,7 @@ describe('ProviderOnboardingDialog', () => {
 
   it('returns to the picker on cancel without completing the step', async () => {
     const h = harness()
-    render(<ProviderOnboardingDialog {...h.props} />)
+    await renderAll(h.props)
     await screen.findByRole('dialog')
     fireEvent.click(screen.getByRole('button', { name: en.addCustom }))
     await screen.findByLabelText(en.customRoute)

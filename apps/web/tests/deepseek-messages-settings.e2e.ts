@@ -21,7 +21,7 @@ it.each([{ name: 'Chromium', engine: chromium }, { name: 'WebKit', engine: webki
       const page = await browser.newPage({ viewport: { width: 1680, height: 1000 }, locale: EN_BROWSER_LOCALE })
       const tripwire = watchConsole(page)
       await page.goto(scaffold.authenticatedUrl, { waitUntil: 'load' })
-      const onboarding = page.getByRole('dialog', { name: 'Choose a model provider to get started' })
+      const onboarding = page.getByRole('dialog', { name: 'Do you already have an account or key?' })
       await onboarding.getByRole('button', { name: 'Configure later' }).click()
       await onboarding.waitFor({ state: 'detached' })
       await openSettings(page)
@@ -82,7 +82,7 @@ describe.skipIf(webSnapshotMode() === 'record')('web e2e: DeepSeek Messages sett
     expect(scaffold.ctx.agentDefaultModel.currentSelection()).toEqual({ provider: 'unconfigured', model: 'none' })
     // The first-run step is model-agnostic (never names DeepSeek); configuring
     // DeepSeek's key happens through the ordinary Models surface instead.
-    const onboarding = page.getByRole('dialog', { name: 'Choose a model provider to get started' })
+    const onboarding = page.getByRole('dialog', { name: 'Do you already have an account or key?' })
     await onboarding.waitFor({ timeout: 15_000 })
     await onboarding.getByRole('button', { name: 'Configure later' }).click()
     await onboarding.waitFor({ state: 'detached' })

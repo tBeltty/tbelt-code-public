@@ -271,7 +271,7 @@ const chatTemplateKwarg: z<ChatTemplateKwargValue> = z.union([
   z.const(null),
   z.object({
     $var: z.union(CHAT_TEMPLATE_VARS).required(),
-    omitWhenOff: z.boolean(),
+    omitWhenOff: z.union([z.boolean(), z.const(undefined)]),
   }),
 ])
 

@@ -400,7 +400,7 @@ describe('viewer page startup contract', () => {
 
   it('keeps the owner’s own surfaces refused and out of the reader’s snapshot', async () => {
     const { decide, grants } = await fixture()
-    const ownerOnly = ['account/watch', 'job/list', 'job/follow', 'settings/describe',
+    const ownerOnly = ['job/list', 'job/follow', 'settings/describe',
       'credentials/describe', 'pluginManager/listPlugins', 'schedule/catalog', 'schedule/create',
       'schedule/deliveryLimits', 'schedule/deleteInactive', 'schedule/edit', 'schedule/history',
       'schedule/list', 'schedule/run', 'schedule/view'] as const

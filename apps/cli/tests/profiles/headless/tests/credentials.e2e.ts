@@ -151,7 +151,7 @@ describe('headless credential policy', { retry: 0 }, () => {
           await writeFile(join(cwd, '.dsh', '.credentials.yaml'), document, { mode: 0o600 })
           if (empty) await writeFile(join(cwd, '.env'), `DEEPSEEK_API_KEY=${projectKey}\n`)
           if (restoring) await writeFile(join(cwd, 'auth.patch.json'), JSON.stringify(
-            ['credentials', 'authorization', 'deepseek-account'].map(id => ({ id, disabled: false })),
+            ['credentials', 'authorization'].map(id => ({ id, disabled: false })),
           ))
         },
         inspect: async (cwd) => {
@@ -173,7 +173,6 @@ describe('headless credential policy', { retry: 0 }, () => {
   }, processTimeoutMs + 15_000)
 
   it.each([
-    { provider: 'deepseek-account', model: 'deepseek-v4-flash', code: 'ACCOUNT_SIGN_IN_REQUIRED' },
     { provider: 'openai-codex', model: 'gpt-5.4', code: 'PI_AI_ERROR: Provider is not configured: openai-codex' },
   ])('fails without saved sign-in for $provider', async ({ provider, model, code }) => {
     const result = await runLoaderSmoke({

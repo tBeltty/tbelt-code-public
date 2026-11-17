@@ -27,9 +27,6 @@ const CUSTOM_NS = 'llm-pi-ai'
 /** A route key no real provider uses, to walk a dictionary schema to the node every route shares. */
 const PROBE_ROUTE = '\u0000probe'
 
-/** Providers that sign in with a vendor account; the terminal offers key-based providers only. */
-const ACCOUNT_ROUTES: ReadonlySet<string> = new Set(['deepseek-account'])
-
 /** Delay between two reads of a running sign-in. */
 const SIGN_IN_POLL_MS = 1000
 
@@ -125,7 +122,7 @@ async function load({ remote, ui }: Context): Promise<ProviderSnapshot | undefin
     remote.authorization.flows().catch(() => undefined),
   ])
   if (registered === undefined || configurable === undefined || settings === undefined) return undefined
-  const entries = joinProviderDirectory(registered, configurable).filter(entry => !ACCOUNT_ROUTES.has(entry.provider))
+  const entries = joinProviderDirectory(registered, configurable)
   const rows = entries.map((entry): ProviderRowFacts => {
     const namespace = settings.namespaces.find(candidate => candidate.ns === entry.settingsNs)
     const profile = namespace === undefined ? undefined : valueAt(namespace.value, entry.settingsPath)

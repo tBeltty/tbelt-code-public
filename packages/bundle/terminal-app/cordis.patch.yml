@@ -42,9 +42,6 @@
 - id: ui-open-in-app
   disabled: true
 
-- id: ui-settings-account
-  disabled: true
-
 - id: ui-theme
   disabled: true
 

@@ -28,9 +28,6 @@
       "path": "../../credentials/credentials"
     },
     {
-      "path": "../../credentials/deepseek-account"
-    },
-    {
       "path": "../../host/webserver"
     },
     {

@@ -29,11 +29,10 @@ describe.skipIf(MODE === 'record')('web e2e: catalog model badges', () => {
 
   beforeAll(async () => {
     scaffold = await launchWebScaffold({
-      extraOverlayPath: fileURLToPath(new URL('./fixtures/model-badge/account.overlay.yml', import.meta.url)),
       replayFixture: FIXTURE,
       replayProvidersOnly: true,
       replayProviders: [
-        { id: 'deepseek-account', name: 'DeepSeek Account', models: [
+        { id: 'badge-catalog', name: 'Badge catalog', models: [
           listedModel('deepseek-flash', NAME, { text: ' 1017 ', tone: 'info' }),
         ] },
         { id: 'deepseek-official', name: 'DeepSeek', models: [
@@ -73,12 +72,12 @@ describe.skipIf(MODE === 'record')('web e2e: catalog model badges', () => {
       expect(await menu.getByRole('group', { name: 'External', exact: true }).locator('[data-tone]').count()).toBe(0)
       expect(await menu.getByRole('menuitemradio', { name: 'Invalid badge model', exact: true }).locator('[data-tone]').count()).toBe(0)
       expect(await menu.getByRole('menuitemradio', { name: `${LONG_NAME} Preview`, exact: true }).locator('[data-tone]').getAttribute('data-tone')).toBe('neutral')
-      const account = menu.getByRole('group', { name: 'DeepSeek Account', exact: true })
-      expect(await account.getByText('1017', { exact: true }).getAttribute('data-tone')).toBe('info')
-      await account.getByRole('menuitemradio', { name: `${NAME} 1017`, exact: true }).click()
-      await expect.poll(() => scaffold.ctx.agentDefaultModel.currentSelection()).toEqual({ provider: 'deepseek-account', model: 'deepseek-flash' })
+      const badged = menu.getByRole('group', { name: 'Badge catalog', exact: true })
+      expect(await badged.getByText('1017', { exact: true }).getAttribute('data-tone')).toBe('info')
+      await badged.getByRole('menuitemradio', { name: `${NAME} 1017`, exact: true }).click()
+      await expect.poll(() => scaffold.ctx.agentDefaultModel.currentSelection()).toEqual({ provider: 'badge-catalog', model: 'deepseek-flash' })
       await expect.poll(() => trigger.textContent()).toContain(`1017 ${NAME}`)
-      const catalog = await scaffold.ctx.llm.listModels('deepseek-account')
+      const catalog = await scaffold.ctx.llm.listModels('badge-catalog')
       expect(catalog.map(model => ({ id: model.id, name: model.name }))).toEqual([{ id: 'deepseek-flash', name: NAME }])
     } finally {
       await page.keyboard.press('Escape')

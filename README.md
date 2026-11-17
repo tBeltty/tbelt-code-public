@@ -26,6 +26,7 @@
 ## Features
 
 - Any provider: hosted APIs with your own key, or local models through Ollama or LM Studio.
+- A first-run guide that asks what you already have and links to free keys from OpenRouter, Groq and Google when you have none.
 - Sandboxed commands with per-session access: Read Only, Workspace Write or Full.
 - Several agents in parallel, each in its own git worktree.
 - A checkpoint before every edit, restored with `/undo`.

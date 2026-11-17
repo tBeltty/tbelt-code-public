@@ -18,9 +18,6 @@
       "path": "../../packages/util/home-paths"
     },
     {
-      "path": "../../packages/credentials/deepseek-account"
-    },
-    {
       "path": "../../packages/api/gateway/tsconfig.host.json"
     },
     {

@@ -4,8 +4,6 @@ import AgentRegistry from '@deepseek-ai/dsh-agent'
 import type { Agent } from '@deepseek-ai/dsh-agent'
 import type { Session } from '@deepseek-ai/dsh-session'
 import WebRuntime from '@deepseek-ai/dsh-web'
-import type { DeepSeekAccount } from '@deepseek-ai/dsh-deepseek-account'
-import SessionStore, { SessionId } from '@deepseek-ai/dsh-session'
 import SessionProjectionRegistry from '@deepseek-ai/dsh-session-projection'
 import {
   DeepSeekSearchApiProvider,
@@ -76,10 +74,6 @@ describe('DeepSeekSearchApiProvider availability', () => {
 
   it('is available with a key', () => {
     expect(searchProvider(options).available()).toBe(true)
-  })
-
-  it('is available with only an account token resolver', () => {
-    expect(searchProvider({ ...options, apiKey: '', resolveAccountToken: async () => 'account-token' }).available()).toBe(true)
   })
 
   it('is misconfigured when the base URL is unparseable', () => {
@@ -231,33 +225,5 @@ describe('Search API configuration and failures', () => {
         + 'change and save Search / Fetch API base URL. If that settings page is unavailable, the user can set '
         + 'web-deepseek-api.baseURL to a trusted DeepSeek endpoint. Only the user should choose or change the endpoint.',
     })
-  })
-})
-
-describe('Search API account route', () => {
-  it('authenticates with the account token when the initiating Session uses the account route', async () => {
-    const fetchMock = vi.fn(async (_input: RequestInfo | URL, _init?: RequestInit) => jsonResponse({ results: [] }))
-    vi.stubGlobal('fetch', fetchMock)
-    const asked: string[] = []
-    const ctx = new Context()
-    try {
-      await ctx.plugin(SessionStore)
-      await ctx.plugin(SessionProjectionRegistry)
-      await ctx.plugin(AgentRegistry)
-      await ctx.plugin(WebRuntime, { searchProvider: 'deepseek-search-api' })
-      ctx.provide('deepseekAccount', {
-        resolveToken: async (url: string) => { asked.push(url); return 'account-token' },
-      } as DeepSeekAccount)
-      await ctx.plugin(webApiPlugin, { apiKey: 'ds-key' })
-      const session = ctx.sessions.create(SessionId('web-search-api-account'))
-      session.append('turn/start', { turn: 1 })
-      session.append('request/context', { provider: 'deepseek-account', model: 'deepseek-v4-flash' })
-      await ctx.agents.withInitiator({ session } as Agent, () => ctx.web.search({ query: 'q' }))
-      expect(asked).toEqual(['https://api.deepseek.com/v1/tools/search'])
-      const headers = (fetchMock.mock.calls[0]?.[1]?.headers ?? {}) as Record<string, string>
-      expect(headers['x-dsh-auth-token']).toBe('account-token')
-      expect(headers).not.toHaveProperty('authorization')
-      expect(headers).not.toHaveProperty('x-api-key')
-    } finally { await ctx.fiber.dispose() }
   })
 })

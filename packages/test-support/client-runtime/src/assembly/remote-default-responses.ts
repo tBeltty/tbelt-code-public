@@ -38,12 +38,6 @@ export const remoteDefaultResponses: RemoteTable = {
     // provider-onboarding step calls on mount: no provider is pre-registered.
     'llm/listProviders': ok([]),
     'llm/listConfigurableProviders': ok([]),
-    // ui-settings-account refreshes details after a stored-grant snapshot.
-    'account/getProfile': ok(null),
-    'account/getBalance': ok(null),
-    // ui-settings-account bonus notice read and acknowledgement at signing in.
-    'account/getUnnotifiedBonuses': ok(null),
-    'account/ackBonusNotified': ok(true),
     // ui-settings-web-search card controller constructor: no search provider is installed.
     'web/searchProviders': ok([]),
     // ui-model-selection spend reading under the composer once a Session is in view: nothing spent, no limits.
@@ -62,8 +56,6 @@ export const remoteDefaultResponses: RemoteTable = {
   stream: {
     // api-session-controller client `apply`: the control stream's opening baseline, then open.
     'session/control': openStream([{ type: 'baseline', value: { projections: {} } }]),
-    // ui-settings-account shares the account snapshot across settings and the sidebar menu.
-    'account/watch': openStream([{ status: 'signed-out', attempt: null, links: { usageUrl: 'https://platform.deepseek.com/usage', topUpUrl: 'https://platform.deepseek.com/top_up' } }]),
     // api-workspace-controller client `apply`: the follow stream's opening baseline, then open.
     'workspace/follow': openStream([{ type: 'baseline', value: { items: [], archivedSessionIds: [], pinnedSessionIds: [] } }]),
     // api-remote-access client `mountAccess`: the owner's access snapshot, then open.

@@ -167,7 +167,6 @@ function ctxWith(face: object): PageContext {
   if (existing !== undefined) return existing
   const ctx = Object.assign(new Context(), { remote: { ...face,
     session: {
-      initializeDefaultModel: async () => ({ ok: true, value: undefined }),
       setDefaultModel: async () => ({ ok: true, value: undefined }),
     },
   } })
@@ -1035,8 +1034,7 @@ describe('hand-declared providers', () => {
   }
 
   it('creates a custom provider without changing the default model', async () => {
-    const { face, mutate, set, onClose } = mountCard()
-    const initialize = vi.spyOn(ctxWith(face).remote.session, 'initializeDefaultModel')
+    const { mutate, set, onClose } = mountCard()
     fireEvent.change(screen.getByLabelText(en.customRoute), { target: { value: 'acme-gateway' } })
     fireEvent.change(screen.getByLabelText(en.baseUrl), { target: { value: 'https://gateway.example/v1' } })
     fireEvent.change(screen.getByLabelText(en.keyInput), { target: { value: 'test-key' } })
@@ -1046,7 +1044,6 @@ describe('hand-declared providers', () => {
     await waitFor(() => { expect(onClose).toHaveBeenCalledWith(true) })
     expect(mutate).toHaveBeenCalledOnce()
     expect(set).toHaveBeenCalledOnce()
-    expect(initialize).not.toHaveBeenCalled()
   })
 
   it('writes the whole profile and the key under the derived reference', async () => {

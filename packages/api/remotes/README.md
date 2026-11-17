@@ -86,5 +86,3 @@ No direct effect; mounted Host capabilities own any model-visible behavior they 
 None.
 
 </details>
-
-The Client assembly includes the account namespace for login commands and reconnectable account snapshots.

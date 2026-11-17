@@ -51,13 +51,11 @@ describe.skipIf(MODE === 'record').each([false, true])('web e2e: native credenti
       }
       // tBelt Code is model-agnostic: until a usable provider exists, every shell
       // opens the same first-run provider dialog, and dismissing it writes nothing.
-      const firstRun = page.getByRole('dialog', { name: 'Choose a model provider to get started', exact: true })
+      const firstRun = page.getByRole('dialog', { name: 'Do you already have an account or key?', exact: true })
       await firstRun.waitFor()
       await firstRun.getByRole('button', { name: 'Configure later', exact: true }).click()
       await firstRun.waitFor({ state: 'detached' })
-      // A signed-out shell with no feedback channel has no account actions, so the menu is omitted.
       await page.getByRole('button', { name: 'Settings', exact: true }).waitFor()
-      expect(await page.getByRole('button', { name: 'Account menu', exact: true }).count()).toBe(0)
       expect(await page.getByRole('dialog', { name: 'Get started' }).count()).toBe(0)
       await openSettings(page)
       const settings = page.getByRole('dialog', { name: 'Settings', exact: true })

@@ -19,7 +19,7 @@ import { openSettings, EN_BROWSER_LOCALE, saveFailureShot } from './support.ts'
 const SNAPSHOT_DIR = fileURLToPath(new URL('./expected/onboarding-usable-provider', import.meta.url))
 const DISMISSED_EXPECTED = join(SNAPSHOT_DIR, 'dismissed.expected.md')
 const MODE = webSnapshotMode()
-const CREDENTIAL_STEP = 'Choose a model provider to get started'
+const CREDENTIAL_STEP = 'Do you already have an account or key?'
 
 describe.skipIf(MODE === 'record')('web e2e: another usable provider ends first-run onboarding', () => {
   let scaffold: WebScaffold
@@ -49,7 +49,6 @@ describe.skipIf(MODE === 'record')('web e2e: another usable provider ends first-
     const credentialStep = page.getByRole('dialog', { name: CREDENTIAL_STEP })
     await credentialStep.waitFor({ timeout: 15_000 })
     expect(await page.getByRole('dialog', { name: 'Get started' }).count()).toBe(0)
-    expect(await page.getByRole('button', { name: 'Account menu', exact: true }).count()).toBe(0)
     await credentialStep.getByRole('button', { name: 'Configure later' }).click()
     await credentialStep.waitFor({ state: 'detached', timeout: 15_000 })
 

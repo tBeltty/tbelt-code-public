@@ -30,9 +30,6 @@
       "path": "../../packages/host/webserver"
     },
     {
-      "path": "../../packages/credentials/deepseek-account"
-    },
-    {
       "path": "../../packages/boot/plugin-manager"
     }
   ]

@@ -138,12 +138,6 @@
 
     # Configuration-surface reads and writes over Typert Remote. Each method
     # reports an actionable error when its settings-domain provider is absent.
-    - id: ui-settings-account
-      name: '@deepseek-ai/dsh-client-ui-settings-account'
-
-    - id: account-controller
-      name: '@deepseek-ai/dsh-api-account-controller'
-
     - id: settings-controller
       name: '@deepseek-ai/dsh-api-settings-controller'
 
@@ -638,12 +632,6 @@
 # product this repository brands as provider-neutral, so it alone turns it off
 # here. The DeepSeek search routes are disabled in `base` itself.
 - id: llm-deepseek
-  disabled: true
-
-# The DeepSeek account route signs in through the DeepSeek Platform. The Web
-# surface offers no provider-specific login, so the route stays unmounted and
-# every provider comes from the user's own Settings > Models entries.
-- id: llm-deepseek-account
   disabled: true
 
 # The search providers the user chooses from in Settings > Plugins > Web

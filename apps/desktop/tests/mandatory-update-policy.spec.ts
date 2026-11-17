@@ -1,9 +1,9 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import type { AccountClientMetadata } from '@deepseek-ai/dsh-deepseek-account/types'
+import type { DesktopClientMetadata } from '../src/client-metadata.ts'
 import { DesktopMandatoryUpdatePolicy, desktopPolicyPage, resolveDesktopPolicyConfig, type DesktopPolicyState } from '../src/mandatory-update-policy.ts'
 
 const identity = { platform: 'win32', arch: 'x64', bundledDshVersion: '0.1.5-rc.1' } as const
-const client: AccountClientMetadata = { version: '1.2.3', locale: 'zh-CN', timezoneOffsetSeconds: 28_800 }
+const client: DesktopClientMetadata = { version: '1.2.3', locale: 'zh-CN', timezoneOffsetSeconds: 28_800 }
 const force = { code: 40005, data: { show_content: { title: '<b>Update</b>', detail: 'Required upgrade' },
   desktop_app_link: 'https://downloads.example.com/desktop?os=win' } }
 const clear = { code: 0, msg: '', data: { biz_code: 0, biz_msg: '', biz_data: null } }
@@ -12,7 +12,7 @@ const deployment = { origin: 'https://policy.example.com', allowedPageOrigins: [
 const instances: DesktopMandatoryUpdatePolicy[] = []
 
 function fixture(authentication: 'anonymous' | 'feishu-test' = 'anonymous',
-  clientSource: () => AccountClientMetadata = () => client) {
+  clientSource: () => DesktopClientMetadata = () => client) {
   const request = vi.fn<typeof fetch>().mockResolvedValue(Response.json(clear))
   const publish = vi.fn<(state: DesktopPolicyState) => void>()
   const policy = new DesktopMandatoryUpdatePolicy(resolveDesktopPolicyConfig({ ...deployment, authentication, ...(authentication === 'feishu-test' ? { allowedAuthOrigins: ['https://login.example.com'] } : {}) })!,

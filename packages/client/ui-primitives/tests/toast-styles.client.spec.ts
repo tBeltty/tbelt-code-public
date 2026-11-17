@@ -15,7 +15,6 @@ const DIALOG_LAYERS = [
   '../src/Modal.module.css',
   '../src/ImageLightbox.module.css',
   '../../ui-settings-general/src/client/SettingsRoot.module.css',
-  '../../ui-settings-account/src/client/PlatformOverlay.module.css',
 ]
 
 describe('Toast.module.css stacking', () => {

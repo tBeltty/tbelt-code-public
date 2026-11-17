@@ -79,8 +79,8 @@ describe('/providers', () => {
     expect(flat(readOnly.log, 'warn')).toHaveLength(1)
   })
 
-  it('hides vendor-account routes and unknown rows', async () => {
-    const { remote } = rig({ configurable: [listed('deepseek-account', 'Account'), listed('acme', 'Acme')], registered: [] })
+  it('lists configurable providers after the custom entry', async () => {
+    const { remote } = rig({ configurable: [listed('acme', 'Acme')], registered: [] })
     const { ui, log } = scriptedUi([undefined])
     await runProviders(remote, ui)
     expect(log[0]!.items!.map(item => item.value)).toEqual([CUSTOM, 'acme'])

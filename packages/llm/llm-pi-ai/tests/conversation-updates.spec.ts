@@ -293,7 +293,7 @@ describe('historical tool availability on the wire', () => {
   it('anchors additions in Responses without emitting removal updates', async () => {
     const update = addition()
     const remove = createDeveloperMessage({ source: { kind: 'tool-registry' }, content: [{ type: 'tool-removal', toolName: 'read' }] })
-    const { requests } = await send('openai', 'gpt-5.4', {
+    const { requests } = await send('openai', 'gpt-5.6-sol', {
       messages: [user('first'), update, remove], tools: [added],
       toolHistory: { tools: [baseline], updates: [
         { messageId: update.id, additions: [added] }, { messageId: remove.id, additions: [] },

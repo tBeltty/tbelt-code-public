@@ -271,6 +271,8 @@ const COMPLETIONS_COMPAT_GATE = {
   maxTokensField: 'offer',
   requiresToolResultName: 'offer',
   requiresAssistantAfterToolResult: 'offer',
+  requiresNonNullAssistantContent: 'withhold',
+  requiresToolsWithToolHistory: 'withhold',
   requiresThinkingAsText: 'offer',
   requiresReasoningContentOnAssistantMessages: 'offer',
   thinkingFormat: 'offer',
@@ -290,6 +292,7 @@ const COMPLETIONS_COMPAT_GATE = {
   supportsMidConvoSystemMessages: 'withhold',
   supportsMidConvoToolAdditions: 'withhold',
   sessionAffinityFormat: 'withhold',
+  promptCacheKeyMode: 'withhold',
 } as const satisfies Record<keyof OpenAICompletionsCompat, CompatDisposition>
 
 /** Disposition of every `OpenAIResponsesCompat` field; a drift gate like the one above. */
@@ -305,6 +308,7 @@ const RESPONSES_COMPAT_GATE = {
   supportsExplicitPromptCacheMode: 'withhold',
   supportsMidConvoSystemMessages: 'withhold',
   supportsMidConvoEffort: 'withhold',
+  promptCacheKeyMode: 'withhold',
 } as const satisfies Record<keyof OpenAIResponsesCompat, CompatDisposition>
 
 /** Disposition of every `AnthropicMessagesCompat` field; a drift gate like the one above. */
@@ -322,6 +326,7 @@ const ANTHROPIC_COMPAT_GATE = {
   supportsMidConvoToolChanges: 'withhold',
   supportsMidConvoEffort: 'withhold',
   allowedFallbackModels: 'withhold',
+  supportsMessageThreads: 'withhold',
 } as const satisfies Record<keyof AnthropicMessagesCompat, CompatDisposition>
 
 /** Disposition of every `BedrockCompat` field; a drift gate like the one above. */
@@ -506,12 +511,17 @@ type UpstreamCompat = OpenAICompletionsCompat & OpenAIResponsesCompat & Anthropi
  * profile field wider than upstream accepts a value the provider rejects, and
  * `resolveModelCompat`'s cast to `ModelCompat` would hide it; a narrower one
  * refuses a value the provider accepts, which is how an upgrade that widens a
- * union would otherwise leave configuration silently behind.
+ * union would otherwise leave configuration silently behind. An explicit
+ * `undefined` upstream is not a different value: configuration never carries
+ * one, so the narrower direction compares the types without it.
  */
-export type EveryProfileFieldMatchesUpstream = AssertTrue<
-  PiAiCompatProfile extends Partial<Pick<UpstreamCompat, OfferedCompatField>>
-    ? Partial<Pick<UpstreamCompat, OfferedCompatField>> extends PiAiCompatProfile ? true : false
-    : false
+export type EveryProfileFieldIsNoWiderThanUpstream = AssertTrue<
+  PiAiCompatProfile extends Partial<Pick<UpstreamCompat, OfferedCompatField>> ? true : false
+>
+
+/** The narrower direction of {@link EveryProfileFieldIsNoWiderThanUpstream}. */
+export type EveryProfileFieldIsNoNarrowerThanUpstream = AssertTrue<
+  Partial<Pick<UpstreamCompat, OfferedCompatField>> extends { [F in keyof PiAiCompatProfile]?: PiAiCompatProfile[F] | undefined } ? true : false
 >
 
 /**

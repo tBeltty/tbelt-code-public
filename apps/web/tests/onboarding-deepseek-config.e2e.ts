@@ -23,7 +23,7 @@ const ONBOARDING_EXPECTED = join(SNAPSHOT_DIR, 'onboarding.expected.md')
 const MISSING_EXPECTED = join(SNAPSHOT_DIR, 'missing.expected.md')
 const MODELS_EXPECTED = join(SNAPSHOT_DIR, 'models.expected.md')
 const DEFAULT_MODELS_EXPECTED = join(SNAPSHOT_DIR, 'default-models.expected.md')
-const ONBOARDING_STEP = 'Choose a model provider to get started'
+const ONBOARDING_STEP = 'Do you already have an account or key?'
 const MODE = webSnapshotMode()
 
 describe.skipIf(MODE === 'record')('web e2e: first-run DeepSeek credential setup', () => {
@@ -129,7 +129,7 @@ describe.skipIf(MODE === 'record')('web e2e: first-run DeepSeek credential setup
       const sightings: string[] = []
       ;(window as unknown as { __takeoverSightings: string[] }).__takeoverSightings = sightings
       setInterval(() => {
-        if (document.querySelector('[role="dialog"][aria-label="Choose a model provider to get started"]') !== null) {
+        if (document.querySelector('[role="dialog"][aria-label="Do you already have an account or key?"]') !== null) {
           sightings.push('chrome')
         }
         if (document.getElementById('root')?.inert === true) sightings.push('inert')

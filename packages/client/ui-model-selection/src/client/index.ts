@@ -58,12 +58,11 @@ function rowId(providerId: string, modelId: string): string {
 function optionsOf(directory: ModelDirectoryState, t: TranslateNS<'model'>): SelectOption[] {
   const rows: SelectOption[] = []
   for (const group of directory.groups) {
-    const name = group.id === 'deepseek-account' ? t('provider.account') : group.name
     for (const model of group.models) {
       rows.push({
         id: rowId(group.id, model.id),
         label: model.name,
-        group: { name: group.id, label: name },
+        group: { name: group.id, label: group.name },
         ...(directory.current !== null
           && directory.current.provider === group.id
           && directory.current.model === model.id
@@ -74,7 +73,7 @@ function optionsOf(directory: ModelDirectoryState, t: TranslateNS<'model'>): Sel
   for (const failure of directory.failures) {
     rows.push({
       id: `failure/${failure.id}`,
-      label: failure.id === 'deepseek-account' ? t('provider.account') : failure.name,
+      label: failure.name,
       detail: t('option.loadError', { message: failure.message }),
     })
   }

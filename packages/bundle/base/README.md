@@ -143,4 +143,4 @@ None.
 
 </details>
 
-The base composition mounts authorization and the platform account provider alongside credentials. The provider opens a callback listener only during an explicit login attempt.
+The base composition mounts authorization alongside credentials.

@@ -2,11 +2,9 @@
 import { fileURLToPath } from 'node:url'
 import { join } from 'node:path'
 import { chromium, type Locator } from 'playwright'
-import { expect, it, onTestFinished, vi } from 'vitest'
-import type { AccountView } from '@deepseek-ai/dsh-deepseek-account/types'
-import type {} from '@deepseek-ai/dsh-deepseek-account'
+import { expect, it, onTestFinished } from 'vitest'
 import {
-  captureStableAria, compareOrRefreshGolden, launchWebScaffold, webSnapshotMode,
+  compareOrRefreshGolden, launchWebScaffold, webSnapshotMode,
 } from './scaffold.ts'
 import { openSettings, EN_BROWSER_LOCALE } from './support.ts'
 
@@ -129,32 +127,6 @@ it('uses 16px text for coarse-pointer font fields and preserves compact fine-poi
 it('shares settings card materials and control sizes in the dark palette', async () => {
   const scaffold = await launchWebScaffold({})
   onTestFinished(() => scaffold.close())
-  await scaffold.ctx.settings.mutate('ui-settings-account', [
-    { op: 'set', path: ['step'], value: 'done' },
-    { op: 'set', path: ['completion'], value: 'completed' },
-  ])
-  const account = scaffold.ctx.deepseekAccount
-  const state: AccountView = {
-    status: 'credential-stored', attempt: null,
-    links: { usageUrl: 'https://platform.deepseek.com/usage', topUpUrl: 'https://platform.deepseek.com/top_up' },
-  }
-  // The Platform provider supplies synthetic identity and wallets; renderer, RPC, and settings remain real.
-  const mocks = [
-    vi.spyOn(account, 'getState').mockResolvedValue(state),
-    vi.spyOn(account, 'getProfile').mockResolvedValue({
-      status: 'ready', value: { id: null, name: 'Radius example', contact: 'r***@example.com', avatarUrl: null },
-    }),
-    vi.spyOn(account, 'getBalance').mockResolvedValue({
-      status: 'ready', value: [{ currency: 'CNY', balance: '128.50' }],
-      bonusWallets: [{ currency: 'CNY', balance: '12.00' }],
-    }),
-    vi.spyOn(account, 'watch').mockImplementation(async function* (signal) {
-      yield state
-      if (signal.aborted) return
-      await new Promise<void>((resolve) => { signal.addEventListener('abort', () => { resolve() }, { once: true }) })
-    }),
-  ]
-  onTestFinished(() => { mocks.forEach((mock) => { mock.mockRestore() }) })
   const browser = await chromium.launch()
   onTestFinished(() => browser.close())
   const page = await browser.newPage({ viewport: { width: 1440, height: 1000 }, locale: EN_BROWSER_LOCALE })
@@ -170,29 +142,13 @@ it('shares settings card materials and control sizes in the dark palette', async
   expect(selector.radius).toBe('12px')
   expect((await appearance(dialog)).radius).toBe('28px')
 
-  await dialog.getByRole('button', { name: 'Account', exact: true }).click()
-  const section = dialog.getByRole('region', { name: 'Account', exact: true })
-  await expect.poll(() => section.innerText()).toContain('¥128.50')
-  const cards = section.locator(':scope > div')
-  expect(await cards.count()).toBe(2)
-  const profile = await appearance(cards.nth(0))
-  const balance = await appearance(cards.nth(1))
-  const material = { radius: profile.radius, border: profile.border, stroke: profile.stroke, fill: profile.fill }
-  expect(material.radius).toBe('20px')
-  expect(material.fill).not.toBe('rgba(0, 0, 0, 0)')
-  expect(balance).toMatchObject(material)
-  const usage = await appearance(section.getByRole('link', { name: 'View usage', exact: true }))
-  const topUp = await appearance(section.getByRole('link', { name: 'Top up', exact: true }))
-  expect(usage).toMatchObject({ radius: '12px', height: 36 })
-  expect(topUp).toMatchObject({ radius: '12px', height: 36 })
-  await compareOrRefreshGolden(join(EXPECTED, 'account.expected.md'),
-    await captureStableAria(page, 'section[aria-label="Account"]', scaffold.workspaceCwd), webSnapshotMode())
-
   await dialog.getByRole('button', { name: 'System inspector', exact: true }).click()
   await dialog.getByRole('button', { name: /^Global/ }).click()
   const plugin = dialog.locator('[data-plugin-scope="global"] [data-plugin-entry]').first()
   await plugin.waitFor()
-  expect(await appearance(plugin)).toMatchObject(material)
+  const material = await appearance(plugin)
+  expect(material.radius).toBe('20px')
+  expect(material.fill).not.toBe('rgba(0, 0, 0, 0)')
 
   await dialog.getByRole('button', { name: 'Agent presets', exact: true }).click()
   const preset = dialog.locator('li').first()
@@ -207,6 +163,6 @@ it('shares settings card materials and control sizes in the dark palette', async
   const save = await appearance(dialog.getByRole('button', { name: 'Save', exact: true }))
   expect(save).toMatchObject({ radius: '12px', height: 36 })
   await compareOrRefreshGolden(join(EXPECTED, 'dark.expected.md'),
-    JSON.stringify({ card: material, selector, usage, topUp, save }, null, 2), webSnapshotMode())
+    JSON.stringify({ card: material, selector, save }, null, 2), webSnapshotMode())
   await dialog.getByRole('button', { name: 'Cancel', exact: true }).click()
 })

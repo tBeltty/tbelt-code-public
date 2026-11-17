@@ -2,11 +2,9 @@
  * Register the DeepSeek Search and Fetch APIs in `ctx.web` as `deepseek-search-api`
  * and `deepseek-fetch-api`. Each operation is one direct API request without an
  * auxiliary model request; both providers read this section's credential and API
- * base. `web.searchProvider` and `web.fetchProvider` select them. A Session on the
- * DeepSeek account route authenticates with the account token when the account
- * service allows the endpoint; every other request uses the configured key. Both
- * providers report themselves not ready for a model request whose operation would
- * have no credential.
+ * base. `web.searchProvider` and `web.fetchProvider` select them. The
+ * configured key authenticates every request. Both providers report themselves
+ * not ready when no key is available.
  * @module @deepseek-ai/dsh-web-deepseek-api
  */
 import type { Context, Volatile } from '@deepseek-ai/cordis'
@@ -76,8 +74,7 @@ function latestUserQuestion(session: Session | undefined): string | undefined {
 export function apply(ctx: Context, config: Config): void {
   const keyConfig = () => ({ apiKey: config.apiKey.get(), apiKeyEnv: config.apiKeyEnv.get() })
   const auth = () => deepSeekWebAuth(ctx, keyConfig())
-  const ready = (llmProvider: string | undefined) =>
-    deepSeekWebCredentialReady(ctx, { ...keyConfig(), baseURL: config.baseURL.get() }, llmProvider)
+  const ready = () => deepSeekWebCredentialReady(ctx, keyConfig())
   const searchApi = new DeepSeekSearchApiProvider(() => ({
     ...auth(),
     baseURL: config.baseURL.get(),

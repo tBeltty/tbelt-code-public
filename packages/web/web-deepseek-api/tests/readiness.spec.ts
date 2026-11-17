@@ -6,7 +6,6 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 import { Context } from '@deepseek-ai/cordis'
 import AgentRegistry from '@deepseek-ai/dsh-agent'
 import type { Agent } from '@deepseek-ai/dsh-agent'
-import type { DeepSeekAccount } from '@deepseek-ai/dsh-deepseek-account'
 import { DSH_LAUNCH_ENVIRONMENT_KEY, createLaunchEnvironmentSnapshot } from '@deepseek-ai/dsh-launch-environment'
 import SessionStore, { SessionId } from '@deepseek-ai/dsh-session'
 import SessionProjectionRegistry from '@deepseek-ai/dsh-session-projection'
@@ -31,8 +30,6 @@ interface Setup {
   environment?: Record<string, string>
   /** Credentials service stand-in. */
   credentials?: { describe(ref: string): Promise<{ configured: boolean }> }
-  /** Account service stand-in. */
-  account?: Pick<DeepSeekAccount, 'resolveToken'>
 }
 
 /**
@@ -45,7 +42,6 @@ async function mount(setup: Setup): Promise<Context> {
   mounted.push(ctx)
   ctx.provide(DSH_LAUNCH_ENVIRONMENT_KEY, createLaunchEnvironmentSnapshot([{ source: 'process', values: setup.environment ?? {} }]))
   if (setup.credentials !== undefined) ctx.provide('credentials', setup.credentials as never)
-  if (setup.account !== undefined) ctx.provide('deepseekAccount', setup.account as DeepSeekAccount)
   await ctx.plugin(SessionStore)
   await ctx.plugin(SessionProjectionRegistry)
   await ctx.plugin(AgentRegistry)
@@ -95,7 +91,6 @@ describe.each(OPERATIONS)('%s readiness', (operation) => {
   it('is ready with the DeepSeek chat key on the DeepSeek routes and outside a model request', async () => {
     const ctx = await mount({ environment: { DEEPSEEK_API_KEY: 'chat-key' } })
     expect(await ready(ctx, operation, 'deepseek-official')).toBe(true)
-    expect(await ready(ctx, operation, 'deepseek-account')).toBe(true)
     expect(await ready(ctx, operation, undefined)).toBe(true)
   })
 
@@ -126,24 +121,6 @@ describe.each(OPERATIONS)('%s readiness', (operation) => {
   ])('answers from the credential store when it %s', async (_label, credentials, expected) => {
     const ctx = await mount({ credentials, environment: { DEEPSEEK_API_KEY: 'ignored-env-key' } })
     expect(await ready(ctx, operation, 'deepseek-official')).toBe(expected)
-  })
-
-  it('is ready on the account route with the account token alone, asking for the API base', async () => {
-    const asked: string[] = []
-    const ctx = await mount({
-      account: { resolveToken: (url: string) => { asked.push(url); return Promise.resolve('account-token') } },
-    })
-    expect(await ready(ctx, operation, 'deepseek-account')).toBe(true)
-    expect(await ready(ctx, operation, 'deepseek-official')).toBe(false)
-    expect(asked).toEqual(['https://api.deepseek.com/v1/tools'])
-  })
-
-  it.each<[string, Pick<DeepSeekAccount, 'resolveToken'>, boolean]>([
-    ['releases no token and the chat key is set', { resolveToken: () => Promise.resolve(undefined) }, true],
-    ['cannot read its grant', { resolveToken: () => Promise.reject(new Error('grant unreadable')) }, false],
-  ])('answers on the account route when the account %s', async (_label, account, expected) => {
-    const ctx = await mount({ account, environment: { DEEPSEEK_API_KEY: 'chat-key' } })
-    expect(await ready(ctx, operation, 'deepseek-account')).toBe(expected)
   })
 })
 

@@ -556,7 +556,7 @@ describe('web e2e: workspace management (create / rename / grouping / hover affo
     expect(await copied.isVisible()).toBe(true)
     expect(await page.evaluate(() => navigator.clipboard.readText())).toBe(rowTitle)
     // Leaving anchor and card together closes it after the grace.
-    await page.getByRole('button', { name: 'Account menu', exact: true }).hover()
+    await page.getByRole('button', { name: 'Settings', exact: true }).hover()
     await expect.poll(() => card.count(), { timeout: 5_000 }).toBe(0)
     expect(tripwire.pageErrors).toEqual([])
   }, 60_000)
@@ -578,7 +578,7 @@ describe('web e2e: workspace management (create / rename / grouping / hover affo
         observations.push({ stage, details: await card.count() > 0, tooltips: await tooltip.allTextContents() })
       }
       const clockStart = Date.now()
-      await hoverPage.getByRole('button', { name: 'Account menu', exact: true }).hover()
+      await hoverPage.getByRole('button', { name: 'Settings', exact: true }).hover()
       await hoverPage.clock.install({ time: clockStart })
       await hoverPage.clock.pauseAt(clockStart + 1000)
       await title.hover()
@@ -627,7 +627,7 @@ describe('web e2e: workspace management (create / rename / grouping / hover affo
       expect(await card.count()).toBe(0)
       await observe('menu-closed')
 
-      await hoverPage.getByRole('button', { name: 'Account menu', exact: true }).hover()
+      await hoverPage.getByRole('button', { name: 'Settings', exact: true }).hover()
       await title.hover()
       await hoverPage.clock.runFor(799)
       expect(await card.count()).toBe(0)
@@ -671,7 +671,7 @@ describe('web e2e: workspace management (create / rename / grouping / hover affo
       const clockStart = Date.now()
       await hoverPage.clock.install({ time: clockStart })
       await hoverPage.clock.pauseAt(clockStart + 1000)
-      await hoverPage.getByRole('button', { name: 'Account menu', exact: true }).hover()
+      await hoverPage.getByRole('button', { name: 'Settings', exact: true }).hover()
       await hoverPage.clock.runFor(300)
       await first.hover()
       await hoverPage.clock.runFor(799)
@@ -691,7 +691,7 @@ describe('web e2e: workspace management (create / rename / grouping / hover affo
       await record('workspace-to-session-immediate', sessionTitle)
       await first.hover()
       await record('session-to-workspace-immediate', 'gamma-ws')
-      await hoverPage.getByRole('button', { name: 'Account menu', exact: true }).hover()
+      await hoverPage.getByRole('button', { name: 'Settings', exact: true }).hover()
       await hoverPage.clock.runFor(300)
       expect(await card.count()).toBe(0)
       await second.hover()
@@ -777,7 +777,7 @@ describe('web e2e: workspace management (create / rename / grouping / hover affo
           await observe('portal-return-instant')
 
           await secondCard.hover()
-          await ui.getByRole('button', { name: 'Account menu', exact: true }).hover()
+          await ui.getByRole('button', { name: 'Settings', exact: true }).hover()
           await ui.clock.runFor(300)
           await secondCard.waitFor({ state: 'detached' })
           expect(await firstCard.count()).toBe(0)
@@ -828,7 +828,7 @@ describe('web e2e: workspace management (create / rename / grouping / hover affo
     await page.waitForTimeout(POINTER_HOLD_MS)
     expect(await page.getByRole('menuitem', { name: 'Rename' }).count()).toBe(1)
     // Context menus stay open across pointer departure and dismiss on an outside press.
-    await page.getByRole('button', { name: 'Account menu', exact: true }).hover()
+    await page.getByRole('button', { name: 'Settings', exact: true }).hover()
     expect(await item.isVisible()).toBe(true)
     await page.locator('[data-row-key]').first().click()
     await expect.poll(() => page.getByRole('menuitem', { name: 'Rename' }).count(), { timeout: 5_000 }).toBe(0)

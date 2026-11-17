@@ -4,6 +4,19 @@ Notable changes to tBelt Code, newest first. The format follows [Keep a Changelo
 
 ## [Unreleased]
 
+## [0.2.2-alpha.2.20261117.2] - 2026-11-17
+
+### Added
+
+- When you open the app with no model provider set up, it asks whether you already have an account or key, and links to free keys from OpenRouter, Groq and Google if you have none.
+
+## [0.2.2-alpha.2.20261117] - 2026-11-17
+
+### Removed
+
+- The app no longer opens a welcome window at startup, and no model provider asks you to sign in with an account.
+- In Settings, the Models page lists each provider with its API key field and no Sign in button.
+
 ## [0.2.2-alpha.2.20261106] - 2026-11-06
 
 ### Added
@@ -425,7 +438,9 @@ Notable changes to tBelt Code, newest first. The format follows [Keep a Changelo
 - Downloads no longer return an older installer.
 - A key that ran out of credit or hit its spending limit is reported as a quota problem instead of an invalid API key.
 
-[Unreleased]: https://github.com/tBeltty/tbelt-code-public/compare/v0.2.2-alpha.2.20261106...HEAD
+[Unreleased]: https://github.com/tBeltty/tbelt-code-public/compare/v0.2.2-alpha.2.20261117.2...HEAD
+[0.2.2-alpha.2.20261117.2]: https://github.com/tBeltty/tbelt-code-public/releases/tag/v0.2.2-alpha.2.20261117.2
+[0.2.2-alpha.2.20261117]: https://github.com/tBeltty/tbelt-code-public/releases/tag/v0.2.2-alpha.2.20261117
 [0.2.2-alpha.2.20261106]: https://github.com/tBeltty/tbelt-code-public/releases/tag/v0.2.2-alpha.2.20261106
 [0.2.1-rc.3.20261030.2]: https://github.com/tBeltty/tbelt-code-public/releases/tag/v0.2.1-rc.3.20261030.2
 [0.2.1-rc.3.20261030]: https://github.com/tBeltty/tbelt-code-public/releases/tag/v0.2.1-rc.3.20261030

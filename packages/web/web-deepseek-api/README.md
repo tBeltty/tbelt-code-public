@@ -7,7 +7,7 @@ kind: "package-reference"
 
 ## Summary
 
-Search and fetch the web through the DeepSeek Search and Fetch APIs: one direct request per operation, without an auxiliary model request. The plugin registers `deepseek-search-api` and `deepseek-fetch-api`, which share one credential and one API base, and authenticates with an API key or the configured account integration. Search returns titles, URLs, available snippets and summaries, and available publication dates; Fetch returns page Markdown. Messages search stays in [dsh-web-search-deepseek](../web-search-deepseek/README.md); the model-facing tools live in `dsh-tool-web`.
+Search and fetch the web through the DeepSeek Search and Fetch APIs: one direct request per operation, without an auxiliary model request. The plugin registers `deepseek-search-api` and `deepseek-fetch-api`, which share one credential and one API base, and authenticates with an API key. Search returns titles, URLs, available snippets and summaries, and available publication dates; Fetch returns page Markdown. Messages search stays in [dsh-web-search-deepseek](../web-search-deepseek/README.md); the model-facing tools live in `dsh-tool-web`.
 
 ## Table of Contents
 
@@ -49,15 +49,15 @@ Run the real API tests with `DEEPSEEK_API_KEY` and `DEEPSEEK_SEARCH_API_TEST_BAS
 <a id="authentication"></a>
 ### Authentication
 
-A Session using the `deepseek-account` route asks the account service for a token authorized for the resolved endpoint and sends it as `x-dsh-auth-token`; the public Search and Fetch routes accepted it on 2026-10-16. Otherwise a non-empty literal `apiKey` wins over `apiKeyEnv`; the reference resolves through `ctx.credentials`, or the launch environment when that service is absent. API keys use `Authorization: Bearer`. Credential resolution and endpoint selection share one settings snapshot.
+A non-empty literal `apiKey` wins over `apiKeyEnv`; the reference resolves through `ctx.credentials`, or the launch environment when that service is absent. API keys use `Authorization: Bearer`. Credential resolution and endpoint selection share one settings snapshot.
 
-Each provider's `ready()` answers whether an operation for a model request has a credential, on any model route: the request's route is `deepseek-account` and `ctx.deepseekAccount` resolves a token for the API base, or a literal `apiKey` is set or `ctx.credentials.describe` reports the `apiKeyEnv` reference configured (without that service, the launch environment must carry it). A failed account-token or credential-store read answers false. While these providers are selected, [`dsh-tool-web`](../tool-web/README.md#search-readiness) withholds `web_search` and `web_fetch` with their prompt guidance from each request for which they answer false. Only presence is checked: a wrong key counts as ready and fails each call.
+Each provider's `ready()` answers whether an operation has a credential, on any model route: a literal `apiKey` is set or `ctx.credentials.describe` reports the `apiKeyEnv` reference configured (without that service, the launch environment must carry it). A failed credential-store read answers false. While these providers are selected, [`dsh-tool-web`](../tool-web/README.md#search-readiness) withholds `web_search` and `web_fetch` with their prompt guidance from each request for which they answer false. Only presence is checked: a wrong key counts as ready and fails each call.
 
 ### Results and failures
 
 The Search API receives `query`, `count` (the configured count, or the request's smaller `maxResults`), `need_content: false`, and, unless `sendOriginalQuestion` is off, `ori_question`: the text of the initiating Session's latest human prompt with whitespace collapsed and cut to 128 characters. A search outside a Session or without such a prompt omits it. The provider maps `results[].snippet` as the display excerpt and `results[].summary` as the model-facing excerpt, and maps nullable `date` to optional `publishedAt`; `dsh-tool-web` caps each summary. An empty results array is successful. Fetch sends `url` and returns the original Markdown as a text body with HTTP status 200, because the API answers with an error status when the target yields no usable content. Its URL is the requested URL: the API reports no final redirected URL.
 
-A blank or unparseable `baseURL` makes both providers unavailable, and a `count` outside 1 to 50 makes Search unavailable. Missing credentials fail with `WEB_PROVIDER_CREDENTIAL_MISSING`; cancellation uses `WEB_ABORTED`; transport, HTTP, and malformed response failures use `WEB_PROVIDER_ERROR`. Redirects are rejected before contacting their target. Non-success Fetch API statuses are retrieval failures, not target-page statuses. Account-authenticated HTTP 401 responses provide sign-in guidance; other dispatch failures identify the endpoint and the `baseURL` settings field. No automatic retry or provider fallback occurs.
+A blank or unparseable `baseURL` makes both providers unavailable, and a `count` outside 1 to 50 makes Search unavailable. Missing credentials fail with `WEB_PROVIDER_CREDENTIAL_MISSING`; cancellation uses `WEB_ABORTED`; transport, HTTP, and malformed response failures use `WEB_PROVIDER_ERROR`. Redirects are rejected before contacting their target. Non-success Fetch API statuses are retrieval failures, not target-page statuses. Dispatch failures identify the endpoint and the `baseURL` settings field. No automatic retry or provider fallback occurs.
 
 -----
 

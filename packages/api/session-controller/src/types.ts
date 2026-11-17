@@ -191,8 +191,6 @@ declare module '@deepseek-ai/dsh-typert-protocol' {
     'session/observation-ended': Record<string, never>
     /** No state arrived before the deadline; a timeout after a state returns its value instead. */
     'session/wait-timeout': Record<string, never>
-    'session/provider-credentials-unavailable': Record<string, never>
-    'session/provider-models-unavailable': { readonly provider: string }
     'session/model-unavailable': { readonly provider: string; readonly model: string }
     'session/conflict': {
       readonly sessionId: SessionId

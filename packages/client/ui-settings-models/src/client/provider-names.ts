@@ -39,6 +39,32 @@ export const POPULAR_PROVIDERS: readonly string[] = [
   'openai', 'anthropic', 'google', 'openrouter', 'deepseek', 'xai', 'mistral', 'groq',
 ]
 
+/** Catalog routes offered on the first-run screen for a person who already has a key, in display order. */
+export const HAVE_KEY_PROVIDERS: readonly string[] = ['openai', 'anthropic', 'google', 'openrouter']
+
+/** A provider that offers a free key, with the page that creates it. */
+export interface FreeKeyProvider {
+  /** Catalog route id. */
+  provider: string
+  /** Page where the person creates the key. */
+  keyUrl: string
+  /** Copy key of the one-line limits text. */
+  limitKey: 'onboardingLimitOpenrouter' | 'onboardingLimitGroq' | 'onboardingLimitGoogle'
+  /** Copy key of a privacy notice shown after the limits text. */
+  privacyKey?: 'onboardingPrivacyGoogle'
+}
+
+/**
+ * Providers shown to a person with no key, in display order. The limits copy
+ * carries no figures; each provider changes them, so the text names only what
+ * its documentation states as a rule.
+ */
+export const FREE_KEY_PROVIDERS: readonly FreeKeyProvider[] = [
+  { provider: 'openrouter', keyUrl: 'https://openrouter.ai/settings/keys', limitKey: 'onboardingLimitOpenrouter' },
+  { provider: 'groq', keyUrl: 'https://console.groq.com/keys', limitKey: 'onboardingLimitGroq' },
+  { provider: 'google', keyUrl: 'https://aistudio.google.com/apikey', limitKey: 'onboardingLimitGoogle', privacyKey: 'onboardingPrivacyGoogle' },
+]
+
 /**
  * Name a provider route for display.
  * @param provider - route id.

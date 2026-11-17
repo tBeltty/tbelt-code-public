@@ -9,7 +9,7 @@ import { createSnapshotStore } from '@deepseek-ai/dsh-client-store'
 import type { ComponentProps } from 'react'
 import type { ModelDirectoryState } from '../src/client/directory.ts'
 import { ModelSelect } from '../src/client/ModelSelect.tsx'
-import { en, es } from '../src/client/locales.ts'
+import { es } from '../src/client/locales.ts'
 import { es as commonEs } from '@deepseek-ai/dsh-client-locale/src/locales/es.ts'
 
 // The seat's key domain is model ∪ common; the stub mirrors the real lookup
@@ -1211,8 +1211,8 @@ it('hides the inherited effort until a listed model is selected', async () => {
 })
 
 
-it('keeps catalog order for account, official and third-party models', async () => {
-  const groups = ['custom', 'deepseek-official', 'deepseek-account', 'another'].map(id => ({
+it('keeps catalog order for official and third-party models', async () => {
+  const groups = ['custom', 'deepseek-official', 'another'].map(id => ({
     id, name: id, models: [1, 2].map(index => ({ id: `${id}-${index}`, name: `${id}-${index}` })),
   }))
   const directory = createSnapshotStore<ModelDirectoryState>(state({ current: null, groups }))
@@ -1222,30 +1222,17 @@ it('keeps catalog order for account, official and third-party models', async () 
   const names = screen.getAllByRole('menuitemradio').map(row => row.textContent)
   expect(names).toEqual([
     'custom-1', 'custom-2', 'deepseek-official-1', 'deepseek-official-2',
-    'deepseek-account-1', 'deepseek-account-2', 'another-1', 'another-2',
+    'another-1', 'another-2',
   ])
-  expect(groups.map(group => group.id)).toEqual(['custom', 'deepseek-official', 'deepseek-account', 'another'])
+  expect(groups.map(group => group.id)).toEqual(['custom', 'deepseek-official', 'another'])
   await expect(`${names.join('\n')}\n`).toMatchFileSnapshot('./expected/catalog-order.txt')
 })
 
-it.each([en, es])('localizes the account group while preserving external names', (copy) => {
-  const groups = ['deepseek-account', 'custom'].map(id => ({
-    id, name: id === 'deepseek-account' ? 'DeepSeek Account' : 'My Gateway',
-    models: [{ id: 'model', name: 'Model' }],
-  }))
-  render(<ModelSelect renderSlot={renderLabel} modelSettings={noSettings} locked={false} available
-    directory={createSnapshotStore(state({ current: null, groups }))}
-    load={vi.fn()} resolveText={resolveText} select={vi.fn()} t={key => key in copy ? copy[key as keyof typeof copy] : key} />)
-  fireEvent.click(screen.getByRole('button', { name: copy['trigger.selectAria'] }))
-  expect(screen.getByRole('group', { name: copy['provider.account'] })).toBeTruthy()
-  expect(screen.getByRole('group', { name: 'My Gateway' })).toBeTruthy()
-})
-
-it('restores the account model name after login without changing the saved route', () => {
-  const groups = [{ id: 'deepseek-account', name: 'DeepSeek Account', models: [
+it('restores the model name after providers reload without changing the saved route', () => {
+  const groups = [{ id: 'deepseek-official', name: 'DeepSeek', models: [
     { id: 'deepseek-flash', name: 'DeepSeek Flash', reasoning },
   ] }]
-  const selected = { provider: 'deepseek-account', model: 'deepseek-flash', reasoningEffort: 'high' }
+  const selected = { provider: 'deepseek-official', model: 'deepseek-flash', reasoningEffort: 'high' }
   const directory = createSnapshotStore(state({ current: selected, groups, retainedEffort: 'High' }))
   render(<ModelSelect renderSlot={renderLabel} modelSettings={noSettings}
     locked={false} available directory={directory} load={vi.fn()} resolveText={resolveText} select={vi.fn()} t={t} />)

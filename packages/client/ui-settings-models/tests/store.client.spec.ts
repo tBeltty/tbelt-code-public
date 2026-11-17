@@ -4,7 +4,7 @@ import type { RpcResponse } from '@deepseek-ai/dsh-api-remotes/client'
 import { RemoteError } from '@deepseek-ai/dsh-client-test-runtime'
 import { SettingsDescribeMirror } from '@deepseek-ai/dsh-client-ui-settings/src/client/settings-mirror.ts'
 import { settingsSchema } from './settings-schema.client.ts'
-import { joinProviderDirectory, ModelsSettingsStore, providerUsable } from '../src/client/store.ts'
+import { joinProviderDirectory, ModelsSettingsStore } from '../src/client/store.ts'
 
 it.each([false, true])('retains configuration diagnostics when the route is active: %s', (active) => {
   expect(joinProviderDirectory(active ? [{ id: 'openai', name: 'openai' }] : [], [{
@@ -17,7 +17,7 @@ it.each([false, true])('retains configuration diagnostics when the route is acti
 })
 
 it('keeps directory order without placing any provider first', () => {
-  const providers = ['custom', 'deepseek-official', 'deepseek-account', 'openai']
+  const providers = ['custom', 'deepseek-official', 'gateway', 'openai']
   const directory = providers.map(provider => ({
     provider, displayName: provider, settingsNs: 'fixture', settingsPath: [],
   }))
@@ -62,15 +62,6 @@ const NAMESPACES = [
     revision: 0,
   },
   {
-    ns: 'llm-deepseek-account',
-    schema: {},
-    value: { baseURL: 'https://base' },
-    base: { baseURL: 'https://base' },
-    autoGenerate: true, applies: 'live' as const,
-    secrets: [],
-    revision: 0,
-  },
-  {
     ns: 'llm-pi-ai',
     schema: {},
     value: { providers: { openai: { apiKeyEnv: 'OPENAI_API_KEY' } } },
@@ -82,7 +73,6 @@ const NAMESPACES = [
 ]
 
 function api(overrides: {
-  accountAvailable?: boolean
   providers?: () => Promise<RpcResponse<{ providers: typeof DIRECTORY }>>
   describeSettings?: () => Promise<RemoteAnswer<{ writable: boolean; hasDocument: boolean; namespaces: typeof NAMESPACES }>>
   describeCredentials?: (refs: readonly string[]) => Promise<RemoteAnswer<Record<string, unknown>>>
@@ -107,8 +97,6 @@ function api(overrides: {
       : remoteFail(response.result.error.message)
   }
   const face = {
-    session: { modelCatalog: async () => remoteOk({ groups: overrides.accountAvailable
-      ? [{ id: 'deepseek-account', models: [{ id: 'deepseek-flash' }] }] : [] }) },
     llm: {
       listProviders: () => mapProviderBatch(rows => rows
         .filter(row => row.active)
@@ -487,36 +475,4 @@ describe('edge joins', () => {
     // The stale empty directory never overwrote the newer join.
     expect(store.store.getSnapshot().rows).toHaveLength(4)
   })
-})
-
-
-it.each([false, true])('uses account availability without asking for an API key: %s', async (accountAvailable) => {
-  const { ctx, mirror, seenRefs } = api({ accountAvailable, providers: async () => ok({ providers: [{
-    provider: 'deepseek-account', displayName: 'DeepSeek Account', settingsNs: 'llm-deepseek-account', settingsPath: [], active: true,
-  }] }) })
-  const store = new ModelsSettingsStore(ctx, settingsSchema, mirror)
-  await store.load()
-  const rows = store.store.getSnapshot().rows
-  expect(rows).toHaveLength(1)
-  expect(rows[0]).toMatchObject({ accountAvailable, apiKeyEnv: undefined, credential: undefined })
-  expect(providerUsable(rows[0]!)).toBe(accountAvailable)
-  expect(store.store.getSnapshot().namespaces.get('llm-deepseek-account')?.ns).toBe('llm-deepseek-account')
-  expect(seenRefs).toEqual([])
-})
-
-it('keeps the account row after sign-out and marks it unavailable', async () => {
-  const overrides = { accountAvailable: true, providers: async () => ok({ providers: [{
-    provider: 'deepseek-account', displayName: 'DeepSeek Account', settingsNs: 'llm-deepseek-account', settingsPath: [], active: true,
-  }, ...DIRECTORY] }) }
-  const { ctx, mirror } = api(overrides)
-  const store = new ModelsSettingsStore(ctx, settingsSchema, mirror)
-  await store.load()
-  expect(store.store.getSnapshot().rows[0]?.entry.provider).toBe('deepseek-account')
-  overrides.accountAvailable = false
-  await store.load()
-  expect(store.store.getSnapshot().rows[0]).toMatchObject({ accountAvailable: false })
-  expect(store.store.getSnapshot().rows).toHaveLength(DIRECTORY.length + 1)
-  overrides.accountAvailable = true
-  await store.load()
-  expect(store.store.getSnapshot().rows[0]).toMatchObject({ accountAvailable: true })
 })

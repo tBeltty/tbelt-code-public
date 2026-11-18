@@ -1,9 +1,5 @@
 - text: 简单画一个 SVG 表示冯诺依曼架构, 保存为 von-neumann.svg {{clock}}
-- button "Copy"
-- status: Completed
-- button "Completed in {{duration}}" [expanded]
-- button "Analysis completed" [expanded]
-- button "Think The user wants a simple SVG diagram of the von Neumann architecture, saved as von-neumann.svg. Let me create a clean SVG showing CPU (control unit, ALU), memory, input, and output with bidirectional data/control buses."
+- button "Copy"- status: Completed- button "Completed in {{duration}}" [expanded]- button "Analysis completed" [expanded]- button "Context injection runtime-context"- button "Context injection skill-catalog"- button "上下文注入 time-context"- button "Think The user wants a simple SVG diagram of the von Neumann architecture, saved as von-neumann.svg. Let me create a clean SVG showing CPU (control unit, ALU), memory, input, and output with bidirectional data/control buses."
 - paragraph: 我来创建一个冯诺依曼架构的 SVG 示意图。
 - button "Wrote files and called tools" [expanded]
 - button "Write von-neumann.svg 6KB +83 -0":

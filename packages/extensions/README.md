@@ -22,7 +22,7 @@ The extensions group provides read-only runtime API discovery for agents, proces
 
 | Package | Role | ctx key |
 |---|---|---|
-| [`tool-cordis`](tool-cordis/README.md) | Two read-only tools for runtime API discovery | registers on `ctx.tools` |
+| [`tool-cordis`](tool-cordis/README.md) | One read-only tool for runtime API discovery | registers on `ctx.tools` |
 | [`cordis-host-runner`](cordis-host-runner/README.md) | Host half: definition registry, sandboxed host-half lifecycle, and the inspect registry that answers browser queries | provides `ctx.dynamicCordisRunner` and `ctx.cordisInspect` |
 | [`cordis-client-runner`](cordis-client-runner/README.md) | Browser half: evaluates a browser-half source into a live plugin and answers run requests | client face; provides browser `ctx.dynamicCordisRunner` |
 | [`ui-cordis`](ui-cordis/README.md) | Browser panel and historical lifecycle tool cards | client face; registers slots |
@@ -33,7 +33,7 @@ The extensions group provides read-only runtime API discovery for agents, proces
 ## Related documentation
 
 - Extensions subsystem — the generated `ctx.cordisInspect` and `ctx.dynamicCordisRunner` service API.
-- Generated tool catalog — the two read-only tool schemas.
+- Generated tool catalog — the read-only inspection tool schema.
 - Generated configuration catalog — the runner's accepted config fields.
 - [Self-referential Cordis toolset reference](cordis-host-runner/README.md) — design home for sandbox semantics, lifecycle, and composition.
 - Client shells and dynamic packages Agent Note — package placement and build faces for the client halves.

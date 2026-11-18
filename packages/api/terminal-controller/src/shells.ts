@@ -39,6 +39,17 @@ export function commandArgs(shell: TerminalShell, command: string): string[] {
   return [...shell.args, '-c', command]
 }
 
+/**
+ * Find a discovered shell by executable name, ignoring letter case and `.exe`.
+ * @param shells - verified shells in preference order.
+ * @param name - executable name or path.
+ * @returns the first matching shell.
+ */
+export function findShell(shells: readonly TerminalShell[], name: string): TerminalShell | undefined {
+  const kind = shellKind(name)
+  return shells.find(shell => shellKind(shell.path) === kind)
+}
+
 function executableName(path: string): string {
   return path.slice(Math.max(path.lastIndexOf('/'), path.lastIndexOf('\\')) + 1)
 }

@@ -40,6 +40,39 @@
   color: var(--dsw-alias-label-primary);
 }
 
+/* A panel field built here rather than by the settings form: the billing menu. */
+.panelField {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 12px 0;
+}
+
+/* Matches the settings fields' own divider, so the billing menu joins their rhythm. */
+.panel > * + .panelField {
+  border-top: 0.5px solid var(--dsw-alias-border-l2);
+}
+
+/* Matches the settings fields' label row: the label, then the override tag at the end. */
+.panelHead {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.panelHead > .panelLabel {
+  flex: 1;
+  min-width: 0;
+}
+
+/* Matches the settings fields' label. */
+.panelLabel {
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 1.5;
+  color: var(--dsw-alias-label-primary);
+}
+
 .hint {
   margin: 0;
   font-size: 12px;

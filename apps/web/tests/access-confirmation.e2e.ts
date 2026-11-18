@@ -14,7 +14,7 @@ import {
   launchWebScaffold, watchConsole, webSnapshotMode, type WebScaffold,
 } from './scaffold.ts'
 import {
-  EN_BROWSER_LOCALE, connectFreshWorkspace, saveFailureShot, writeComposerDraft,
+  EN_BROWSER_LOCALE, assertWarningDialogLayout, connectFreshWorkspace, saveFailureShot, writeComposerDraft,
 } from './support.ts'
 
 import { AUTO_REVIEW_FIXTURE, captureAutoReviewState } from './auto-review-fixture.ts'
@@ -154,6 +154,7 @@ describe('web e2e: experimental Auto and Full access confirmation', () => {
     await page.getByRole('menuitem', { name: 'Full access' }).click()
     const dialog = page.getByRole('dialog', { name: 'Enable Full access?' })
     await dialog.waitFor({ timeout: 10_000 })
+    await assertWarningDialogLayout(dialog)
     const enable = dialog.getByRole('button', { name: 'Enable Full access' })
     expect(await enable.isDisabled()).toBe(true)
 
@@ -163,7 +164,18 @@ describe('web e2e: experimental Auto and Full access confirmation', () => {
     const snapshot = await captureStableAria(page, '[role="dialog"]', scaffold.workspaceCwd)
     await compareOrRefreshGolden(UI_EXPECTED, snapshot, MODE)
 
-    await dialog.getByRole('checkbox', { name: 'I understand the risks and want to continue' }).check()
+    const acknowledgement = dialog.getByRole('checkbox', { name: 'I understand the risks and want to continue' })
+    expect(await acknowledgement.evaluate((input) => {
+      const label = input.closest('label')!
+      const textStyle = getComputedStyle(label)
+      const inputStyle = getComputedStyle(input)
+      return {
+        focused: document.activeElement === input,
+        fontSize: textStyle.fontSize, lineHeight: textStyle.lineHeight, weight: textStyle.fontWeight,
+        gap: textStyle.gap, width: inputStyle.width, height: inputStyle.height,
+      }
+    })).toEqual({ focused: true, fontSize: '14px', lineHeight: '20px', weight: '400', gap: '6px', width: '14px', height: '14px' })
+    await dialog.getByText('I understand the risks and want to continue', { exact: true }).click()
     expect(await enable.isEnabled()).toBe(true)
     await enable.click()
     await expect.poll(() => access.getAttribute('aria-label'), { timeout: 10_000 })

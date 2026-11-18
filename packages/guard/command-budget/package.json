@@ -1,7 +1,7 @@
 {
   "name": "@deepseek-ai/dsh-command-budget",
   "description": "Human-facing /budget slash command that shows session and monthly model spend and sets or clears spend limits",
-  "version": "0.2.2-alpha.2",
+  "version": "0.2.2-rc.4",
   "publishConfig": {
     "access": "public"
   },

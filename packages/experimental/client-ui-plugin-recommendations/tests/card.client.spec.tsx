@@ -1,8 +1,9 @@
 // @vitest-environment jsdom
 import { act, cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import { afterEach, expect, it, vi } from 'vitest'
-import { ToolCallId } from '@deepseek-ai/dsh-llm/brand'
-import { SessionId } from '@deepseek-ai/dsh-session/types'
+import { brandString } from '@deepseek-ai/dsh-brand'
+import type { ActionCardId } from '@deepseek-ai/dsh-action-cards/types'
+import type { SessionId } from '@deepseek-ai/dsh-session/types'
 import { createSnapshotStore } from '@deepseek-ai/dsh-client-store'
 import { makeTranslate } from '@deepseek-ai/dsh-client-test-runtime'
 import type { LocalizedText } from '@deepseek-ai/dsh-package-manifest'
@@ -13,14 +14,14 @@ import { PluginCardBody, type CatalogDetails, type PluginCardProps } from '../sr
 import { en, es, el, fr } from '../src/client/locales.ts'
 
 afterEach(cleanup)
-const callId = ToolCallId('call-plugin-1')
+const cardId = brandString<ActionCardId>('call-plugin-1')
 const ACTION = 'enable_official_plugin'
 type Act = (verb: string, payload?: ActionCardFields) => Promise<ActionCardResult | undefined>
 type Describe = PluginCardProps['describe']
 const available: RecommendationDetails = {
   status: 'available', title: { en: 'Session search', es: 'Búsqueda de sesiones' }, description: { en: 'Search past conversations', es: 'Busca en conversaciones pasadas' }, enabled: false,
 }
-const proposal = { callId, turn: 1, action: ACTION, title: 'Buscar sesiones antiguas', brief: 'Te ayuda a encontrar el plan comentado la semana pasada', details: { name: 'official-search' } as ActionCardFields }
+const proposal = { cardId, turn: 1, action: ACTION, title: 'Buscar sesiones antiguas', brief: 'Te ayuda a encontrar el plan comentado la semana pasada', details: { name: 'official-search' } as ActionCardFields }
 
 function catalog() {
   return createSnapshotStore<Readonly<Record<string, CatalogDetails>>>({})
@@ -28,9 +29,9 @@ function catalog() {
 
 function props(decision?: { phase: string; data?: ActionCardFields }, details: RecommendationDetails = available, store = catalog()) {
   return {
-    proposal, decision: decision === undefined ? undefined : { callId, action: ACTION, ...decision },
-    sessionId: SessionId('session-1'), summary: <strong>{proposal.title}</strong>, Folded: FoldedText,
-    act: vi.fn<Act>(async () => ({ status: 'settled', decision: { callId, action: ACTION, phase: 'enabled' } })),
+    proposal, decision: decision === undefined ? undefined : { cardId, action: ACTION, ...decision },
+    sessionId: brandString<SessionId>('session-1'), summary: <strong>{proposal.title}</strong>, fallback: <p>frame fallback</p>,
+    Folded: FoldedText, act: vi.fn<Act>(async () => ({ status: 'settled', decision: { cardId, action: ACTION, phase: 'enabled' } })),
     catalog: store, describe: vi.fn<Describe>(async () => details), openDetails: vi.fn<(name: string) => void>(),
     resolveText: (text: LocalizedText) => typeof text === 'string' ? text : text.es ?? text.en,
     t: makeTranslate(es),
@@ -39,7 +40,7 @@ function props(decision?: { phase: string; data?: ActionCardFields }, details: R
 
 async function shown(value: PluginCardProps) {
   const view = render(<PluginCardBody {...value} />)
-  await waitFor(() => { expect(value.describe).toHaveBeenCalledWith('session-1', callId) })
+  await waitFor(() => { expect(value.describe).toHaveBeenCalledWith('session-1', cardId) })
   await act(async () => {})
   return view
 }
@@ -84,7 +85,7 @@ it.each([
   expect(value.act).toHaveBeenCalledWith(verb)
   expect(screen.getByRole('button', { name: 'Procesando…' }).hasAttribute('disabled')).toBe(true)
   expect(screen.getByRole('button', { name: other }).hasAttribute('disabled')).toBe(true)
-  await act(async () => { pending.resolve({ status: 'settled', decision: { callId, action: ACTION, phase: 'dismissed' } }) })
+  await act(async () => { pending.resolve({ status: 'settled', decision: { cardId, action: ACTION, phase: 'dismissed' } }) })
   expect(screen.getByRole('button', { name: clicked }).hasAttribute('disabled')).toBe(false)
 })
 
@@ -212,10 +213,11 @@ it('renders a remembered plugin at once on a later card while refusals and lost 
   expect(screen.queryByRole('button', { name: 'Habilitar' })).toBeNull()
 })
 
-it('renders only the frame summary when the card names no plugin', () => {
+it('shows only the frame fallback when the card names no plugin', () => {
   const value = { ...props(), proposal: { ...proposal, details: {} } }
   render(<PluginCardBody {...value} />)
-  expect(screen.getByText('Buscar sesiones antiguas')).toBeTruthy()
+  expect(screen.getByText('frame fallback')).toBeTruthy()
+  expect(screen.queryByText('Buscar sesiones antiguas')).toBeNull()
   expect(screen.queryByRole('button')).toBeNull()
   expect(value.describe).not.toHaveBeenCalled()
 })

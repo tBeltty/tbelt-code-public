@@ -3,14 +3,16 @@ import * as uiPrimitives from '@deepseek-ai/dsh-client-ui-primitives'
 import { act, cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, onTestFinished, vi } from 'vitest'
 import { RemoteError, SlotTestRuntime } from '@deepseek-ai/dsh-client-test-runtime'
-import { SessionId } from '@deepseek-ai/dsh-session/types'
+import type { SessionId } from '@deepseek-ai/dsh-session/types'
 import type { ModelSelection } from '@deepseek-ai/dsh-api-remotes/client'
 import { createSnapshotStore } from '@deepseek-ai/dsh-client-store'
 import type { ComponentProps } from 'react'
+import type { OwnerOf } from '@deepseek-ai/dsh-client-ui-slots'
 import type { ModelDirectoryState } from '../src/client/directory.ts'
 import { ModelSelect } from '../src/client/ModelSelect.tsx'
 import { es } from '../src/client/locales.ts'
 import { es as commonEs } from '@deepseek-ai/dsh-client-locale/src/locales/es.ts'
+import { brandString } from '@deepseek-ai/dsh-brand'
 
 // The seat's key domain is model ∪ common; the stub mirrors the real lookup
 // chain: package dictionary, then common vocabulary, then the key.
@@ -88,7 +90,7 @@ describe('ModelSelect label slot', () => {
   it('distinguishes identical model names and ids by provider across all placements and restores labels on unload', async () => {
     const runtime = await SlotTestRuntime.create()
     onTestFinished(() => runtime.dispose())
-    const sessionId = SessionId('model-label')
+    const sessionId = brandString<SessionId>('model-label')
     await runtime.sessions.add({ id: sessionId })
     const session = runtime.sessions.retainFor(runtime.ctx, sessionId)
     const groups = ['trusted', 'external'].map(id => ({
@@ -101,6 +103,7 @@ describe('ModelSelect label slot', () => {
     })
     await runtime.root.declare({
       'conversation.input.model.label': { kind: 'single', scope: 'session', inline: true },
+      'conversation.input.model.options': { kind: 'list', scope: 'session' },
     }, ({ renderSlot, SessionProvider }) => <SessionProvider session={session}>
       <ModelSelect modelSettings={noSettings}
         locked={false} available directory={directory} load={vi.fn()} resolveText={resolveText} select={select} t={t}
@@ -190,7 +193,7 @@ describe('ModelSelect catalog badges', () => {
   it('hands the badge to a label contribution, which replaces the default rendering', async () => {
     const runtime = await SlotTestRuntime.create()
     onTestFinished(() => runtime.dispose())
-    const sessionId = SessionId('model-badge')
+    const sessionId = brandString<SessionId>('model-badge')
     await runtime.sessions.add({ id: sessionId })
     const session = runtime.sessions.retainFor(runtime.ctx, sessionId)
     await runtime.root.declare({
@@ -384,7 +387,7 @@ describe('ModelSelect reasoning effort', () => {
     const directory = createSnapshotStore<ModelDirectoryState>(state({ groups }))
     const select = vi.fn(async () => {
       const error = sessionInUse
-        ? new RemoteError('session/writer-held', 'writer held', { sessionId: SessionId('owned') })
+        ? new RemoteError('session/writer-held', 'writer held', { sessionId: brandString<SessionId>('owned') })
         : new RemoteError('session/model-unavailable', 'session already contains images', { provider: 'deepseek-official', model: 'deepseek-v4-pro' })
       directory.set(state({ groups, status: 'error', error: 'unrelated catalog refresh' }))
       return { ok: false as const, error }
@@ -477,41 +480,36 @@ describe('ModelSelect reasoning effort', () => {
       .map(row => row.textContent)).toEqual(['Max'])
   })
 
-  it('portals the placed menu card to body and closes only on truly-outside mousedown', () => {
-    const offsetWidth = Object.getOwnPropertyDescriptor(HTMLElement.prototype, 'offsetWidth')!
-    const offsetHeight = Object.getOwnPropertyDescriptor(HTMLElement.prototype, 'offsetHeight')!
-    Object.defineProperty(HTMLElement.prototype, 'offsetWidth', { configurable: true, get: () => 200 })
-    Object.defineProperty(HTMLElement.prototype, 'offsetHeight', { configurable: true, get: () => 300 })
-    try {
-      const { container } = render(<ModelSelect renderSlot={renderLabel} modelSettings={noSettings}
-        locked={false}
-        available
-        directory={createSnapshotStore(state())}
-        load={vi.fn()} resolveText={resolveText}
-        select={vi.fn().mockResolvedValue({ ok: true, value: undefined })}
-        t={t}
-      />)
-      const trigger = screen.getByRole('button', { name: /Elegir modelo/ })
-      fireEvent.click(trigger)
-      const menu = screen.getByRole('menu')
-      // Outside the composer subtree — column overflow clips cannot crop it.
-      expect(container.contains(menu)).toBe(false)
-      expect(menu.parentElement).toBe(document.body)
-      // jsdom anchor rects are all zero, so the measured 200x300 card clamps
-      // to the 12px viewport margin on both axes.
-      expect(menu.style.left).toBe('12px')
-      expect(menu.style.top).toBe('12px')
-      // Interactions inside the trigger subtree or the portaled card stay open.
-      expect(fireEvent.mouseDown(menu)).toBe(true)
-      expect(fireEvent.mouseDown(trigger)).toBe(false)
-      fireEvent.blur(trigger, { relatedTarget: menu })
-      expect(screen.getByRole('menu')).toBeTruthy()
-      fireEvent.mouseDown(document.body)
-      expect(screen.queryByRole('menu')).toBeNull()
-    } finally {
-      Object.defineProperty(HTMLElement.prototype, 'offsetWidth', offsetWidth)
-      Object.defineProperty(HTMLElement.prototype, 'offsetHeight', offsetHeight)
-    }
+  it('anchors the body portal with CSS and closes only on truly-outside mousedown', () => {
+    const measure = vi.spyOn(HTMLElement.prototype, 'getBoundingClientRect')
+    onTestFinished(() => { measure.mockRestore() })
+    const { container } = render(<ModelSelect renderSlot={renderLabel} modelSettings={noSettings}
+      locked={false}
+      available
+      directory={createSnapshotStore(state())}
+      load={vi.fn()} resolveText={resolveText}
+      select={vi.fn().mockResolvedValue({ ok: true, value: undefined })}
+      t={t}
+    />)
+    const trigger = screen.getByRole('button', { name: /Elegir modelo/ })
+    fireEvent.click(trigger)
+    const menu = screen.getByRole('menu')
+    // Outside the composer subtree — column overflow clips cannot crop it.
+    expect(container.contains(menu)).toBe(false)
+    expect(menu.parentElement).toBe(document.body)
+    const anchor = trigger.style.getPropertyValue('--dsh-model-anchor')
+    expect(anchor).toMatch(/^--dsh-model-/)
+    expect(menu.style.getPropertyValue('--dsh-model-anchor')).toBe(anchor)
+    expect(menu.style.left).toBe('')
+    expect(menu.style.top).toBe('')
+    expect(measure).not.toHaveBeenCalled()
+    // Interactions inside the trigger subtree or the portaled card stay open.
+    expect(fireEvent.mouseDown(menu)).toBe(true)
+    expect(fireEvent.mouseDown(trigger)).toBe(false)
+    fireEvent.blur(trigger, { relatedTarget: menu })
+    expect(screen.getByRole('menu')).toBeTruthy()
+    fireEvent.mouseDown(document.body)
+    expect(screen.queryByRole('menu')).toBeNull()
   })
 
   it('renders no Agent-bound control for an addressed subagent session', () => {
@@ -1242,4 +1240,21 @@ it('restores the model name after providers reload without changing the saved ro
   act(() => { directory.update((snapshot) => { snapshot.groups = groups; snapshot.routable = true }) })
   expect(screen.getByRole('button', { name: /Elegir modelo, actual/ }).textContent).toBe('DeepSeek FlashHigh')
   expect(directory.getSnapshot().current).toEqual(selected)
+})
+
+
+it('dismisses contributed options with focus on the trigger before opening another overlay', () => {
+  const renderSlot = vi.fn((_name: string, _owner: object) => null)
+  render(<ModelSelect modelSettings={noSettings} locked={false} available directory={createSnapshotStore(state())}
+    load={vi.fn()} resolveText={resolveText} select={vi.fn()} t={t} renderSlot={renderSlot} />)
+  const trigger = screen.getByRole('button', { name: /^Elegir modelo/ })
+  fireEvent.click(trigger)
+  const options = renderSlot.mock.calls.find(call => call[0] === 'conversation.input.model.options')
+  if (options?.[0] !== 'conversation.input.model.options') throw new Error('Missing model options')
+  act(() => {
+    screen.getAllByRole('menuitem')[0]!.focus()
+    ;(options[1] as OwnerOf<'conversation.input.model.options'>).dismiss()
+    expect(document.activeElement).toBe(trigger)
+  })
+  expect(screen.queryByRole('menu')).toBeNull()
 })

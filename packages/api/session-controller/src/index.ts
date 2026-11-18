@@ -12,7 +12,7 @@ import { canOpenNativePath, nativeFileManager, nativeFileApplications, openNativ
 import type { SessionId } from '@deepseek-ai/dsh-session'
 import type {} from '@deepseek-ai/dsh-session-projection-cache'
 import type { SessionObservation } from '@deepseek-ai/dsh-session-query'
-import { Remote, RemoteError, TypertRemoteService, principalOf, type TypertResourceResolveInput } from '@deepseek-ai/dsh-typert-protocol'
+import { Remote, RemoteError, TypertRemoteService, principalOf } from '@deepseek-ai/dsh-typert-protocol'
 import { canonicalClientTimeZone } from '@deepseek-ai/dsh-util-time'
 import { assertNever } from '@deepseek-ai/dsh-util-values'
 import type {} from '@deepseek-ai/dsh-api-remote-access'
@@ -21,6 +21,7 @@ import {
   type ApiSessionAgentResult,
 } from './agent.ts'
 import { SessionCommandController, hasPromptContent } from './commands.ts'
+import { resolveSessionResource } from './session-resource.ts'
 import { SessionControlController } from './control.ts'
 import { HistoryController } from './history/controller.ts'
 import { StateController } from './state/controller.ts'
@@ -34,7 +35,6 @@ import { ArchivedSessionGate } from './archived-session-gate.ts'
 import type {
   ModelCatalog,
   SessionWorkspacePathApplication,
-  SessionAddress,
   SessionAttachmentRequest,
   SessionAttachmentValue,
   SessionCancelRequest,
@@ -78,34 +78,6 @@ declare module '@deepseek-ai/cordis' {
     /** Host Session business API and Remote namespace owner. */
     sessionController: SessionController
   }
-}
-
-/**
- * Extract the Session resource from an ID or a history address.
- *
- * Registers as the `session` kind default, so it applies to every Remote method of
- * every namespace: a top-level `sessionId` parameter, otherwise the first object
- * parameter carrying `sessionId` or an `address`. A new request type whose first
- * object parameter has an unrelated `address` field would be read as an address.
- * @param input - validated wire arguments and their ordered parameter descriptions.
- * @returns the named Session identity, otherwise the first object's Session identity or history address.
- * @throws Error when the request object supplies both sessionId and address.
- */
-function resolveSessionResource({ args, parameters }: TypertResourceResolveInput): SessionId | undefined {
-  const sessionParameter = parameters.find(parameter => parameter.name === 'sessionId' || parameter.wire === 'sessionId')
-  if (sessionParameter !== undefined) return args[sessionParameter.wire] as SessionId | undefined
-  for (const parameter of parameters) {
-    const value = args[parameter.wire]
-    if (typeof value !== 'object' || value === null || Array.isArray(value)) continue
-    const request = value as { readonly sessionId?: SessionId; readonly address?: SessionAddress }
-    const address = request.address
-    if (request.sessionId !== undefined && address !== undefined) {
-      throw new Error('Session resource request must not contain both sessionId and address')
-    }
-    return request.sessionId ?? (address === undefined ? undefined
-      : address.kind === 'session' ? address.sessionId : address.childSessionId)
-  }
-  return undefined
 }
 
 /** Session Controller deployment policy. */
@@ -211,7 +183,10 @@ export class SessionController extends TypertRemoteService {
     this.stateController = new StateController(ctx, this.historyController)
     this.webController = new WebController(ctx, this.historyController, (observation) => { this.promote(observation) })
     this.listState = new ApiSessionList(ctx, this.listWorkSliceMs)
+    await this.commands.initialize()
+    ctx.fiber.assertActive()
     await this.listState.initialize()
+    ctx.fiber.assertActive()
     ctx.plugin(SessionFileReferences)
     ctx.plugin(SessionMediaReferences)
     ctx.plugin(SessionSkillCatalog)
@@ -460,7 +435,7 @@ export class SessionController extends TypertRemoteService {
   @Remote('prompt')
   async prompt(request: SessionPromptRequest, signal: AbortSignal): Promise<SessionPromptValue> {
     signal.throwIfAborted()
-    if (!hasPromptContent(request.content)) {
+    if (request.content.length > 0 && !hasPromptContent(request.content)) {
       throw new RemoteError('gateway/bad-request', 'prompt content must include non-whitespace text or an attachment', {})
     }
     const clientTimeZone = request.clientTimeZone === undefined
@@ -476,7 +451,7 @@ export class SessionController extends TypertRemoteService {
     // The caller is recorded only when it is not the owner, so owner messages keep their exact source.
     const principal = principalOf(this.ctx.invocation)
     const source: MessageSource = {
-      kind: 'user',
+      kind: request.content.length === 0 ? 'retry' : 'user',
       rpcId: request.requestId,
       ...(clientTimeZone === undefined ? {} : { clientTimeZone }),
       ...(principal === undefined ? {} : { principal }),
@@ -549,10 +524,10 @@ export class SessionController extends TypertRemoteService {
   }
 
   /**
-   * Subscribe to sparse Session projection changes.
+   * Subscribe to Session projection changes.
    * @param request - target Session.
    * @param signal - subscription cancellation.
-   * @returns readiness and sparse projection changes.
+   * @returns readiness followed by one projection change frame per committed event.
    */
   @Remote({ mode: 'stream' })
   observeProjections(request: SessionProjectionsRequest, signal: AbortSignal): AsyncIterable<SessionProjectionFrame> {

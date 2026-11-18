@@ -4,7 +4,7 @@
  * @module @deepseek-ai/dsh-terminal-views/composer
  */
 import { activeAtToken } from '@deepseek-ai/dsh-file-reference/grammar'
-import type { ActiveAtToken } from '@deepseek-ai/dsh-file-reference/grammar'
+import type { ActiveAtToken } from '@deepseek-ai/dsh-file-reference'
 import type { Key, KeyName } from './keys.ts'
 import { graphemes, textWidth, truncate, wrapRows } from './width.ts'
 

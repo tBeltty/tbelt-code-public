@@ -23,6 +23,10 @@
 - id: web-runtime
   disabled: true
 
+# The MCP server fleet serves the browser's Settings and plugin views over Remote.
+- id: mcp-manager
+  disabled: true
+
 - id: client-hmr
   disabled: true
 
@@ -96,9 +100,6 @@
 - id: ui-plugin-manager
   disabled: true
 
-- id: ui-settings-plugin-inventory
-  disabled: true
-
 - id: ui-conversation
   disabled: true
 
@@ -138,6 +139,9 @@
 - id: ui-skill
   disabled: true
 
+- id: ui-agent-team
+  disabled: true
+
 - id: ui-subagent
   disabled: true
 
@@ -166,9 +170,6 @@
   disabled: true
 
 - id: ui-agent-preset
-  disabled: true
-
-- id: ui-settings-plugins
   disabled: true
 
 - id: ui-file-actions
@@ -220,3 +221,12 @@
         resume: !!js ctx.terminalStartup.resume
         continueLatest: !!js ctx.terminalStartup.continueLatest
         cwd: !!js ctx.terminalStartup.cwd
+
+- id: ui-connector-account
+  disabled: true
+
+- id: ui-session-panel
+  disabled: true
+
+- id: ui-session-status
+  disabled: true

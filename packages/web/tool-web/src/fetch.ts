@@ -8,7 +8,7 @@
 import type { Context } from '@deepseek-ai/cordis'
 import TurndownService from 'turndown'
 import { gfm } from '@joplin/turndown-plugin-gfm'
-import { defineTool } from '@deepseek-ai/dsh-tools'
+import { defineTool, ToolArgsError } from '@deepseek-ai/dsh-tools'
 import type { GenericCallView, ToolResult, WebFetchResultView } from '@deepseek-ai/dsh-tools'
 import type { WebFetchBody, WebFetchResult } from '@deepseek-ai/dsh-web'
 import { assertNever, type JsonValue } from '@deepseek-ai/dsh-util-values'
@@ -123,7 +123,7 @@ const turndownWhole = createConverter(false)
 
 /**
  * Validate value constraints the schema DSL can't express: a non-blank `url`.
- * Throws a plain `Error` otherwise. No timeout parameter — the tool-call budget
+ * Throws `ToolArgsError` otherwise. No timeout parameter — the tool-call budget
  * is deployment policy declared via `fetchTimeoutMs` config and enforced by
  * `@deepseek-ai/dsh-tool-call-timeout-policy`, not a model argument.
  *
@@ -131,7 +131,7 @@ const turndownWhole = createConverter(false)
  * @returns the arguments as the seam's request fields.
  */
 export function parseFetchArgs(args: { url: string }): { url: string } {
-  if (args.url.trim().length === 0) throw new Error('url must be a non-empty string')
+  if (args.url.trim().length === 0) throw new ToolArgsError(['url must be a non-empty string'])
   return { url: args.url }
 }
 

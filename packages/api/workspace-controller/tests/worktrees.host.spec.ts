@@ -46,6 +46,7 @@ async function harness(withWorktrees = true) {
   ctx.provide('typert', {
     lookups: { configure: () => dispose },
     contexts: { configureHost: () => dispose },
+    resources: { register: () => dispose },
   } as never)
   if (withWorktrees) {
     await ctx.plugin(LocalSubprocessRuntime)

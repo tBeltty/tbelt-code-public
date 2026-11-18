@@ -1,13 +1,19 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { WebError } from '@deepseek-ai/dsh-web'
+import { customGuidance } from './guidance.ts'
 import { dispatchDeepSeekWeb, type DeepSeekWebAuth } from '../src/transport.ts'
-const options = { apiKey: 'ds-key', baseURL: 'https://api.deepseek.test/anthropic/v1' }
-function searchProvider(auth: DeepSeekWebAuth & { baseURL: string; recordRequest?: (endpoint: string) => void }) {
+const options = { apiKey: 'ds-key', baseURL: 'https://api.deepseek.test/v1/tools' }
+/** Sources of one search. */
+type SearchSources = DeepSeekWebAuth & {
+  baseURL: string
+  recordRequest?: (endpoint: string) => void
+}
+function searchProvider({ baseURL, recordRequest, ...auth }: SearchSources) {
   return { search: (body: { query: string }, signal?: AbortSignal) => dispatchDeepSeekWeb(auth, {
-    endpoint: `${auth.baseURL}/messages`, body, decode: value => value,
-    ...auth.recordRequest === undefined ? {} : { recordRequest: auth.recordRequest },
+    baseURL, path: '/search', body, decode: value => value,
+    ...recordRequest === undefined ? {} : { recordRequest },
     apiKeyHeaders: key => ({ 'x-api-key': key }),
-    guidance: { subject: 'Search', plugin: 'web-search-deepseek', field: 'baseURL', label: 'Messages API base URL', page: 'Web search' },
+    guidance: customGuidance('search'),
   }, signal) }
 }
 function jsonResponse(body: unknown, init: ResponseInit = {}): Response {
@@ -111,11 +117,11 @@ describe('DeepSeek web cancellation and failures', () => {
       .rejects.toThrow(expect.objectContaining({
         code: 'WEB_PROVIDER_ERROR',
         message: 'DeepSeek API error (HTTP 429): rate limited\n\n'
-          + 'The web request used endpoint "https://api.deepseek.test/anthropic/v1/messages". '
-          + 'Search endpoint configuration is separate from chat. If that endpoint is not intended, '
-          + 'guide the user to Plugins > Built-in plugin settings > Web search, where they can '
-          + 'change and save Messages API base URL. If that settings page is unavailable, the user can set '
-          + 'web-search-deepseek.baseURL to a trusted DeepSeek endpoint. Only the user should choose or change the endpoint.',
+          + 'The web request used endpoint "https://api.deepseek.test/v1/tools/search". '
+          + 'Search sends the API key under web-deepseek-api.searchApiKeyEnv to web-deepseek-api.searchBaseURL. If that '
+          + 'endpoint is not intended, guide the user to correct web-deepseek-api.searchBaseURL and '
+          + 'web-deepseek-api.searchApiKeyEnv, or to remove both so Search uses the DeepSeek credential of the conversation. '
+          + 'Only the user should choose or change the endpoint.',
       }))
   })
 
@@ -180,7 +186,7 @@ describe('DeepSeek web cancellation and failures', () => {
     vi.stubGlobal('fetch', vi.fn(() => Promise.reject(new TypeError('connection refused'))))
     const error = await rejectedWebError(searchProvider(options).search({ query: 'q' }))
     expect(error.code).toBe('WEB_PROVIDER_ERROR')
-    expect(error.message).toContain('The web request used endpoint "https://api.deepseek.test/anthropic/v1/messages".')
+    expect(error.message).toContain('The web request used endpoint "https://api.deepseek.test/v1/tools/search".')
   })
 
 })

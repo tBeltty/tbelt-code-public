@@ -6,8 +6,8 @@
 // while the settings document records only that reference. Each saved row
 // appears after route topology invalidation without presenting liveness as
 // provider status. The customized-settings fold writes its curated fields —
-// the endpoint, a declared route's own name and protocol, and the reasoning
-// levels of its models — as merge patches against the stored profile. Zero
+// the endpoint, the retry policy, a declared route's own name and protocol, and
+// the reasoning levels of its models — as merge patches against the stored profile. Zero
 // model calls: configuration is pure settings/credentials/llm-domain traffic,
 // so there is no fixture and a stray stream would fail loud because the
 // adapter registry is empty. The provider under test is
@@ -219,6 +219,8 @@ describe('web e2e: Models settings page configures a dormant provider', () => {
     const url = dialog.getByLabel('Base URL')
     await url.waitFor({ timeout: 10_000 })
     await url.fill('https://gateway.minimax.example/v1')
+    await dialog.getByRole('combobox', { name: 'Retry policy', exact: true }).selectOption('normal')
+    await dialog.getByLabel('Max retries', { exact: true }).fill('3')
     await dialog.getByRole('button', { name: 'Save', exact: true }).click()
     // The editor closes back to the row; the fold's write merged into the
     // stored profile beside the reference.
@@ -227,6 +229,7 @@ describe('web e2e: Models settings page configures a dormant provider', () => {
     const document = await readFile(join(scaffold.harnessHome, 'profiles', 'scaffold', 'cordis.patch.yml'), 'utf8')
     expect(document).toContain('baseURL: https://gateway.minimax.example/v1')
     expect(document).toContain('apiKeyEnv: MINIMAX_CN_API_KEY')
+    expect(document).toMatch(/retryPolicy:\n\s+mode: normal\n\s+maxRetries: 3\n/u)
     const snapshot = await captureStableAria(page, '[role="dialog"]', scaffold.workspaceCwd)
     await compareOrRefreshGolden(CONFIGURED_EXPECTED, snapshot, MODE)
     expect(tripwire.pageErrors).toEqual([])
@@ -286,7 +289,7 @@ describe('web e2e: Models settings page configures a dormant provider', () => {
     // The custom-API mode is the second segment of the one add card; its
     // purpose line replaces the catalog one.
     await dialog.getByRole('tab', { name: 'Custom model API' }).click()
-    await dialog.getByText('Connect a relay, a self-hosted server, or any other OpenAI- or Anthropic-compatible endpoint by its base URL, protocol, and models.').waitFor({ timeout: 10_000 })
+    await dialog.getByText('Connect a relay, a self-hosted server, or any other OpenAI-, Anthropic-, or Gemini-compatible endpoint by its base URL, protocol, and models.').waitFor({ timeout: 10_000 })
     // The third-party panel stays mounted, hidden, beside this one, so the
     // form is addressed through its own panel.
     const custom = dialog.getByRole('tabpanel', { name: 'Custom model API' })
@@ -300,6 +303,10 @@ describe('web e2e: Models settings page configures a dormant provider', () => {
     await custom.getByRole('button', { name: 'Add model', exact: true }).click()
     await custom.getByLabel('Model ID 1').fill('acme-large')
     await custom.getByRole('button', { name: 'Model options 1' }).click()
+    const fieldLeft = async (name: string) => custom.getByLabel(name, { exact: true })
+      .evaluate(element => element.getBoundingClientRect().left)
+    expect(await fieldLeft('Context window 1')).toBe(await fieldLeft('Model ID 1'))
+    expect(await fieldLeft('Max output tokens 1')).toBe(await fieldLeft('Display name 1'))
     expect(await custom.getByLabel('Context window 1').getAttribute('placeholder')).toBe('1M')
     expect(await custom.getByLabel('Max output tokens 1').getAttribute('placeholder')).toBe('128K')
     expect(await custom.getByRole('group', { name: 'Input types 1' }).getByRole('checkbox', { name: 'Image' }).isChecked()).toBe(false)
@@ -617,8 +624,10 @@ describe('web e2e: Models settings page configures a dormant provider', () => {
       await toggle.click()
       expect(await name.inputValue()).toBe('Full display name on mobile')
       const expandedName = await name.boundingBox()
-      if (expandedName === null) throw new Error('Expanded model name is not visible')
-      expect(expandedName.y).toBeGreaterThanOrEqual(compactId.y + compactId.height)
+      // Expanding can scroll the dialog, so the ID is measured again in the same frame.
+      const expandedId = await id.boundingBox()
+      if (expandedName === null || expandedId === null) throw new Error('Expanded model fields are not visible')
+      expect(expandedName.y).toBeGreaterThanOrEqual(expandedId.y + expandedId.height)
       expect(expandedName.width).toBeGreaterThan(compactId.width)
       expect(await dialog.getByRole('region', { name: 'Models', exact: true })
         .evaluate(element => element.scrollWidth <= element.clientWidth)).toBe(true)

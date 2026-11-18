@@ -16,6 +16,21 @@ export type MarkdownMenuTarget =
   | { kind: 'url'; url: string }
   | { kind: 'image'; url: string; path?: string; name?: string; mediaType?: string }
 
+/** One Markdown code fence whose language is final, as {@link MarkdownDelegate.renderCode} receives it. */
+export interface MarkdownDelegateFenceInfo {
+  /**
+   * The info string's language word, cut at its first character outside
+   * letters, digits, `_`, and `-`, then lowercased (`c++` yields `c`).
+   */
+  readonly lang: string
+  /** The fence body without its closing newline. */
+  readonly code: string
+  /** The surrounding document is still streaming, so `code` may still change. */
+  readonly streaming: boolean
+  /** The info string after the language word, as the author wrote it; absent when the fence names only a language. */
+  readonly meta?: string | undefined
+}
+
 /** Navigation capabilities supplied by the nearest Markdown owner. */
 export interface MarkdownDelegate {
   /** Open an object menu without executing its normal activation. */
@@ -40,6 +55,14 @@ export interface MarkdownDelegate {
   readonly openFile?: ((path: string, options?: { line?: number }) => void) | undefined
   /** Actions for settled fences; streaming fences and absent runners render plain code blocks. */
   readonly codeRunner?: MarkdownCodeRunner | undefined
+  /**
+   * Render one fence whose language is final: it has a language and content.
+   * Absent, the document renders fences with its built-in code and math blocks;
+   * present, the owner renders every such fence, including `diff` and `math`.
+   * @param fence - language, body, and streaming state.
+   * @returns the rendered block.
+   */
+  readonly renderCode?: ((fence: MarkdownDelegateFenceInfo) => ReactNode) | undefined
 }
 
 /** Header actions and footer an owner adds to one fenced code block. */
@@ -94,9 +117,10 @@ export function MarkdownDelegateProvider({
   fileImages,
   codeRunner,
   getTriggerProps,
+  renderCode,
 }: MarkdownDelegateProviderProps): ReactNode {
-  const delegate = useMemo(() => ({ openExternalLink, openFile, fileImages, codeRunner, getTriggerProps }),
-    [openExternalLink, openFile, fileImages, codeRunner, getTriggerProps])
+  const delegate = useMemo(() => ({ openExternalLink, openFile, fileImages, codeRunner, getTriggerProps, renderCode }),
+    [openExternalLink, openFile, fileImages, codeRunner, getTriggerProps, renderCode])
   return (
     <MarkdownDelegateContext.Provider value={delegate}>
       {children}

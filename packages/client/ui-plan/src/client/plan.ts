@@ -1,5 +1,5 @@
 /** Plan resource identities; the plan documents come from the shared presenter. */
-import type { ToolCallId } from '@deepseek-ai/dsh-llm/brand'
+import type { ToolCallId } from '@deepseek-ai/dsh-llm/types'
 import type { SessionId } from '@deepseek-ai/dsh-session/types'
 import type { SessionAddress } from '@deepseek-ai/dsh-api-session-controller/types'
 

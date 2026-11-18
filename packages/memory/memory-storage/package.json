@@ -1,7 +1,7 @@
 {
   "name": "@deepseek-ai/dsh-memory-storage",
   "description": "Durable, schema-validated storage domain for typed cross-session memory entries (ctx.memoryStorage) for tBelt Code",
-  "version": "0.2.2-alpha.2",
+  "version": "0.2.2-rc.4",
   "publishConfig": {
     "access": "public"
   },
@@ -39,7 +39,7 @@
     "@deepseek-ai/dsh-memory-redact": "workspace:*",
     "@deepseek-ai/dsh-project-root": "workspace:*",
     "yaml": "^2.9.0",
-    "zod": "^4.4.3"
+    "zod": "4.6.6"
   },
   "devDependencies": {
     "@deepseek-ai/cordis": "workspace:^",

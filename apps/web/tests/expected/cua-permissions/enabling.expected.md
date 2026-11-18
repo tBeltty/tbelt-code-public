@@ -1,1 +1,1 @@
-- button "Enable now" [disabled]
+- status: Applying changes to Computer use

@@ -45,7 +45,7 @@ Load the web service and the provider; the key resolves from `ctx.credentials` w
 |---|---|---|
 | `apiKey` | omitted | Literal DeepSeek API key; prefer `apiKeyEnv` so no secret enters configuration. A non-empty literal wins over `apiKeyEnv` |
 | `apiKeyEnv` | `DEEPSEEK_API_KEY` | Credential reference resolved for each search through `ctx.credentials`, or from the process environment when that service is absent. A search that needs an API key and finds none fails as `WEB_PROVIDER_CREDENTIAL_MISSING` |
-| `baseURL` | `https://api.deepseek.com/anthropic/v1` | Anthropic-compatible endpoint base; `/messages` is appended. Falls back to `$DEEPSEEK_SEARCH_BASE_URL`; an unparseable value makes the provider unavailable |
+| `baseURL` | `https://api.deepseek.com/anthropic/v1` | Anthropic-compatible endpoint base; `/messages` is appended. Falls back to `$DEEPSEEK_SEARCH_BASE_URL`; a value that does not parse or embeds credentials makes the provider unavailable |
 | `model` | `deepseek-v4-flash` | Anthropic-format model name |
 | `apiVersion` | `2023-06-01` | `anthropic-version` header value |
 | `maxTokens` | `4096` | Positive-integer upper bound on generated tokens for the Messages request |
@@ -60,6 +60,8 @@ Every search sends the API key as both `x-api-key` and `Authorization: Bearer`.
 
 The provider's `ready()` answers whether a search has a credential, on any model route: a literal `apiKey` is set or `ctx.credentials.describe` reports the `apiKeyEnv` reference configured (without that service, the process environment must carry it). A failed credential-store read answers false. While this provider is the selected search provider, [`dsh-tool-web`](../tool-web/README.md#search-readiness) withholds `web_search` and its prompt guidance from each request for which it answers false. Only presence is checked: a wrong key, or an endpoint that does not serve the native `web_search_20250305` server tool, counts as ready and fails each call. A call that still arrives resolves credentials when it runs.
 
+Referenced keys use the [shared DeepSeek credential helpers](../../llm/llm-deepseek/README.md#credentials), including the same whitespace normalization and format validation as model requests. A malformed referenced key fails before dispatch; readiness remains a presence-only check.
+
 ### What a search returns
 
 `content` is always omitted: DeepSeek's provider prose is not trusted as an answer. `sources[]` comes from `web_search_result` items inside `web_search_tool_result` blocks — `url` and `title` directly, and `publishedAt` from `page_age` — with snippets joined from URL-keyed `cited_text` entries where an excerpt exists. Results are deduplicated by URL, and because DeepSeek exposes no result-count knob, the service enforces `maxResults` by truncating and flagging.
@@ -70,7 +72,7 @@ A search running under an initiating agent appends the log-only `web/deepseek-se
 
 ### Failures and recovery
 
-Failures throw `WebError` with a machine-routable code: a missing credential is `WEB_PROVIDER_CREDENTIAL_MISSING`, caller cancellation is `WEB_ABORTED`, and provider or transport failures — including a response with no `web_search_tool_result` block — are `WEB_PROVIDER_ERROR`. HTTP redirects are rejected before the `Location` target is contacted. Every failure after dispatch names the resolved search endpoint and explains that search endpoint configuration is separate from chat. If the endpoint is unintended, the message tells the conversation model to guide the user to the Messages API base URL field under Plugins > Built-in plugin settings > Web search and save the change. When that page is unavailable, it names `web-search-deepseek.baseURL` as the deployment configuration alternative. The model must not choose or change the endpoint. The model-facing `web_search` tool surfaces this text under its own error wrapper.
+Failures throw `WebError` with a machine-routable code: a missing credential is `WEB_PROVIDER_CREDENTIAL_MISSING`, caller cancellation is `WEB_ABORTED`, and provider or transport failures — including a response with no `web_search_tool_result` block — are `WEB_PROVIDER_ERROR`. HTTP redirects are rejected before the `Location` target is contacted. Every failure after dispatch names the resolved search endpoint and explains that search endpoint configuration is separate from chat. If the endpoint is unintended, the message tells the conversation model to guide the user to Plugins > Built-in plugin settings > Web search and fetch, select DeepSeek (legacy) under Search, and save its Base URL. When that page is unavailable, it names `web-search-deepseek.baseURL` as the deployment configuration alternative. The model must not choose or change the endpoint. The model-facing `web_search` tool surfaces this text under its own error wrapper.
 
 -----
 
@@ -113,7 +115,7 @@ Readiness captures the same options but reads no API key value: checks the liter
 Read these pages when the package-level contract is not enough. They move from the shared vocabulary to the service, the model-facing tools, and the design rationale.
 
 - Web subsystem — the exhaustive search request/result vocabulary and error codes.
-- [Web package map](../README.md) — the ten-package family and each role.
+- [Web package map](../README.md) — the web package family and each role.
 - [dsh-web](../web/README.md) — the web service this provider registers into.
 - [dsh-tool-web](../tool-web/README.md) — the model-facing `web_search` tool that renders this provider's sources.
 - Generated configuration catalog — every accepted config field and its source declaration.
@@ -191,6 +193,6 @@ This Dev Note is working context for maintainers: open questions and undecided d
 
 #### Dedicated retrieval endpoint
 
-DeepSeek's Search and Fetch APIs, which avoid the full model turn, live in [dsh-web-deepseek-api](../web-deepseek-api/README.md) and are selected by the Web search settings switch; this provider stays the default until the Search API launch is announced.
+DeepSeek's Search and Fetch APIs, which avoid the full model turn, live in [dsh-web-deepseek-api](../web-deepseek-api/README.md) and are selected with the `web` namespace's `searchProvider` and `fetchProvider` settings. Shipped profiles select the Search API, so this provider runs only when `searchProvider: deepseek-official` is selected (for example, on gateways without Search API routes).
 
 </details>

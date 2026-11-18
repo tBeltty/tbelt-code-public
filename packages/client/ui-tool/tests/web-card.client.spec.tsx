@@ -209,6 +209,44 @@ describe('chat row web body', () => {
     expect(view.queryByRole('link')).toBeNull()
   })
 
+  /** A settled web_fetch transport failure as the provider records it. */
+  const transportFailure = (code: string, text: string, toolName = 'web_fetch') => settledFetch({
+    call: { name: toolName, argsRaw: FETCH_ARGS },
+    isError: true,
+    content: [{ type: 'text', text }],
+    meta: undefined,
+    error: { name: 'WebError', code },
+  })
+
+  it.each([
+    ['WEB_FETCH_DNS_FAILED', 'could not resolve the host name (ENOTFOUND): getaddrinfo ENOTFOUND example.com', es['tool.webFetch.failure.dns']],
+    ['WEB_FETCH_CONNECTION_REFUSED', 'the server refused the connection (ECONNREFUSED): connect ECONNREFUSED 127.0.0.1:8080', es['tool.webFetch.failure.refused']],
+    ['WEB_FETCH_CONNECTION_TIMEOUT', 'the connection timed out (UND_ERR_CONNECT_TIMEOUT): Connect Timeout Error', es['tool.webFetch.failure.connectionTimeout']],
+    ['WEB_FETCH_CERTIFICATE_INVALID', 'the server certificate could not be verified (CERT_HAS_EXPIRED): certificate has expired', es['tool.webFetch.failure.certificate']],
+    ['WEB_FETCH_CONNECTION_INTERRUPTED', 'the connection was interrupted (UND_ERR_SOCKET): other side closed', es['tool.webFetch.failure.interrupted']],
+    ['WEB_FETCH_NETWORK_UNREACHABLE', 'the network or host is unreachable (ENETUNREACH): connect ENETUNREACH 10.0.0.1:443', es['tool.webFetch.failure.unreachable']],
+    ['WEB_FETCH_NETWORK_ERROR', 'the network request failed (EPROTO): write EPROTO', es['tool.webFetch.failure.network']],
+  ])('a %s web fetch leads with its localized summary and keeps the detail in the output', (code, detail, summary) => {
+    const text = `Error: web fetch failed: ${detail}`
+    const view = render(<WebRow {...rowProps(transportFailure(code, text), 'web_fetch')} useContextMenu={contextMenuHook()} />)
+    expect(view.getByText(summary)).toBeTruthy()
+    expect(view.queryByText(text)).toBeNull()
+    toggleRow(view)
+    expect(view.getByText(text)).toBeTruthy()
+  })
+
+  it('a failure without a transport failure code keeps the recorded first line', () => {
+    const text = 'Error: unsupported content type "image/png"'
+    const view = render(<WebRow {...rowProps(transportFailure('WEB_UNSUPPORTED_CONTENT_TYPE', text), 'web_fetch')} useContextMenu={contextMenuHook()} />)
+    expect(view.getByText(text)).toBeTruthy()
+  })
+
+  it('a web search failure keeps the recorded first line even with a fetch failure code', () => {
+    const text = 'Error: web search failed'
+    const view = render(<WebRow {...rowProps(transportFailure('WEB_FETCH_NETWORK_ERROR', text, 'web_search'), 'web_search')} useContextMenu={contextMenuHook()} />)
+    expect(view.getByText(text)).toBeTruthy()
+  })
+
   it('a running web call is the summary row alone, with nothing to expand', () => {
     const view = render(<WebRow {...rowProps(runningSearch(), 'web_search')} useContextMenu={contextMenuHook()} />)
     expect(view.getByText('Buscar')).toBeTruthy()

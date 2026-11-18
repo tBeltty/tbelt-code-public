@@ -25,6 +25,8 @@ kind: "package-library"
 
 Use this runner when a host-side integration must execute one native command and needs its output, its failure, or both — and must never involve a shell.
 
+`isWsl()` distinguishes Linux processes with WSL environment or kernel markers from ordinary Linux and native Windows processes. Detection remains true when Windows interoperation is disabled; callers must check the requested Windows capability separately.
+
 ### Running a command
 
 ```ts

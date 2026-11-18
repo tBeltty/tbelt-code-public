@@ -26,18 +26,19 @@ import type { SessionListState, SessionSnapshot } from '@deepseek-ai/dsh-api-ses
 import type { ContextPressureProjection } from '@deepseek-ai/dsh-token-meter/client'
 import { es as commonEs } from '@deepseek-ai/dsh-client-locale/src/locales/es.ts'
 import type { Context } from '@deepseek-ai/cordis'
-import type { SessionId } from '@deepseek-ai/dsh-session/types'
+import type { SessionId, SessionSeq } from '@deepseek-ai/dsh-session/types'
 import type { SubmitOutcome } from '../src/client/contract/input.ts'
 import { SessionInputShell } from '../src/client/input/facade.ts'
 import { $replaceDetectSpanWithText, $selectDetectSpan } from '../src/client/input/editor/span-map.ts'
 import type {
-  ComposerAttachment, ComposerAttachmentsOwnerProps, DraftFileUploads, InputActivityOwnerProps,
+  ComposerAttachment, ComposerAttachmentsOwnerProps, ComposerFileIntake, DraftFileUploads, InputActivityOwnerProps,
 } from '../src/client/contract/slots.ts'
 import type { DraftAttachmentId } from '../src/client/contract/input.ts'
 import { pastedTextFile } from '../src/client/input/pasted-text.ts'
 import { InputBar } from '../src/client/skeleton/InputBar.tsx'
 import type { InputBarProps } from '../src/client/skeleton/InputBar.tsx'
 import { en, es } from '../src/client/locales.ts'
+import { createComposerFileIntake } from '../src/client/input/file-intake.ts'
 
 // Every fixture carries the resource hook the resources plugin merges into GlobalStandardProps.
 const useResource = (() => ({ status: 'none' as const, value: undefined, failure: undefined })) as GlobalStandardProps['useResource']
@@ -55,7 +56,6 @@ const SCTX = {} as Context
 const SID = 's1' as SessionId
 const CONTINUABLE_CHILD = {
   address: { parentSessionId: 'parent' as SessionId, childSessionId: SID, mode: 'continuable' as const },
-  parentAvailable: true,
 }
 
 function snapshotOf(overrides: Partial<SessionSnapshot> = {}): SessionSnapshot {
@@ -83,6 +83,7 @@ interface BenchOptions {
   }
   draft?: string
   running?: boolean
+  retryableFailure?: SessionSeq
   subagent?: Exclude<SessionSnapshot['subagent'], null>
   disabled?: boolean
   inert?: boolean
@@ -96,6 +97,8 @@ interface BenchOptions {
   /** The hub's steer-all face (empty-draft accelerated Enter). */
   steerQueue?: () => void
   variant?: 'hero' | 'composer'
+  occurrence?: 'main' | 'embedded'
+  registerFileIntake?: ComposerFileIntake
   placeholder?: string
   t?: InputBarProps['t']
   accessory?: React.ReactNode
@@ -164,6 +167,7 @@ function bench(over?: BenchOptions) {
   if (over?.draft !== undefined && over.draft !== '') shell.setDraft(over.draft)
   if (over?.attachments !== undefined) shell.addAttachments(over.attachments.map(attachment => attachment.id))
   const stop = vi.fn()
+  const retry = vi.fn()
   const removeAttachment = vi.fn((id: DraftAttachmentId) => { shell.removeAttachment(id) })
   const menuLauncher = createSnapshotStore<string | null>(over?.commandMenuOpen === true ? 'command' : null)
   const busyEnter = createSnapshotStore<'queue' | 'steer'>(over?.busyEnter ?? 'queue')
@@ -200,18 +204,21 @@ function bench(over?: BenchOptions) {
     ...allowAllAccess,
     useContextMenu: contextMenuHook(),
     useAccess: endpoint => !(over?.deniedEndpoints ?? []).includes(endpoint),
-    useProjection: ((key: string, selector?: (v: unknown) => unknown) =>
-      (selector ?? (v => v))(key === 'plan'
+    useProjection: ((key: string, selector: (v: unknown) => unknown = v => v) =>
+      selector(key === 'plan'
         ? over?.plan
         : key === 'goal' ? over?.goal
-          : key === 'imageLimits' ? over?.imageLimits
-            : key === 'contextPressure' ? over?.contextPressure : undefined)),
+          : key === 'conversationContinuation' ? over?.retryableFailure
+            : key === 'inbox' ? { 'next-turn': over?.queue ?? [], 'next-step': over?.nextStep ?? [] }
+              : key === 'imageLimits' ? over?.imageLimits
+                : key === 'contextPressure' ? over?.contextPressure : undefined)),
     useInput: bindSnapshotSelector(shell.state),
     inputActions: shell.actions,
     keyboard: shell,
     addFiles: over?.addFiles ?? (() => null),
     useFileUploads: bindSnapshotSelector(createSnapshotStore<DraftFileUploads>(over?.fileUploads ?? {})),
     retryFileUpload: undefined,
+    registerFileIntake: over?.registerFileIntake ?? createComposerFileIntake(),
     removeAttachment,
     resolveDraftAttachments: ids => ids.flatMap((id) => {
       const attachment = over?.attachments?.find(candidate => candidate.id === id)
@@ -220,6 +227,7 @@ function bench(over?: BenchOptions) {
     toggleCommandMenu: over?.toggleCommandMenu ?? vi.fn(),
     useBusyEnter: bindSnapshotSelector(busyEnter),
     usePasteToFileChars: bindSnapshotSelector(createSnapshotStore(over?.pasteToFileChars ?? 8000)),
+    retry,
     useStopShortcut: bindSnapshotSelector(stopShortcut),
     useNotices: bindSnapshotSelector(shell.notices),
     useLexicon: bindSnapshotSelector(shell.lexicon),
@@ -229,6 +237,7 @@ function bench(over?: BenchOptions) {
     t: over?.t ?? makeTranslate(es, commonEs),
     renderSlot,
     variant: over?.variant ?? 'composer',
+    occurrence: over?.occurrence ?? 'main',
     ...(over?.inert === true ? { disabled: true } : {}),
     ...(over?.blocked !== undefined ? { blocked: over.blocked } : {}),
     ...(over?.workspacePickerOpen !== undefined ? { workspacePickerOpen: over.workspacePickerOpen } : {}),
@@ -250,26 +259,52 @@ function bench(over?: BenchOptions) {
   // that claim a command or freeze the machine query the DOM directly.
   const steeringAvailable = over?.subagent === undefined || over.subagent.address.mode === 'continuable'
   const composerLocked = over?.disabled === true || over?.inert === true || over?.blocked !== undefined
-    || (over?.subagent?.address.mode === 'continuable' && over.subagent.parentAvailable !== true)
   const uploadsPending = (over?.attachments ?? []).some(attachment => attachment.kind === 'file'
     ? over?.fileUploads?.[attachment.id]?.status !== 'ready'
     : over?.fileUploads?.[attachment.id] !== undefined && over.fileUploads[attachment.id]?.status !== 'ready')
   const plainMessageDraft = sendableDraft && !uploadsPending && !(over?.draft?.trimStart().startsWith('/') ?? false)
   const primaryLabel = primaryStops
     ? 'Detener la generación'
-    : over?.running === true && steeringAvailable && !composerLocked && plainMessageDraft
-      ? (over.busyEnter === 'steer' ? 'Dirigir con el mensaje' : 'Poner el mensaje en cola')
-      : 'Enviar mensaje'
+    : over?.retryableFailure !== undefined && !sendableDraft && over.running !== true && over.subagent === undefined && !composerLocked
+      && !(over.nextStep ?? []).some(message => message.source.kind === 'user')
+      ? 'Continuar generando'
+      : over?.running === true && steeringAvailable && !composerLocked && plainMessageDraft
+        ? (over.busyEnter === 'steer' ? 'Dirigir con el mensaje' : 'Poner el mensaje en cola')
+        : 'Enviar mensaje'
   const button = view.container.querySelector<HTMLButtonElement>(`button[aria-label="${primaryLabel}"]`)!
   const interruptButton = view.container.querySelector<HTMLButtonElement>('button[aria-label="Detener la generación"]')
   return {
     view, textarea, button, interruptButton, props, sink, shell, wiring: shell, session, stop, removeAttachment, slotCalls,
-    menuLauncher, busyEnter, stopShortcut,
+    menuLauncher, busyEnter, stopShortcut, retry,
     steerQueue: over?.steerQueue,
     get placeholder() { return placeholderOf(view.container) },
     get inputDisabled() { return textarea.getAttribute('aria-disabled') === 'true' },
   }
 }
+
+it('offers the play action only for an empty, idle composer with an eligible failure', async () => {
+  const b = bench({ retryableFailure: 2 as SessionSeq })
+  expect(b.button.disabled).toBe(false)
+  expect(b.button.querySelector('svg')).not.toBeNull()
+  fireEvent.click(b.button)
+  expect(b.retry).toHaveBeenCalledExactlyOnceWith(2)
+  expect(b.sink).not.toHaveBeenCalled()
+  await act(async () => { b.shell.setDraft('A new instruction') })
+  const send = b.view.getByRole('button', { name: 'Enviar mensaje' })
+  fireEvent.click(send)
+  await vi.waitFor(() => { expect(b.sink).toHaveBeenCalledOnce() })
+  expect(b.sink.mock.calls[0]?.[0]).toBe('A new instruction')
+  expect(b.retry).toHaveBeenCalledOnce()
+})
+
+it.each([
+  { running: true }, { attachments: [{ kind: 'image' as const, id: 'image' as DraftAttachmentId, file: new File([], 'x.png'), previewUrl: 'blob:test' }] },
+  { blocked: { reason: 'Select a model' } }, { subagent: CONTINUABLE_CHILD }, { deniedEndpoints: ['session/prompt'] },
+  { nextStep: [row('new instruction')] },
+])('keeps the continue action unavailable with %j', (options) => {
+  const b = bench({ ...options, retryableFailure: 2 as SessionSeq })
+  expect(b.view.queryByRole('button', { name: 'Continuar generando' })).toBeNull()
+})
 
 function attachmentOwner(slotCalls: readonly { key: string; owner: unknown }[]): ComposerAttachmentsOwnerProps {
   for (let i = slotCalls.length - 1; i >= 0; i -= 1) {
@@ -510,7 +545,6 @@ describe('long pasted text', () => {
       addFiles, pasteToFileChars: 20,
       subagent: {
         address: { parentSessionId: 'parent' as SessionId, childSessionId: SID, mode: 'continuable' },
-        parentAvailable: true,
       },
     })
     pasteText(textarea, longText)
@@ -579,7 +613,6 @@ describe('image draft rail', () => {
   })
 
   it.each([
-    ['an offline parent', { ...CONTINUABLE_CHILD, parentAvailable: false }],
     ['a one-shot child', { ...CONTINUABLE_CHILD, address: { ...CONTINUABLE_CHILD.address, mode: 'one-shot' as const } }],
   ])('keeps attachment intake closed for %s', (_name, subagent) => {
     const addFiles = vi.fn(() => null)
@@ -681,6 +714,31 @@ describe('image draft rail', () => {
     intake(within, [fits])
     expect(within.props.addFiles).toHaveBeenCalledWith([fits], undefined, new Set())
     expect(within.view.queryByRole('alert')).toBeNull()
+  })
+
+  it('joins the paste route with its card and occurrence and routes pastes through its own intake', () => {
+    const leave = vi.fn()
+    const register = vi.fn<ComposerFileIntake>(() => leave)
+    const addFiles = vi.fn(() => null)
+    const result = bench({ addFiles, registerFileIntake: register, occurrence: 'embedded' })
+    expect(register).toHaveBeenCalledTimes(1)
+    const target = register.mock.calls[0]![0]
+    expect(target.card).toBe(result.view.container.querySelector('[data-composer-card]'))
+    expect(target.occurrence).toBe('embedded')
+    expect(target.accepts()).toBe(true)
+    const pasted = new File([Uint8Array.of(1)], 'pasted.png', { type: 'image/png' })
+    act(() => { target.add([pasted]) })
+    expect(addFiles).toHaveBeenCalledWith([pasted], undefined, new Set())
+
+    // Acceptance follows live bar state without re-registering.
+    result.view.rerender(<InputBar {...result.props} useAccess={() => false} />)
+    expect(target.accepts()).toBe(false)
+    expect(register).toHaveBeenCalledTimes(1)
+    result.view.rerender(<InputBar {...result.props} occurrence="main" />)
+    expect(leave).toHaveBeenCalledTimes(1)
+    expect(register.mock.calls[1]![0].occurrence).toBe('main')
+    result.view.unmount()
+    expect(leave).toHaveBeenCalledTimes(2)
   })
 
   it('announces the format problem before any limit when the batch holds a non-image', () => {
@@ -874,7 +932,6 @@ describe('Enter semantics', () => {
       queue: [row('q-1')],
       subagent: {
         address: { parentSessionId: 'parent' as SessionId, childSessionId: SID, mode: 'continuable' },
-        parentAvailable: true,
       },
     }).placeholder).toBe('Cmd/Ctrl+Enter dirige todos los mensajes en cola')
   })
@@ -993,7 +1050,6 @@ describe('Enter semantics', () => {
         childSessionId: SID,
         mode: 'continuable' as const,
       },
-      parentAvailable: true,
     }
     const childSteerQueue = vi.fn()
     const child = bench({ running: true, subagent, queue: [row('q-1')], steerQueue: childSteerQueue })
@@ -1133,7 +1189,7 @@ describe('running and lock semantics', () => {
     try {
       const { view, stopShortcut } = bench({
         running: true,
-        subagent: { address: { parentSessionId: 'parent' as SessionId, childSessionId: SID, mode: 'continuable' }, parentAvailable: true },
+        subagent: { address: { parentSessionId: 'parent' as SessionId, childSessionId: SID, mode: 'continuable' } },
         t: makeTranslate(messages, {}),
       })
       const stop = view.getByRole('button', { name: label })
@@ -1143,6 +1199,31 @@ describe('running and lock semantics', () => {
       expect(view.getByRole('tooltip').getAttribute('aria-label')).toBe(`${label} Esc Esc`)
       act(() => { stopShortcut.set([]) })
       expect(view.getByRole('tooltip').textContent).toBe(label)
+    } finally {
+      vi.useRealTimers()
+    }
+  })
+
+  // The docked seat is the containing block for fixed descendants, so control
+  // tooltips render under the document body rather than inside the composer.
+  it('renders every control tooltip outside the composer subtree', () => {
+    vi.useFakeTimers()
+    try {
+      const { view } = bench({ running: true })
+      const shown: string[] = []
+      for (const control of view.container.querySelectorAll('button')) {
+        fireEvent.pointerEnter(control)
+        act(() => { vi.advanceTimersByTime(500) })
+        const tooltip = view.queryByRole('tooltip')
+        if (tooltip !== null) {
+          shown.push(control.getAttribute('aria-label') ?? '')
+          expect(view.container.contains(tooltip)).toBe(false)
+          expect(document.body.contains(tooltip)).toBe(true)
+        }
+        fireEvent.pointerLeave(control)
+        act(() => { vi.advanceTimersByTime(500) })
+      }
+      expect(shown).toEqual(expect.arrayContaining(['Añadir archivos o ejecutar comandos', 'Detener la generación']))
     } finally {
       vi.useRealTimers()
     }
@@ -1413,7 +1494,6 @@ describe('running and lock semantics', () => {
           childSessionId: SID,
           mode: 'continuable',
         },
-        parentAvailable: true,
       },
     })
     expect(button.getAttribute('aria-label')).toBe('Poner el mensaje en cola')
@@ -1440,7 +1520,6 @@ describe('running and lock semantics', () => {
         childSessionId: SID,
         mode: 'continuable' as const,
       },
-      parentAvailable: true,
     }
     const { button, sink } = bench({ running: true, busyEnter: 'steer', draft: '子代理插话', subagent })
     expect(button.getAttribute('aria-label')).toBe('Dirigir con el mensaje')
@@ -1496,24 +1575,14 @@ describe('running and lock semantics', () => {
     expect(shell.pickFiles()).toBe(false)
   })
 
-  it('parent-offline running continuable locks Send but keeps independent Stop usable', () => {
-    const { button, interruptButton, textarea, stop, view } = bench({
+  it('keeps input and Stop available for a continuable child without parent availability', () => {
+    const { button, interruptButton, textarea, stop } = bench({
       running: true,
-      draft: '',
-      subagent: {
-        address: {
-          parentSessionId: 'parent' as SessionId,
-          childSessionId: SID,
-          mode: 'continuable',
-        },
-        parentAvailable: false,
-      },
+      draft: 'continue',
+      subagent: CONTINUABLE_CHILD,
     })
-    expect(textarea.getAttribute('aria-disabled')).toBe('true')
-    expect(placeholderOf(view.container)).toBe('Sesión principal sin conexión; no se puede enviar, pero sí detener la ejecución')
-    expect((view.getByLabelText('Añadir archivos o ejecutar comandos') as HTMLButtonElement).disabled).toBe(true)
-    expect(button.getAttribute('aria-label')).toBe('Enviar mensaje')
-    expect(button.disabled).toBe(true)
+    expect(textarea.getAttribute('aria-disabled')).not.toBe('true')
+    expect(button.disabled).toBe(false)
     expect(interruptButton?.disabled).toBe(false)
     fireEvent.click(interruptButton!)
     expect(stop).toHaveBeenCalledTimes(1)
@@ -1529,7 +1598,6 @@ describe('running and lock semantics', () => {
           childSessionId: SID,
           mode: 'one-shot',
         },
-        parentAvailable: true,
       },
     })
     expect(button.getAttribute('aria-label')).toBe('Enviar mensaje')
@@ -1544,7 +1612,6 @@ describe('running and lock semantics', () => {
         childSessionId: SID,
         mode: 'continuable' as const,
       },
-      parentAvailable: true,
     }
     const plain = bench({ running: true, busyEnter: 'steer', draft: 'plain', subagent })
     fireEvent.keyDown(plain.textarea, { key: 'Enter' })

@@ -39,6 +39,7 @@ const PRODUCT_NAMES = {
 
 /** English dictionary and key-set source of truth. */
 export const en = {
+  'menu.openIn': 'Open in',
   'menu.openInSidebar': 'Open in sidebar',
   'menu.openInFloat': 'Open in floating panel',
   'menu.finder': 'Show in Finder',
@@ -75,6 +76,7 @@ export type OpenInAppKey = keyof typeof en
 
 /** Spanish dictionary, checked against the English keys. */
 export const es = {
+  'menu.openIn': 'Abrir con',
   'menu.openInSidebar': 'Abrir en la barra lateral',
   'menu.openInFloat': 'Abrir en un panel flotante',
   'menu.finder': 'Mostrar en Finder',
@@ -108,6 +110,7 @@ export const es = {
 
 /** Greek dictionary, checked complete against the English key set. */
 export const el = {
+  'menu.openIn': 'Άνοιγμα σε',
   'menu.openInSidebar': 'Άνοιγμα στην πλαϊνή στήλη',
   'menu.openInFloat': 'Άνοιγμα σε αιωρούμενο πλαίσιο',
   'menu.finder': 'Εμφάνιση στο Finder',
@@ -141,6 +144,7 @@ export const el = {
 
 /** French dictionary, checked against the English keys. */
 export const fr = {
+  'menu.openIn': 'Ouvrir avec',
   'menu.openInSidebar': 'Ouvrir dans la barre latérale',
   'menu.openInFloat': 'Ouvrir dans un panneau flottant',
   'menu.finder': 'Afficher dans le Finder',

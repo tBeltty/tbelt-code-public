@@ -1,5 +1,7 @@
 /** Copy for the More menu rows: navigation actions, and Creator draft prompts per region. */
 export const en = {
+  'pinTooltip': 'Pin to left sidebar',
+  'pin': 'Pin {name} to sidebar',
   install: 'Browse other plugins',
   create: 'Create your plugin',
   'createPrompt.sidebar': 'Create a tBelt Code plugin with a left sidebar entry.',
@@ -9,6 +11,8 @@ export const en = {
 
 /** Spanish dictionary, checked against the English keys. */
 export const es = {
+  'pinTooltip': 'Fijar a la barra lateral izquierda',
+  'pin': 'Fijar {name} en la barra lateral',
   install: 'Explorar otros complementos',
   create: 'Crea tu complemento',
   'createPrompt.sidebar': 'Cree un complemento tBelt Code con una entrada en la barra lateral izquierda.',
@@ -18,6 +22,8 @@ export const es = {
 
 /** Greek dictionary, checked against the English keys. */
 export const el = {
+  'pinTooltip': 'Καρφίτσωμα στην αριστερή πλαϊνή στήλη',
+  'pin': 'Καρφίτσωμα του {name} στην πλαϊνή στήλη',
   install: 'Περιήγηση σε άλλα πρόσθετα',
   create: 'Δημιουργήστε το πρόσθετό σας',
   'createPrompt.sidebar': 'Δημιουργία ενός προσθέτου tBelt Code με καταχώριση στην αριστερή πλαϊνή στήλη.',
@@ -27,6 +33,8 @@ export const el = {
 
 /** French dictionary, checked against the English keys. */
 export const fr = {
+  'pinTooltip': 'Épingler sur la barre latérale gauche',
+  'pin': 'Épingler {name} à la barre latérale',
   install: "Parcourir d'autres plugins",
   create: 'Créez votre plugin',
   'createPrompt.sidebar': 'Créez un plugin tBelt Code avec une entrée dans la barre latérale gauche.',

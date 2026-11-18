@@ -42,6 +42,7 @@ export const COPY_FR: Readonly<Record<CopyKey, string>> = {
   'tool.title.traceSession': 'Tracer une session',
   'tool.title.listModels': 'Lister les modèles',
   'tool.title.subagent': 'Créer un sous-agent',
+  'tool.title.subagentFork': 'Créer un sous-agent (hériter du contexte)',
   'tool.title.listAgents': 'Lister les sous-agents',
   'tool.title.sendMessage': 'Envoyer un message',
   'tool.title.interruptAgent': 'Interrompre un agent',

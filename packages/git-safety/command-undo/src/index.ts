@@ -4,7 +4,7 @@
  */
 
 import type { Context } from '@deepseek-ai/cordis'
-import { CommandDefinitionId } from '@deepseek-ai/dsh-commands/brand'
+import { CommandDefinitionId } from '@deepseek-ai/dsh-commands'
 import type { CommandInvocation, CommandResult } from '@deepseek-ai/dsh-commands'
 import { FsError } from '@deepseek-ai/dsh-fs'
 import { undo } from '@deepseek-ai/dsh-git-safety-net'

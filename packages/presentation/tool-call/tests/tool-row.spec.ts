@@ -1,5 +1,5 @@
 /** Tool row model: classification, summaries, paths, state, output and Auto-review denial, without a DOM or a locale. */
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 import {
   classifyTool, formatToolBody, resultText, toolRowModel, toolTitleKey,
   type StartedToolCall, type ToolResultNode,
@@ -72,6 +72,9 @@ describe('tool row model', () => {
     expect(classifyTool('grep')).toBe('search')
     expect(classifyTool('write')).toBe('write')
     expect(classifyTool('edit')).toBe('edit')
+    expect(classifyTool('run_code')).toBe('code')
+    expect(classifyTool('cua_run_code')).toBe('code')
+    expect(classifyTool('cua_run_code_extra')).toBe('others')
     expect(classifyTool('cordis_runtime_inspect')).toBe('read')
     // The v3 run-control verbs: `others` is the decided intent, not an
     // unclassified default (there is no program to show and no file to open).
@@ -172,19 +175,48 @@ describe('tool row model', () => {
       .toBe('{\n  "code": ""\n}')
   })
 
-  it('resultText flattens text blocks verbatim, other shapes as JSON, empty error content to name: code', () => {
+  it('resultText retains text and image JSON and uses the structured failure when content is empty', () => {
     expect(resultText(result({ content: [{ type: 'text', text: 'a\nb' }] }))).toBe('a\nb')
-    expect(resultText(result({ content: [{ type: 'text', text: 'a' }, { type: 'image', data: 'x' } as never] })))
-      .toBe(`a\n${JSON.stringify({ type: 'image', data: 'x' }, null, 2)}`)
+    const image = { type: 'image' as const, attachment: { attachmentId: 'sha256:image' as never, mediaType: 'image/png' as const, width: 8, height: 4, bytes: 64 } }
+    expect(resultText(result({ content: [image] }))).toBe(JSON.stringify(image, null, 2))
+    const reasoning = { type: 'reasoning' as const, text: 'detail' }
+    expect(resultText(result({ content: [reasoning] }))).toBe(JSON.stringify(reasoning, null, 2))
     expect(resultText(result({ content: [], isError: true, error: { name: 'ToolError', code: 'denied' } })))
       .toBe('ToolError: denied')
     expect(resultText(result({ content: [] }))).toBe('')
+  })
+
+  it('preserves image JSON when the formatter declines', () => {
+    for (const content of ['[{"type":"image"}]', '[{"type":"image","attachment":null}]',
+      '[{"type":"image","attachment":{"width":"8"}}]']) {
+      const blocks = JSON.parse(content) as ToolResultNode['content']
+      expect(resultText(result({ content: blocks }), () => undefined)).toBe(JSON.stringify(blocks[0], null, 2))
+    }
+  })
+
+  it('separates image references without duplicating an emitted newline', () => {
+    const attachment = { attachmentId: 'sha256:image' as never, mediaType: 'image/png' as const, width: 8, height: 4, bytes: 64 }
+    for (const text of ['a', 'a\n']) {
+      expect(resultText(result({ content: [{ type: 'text', text }, { type: 'image', attachment }] }), () => 'sha256:image'))
+        .toBe('a\nsha256:image')
+    }
+    expect(resultText(result({ content: [{ type: 'text', text: 'a\n\n' }, { type: 'image', attachment }] }), () => 'sha256:image'))
+      .toBe('a\n\nsha256:image')
   })
 
   it('derives output from the settled result and null while running or blank', () => {
     expect(toolRowModel('bash', result({ content: [{ type: 'text', text: 'out' }] })).output).toBe('out')
     expect(toolRowModel('bash', running()).output).toBeNull()
     expect(toolRowModel('bash', result({ content: [] })).output).toBeNull()
+  })
+
+  it.each([false, true])('shares formatted image output with its error summary, failure=%s', (isError) => {
+    const image = { type: 'image' as const, attachment: { attachmentId: 'sha256:image' as never, mediaType: 'image/png' as const, width: 8, height: 4, bytes: 64 } }
+    const formatImage = vi.fn(() => 'selected image')
+    const model = toolRowModel('run_code', result({ content: [image], isError }), undefined, undefined, formatImage)
+    expect(model.output).toBe('selected image')
+    expect(model.errorSummary).toBe(isError ? 'selected image' : null)
+    expect(formatImage).toHaveBeenCalledOnce()
   })
 
   it('derives errorSummary as the first output line on error rows only', () => {

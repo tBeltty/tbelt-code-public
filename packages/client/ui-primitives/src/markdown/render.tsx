@@ -25,6 +25,7 @@ import type {} from 'mdast-util-math'
 import { normalizeUri } from 'micromark-util-sanitize-uri'
 import type { CodeToolbarLabels } from '../CodeToolbar.tsx'
 import { CodeBlock } from './CodeBlock.tsx'
+import { FenceCodeBlock, FenceMathBlock } from './FenceBlocks.tsx'
 import { isExplicitFilePath, parseFileLink } from './file-link.ts'
 import { renderTexToReact } from './katex.tsx'
 import { LinkIconMedium, classifyLinkPath } from '../LinkIcon.tsx'
@@ -428,53 +429,59 @@ function renderCode(node: Md.Code, key: Key, context: MarkdownRenderContext): Re
   // The replaced pipeline recovered the grammar id from the hast class with
   // /language-([\w-]+)/, which truncates at the first non-word character.
   const lang = language === undefined ? undefined : /^[\w-]+/.exec(language)?.[0]
-  if (!context.streaming && lang === 'math') {
-    // ```math fences render as display TeX once settled (rehype-katex parity);
-    // its text extraction saw the code block's trailing newline.
-    return <Fragment key={key}>{renderTexToReact(`${node.value}\n`, true)}</Fragment>
+  // Streaming keys are source offsets, stable while the fence grows, so the
+  // block instance (and its incremental highlight session) survives every
+  // chunk. A fence whose info string is still mid-chunk has no content yet and
+  // took the empty-fence arm above, so `lang` here is final.
+  if (lang === undefined) {
+    return <FenceCodeBlock key={key} code={node.value} streaming={context.streaming} labels={context.labels.code} />
   }
   return (
-    <FenceBlock
-      key={key}
-      // The replaced hast pipeline appended one synthetic newline that
-      // CodeBlock's display trim removes; feeding the bare value would make
-      // that trim eat a REAL trailing blank line inside the fence instead.
-      code={`${node.value}\n`}
-      lang={lang}
-      // Streaming keys are source offsets, stable while the fence grows, so
-      // the CodeBlock instance (and its incremental highlight session)
-      // survives every chunk. A fence whose info string is still mid-chunk
-      // has no content yet and took the empty-fence arm above, so `lang`
-      // here is final: it can never re-resolve to a different grammar.
-      streaming={context.streaming}
-      labels={context.labels.code}
+    <MarkdownFenceSeat
+      key={key} lang={lang} meta={node.meta ?? undefined} code={node.value} streaming={context.streaming} labels={context.labels.code}
     />
   )
 }
 
-/** Settled fences in a runner-accepted language render through the delegate's runner component. */
-function FenceBlock({ code, lang, streaming, labels }: {
-  code: string
-  lang: string | undefined
-  streaming: boolean
-  labels: MarkdownCodeLabels
+/**
+ * One fence whose language is final: the delegate's renderer when the owner
+ * supplies one, otherwise the built-in math and code blocks. Reading the
+ * delegate in this Component rather than in the render pass lets cached
+ * streaming elements follow a provider change.
+ */
+function MarkdownFenceSeat({ lang, meta, code, streaming, labels }: {
+  readonly lang: string
+  readonly meta: string | undefined
+  readonly code: string
+  readonly streaming: boolean
+  readonly labels: MarkdownCodeLabels
 }): ReactNode {
-  const { codeRunner } = useMarkdownDelegate()
-  const block = ({ actions, footer }: MarkdownCodeBlockSlots): ReactNode => (
-    <CodeBlock
-      code={code}
-      lang={lang}
-      streaming={streaming}
-      copyLabel={labels.copyLabel}
-      copiedLabel={labels.copiedLabel}
-      toolbarLabels={labels.toolbarLabels}
-      actions={actions}
-      footer={footer}
-    />
-  )
-  if (streaming || codeRunner === undefined || lang === undefined || !codeRunner.accepts(lang)) return block({})
-  const Runner = codeRunner.Component
-  return <Runner code={code.slice(0, -1)} lang={lang} renderBlock={block} />
+  const { renderCode, codeRunner } = useMarkdownDelegate()
+  if (renderCode !== undefined) {
+    // The seat box spaces the fence among its siblings, so the delegate's blocks carry no margins of their own.
+    return <div className={css.fenceSeat}>{renderCode({ lang: lang.toLowerCase(), code, streaming, meta })}</div>
+  }
+  if (!streaming && codeRunner !== undefined && codeRunner.accepts(lang)) {
+    const block = ({ actions, footer }: MarkdownCodeBlockSlots): ReactNode => (
+      <CodeBlock
+        // CodeBlock's display trim removes one trailing newline; feeding the bare value would
+        // make that trim eat a REAL trailing blank line inside the fence instead.
+        code={`${code}\n`}
+        lang={lang}
+        streaming={streaming}
+        copyLabel={labels.copyLabel}
+        copiedLabel={labels.copiedLabel}
+        toolbarLabels={labels.toolbarLabels}
+        actions={actions}
+        footer={footer}
+      />
+    )
+    const Runner = codeRunner.Component
+    return <Runner code={code} lang={lang} renderBlock={block} />
+  }
+  // ```math fences render as display TeX once settled; while streaming they stay literal.
+  if (!streaming && lang === 'math') return <FenceMathBlock code={code} />
+  return <FenceCodeBlock lang={lang} code={code} streaming={streaming} labels={labels} />
 }
 
 /** A list is loose when it or any of its items is spread; every item then keeps its paragraphs. */

@@ -1,4 +1,8 @@
 # Bound foreground preparation before any native process is allocated.
+# Repo map injection and its rg walk are outside this scenario's fixed budget or launch accounting.
+- id: repo-map
+  disabled: true
+
 - id: subprocess
   disabled: true
 

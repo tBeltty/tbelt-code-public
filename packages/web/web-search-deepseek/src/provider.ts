@@ -192,6 +192,13 @@ interface SearchAuth {
  */
 export class DeepSeekSearchProvider implements WebSearchProvider {
   readonly id = DEEPSEEK_PROVIDER_ID
+  /** Picker description: what this provider suits and what it costs or cannot do. */
+  readonly description: NonNullable<WebSearchProvider['description']> = {
+    en: 'Slower, and every search uses extra model tokens. Requires a DeepSeek API key.',
+    es: 'Más lenta, y cada búsqueda consume tokens adicionales del modelo. Requiere una clave de API de DeepSeek.',
+    el: 'Πιο αργή, και κάθε αναζήτηση καταναλώνει επιπλέον tokens μοντέλου. Απαιτεί κλειδί API του DeepSeek.',
+    fr: 'Plus lente, et chaque recherche consomme des jetons de modèle supplémentaires. Nécessite une clé API DeepSeek.',
+  }
 
   /**
    * @param resolveOptions - the options for the NEXT operation, snapshotted
@@ -205,7 +212,7 @@ export class DeepSeekSearchProvider implements WebSearchProvider {
   available(): boolean {
     const options = this.resolveOptions()
     return ((options.apiKey?.length ?? 0) > 0 || options.resolveApiKey !== undefined)
-      && URL.canParse(options.baseURL)
+      && dispatchable(options.baseURL)
       && isPositiveInteger(options.maxTokens)
       && isPositiveInteger(options.maxUses)
   }
@@ -261,6 +268,7 @@ export class DeepSeekSearchProvider implements WebSearchProvider {
     if (!response.ok) {
       const status = response.status
       let message = `DeepSeek API error (HTTP ${status})`
+      let aborted: WebError | undefined
       try {
         const parsed = await response.json() as AnthropicError
         const detail = typeof parsed.error === 'string' ? parsed.error : parsed.error?.message ?? parsed.message
@@ -269,11 +277,12 @@ export class DeepSeekSearchProvider implements WebSearchProvider {
         // An abort fired mid-body must surface as WEB_ABORTED, not be swallowed
         // into a generic HTTP-error message — cancellation is not a provider
         // error (the seam's cancellation contract).
-        if (signal?.aborted === true || isAbortError(error)) throw searchAborted(signal, error)
+        if (signal?.aborted === true || isAbortError(error)) aborted = searchAborted(signal, error)
         // Otherwise: the HTTP status is already captured in `message` above; a
         // malformed/non-JSON error body (normal for gateway 5xx/429s) can only
         // cost a richer provider message, never the real error.
       }
+      if (aborted !== undefined) throw aborted
       throw searchEndpointError(endpoint, message)
     }
 
@@ -370,7 +379,12 @@ function searchEndpointError(endpoint: string, message: string, cause?: unknown)
  */
 function abortable<T>(operation: Promise<T>, signal?: AbortSignal): Promise<T> {
   if (signal === undefined) return operation
-  if (signal.aborted) return Promise.reject(searchAborted(signal))
+  if (signal.aborted) {
+    // The operation began before this check and can still reject: a credential read that cancels its caller, then
+    // fails on that cancellation. Observing it keeps that rejection from being unhandled.
+    void operation.catch(() => {})
+    return Promise.reject(searchAborted(signal))
+  }
   return new Promise<T>((resolve, reject) => {
     const onAbort = (): void => { reject(searchAborted(signal)) }
     signal.addEventListener('abort', onAbort, { once: true })
@@ -381,7 +395,7 @@ function abortable<T>(operation: Promise<T>, signal?: AbortSignal): Promise<T> {
       },
       (error: unknown) => {
         signal.removeEventListener('abort', onAbort)
-        reject(new Error(String(error).replace(/^Error: /u, ''), { cause: error }))
+        reject(error instanceof Error ? error : new Error(String(error), { cause: error }))
       },
     )
   })
@@ -402,6 +416,13 @@ function searchAborted(signal?: AbortSignal, fallback?: unknown): WebError {
 /** True for a fetch/`AbortSignal` abort, surfaced as `WEB_ABORTED`. */
 function isAbortError(error: unknown): boolean {
   return error instanceof DOMException && error.name === 'AbortError'
+}
+
+/** True for a base URL a search can be sent to: it parses and embeds no credentials, which `fetch` refuses to send. */
+function dispatchable(baseURL: string): boolean {
+  if (!URL.canParse(baseURL)) return false
+  const { username, password } = new URL(baseURL)
+  return username === '' && password === ''
 }
 
 /** True for DeepSeek request limits that can be sent to the Messages API. */

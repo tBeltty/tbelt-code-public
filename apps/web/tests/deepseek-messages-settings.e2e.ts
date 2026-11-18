@@ -1,9 +1,14 @@
-/** Web DeepSeek configuration, credential reuse, and saved model selection. */
+/** Web provider credentials, environment fallback, and DeepSeek model selection. */
 import { readFile } from 'node:fs/promises'
+import { once } from 'node:events'
+import { createServer } from 'node:http'
 import { join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { chromium, webkit, type Browser, type Page } from 'playwright'
 import { afterAll, beforeAll, describe, expect, it, onTestFailed } from 'vitest'
+import { BlockAssembler, createUserMessage, type StreamChunk } from '@deepseek-ai/dsh-llm'
+import { credentialRef } from '@deepseek-ai/dsh-credentials'
+import { createLaunchEnvironmentSnapshot } from '@deepseek-ai/dsh-launch-environment'
 import {
   captureStableAria, compareOrRefreshGolden, launchWebScaffold,
   watchConsole, webSnapshotMode, type WebScaffold,
@@ -11,6 +16,157 @@ import {
 import { openSettings, connectFreshWorkspace, saveFailureShot, EN_BROWSER_LOCALE } from './support.ts'
 
 const EXPECTED = fileURLToPath(new URL('./expected/deepseek-messages-settings/', import.meta.url))
+
+it.skipIf(webSnapshotMode() === 'record').each(['deepseek-official', 'google', 'openai', 'acme-gateway'])(
+  'clears the saved %s key and sends the next request with environment authentication', async (provider) => {
+    const messages = provider === 'deepseek-official'
+    const google = provider === 'google'
+    const ref = credentialRef(messages ? 'DEEPSEEK_API_KEY' : `${provider.toUpperCase().replaceAll('-', '_')}_API_KEY`)
+    const envRef = google ? 'GEMINI_API_KEY' : ref
+    const calls: { path: string; key: string | undefined }[] = []
+    const server = createServer((request, response) => {
+      request.on('end', () => {
+        const key = request.headers[messages ? 'x-api-key' : google ? 'x-goog-api-key' : 'authorization']
+        calls.push({ path: request.url ?? '', key: typeof key === 'string' ? key : undefined })
+        const events = messages ? [
+          { type: 'message_start', message: { id: 'clear', type: 'message', role: 'assistant', model: 'clear-model', content: [], usage: { input_tokens: 1, output_tokens: 0 } } },
+          { type: 'content_block_start', index: 0, content_block: { type: 'text', text: '' } },
+          { type: 'content_block_delta', index: 0, delta: { type: 'text_delta', text: 'connection-ok' } },
+          { type: 'content_block_stop', index: 0 },
+          { type: 'message_delta', delta: { stop_reason: 'end_turn', stop_sequence: null }, usage: { output_tokens: 1 } },
+          { type: 'message_stop' },
+        ] : google ? [{ candidates: [{ content: { role: 'model', parts: [{ text: 'connection-ok' }] }, finishReason: 'STOP' }] }]
+          : [{ id: 'clear', object: 'chat.completion.chunk', choices: [{ index: 0, delta: { content: 'connection-ok' }, finish_reason: null }] },
+            { id: 'clear', object: 'chat.completion.chunk', choices: [{ index: 0, delta: {}, finish_reason: 'stop' }] }]
+        response.writeHead(200, { 'content-type': 'text/event-stream' })
+        response.end(events.map(event => `data: ${JSON.stringify(event)}\n\n`).join(''))
+      })
+      request.resume()
+    })
+    server.listen(0, '127.0.0.1')
+    await once(server, 'listening')
+    let scaffold: WebScaffold | undefined
+    let browser: Browser | undefined
+    try {
+      const address = server.address()
+      if (address === null || typeof address === 'string') throw new Error('Missing credential test listener')
+      const baseURL = `http://127.0.0.1:${String(address.port)}/configured`
+      scaffold = await launchWebScaffold({
+        deepSeekMissingCredential: true,
+        openInAppEnvironment: createLaunchEnvironmentSnapshot([{ source: 'process', values: { [envRef]: 'fixture-environment-key' } }]),
+      })
+      const profile = { apiKeyEnv: ref, baseURL, models: [{ id: 'clear-model' }],
+        ...messages || google ? {} : { api: 'openai-completions' } }
+      await scaffold.ctx.settings.mutate(messages ? 'llm-deepseek' : 'llm-pi-ai', [{
+        op: 'set', path: messages ? [] : ['providers', provider], value: profile,
+      }])
+      await scaffold.ctx.credentials.set(ref, 'fixture-saved-key')
+      const runtime = scaffold.ctx
+      const generate = async (): Promise<void> => {
+        const assembler = new BlockAssembler()
+        const chunks: StreamChunk[] = []
+        for await (const chunk of runtime.llm.stream({ provider, model: 'clear-model',
+          messages: [createUserMessage({ content: [{ type: 'text', text: 'Reply connection-ok' }], source: { kind: 'user' } })] })) {
+          chunks.push(chunk)
+          assembler.push(chunk)
+        }
+        expect(assembler.message({ provider, model: 'clear-model' }).content, JSON.stringify(chunks))
+          .toContainEqual({ type: 'text', text: 'connection-ok' })
+      }
+      await generate()
+      browser = await chromium.launch()
+      const page = await browser.newPage({ locale: EN_BROWSER_LOCALE })
+      await page.goto(scaffold.authenticatedUrl)
+      await openSettings(page)
+      const dialog = page.getByRole('dialog', { name: 'Settings' })
+      await dialog.getByRole('button', { name: 'Models', exact: true }).click()
+      const edit = dialog.getByRole('button', { name: `Edit ${messages ? 'DeepSeek (deepseek-official)' : provider}`, exact: true })
+      await edit.click()
+      const key = dialog.getByLabel('API key', { exact: true })
+      await key.press('Delete')
+      expect(await key.getAttribute('placeholder')).toBe(`Leave blank to use env as auth (${envRef})`)
+      await dialog.getByText(`Apply to clear the saved API key. Environment authentication will be used (${envRef}).`, { exact: true }).waitFor()
+      expect((await runtime.credentials.resolve(ref))?.source).toBe('file')
+      if (messages) await compareOrRefreshGolden(join(EXPECTED, 'clear-key.expected.md'),
+        await captureStableAria(page, '[role="dialog"]', scaffold.workspaceCwd), webSnapshotMode())
+      await dialog.getByRole('button', { name: 'Cancel', exact: true }).click()
+      expect((await runtime.credentials.resolve(ref))?.source).toBe('file')
+      await edit.click()
+      await key.press('Delete')
+      await dialog.getByRole('button', { name: 'Save', exact: true }).click()
+      await expect.poll(() => key.count()).toBe(0)
+      await generate()
+      expect(calls).toHaveLength(2)
+      expect(calls[0]?.key).toBe(messages || google ? 'fixture-saved-key' : 'Bearer fixture-saved-key')
+      expect(calls[1]).toEqual({ path: calls[0]?.path,
+        key: messages || google ? 'fixture-environment-key' : 'Bearer fixture-environment-key' })
+      expect(calls[1]?.path).toContain('/configured/')
+      expect(await readFile(join(scaffold.harnessHome, '.credentials.yaml'), 'utf8')).not.toContain('fixture-saved-key')
+      await edit.click()
+      await dialog.getByText(`Env var detected. (${envRef})`, { exact: true }).waitFor()
+      await dialog.getByText('Customized settings', { exact: true }).click()
+      expect(await dialog.getByLabel('Base URL', { exact: true }).inputValue()).toBe(baseURL)
+      expect(await dialog.getByRole('button', { name: 'Clear saved key', exact: true }).count()).toBe(0)
+    } finally {
+      try { await browser?.close() } finally {
+        try { await scaffold?.close() } finally {
+          await new Promise<void>((resolve, reject) => server.close((error) => {
+            if (error === undefined) resolve()
+            else reject(error)
+          }))
+        }
+      }
+    }
+  },
+)
+
+it.each([{ name: 'Chromium', engine: chromium }, { name: 'WebKit', engine: webkit }])(
+  'protects saved keys and reveals only unsaved replacements in $name', async ({ engine }) => {
+    const scaffold = await launchWebScaffold({ deepSeekMissingCredential: true })
+    let browser: Browser | undefined
+    try {
+      await scaffold.ctx.credentials.set(credentialRef('DEEPSEEK_API_KEY'), 'fixture-protected-old-key')
+      browser = await engine.launch()
+      const page = await browser.newPage({ locale: EN_BROWSER_LOCALE })
+      await page.goto(scaffold.authenticatedUrl)
+      await openSettings(page)
+      const dialog = page.getByRole('dialog', { name: 'Settings' })
+      await dialog.getByRole('button', { name: 'Models', exact: true }).click()
+      const edit = dialog.getByRole('button', { name: 'Edit DeepSeek (deepseek-official)', exact: true })
+      await edit.click()
+      const key = dialog.getByLabel('API key', { exact: true })
+      expect(await key.getAttribute('placeholder')).toBe(`fixture-prote${'•'.repeat(8)}-key`)
+      expect(await key.inputValue()).toBe('')
+      expect(await dialog.getByRole('button', { name: 'Show secret' }).count()).toBe(0)
+      expect(await page.locator('body').innerHTML()).not.toContain('fixture-protected-old-key')
+      await key.press('Backspace')
+      await dialog.getByText('Apply to clear the saved API key. Environment authentication will be used (DEEPSEEK_API_KEY).', { exact: true }).waitFor()
+      expect(await key.getAttribute('placeholder')).toBe('Leave blank to use env as auth (DEEPSEEK_API_KEY)')
+      await dialog.getByRole('button', { name: 'Cancel', exact: true }).click()
+      await edit.click()
+      expect(await key.getAttribute('placeholder')).toBe(`fixture-prote${'•'.repeat(8)}-key`)
+      await key.fill('fixture-new-key')
+      await dialog.getByText('Apply to replace the saved API key.', { exact: true }).waitFor()
+      await dialog.getByRole('button', { name: 'Show secret', exact: true }).click()
+      expect(await key.getAttribute('type')).toBe('text')
+      expect(await key.inputValue()).toBe('fixture-new-key')
+      await key.press('ControlOrMeta+A')
+      await key.press('ControlOrMeta+X')
+      await expect.poll(() => key.inputValue()).toBe('')
+      await key.fill('fixture-new-key')
+      await dialog.getByRole('button', { name: 'Save', exact: true }).click()
+      await expect.poll(() => key.count()).toBe(0)
+      await edit.click()
+      expect(await key.getAttribute('placeholder')).toBe('•'.repeat('fixture-new-key'.length))
+      expect(await key.inputValue()).toBe('')
+      expect(await key.getAttribute('type')).toBe('password')
+      expect(await dialog.getByRole('button', { name: 'Show secret' }).count()).toBe(0)
+      expect(await page.locator('body').innerHTML()).not.toContain('fixture-new-key')
+    } finally {
+      try { await browser?.close() } finally { await scaffold.close() }
+    }
+  },
+)
 
 it.each([{ name: 'Chromium', engine: chromium }, { name: 'WebKit', engine: webkit }])(
   'keeps a foreign model drag from editing another provider input in $name', async ({ engine }) => {
@@ -117,6 +273,18 @@ describe.skipIf(webSnapshotMode() === 'record')('web e2e: DeepSeek Messages sett
     expect(credentials).toContain('DEEPSEEK_API_KEY: sk-e2e-messages')
     expect(credentials).not.toContain('DEEPSEEK_MESSAGES_API_KEY')
     expect(await page.locator('body').innerText()).not.toContain('sk-e2e-')
+    await dialog.getByRole('button', { name: 'Edit DeepSeek (deepseek-official)', exact: true }).click()
+    const key = messages.getByLabel('API key', { exact: true })
+    expect(await key.inputValue()).toBe('')
+    await messages.getByText('Use the existing saved API key.', { exact: true }).waitFor()
+    expect(await key.getAttribute('type')).toBe('password')
+    await key.fill('sk-cancelled-replacement')
+    await messages.getByText('Apply to replace the saved API key.', { exact: true }).waitFor()
+    expect(await messages.getByText('Use the existing saved API key.', { exact: true }).count()).toBe(0)
+    await key.fill('')
+    await messages.getByText('Apply to clear the saved API key. Environment authentication will be used (DEEPSEEK_API_KEY).', { exact: true }).waitFor()
+    await messages.getByRole('button', { name: 'Cancel', exact: true }).click()
+    expect(await readFile(join(scaffold.harnessHome, '.credentials.yaml'), 'utf8')).toBe(credentials)
     await page.keyboard.press('Escape')
     // The shipped composition names no default model, so pick the saved route as one.
     await scaffold.ctx.agentDefaultModel.saveSelection({ provider: 'deepseek-official', model: 'deepseek-flash' })

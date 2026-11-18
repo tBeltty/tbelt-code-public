@@ -42,6 +42,7 @@ const MAIN = {
   'tool.title.traceSession': 'Rastrear sesión',
   'tool.title.listModels': 'Listar modelos',
   'tool.title.subagent': 'Crear subagente',
+  'tool.title.subagentFork': 'Crear subagente (heredar contexto)',
   'tool.title.listAgents': 'Listar subagentes',
   'tool.title.sendMessage': 'Enviar mensaje',
   'tool.title.interruptAgent': 'Interrumpir agente',

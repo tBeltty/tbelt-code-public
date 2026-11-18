@@ -5,7 +5,7 @@
  */
 import type { WebSearchProvider, WebSearchRequest, WebSearchResult } from '@deepseek-ai/dsh-web'
 import {
-  dispatchDeepSeekWeb, hasDeepSeekWebCredential, invalidResponse, isRecord,
+  dispatchDeepSeekWeb, hasDeepSeekWebCredential, invalidResponse, isRecord, searchAborted,
   type DeepSeekWebAuth, type DeepSeekWebGuidance,
 } from './transport.ts'
 
@@ -18,20 +18,24 @@ export const DEEPSEEK_WEB_API_BASE_URL = 'https://api.deepseek.com/v1/tools'
 /** Default Search API result count, the service's own default. */
 export const DEEPSEEK_DEFAULT_COUNT = 10
 
+/** Default Search requests started per second, the service's account-wide 5 QPS limit. */
+export const DEEPSEEK_SEARCH_REQUESTS_PER_SECOND = 5
+
 /** Longest `ori_question` the Search API accepts, in characters. */
 const ORIGINAL_QUESTION_MAX_CHARS = 128
 
-/** Settings named by endpoint failures of either API in this package. */
-export const DEEPSEEK_WEB_API_GUIDANCE: Omit<DeepSeekWebGuidance, 'subject'> = {
-  plugin: 'web-deepseek-api', field: 'baseURL', label: 'Search / Fetch API base URL', page: 'Web search',
-}
-
 /** Authentication, endpoint, and result settings snapshotted for one search. */
-export interface DeepSeekSearchApiOptions extends DeepSeekWebAuth {
-  /** API base including its path prefix; `/search` is appended. */
+export interface DeepSeekSearchApiOptions {
+  /** API base the API key is sent to, including its path prefix; `/search` is appended. */
   baseURL: string
+  /** Authentication sources of the search. */
+  auth: DeepSeekWebAuth
+  /** Settings that endpoint failures of the search name. */
+  guidance: DeepSeekWebGuidance
   /** Results requested per search, from 1 through 50; a smaller request bound wins. */
   count: number
+  /** Most Search requests this provider starts in any one-second window. */
+  requestsPerSecond: number
   /** Read the user question that triggered the search; undefined or blank sends none. */
   originalQuestion?: () => string | undefined
 }
@@ -67,6 +71,15 @@ export function mapSearchResponse(response: unknown): WebSearchResult {
  */
 export class DeepSeekSearchApiProvider implements WebSearchProvider {
   readonly id = DEEPSEEK_SEARCH_API_PROVIDER_ID
+  /** Monotonic start times (ms) of requests inside the current window, oldest first. */
+  private readonly starts: number[] = []
+  /** Picker description: what this provider suits and what it costs or cannot do. */
+  readonly description: NonNullable<WebSearchProvider['description']> = {
+    en: 'Queries the search endpoint directly for titles, URLs, and snippets without an extra model call. Uses a DeepSeek API key, and may incur API charges.',
+    es: 'Consulta directamente el punto de conexión de búsqueda y devuelve títulos, URL y fragmentos sin una llamada adicional al modelo. Usa una clave de API de DeepSeek y puede generar cargos de API.',
+    el: 'Υποβάλλει ερωτήματα απευθείας στο τελικό σημείο αναζήτησης για τίτλους, URL και αποσπάσματα, χωρίς πρόσθετη κλήση μοντέλου. Χρησιμοποιεί κλειδί API του DeepSeek και ενδέχεται να επιφέρει χρεώσεις API.',
+    fr: "Interroge directement le point de terminaison de recherche pour obtenir titres, URL et extraits, sans appel de modèle supplémentaire. Utilise une clé API DeepSeek et peut entraîner des frais d'API.",
+  }
 
   /**
    * @param resolveOptions - the options for the NEXT search, read once at each
@@ -76,14 +89,16 @@ export class DeepSeekSearchApiProvider implements WebSearchProvider {
 
   available(): boolean {
     const options = this.resolveOptions()
-    return hasDeepSeekWebCredential(options) && URL.canParse(options.baseURL) && isPositiveInteger(options.count)
+    return hasDeepSeekWebCredential(options.auth) && URL.canParse(options.baseURL)
+      && isPositiveInteger(options.count) && isPositiveInteger(options.requestsPerSecond)
   }
 
-  search(request: WebSearchRequest, signal?: AbortSignal): Promise<WebSearchResult> {
+  async search(request: WebSearchRequest, signal?: AbortSignal): Promise<WebSearchResult> {
     const options = this.resolveOptions()
     const question = boundedQuestion(options.originalQuestion?.())
-    return dispatchDeepSeekWeb(options, {
-      endpoint: `${options.baseURL.replace(/\/+$/u, '')}/search`,
+    return dispatchDeepSeekWeb(options.auth, {
+      baseURL: options.baseURL,
+      path: '/search',
       body: {
         query: request.query,
         count: Math.min(options.count, request.maxResults ?? options.count),
@@ -91,9 +106,47 @@ export class DeepSeekSearchApiProvider implements WebSearchProvider {
         ...question === undefined ? {} : { ori_question: question },
       },
       decode: mapSearchResponse,
-      guidance: { subject: 'Search', ...DEEPSEEK_WEB_API_GUIDANCE },
+      waitToSend: waitSignal => this.waitForRequestSlot(options.requestsPerSecond, waitSignal),
+      guidance: options.guidance,
     }, signal)
   }
+
+  /**
+   * Wait until fewer than `limit` requests started within the last second,
+   * inclusive of its first millisecond, then record this start.
+   * @throws {@link WebError} `WEB_ABORTED` when `signal` aborts while waiting.
+   */
+  private async waitForRequestSlot(limit: number, signal?: AbortSignal): Promise<void> {
+    for (;;) {
+      if (signal?.aborted === true) throw searchAborted(signal)
+      const now = performance.now()
+      let oldest = this.starts[0]
+      while (oldest !== undefined && oldest < now - 1000) {
+        this.starts.shift()
+        oldest = this.starts[0]
+      }
+      if (oldest === undefined || this.starts.length < limit) {
+        this.starts.push(now)
+        return
+      }
+      await abortableDelay(oldest + 1001 - now, signal)
+    }
+  }
+}
+
+/** Resolve after `ms`, or early when `signal` aborts; the caller rechecks the signal. */
+function abortableDelay(ms: number, signal?: AbortSignal): Promise<void> {
+  return new Promise((resolve) => {
+    const onAbort = () => {
+      clearTimeout(timer)
+      resolve()
+    }
+    const timer = setTimeout(() => {
+      signal?.removeEventListener('abort', onAbort)
+      resolve()
+    }, ms)
+    signal?.addEventListener('abort', onAbort, { once: true })
+  })
 }
 
 /**

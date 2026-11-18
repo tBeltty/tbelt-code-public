@@ -13,6 +13,7 @@ import type {} from '@deepseek-ai/dsh-agent'
 import { credentialRef } from '@deepseek-ai/dsh-credentials'
 import type { CredentialRef } from '@deepseek-ai/dsh-credentials'
 import { launchEnvironmentOf } from '@deepseek-ai/dsh-launch-environment'
+import { deepSeekApiKeyConfigured, resolveDeepSeekApiKey } from '@deepseek-ai/dsh-llm-deepseek'
 import type {} from '@deepseek-ai/dsh-session'
 import type {} from '@deepseek-ai/dsh-web'
 import {
@@ -104,13 +105,7 @@ function resolveOptions(
     : undefined
   return {
     ...literalApiKey === undefined ? {} : { apiKey: literalApiKey },
-    resolveApiKey: async () => {
-      const credentials = ctx.get('credentials')
-      if (credentials !== undefined) return (await credentials.resolve(apiKeyEnv))?.value
-      // Without the seam the environment is the whole credential plane.
-      const ambient = launchEnvironmentOf(ctx).get(apiKeyEnv)
-      return ambient !== undefined && ambient.value.length > 0 ? ambient.value : undefined
-    },
+    resolveApiKey: () => resolveDeepSeekApiKey(ctx, apiKeyEnv),
     apiKeyEnv,
     baseURL: config.baseURL
       ?? launchEnvironmentOf(ctx).get(SEARCH_BASE_URL_ENV)?.value
@@ -138,12 +133,7 @@ function resolveOptions(
  */
 async function searchConfigured(ctx: Context, options: SearchOptions): Promise<boolean> {
   if (options.apiKey !== undefined) return true
-  const credentials = ctx.get('credentials')
-  if (credentials === undefined) {
-    const ambient = launchEnvironmentOf(ctx).get(options.apiKeyEnv)
-    return ambient !== undefined && ambient.value.length > 0
-  }
-  try { return (await credentials.describe(options.apiKeyEnv)).configured }
+  try { return await deepSeekApiKeyConfigured(ctx, options.apiKeyEnv) }
   catch (_unreadableStore) { return false /* A store that cannot be read supplies no key to the search either. */ }
 }
 
@@ -159,6 +149,7 @@ export function apply(ctx: Context, config: Config): void {
   const provider = new DeepSeekSearchProvider(options)
   ctx.web.registerSearchProvider({
     id: provider.id,
+    description: provider.description,
     available: () => provider.available(),
     ready: () => searchConfigured(ctx, options()),
     search: (request, signal) => provider.search(request, signal),

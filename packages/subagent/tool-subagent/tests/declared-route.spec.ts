@@ -81,10 +81,14 @@ describe('declared preset route', () => {
 
   it('lets a model-chosen route replace the declared one and drops the declared effort', () => {
     const declared = presetRouteOptions(undefined, fastReviewer.agentRoute!)
-    expect(requestedAgentOptions({}, declared, { provider: 'alpha', model: 'unlisted-model' }, true))
-      .toEqual({ provider: 'alpha', model: 'unlisted-model' })
-    expect(requestedAgentOptions({}, declared, { reasoning_effort: 'high' }, true))
+    const policy = { routes: [{ provider: 'alpha', model: 'unlisted-model' }, { provider: 'alpha', model: 'fast-model' }] }
+    const parent = { provider: 'alpha', model: 'fast-model' }
+    expect(requestedAgentOptions(declared, { provider: 'alpha', model: 'unlisted-model' }, true, policy, parent, false))
+      .toEqual({ provider: 'alpha', model: 'unlisted-model', reasoningEffort: undefined })
+    expect(requestedAgentOptions(declared, { provider: 'alpha', model: 'fast-model', reasoning_effort: 'high' }, true, policy, parent, false))
       .toEqual({ provider: 'alpha', model: 'fast-model', reasoningEffort: 'high' })
+    expect(() => requestedAgentOptions(declared, { reasoning_effort: 'high' }, true, policy, parent, false))
+      .toThrow('requires both `provider` and `model`')
   })
 
   it('keeps deployment defaults that the declared route does not own', async () => {

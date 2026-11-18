@@ -31,11 +31,13 @@ Choose the service when a plugin or tool must search or fetch without hard-codin
 
 ### Minimal configuration
 
-Load the service and let a single mounted backend auto-select, or pin a provider id with `searchProvider`/`fetchProvider`. The environment variables `$DSH_WEB_SEARCH_PROVIDER` and `$DSH_WEB_FETCH_PROVIDER` feed the same fields and are not a separate priority chain.
+Load the service and let a single mounted backend auto-select, or pin a provider id with `searchProvider`/`fetchProvider`. The environment variables `$DSH_WEB_SEARCH_PROVIDER` and `$DSH_WEB_FETCH_PROVIDER` feed the same fields and are not a separate priority chain. Both backends below register a fetch provider, so the example pins `fetchProvider: http`.
 
 ```yaml
 - name: '@deepseek-ai/dsh-web'
-- name: '@deepseek-ai/dsh-web-search-exa'
+  config:
+    fetchProvider: http
+- name: '@deepseek-ai/dsh-web-deepseek-api'
 - name: '@deepseek-ai/dsh-web-fetch-http'
 ```
 
@@ -73,6 +75,8 @@ Each call resolves its provider at execution time, and registration or load orde
 | no id, no usable provider | `WEB_PROVIDER_UNAVAILABLE` |
 | no id, multiple usable providers | `WEB_PROVIDER_AMBIGUOUS` |
 
+The shipped `deepseek-official` and `deepseek-search-api` search ids select legacy Messages search and the direct Search API respectively.
+
 A provider's availability is a cheap local check — for example whether its API key is present — and never makes network calls, so selection stays fast and deterministic.
 
 ### Provider API keys
@@ -80,6 +84,33 @@ A provider's availability is a cheap local check — for example whether its API
 A key-authenticated search provider reads its key through `SearchApiKey`: a literal from configuration, or a credential reference resolved at each search through the credentials service (the launch environment when none is mounted). `SearchApiKey.configured()` is the last state the credentials service reported for the reference, refreshed on every `credentials/reference-updated` for it, so `available()` stays a local check. Providers send their requests through `requestProviderJson`, which refuses redirects and classifies a refusal as `WEB_PROVIDER_AUTH` (rejected key), `WEB_PROVIDER_QUOTA` (quota, credit, or rate limit; quota wording wins over a 401 or 403), or `WEB_PROVIDER_ERROR`.
 
 Configuration surfaces reach two Remote methods. `searchProviders` lists the registered providers that expose a `credentialRef` and a `checkKey`. `checkSearchKey(providerId, apiKey)` sends the candidate key to that provider's own endpoint, stores nothing, and answers `{ ok: true }` or `{ ok: false, reason: 'auth' | 'quota' | 'error', message }`.
+
+<a id="listing-providers"></a>
+### Listing providers
+
+`listProviders()` returns every registered search and fetch provider as `{ id, title?, description? }` entries, each list in registration order; it lists unavailable providers too, because a picker shows what can be pinned. `title` is the provider's optional display name, and a picker shows `id` when it is absent. `description` is optional `LocalizedText` from `dsh-package-manifest`, a plain string or translations keyed by lowercase language id with a required `en` entry, stating what the provider suits and what it costs or cannot do; a picker shows it under the selected provider and shows nothing when it is absent. Each registration and each disposal emits the payload-free `web/providers-changed` event after the registry changes, and observer failures cannot veto the change. Clients call the same method as the `web` Remote namespace, `ctx.remote.web.listProviders()`, whose Remote result carries the lists in `value` only when `ok` is true, and refresh on the forwarded `web/providers-changed` event; a client provider picker fills its menus this way. The [Web search settings page](../../client/ui-settings-web-search/README.md) does not use it yet; it lists only key-authenticated search providers through `searchProviders`.
+
+```text
+// Remote: web/listProviders; Host event: web/providers-changed
+const response = await ctx.remote.web.listProviders()
+if (response.ok) {
+  const { search, fetch } = response.value
+} // else: response.error is a structured RemoteError; keep any previous list and report it
+ctx.remote.$on('web/providers-changed', () => { /* re-read the lists */ })
+```
+
+<a id="adding-a-provider"></a>
+#### Add another provider
+
+A search or fetch backend outside the shipped composition is a plugin package that calls `ctx.web.registerSearchProvider()` or `ctx.web.registerFetchProvider()` with a unique `id`, and an optional `title` and `description`. To enable one in a profile, install the package with `dsh plugin --profile <name> add <package>` (install rules), add its row to the profile's user patch layer `$DSH_HOME/profiles/<name>/cordis.patch.yml`, and restart DSH. That file is a top-level YAML array of patch entries; append the `insert` entry below, or replace a lone `[]` with it. The example mounts a hypothetical `@example/dsh-web-search-acme`; use the provider's real package name and add the `config` its README documents.
+
+```yaml
+- insert:
+    - id: web-search-acme
+      name: '@example/dsh-web-search-acme'
+```
+
+`dsh --profile <name> --dump-config` prints the row under the patch file's layer. After the restart, the provider appears in `listProviders()` and is selectable by pinning `searchProvider` or `fetchProvider` to its `id`. If the row is later removed while the provider is pinned, each call fails with `WEB_PROVIDER_CONFIGURED_MISSING` until another provider is chosen.
 
 <a id="search-readiness"></a>
 ### Search and fetch readiness
@@ -118,10 +149,10 @@ The package is built on one deliberate separation:
 
 | File | Role |
 |---|---|
-| [`src/index.ts`](src/index.ts) | Plugin entry: the `WebRuntime` service, both provider registries, execution-time selection, per-route readiness, and the key Remote methods |
+| [`src/index.ts`](src/index.ts) | Plugin entry: the `WebRuntime` service, both provider registries, the `web/listProviders` Remote method and `web/providers-changed` event, execution-time selection, per-route readiness, and the key Remote methods |
 | [`src/api-key.ts`](src/api-key.ts) | `SearchApiKey`: a provider key resolved through the credentials service |
 | [`src/provider-http.ts`](src/provider-http.ts) | `requestProviderJson` and refusal classification shared by key-authenticated providers |
-| [`src/types.ts`](src/types.ts) | Vocabulary: request/result types, the closed `WebFetchBody` union, and the `WebError` taxonomy |
+| [`src/types.ts`](src/types.ts) | Vocabulary: request/result types, provider list entries, the `web/providers-changed` event declaration, the closed `WebFetchBody` union, and the `WebError` taxonomy |
 
 ### Data model
 
@@ -166,7 +197,7 @@ No direct invalidation; the named consumer owns any request-prefix changes.
 
 These limits define when the service is incomplete on its own. They are current package constraints.
 
-- **No observation surface** — there is no provider-change event and no capability-status query beyond the provider listing for key entry; `searchReady()` and `fetchReady()` report only the selected provider's credential readiness and answer true when selection fails. Availability is observable only by running a search or fetch and routing the thrown code, and the no-provider failure is the generic `WEB_PROVIDER_UNAVAILABLE` with no per-provider reason enumeration (Agent Note).
+- **No availability observation** — `listProviders()` and `web/providers-changed` report which providers are registered, not whether they are usable; there is no capability-status query beyond the key-entry provider listing, and `searchReady()` and `fetchReady()` report only the selected provider's credential readiness and answer true when selection fails. Availability is observable only by running a search or fetch and routing the thrown code, and the no-provider failure is the generic `WEB_PROVIDER_UNAVAILABLE` with no per-provider reason enumeration (Agent Note).
 - **Search requests carry only `query` and `maxResults`** — provider-neutral controls (recency, domain filters, regional hints, search depth) are deferred until the backends can honor them (seam Agent Note).
 - **`WebFetchBody` has no `pdf` arm** — text-extractable PDF support is named deferred work; the closed union makes adding it a compile-enforced change across the web packages.
 - **Provider-backed page extraction is out of scope of `fetch()`** — a Firecrawl/Tavily-style `web_extract` capability is deferred rather than widening the fetch operation.
@@ -181,6 +212,6 @@ This Dev Note is working context for maintainers: open questions and undecided d
 
 #### Future: observing provider state
 
-No provider-change event or capability-status query exists; consumers observe availability only by executing a call and routing the thrown code. Restoring a small observation surface is possible if a consumer needs per-provider reasons, but the archived simplification note records why the earlier one was dropped.
+Registration is observable through `listProviders()` and `web/providers-changed`, but no capability-status query exists; consumers observe availability only by executing a call and routing the thrown code. Restoring a small observation surface is possible if a consumer needs per-provider reasons, but the archived simplification note records why the earlier one was dropped.
 
 </details>

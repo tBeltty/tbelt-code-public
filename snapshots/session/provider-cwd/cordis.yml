@@ -1,4 +1,8 @@
 # The filesystem fixture supplies execution coordinates without a remote service.
+# Repo map injection and its rg walk are outside this scenario's fixed budget or launch accounting.
+- id: repo-map
+  disabled: true
+
 - id: fs-sandbox
   disabled: true
 

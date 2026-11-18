@@ -86,6 +86,7 @@ The hook-protocol-lib Agent Note records the shared-versus-per-dialect split and
 | [`src/runner.ts`](src/runner.ts) | `runHook` execution through `ctx.shell` and `DEFAULT_HOOK_TIMEOUT_MS` |
 | [`src/codec.ts`](src/codec.ts) | Exit-code and structured-stdout decoding into `HookOutput` |
 | [`src/merge.ts`](src/merge.ts) | Most-restrictive merge and the `MergedHookOutcome` type |
+| [`src/errors.ts`](src/errors.ts) | `HookError` name with `HOOK_DENIED` and `HOOK_BLOCKED` codes recorded on denied and blocked tool calls |
 | [`src/events.ts`](src/events.ts) | `hook/*` event declaration, append helpers, stderr summary |
 | [`src/detached.ts`](src/detached.ts) | Detached-run quiescence tracking |
 | [`src/types.ts`](src/types.ts) | `HookOutput`, `MatcherGroup`, `CommandHook`, and the `hook/*` payload types |

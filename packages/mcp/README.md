@@ -7,7 +7,7 @@ kind: "package-group"
 
 ## Summary
 
-The `mcp/` group lets the model call external Model Context Protocol (MCP) tools and read server resources. Configure only `mcp-client` entries; shipped profiles already mount `mcp-resources` once. MCP tools and prompt text appear only for callers with a configured server in scope. Connections also supply server instructions. Package READMEs own configuration and limitations.
+The `mcp/` group lets the model call external Model Context Protocol (MCP) tools and read server resources. Configure `mcp-client` entries directly, or let `mcp-manager` run a settings-driven fleet of them that a management surface edits at runtime; shipped profiles already mount `mcp-resources` once. MCP tools and prompt text appear only for callers with a configured server in scope. Connections also supply server instructions. Package READMEs own configuration and limitations.
 
 ## Table of Contents
 
@@ -20,11 +20,13 @@ The `mcp/` group lets the model call external Model Context Protocol (MCP) tools
 <a id="packages"></a>
 ## Packages
 
-The client owns each configured connection; the shared resource package supplies resource tools across those connections.
+The client owns each configured connection, the manager runs a settings-driven fleet of clients, and the shared resource package supplies resource tools across those connections.
 
 | Package | What it provides |
 |---|---|
+| [`mcp-account/`](mcp-account/README.md) | Show each MCP connector's OAuth server account on the Plugins page through the connector account registry |
 | [`mcp-client/`](mcp-client/README.md) | Connect one MCP server, expose its tools and instructions, and provide its resource operations |
+| [`mcp-manager/`](mcp-manager/README.md) | Manage a settings-driven fleet of mcp-client instances: live add/edit/enable/disable/delete, status, restart, probe |
 | [`mcp-resources/`](mcp-resources/README.md) | Discover and read resources through shared tools with explicit server selection |
 
 -----
@@ -35,6 +37,7 @@ The client owns each configured connection; the shared resource package supplies
 Try the worked example configurations to see the plugin in action, then read the Agent Note for the behavior decisions behind it.
 
 - historical MCP client plugin Agent Note — the bridge's design: server-qualified naming, discovery, execution, and environment scrubbing.
+- MCP manager Agent Note — the settings-driven fleet: reconcile semantics, templates, status surface, and rejected alternatives.
 - [Resources and instructions reference](mcp-resources/README.md) — on-demand resource access and scoped server guidance.
 - Third-party memory MCP guide — runnable overlay rows and setup instructions.
 - Tools subsystem reference — the `ToolRuntime` that receives the registered tools.

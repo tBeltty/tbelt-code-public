@@ -25,13 +25,14 @@ import { hunkRows, MAX_RENDERED_LINES, renderedHunks, splitRows } from '../src/c
 import { changesReviewDefinition } from '../src/client/review-definition.ts'
 import { createReviewStore } from '../src/client/review-store.ts'
 import { en, es } from '../src/client/locales.ts'
+import { brandString } from '@deepseek-ai/dsh-brand'
 
 afterEach(() => {
   cleanup()
   vi.unstubAllGlobals()
 })
 
-const SESSION = SessionId('viewed')
+const SESSION = brandString<SessionId>('viewed')
 const TAB = 'tab-1' as TabId
 const COORDINATES = { sessionId: SESSION, seq: 5, turn: 2 }
 const ADDRESS = changesReviewAddress(COORDINATES)

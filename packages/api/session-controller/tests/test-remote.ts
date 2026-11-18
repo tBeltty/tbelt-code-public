@@ -3,6 +3,7 @@ import type { SessionControllerInternals } from '../src/index.ts'
 
 import { SessionLogOffset } from '@deepseek-ai/dsh-session'
 import { Service, type Context } from '@deepseek-ai/cordis'
+import { brandString } from '@deepseek-ai/dsh-brand'
 import type { ModelSelection as AgentModelSelection } from '@deepseek-ai/dsh-agent'
 import type {
   AdmittedPromptContentPart,
@@ -13,7 +14,7 @@ import type { SessionEvent, SessionHeader, SessionId } from '@deepseek-ai/dsh-se
 import type { SessionProjectionsValue } from '../src/types.ts'
 import {
   SessionPersistenceNotFoundError,
-  SessionPersistenceRevision,
+  type SessionPersistenceRevision,
   SessionReadOnlyError,
   type SessionAccess,
   type SessionHandle,
@@ -62,6 +63,7 @@ import type {
   SessionSelectModelRequest,
   SessionSelectModelValue,
   SessionProjectionsRequest,
+  SessionProjectionFrame,
   SessionUpdateQueueRequest,
   SessionUpdateQueueValue,
   SetDefaultModelRequest,
@@ -93,6 +95,7 @@ export interface TestSessionRemote {
   page(request: SessionPageRequest, signal?: AbortSignal): Promise<RemoteResult<SessionEventsPage>>
   projections(request: SessionProjectionsRequest, signal?: AbortSignal): Promise<RemoteResult<SessionProjectionsValue>>
   follow(request: SessionFollowRequest, signal?: AbortSignal): AsyncIterable<SessionFollowFrame>
+  observeProjections(request: SessionProjectionsRequest, signal?: AbortSignal): AsyncIterable<SessionProjectionFrame>
   control(signal?: AbortSignal): AsyncIterable<SessionControlFrame>
 }
 
@@ -187,7 +190,7 @@ export function testSessionPersistence(
     list: async (options?: SessionPersistenceListOptions) =>
       (await listHeaders(options?.signal)).map(header => ({
         header,
-        revision: SessionPersistenceRevision(`test:${header.id}:list`),
+        revision: brandString<SessionPersistenceRevision>(`test:${header.id}:list`),
       })),
   }
   if (persistence.stat === undefined) {
@@ -199,7 +202,7 @@ export function testSessionPersistence(
       const header = (await listHeaders(options?.signal)).find(listed => listed.id === sessionId)
       return header === undefined
         ? undefined
-        : { header, revision: SessionPersistenceRevision(`test:${sessionId}:stat`) }
+        : { header, revision: brandString<SessionPersistenceRevision>(`test:${sessionId}:stat`) }
     }
   }
   if (persistence.open === undefined) {
@@ -222,6 +225,10 @@ export function testSessionPersistence(
 
 /** Concrete point-read query used by Session Controller tests that do not exercise search. */
 class TestSessionQuery extends SessionQueryEngine {
+  initialize(): Promise<void> {
+    return this[Service.init]()
+  }
+
   override searchSessions(): Promise<never> {
     return Promise.reject(new Error('session search is not configured in this test'))
   }
@@ -231,10 +238,14 @@ class TestSessionQuery extends SessionQueryEngine {
   }
 }
 
-/** Install the required projection and point-query services for direct controller tests. */
-export function installSessionReadTestServices(ctx: Context): void {
+/**
+ * Install the required projection and point-query services for direct controller tests.
+ * @param ctx - test context that receives missing services.
+ * @returns when the installed query service has registered its projections.
+ */
+export async function installSessionReadTestServices(ctx: Context): Promise<void> {
   if (ctx.get('sessionProjections') === undefined) new SessionProjectionRegistry(ctx)
-  if (ctx.get('sessionQuery') === undefined) new TestSessionQuery(ctx)
+  if (ctx.get('sessionQuery') === undefined) await new TestSessionQuery(ctx).initialize()
 }
 
 async function installControllers(
@@ -295,7 +306,7 @@ async function installControllers(
       retirePrompt: () => {},
     } as never)
   }
-  installSessionReadTestServices(ctx)
+  await installSessionReadTestServices(ctx)
   if (ctx.get('remoteAccess') === undefined) new RemoteAccessService(ctx)
   const cwd = vi.spyOn(process, 'cwd').mockReturnValue(defaults.cwd)
   class TestController extends SessionController {
@@ -401,6 +412,7 @@ export async function createSessionTestRemote(
       signal,
     ),
     follow: (request, signal = new AbortController().signal) => direct.follow(request, signal),
+    observeProjections: (request, signal = new AbortController().signal) => direct.observeProjections(request, signal),
     control: (signal = new AbortController().signal) => direct.control(signal),
   }
 }

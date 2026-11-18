@@ -4,7 +4,7 @@
  * @module @deepseek-ai/dsh-terminal-views/references
  */
 import { formatFileMention } from '@deepseek-ai/dsh-file-reference/grammar'
-import type { ActiveAtToken } from '@deepseek-ai/dsh-file-reference/grammar'
+import type { ActiveAtToken } from '@deepseek-ai/dsh-file-reference'
 import { t } from './copy.ts'
 import type { PickerItem } from './picker.ts'
 import { oneLine } from './lines.ts'

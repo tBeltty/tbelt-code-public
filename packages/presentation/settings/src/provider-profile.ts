@@ -55,21 +55,29 @@ export function modelEntry(candidate: DiscoveredModel): ModelEntry {
   }
 }
 
+/** Whether `value` is a plain object, as the settings JSON carries one. */
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value)
+}
+
 /**
  * Settings edits that turn one profile object into another, field by field.
+ * Nested objects are diffed the same way, so an omitted nested field keeps the
+ * value an unset restores from the inherited layer instead of a whole-object
+ * `set` discarding it.
  * @param base - path to the profile object.
  * @param before - the profile as stored; anything that is not an object counts as empty.
  * @param after - the profile to store.
  * @returns a `set` for each changed field and an `unset` for each removed one.
  */
 export function profileOps(base: readonly string[], before: unknown, after: Readonly<Record<string, unknown>>): ProfileOp[] {
-  const previous = typeof before === 'object' && before !== null && !Array.isArray(before)
-    ? before as Record<string, unknown>
-    : {}
+  const previous = isRecord(before) ? before : {}
   const ops: ProfileOp[] = []
   for (const [key, value] of Object.entries(after)) {
-    if (JSON.stringify(previous[key]) === JSON.stringify(value)) continue
-    ops.push({ op: 'set', path: [...base, key], value: value as JsonValue })
+    const prior = previous[key]
+    if (JSON.stringify(prior) === JSON.stringify(value)) continue
+    if (isRecord(value) && (prior === undefined || isRecord(prior))) ops.push(...profileOps([...base, key], prior, value))
+    else ops.push({ op: 'set', path: [...base, key], value: value as JsonValue })
   }
   for (const key of Object.keys(previous)) {
     if (!(key in after)) ops.push({ op: 'unset', path: [...base, key] })

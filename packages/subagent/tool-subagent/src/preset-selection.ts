@@ -1,4 +1,5 @@
 /** Deployment-owned preset choices for one delegation tool. */
+import { SubagentError } from '@deepseek-ai/dsh-subagent'
 import type { SubagentCapabilities, SubagentProvider } from '@deepseek-ai/dsh-subagent'
 
 /** Optional default and model-selectable preset ids for a spawn tool. */
@@ -103,14 +104,18 @@ export class SubagentPresetSelection {
    * @param request - Model-supplied tool arguments.
    * @param provider - provider that will start the child.
    * @returns Selected preset id, or omission to inherit the parent.
+   * @throws {SubagentError} `PRESET_SELECTION_DISABLED` when this tool exposes no
+   *   preset choice, or `PRESET_NOT_ALLOWED` when the id is outside the allowlist.
    */
   resolve(request: PresetSelectionRequest, provider: PresetProviderFacts): string | undefined {
     const id = request.agent_preset
     if (id === undefined) return this.config.agentPreset
     const choices = this.choicesFor(provider)
-    if (choices === undefined) throw new Error('agent_preset selection is disabled for this tool instance')
+    if (choices === undefined) {
+      throw new SubagentError('agent_preset selection is disabled for this tool instance', 'PRESET_SELECTION_DISABLED')
+    }
     if (typeof id !== 'string' || !choices.includes(id)) {
-      throw new Error(`agent_preset must be one of: ${choices.join(', ')}`)
+      throw new SubagentError(`agent_preset must be one of: ${choices.join(', ')}`, 'PRESET_NOT_ALLOWED')
     }
     return id
   }

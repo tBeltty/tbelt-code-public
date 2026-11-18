@@ -1,4 +1,5 @@
 import type { SessionId } from '@deepseek-ai/dsh-session/types'
+import type { AttachmentId } from '@deepseek-ai/dsh-attachment'
 // @vitest-environment jsdom
 import { contextMenuHook } from '@deepseek-ai/dsh-client-test-runtime'
 import { afterEach, describe, expect, it, vi } from 'vitest'
@@ -12,8 +13,9 @@ import { localizeAutoReviewDenial, normalizeAutoReviewReason } from '../src/clie
 import { classifyTool, toolRowModel } from '@deepseek-ai/dsh-presentation-tool-call'
 import { ToolRow } from '../src/client/tool/components/ToolRow.tsx'
 import { GenericToolCard, type GenericToolCardProps } from '../src/client/tool/toolviews/GenericToolCard.tsx'
-import { es } from '@deepseek-ai/dsh-client-ui-conversation/src/client/locales.ts'
+import { en, es } from '@deepseek-ai/dsh-client-ui-conversation/src/client/locales.ts'
 import { PartialArguments } from '@deepseek-ai/dsh-util-values'
+import { brandString } from '@deepseek-ai/dsh-brand'
 
 afterEach(() => {
   cleanup()
@@ -357,6 +359,33 @@ describe('GenericToolCard', () => {
     getFileTriggerProps: () => ({}),
     loadImage: vi.fn(() => Promise.reject(new Error('not used'))),
     useDisclosure, callId: 'c1', toolName, ...('kind' in block ? { phase: 'result' as const, block: block } : { phase: block.phase, block: block }), openFile: vi.fn(), t,
+  })
+
+  it.each([
+    [t, 'sha256:image (8x4px, 64 bytes)'],
+    [makeTranslate(en), 'sha256:image (8x4px, 64 bytes)'],
+  ] as const)('localizes compact image references in the generic card', (translate, expected) => {
+    const attachment = { attachmentId: brandString<AttachmentId>('sha256:image'), mediaType: 'image/png' as const, width: 8, height: 4, bytes: 64 }
+    const block = result({ content: [{ type: 'text', text: 'before\n' }, { type: 'image', attachment }] })
+    const view = render(<GenericToolCard {...props('run_code', block)} t={translate} />)
+    fireEvent.click(view.getByRole('button'))
+    expect(view.container.textContent).toContain(expected)
+    expect(view.container.querySelector('[class*="output"]')?.textContent ?? view.container.textContent).not.toContain('before\n\nsha256:')
+  })
+
+  it.each([
+    '{"type":"image"}',
+    '{"type":"image","attachment":null}',
+    '{"type":"image","attachment":[]}',
+    '{"type":"image","attachment":{"attachmentId":"image","width":"8","height":4,"bytes":64}}',
+    '{"type":"image","attachment":{"attachmentId":"image","width":8,"height":4,"bytes":0}}',
+    '{"type":"image","attachment":{"attachmentId":"image","name":12,"width":8,"height":4,"bytes":64}}',
+    '{"type":"image","attachment":{"width":8,"height":4,"bytes":64}}',
+  ])('renders malformed image references as JSON: %s', (json) => {
+    const content = JSON.parse(`[${json}]`) as ToolResultNode['content']
+    const view = render(<GenericToolCard {...props('run_code', result({ content }))} />)
+    fireEvent.click(view.getByRole('button'))
+    expect(view.container.textContent).toContain(JSON.stringify(content[0], null, 2))
   })
 
   it('renders the classified variant row from the frozen slice', () => {

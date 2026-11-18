@@ -5,6 +5,8 @@ export type SidebarKey = keyof typeof en
 
 /** English dictionary and key-set source of truth. */
 export const en = {
+  'panels.unpinTooltip': 'Unpin from left sidebar',
+  'panels.unpin': 'Unpin {name} from sidebar',
   'session.new': 'New Session',
   'session.new.label': 'New session',
   'toggle.open': 'Open sidebar',
@@ -18,6 +20,8 @@ export const en = {
 
 /** Spanish dictionary, checked against the English keys. */
 export const es = {
+  'panels.unpinTooltip': 'Desanclar de la barra lateral izquierda',
+  'panels.unpin': 'Desfijar {name} de la barra lateral',
   'session.new': 'Nueva sesión',
   'session.new.label': 'Nueva sesión',
   'toggle.open': 'Abrir barra lateral',
@@ -31,6 +35,8 @@ export const es = {
 
 /** Greek dictionary, checked complete against the English key set. */
 export const el = {
+  'panels.unpinTooltip': 'Ξεκαρφίτσωμα από την αριστερή πλευρική γραμμή',
+  'panels.unpin': 'Ξεκαρφίτσωμα του {name} από την πλευρική γραμμή',
   'session.new': 'Νέα συνεδρία',
   'session.new.label': 'Νέα συνεδρία',
   'toggle.open': 'Άνοιγμα πλευρικής γραμμής',
@@ -44,8 +50,10 @@ export const el = {
 
 /** French dictionary, checked against the English keys. */
 export const fr = {
+  'panels.unpinTooltip': "Retirer l'épingle de la barre latérale gauche",
   'session.new': 'Nouvelle session',
   'session.new.label': 'Nouvelle session',
+  'panels.unpin': 'Désépingler {name} de la barre latérale',
   'toggle.open': 'Ouvrir la barre latérale',
   'toggle.collapse': 'Réduire la barre latérale',
   'panels.label': 'Panneaux globaux',

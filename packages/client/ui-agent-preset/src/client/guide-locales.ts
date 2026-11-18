@@ -10,7 +10,8 @@ export const guideEn = {
   guideStandardIntro: 'Choose Standard mode when starting a new task. Describe what you want to accomplish, point to the relevant files, and explain how to check the result.',
   guideStandardExplanation: [
     '### How it works',
-    'The agent calls tools directly to read and edit files, search, and run terminal commands. It includes Skills, planning, goals, subagents, workflows, plugin management, and context compaction.',
+    'The agent calls tools directly to read and edit files, search, and run terminal commands. It includes Skills, planning, goals, subagents, workflows, plugin management, read-only runtime inspection, and context compaction.',
+    'For questions about tBelt Code and plugin or preset work you request, the dsh-doc skill guides the agent to the installed documentation and source. Its instructions load only when requested or relevant; loading it does not change files, tools, or the profile.',
     '### When to choose it',
     'Start here for everyday coding, file work, and research. Standard mode can also write scripts and process files in batches. PTC changes how tool calls are organized; it is not required for batch tasks.',
   ].join('\n\n'),
@@ -69,7 +70,7 @@ export const guideEn = {
   guideCordisIntro: 'Choose Creator mode for a new task. Describe the capability you want, where it should appear, and how you will verify it.',
   guideCordisExplanation: [
     '### What you can create',
-    'Creator mode includes the standard task tools plus runtime inspection and guidance for authoring Cordis plugins and agent presets. It can create a plugin that adds a capability or UI, or a preset that combines tools and prompts for a particular job.',
+    'Creator mode focuses on customizing tBelt Code. It shares read-only runtime inspection and dsh-doc guidance with Standard mode. The agent can create a plugin that adds a capability or UI, or a preset that combines tools and prompts for a particular job.',
     '### Plugins and modes',
     'A plugin adds capabilities to tBelt Code, such as a tool, a service connection, or a UI entry. A mode is an agent preset that selects tools and defines how the agent works in a task. A plugin can be included in a custom preset.',
     '### How the result takes effect',
@@ -103,7 +104,8 @@ export const guideEs = {
   guideStandardIntro: 'Elige el modo estándar al empezar una tarea nueva. Describe lo que quieres lograr, señala los archivos relevantes y explica cómo comprobar el resultado.',
   guideStandardExplanation: [
     '### Cómo funciona',
-    'El agente llama a herramientas directamente para leer y editar archivos, buscar y ejecutar comandos de terminal. Incluye habilidades, planificación, objetivos, subagentes, flujos de trabajo, gestión de complementos y compactación de contexto.',
+    'El agente llama a herramientas directamente para leer y editar archivos, buscar y ejecutar comandos de terminal. Incluye habilidades, planificación, objetivos, subagentes, flujos de trabajo, gestión de complementos, inspección del tiempo de ejecución de solo lectura y compactación de contexto.',
+    'Para preguntas sobre tBelt Code y el trabajo con complementos o ajustes preestablecidos que solicite, la habilidad dsh-doc guía al agente hacia la documentación y el código fuente instalados. Sus instrucciones se cargan solo cuando se solicitan o son relevantes; cargarla no cambia archivos, herramientas ni el perfil.',
     '### Cuándo elegirlo',
     'Comience aquí para la codificación, el trabajo con archivos y la investigación diaria. El modo estándar también puede escribir scripts y procesar archivos en lotes. PTC cambia la forma en que se organizan las llamadas a herramientas; no es necesario para tareas por lotes.',
   ].join('\n\n\n\n'),
@@ -139,7 +141,7 @@ export const guideEs = {
   guideCordisIntro: 'Elige el modo creador para una tarea nueva. Describe la capacidad que quieres, dónde debe aparecer y cómo la vas a verificar.',
   guideCordisExplanation: [
     '### Lo que puedes crear',
-    'El modo Creador incluye las herramientas de tareas estándar además de inspección del tiempo de ejecución y orientación para crear Cordis complementos y ajustes preestablecidos de agentes. Puede crear un complemento que agregue una capacidad o interfaz de usuario, o un ajuste preestablecido que combine herramientas e indicaciones para un trabajo en particular.',
+    'El modo Creador se centra en personalizar tBelt Code. Comparte la inspección del tiempo de ejecución de solo lectura y la orientación de dsh-doc con el modo Estándar. El agente puede crear un complemento que agregue una capacidad o interfaz de usuario, o un ajuste preestablecido que combine herramientas e indicaciones para un trabajo en particular.',
     '### Complementos y modos',
     'Un complemento agrega capacidades a tBelt Code, como una herramienta, una conexión de servicio o una entrada de UI. Un modo es un ajuste preestablecido del agente que selecciona herramientas y define cómo trabaja el agente en una tarea. Se puede incluir un complemento en un ajuste preestablecido personalizado.',
     '### Cómo surte efecto el resultado',
@@ -160,7 +162,8 @@ export const guideEl = {
   guideStandardIntro: 'Επιλέξτε την Τυπική λειτουργία όταν ξεκινάτε μια νέα εργασία. Περιγράψτε τι θέλετε να πετύχετε, υποδείξτε τα σχετικά αρχεία και εξηγήστε πώς θα ελεγχθεί το αποτέλεσμα.',
   guideStandardExplanation: [
     '### How it works',
-    'The agent calls tools directly to read and edit files, search, and run terminal commands. It includes Skills, planning, goals, subagents, workflows, plugin management, and context compaction.',
+    'The agent calls tools directly to read and edit files, search, and run terminal commands. It includes Skills, planning, goals, subagents, workflows, plugin management, read-only runtime inspection, and context compaction.',
+    'For questions about tBelt Code and plugin or preset work you request, the dsh-doc skill guides the agent to the installed documentation and source. Its instructions load only when requested or relevant; loading it does not change files, tools, or the profile.',
     '### When to choose it',
     'Start here for everyday coding, file work, and research. Standard mode can also write scripts and process files in batches. PTC changes how tool calls are organized; it is not required for batch tasks.',
   ].join('\n\n'),
@@ -187,7 +190,7 @@ export const guideEl = {
   guideCordisIntro: 'Επιλέξτε τη λειτουργία Δημιουργού για μια νέα εργασία. Περιγράψτε τη δυνατότητα που θέλετε, πού θα εμφανίζεται και πώς θα την επαληθεύσετε.',
   guideCordisExplanation: [
     '### What you can create',
-    'Creator mode includes the standard task tools plus runtime inspection and guidance for authoring Cordis plugins and agent presets. It can create a plugin that adds a capability or UI, or a preset that combines tools and prompts for a particular job.',
+    'Creator mode focuses on customizing tBelt Code. It shares read-only runtime inspection and dsh-doc guidance with Standard mode. The agent can create a plugin that adds a capability or UI, or a preset that combines tools and prompts for a particular job.',
     '### Plugins and modes',
     'A plugin adds capabilities to tBelt Code, such as a tool, a service connection, or a UI entry. A mode is an agent preset that selects tools and defines how the agent works in a task. A plugin can be included in a custom preset.',
     '### How the result takes effect',
@@ -208,7 +211,8 @@ export const guideFr = {
   guideStandardIntro: 'Choisissez le mode Standard au début d’une nouvelle tâche. Décrivez ce que vous voulez accomplir, indiquez les fichiers concernés et expliquez comment vérifier le résultat.',
   guideStandardExplanation: [
     '### Comment ça marche',
-    "L'agent appelle directement des outils pour lire et modifier des fichiers, rechercher et exécuter des commandes de terminal. Il comprend les compétences, la planification, les objectifs, les sous-agents, les flux de travail, la gestion des plugins et le compactage du contexte.",
+    "L'agent appelle directement des outils pour lire et modifier des fichiers, rechercher et exécuter des commandes de terminal. Il comprend les compétences, la planification, les objectifs, les sous-agents, les flux de travail, la gestion des plugins, l\'inspection d\'exécution en lecture seule et le compactage du contexte.",
+    "Pour les questions sur tBelt Code et le travail sur les plugins ou préréglages que vous demandez, la compétence dsh-doc guide l'agent vers la documentation et le code source installés. Ses instructions ne se chargent que sur demande ou lorsqu'elles sont pertinentes ; la charger ne modifie ni les fichiers, ni les outils, ni le profil.",
     '### Quand le choisir',
     "Commencez ici pour le codage quotidien, le travail sur les fichiers et la recherche. Le mode standard peut également écrire des scripts et traiter des fichiers par lots. PTC modifie la façon dont les appels d'outils sont organisés ; il n'est pas requis pour les tâches par lots.",
   ].join('\n\n\n\n'),
@@ -235,7 +239,7 @@ export const guideFr = {
   guideCordisIntro: 'Choisissez le mode Créateur pour une nouvelle tâche. Décrivez la fonctionnalité souhaitée, l’endroit où elle doit apparaître et la manière dont vous la vérifierez.',
   guideCordisExplanation: [
     '### Ce que vous pouvez créer',
-    "Le mode Créateur inclut les outils de tâches standard, ainsi qu'une inspection d'exécution et des conseils pour la création de Cordis plug-ins et préréglages d'agent. Il peut créer un plugin qui ajoute une fonctionnalité ou une interface utilisateur, ou un préréglage combinant des outils et des invites pour une tâche particulière.",
+    "Le mode Créateur se concentre sur la personnalisation de tBelt Code. Il partage l'inspection d'exécution en lecture seule et les conseils de dsh-doc avec le mode Standard. L'agent peut créer un plugin qui ajoute une fonctionnalité ou une interface utilisateur, ou un préréglage combinant des outils et des invites pour une tâche particulière.",
     '### Plugins et modes',
     "Un plug-in ajoute des fonctionnalités à tBelt Code, telles qu'un outil, une connexion à un service ou une entrée d'interface utilisateur. Un mode est un préréglage d'agent qui sélectionne les outils et définit la manière dont l'agent fonctionne dans une tâche. Un plugin peut être inclus dans un préréglage personnalisé.",
     '### Comment le résultat prend effet',

@@ -1,6 +1,6 @@
 import { vi } from 'vitest'
 import type { Mocked } from 'vitest'
-import { MessageId, ToolCallId } from '@deepseek-ai/dsh-llm/brand'
+import { MessageId, ToolCallId } from '@deepseek-ai/dsh-llm'
 import { SessionSeq } from '@deepseek-ai/dsh-session/types'
 import type { SessionEvent } from '@deepseek-ai/dsh-session/types'
 import { createStyle } from '@deepseek-ai/dsh-terminal-views'

@@ -11,20 +11,18 @@ import type { Browser, Locator, Page, Request } from 'playwright'
 import { chromium } from 'playwright'
 import { afterAll, beforeAll, describe, expect, it, onTestFailed, onTestFinished } from 'vitest'
 import { basename, join } from 'node:path'
-import { SessionId } from '@deepseek-ai/dsh-session'
+import type { SessionId } from '@deepseek-ai/dsh-session'
 import {
   acknowledgeReloadConnectionLoss, assertFixtureInventory, captureStableAria, compareOrRefreshGolden,
   launchWebScaffold, watchConsole, webSnapshotMode, type WebScaffold,
 } from './scaffold.ts'
 import { openSettings, EN_BROWSER_LOCALE, saveFailureShot } from './support.ts'
+import { brandString } from '@deepseek-ai/dsh-brand'
 
 const SNAPSHOT_DIR = fileURLToPath(new URL('./expected/settings-chrome', import.meta.url))
 const DIALOG_EXPECTED = join(SNAPSHOT_DIR, 'dialog.expected.md')
-const PLUGINS_EXPECTED = join(SNAPSHOT_DIR, 'plugins.expected.md')
-const PLUGIN_INSTANCES_EXPECTED = join(SNAPSHOT_DIR, 'plugin-instances.expected.md')
 // The English fallback surface: a browser naming no shipped language.
 const DIALOG_EN_EXPECTED = join(SNAPSHOT_DIR, 'dialog-en.expected.md')
-const PLUGIN_ROW_SELECTOR = '[data-plugin-scope="preset"] [data-plugin-entry="tool-subagent"]'
 const MODE = webSnapshotMode()
 const SCREENSHOTS = 'screenshots/collapse-timing-settings'
 const SCREENSHOT_DIR = fileURLToPath(new URL(`../../../.artifacts/${SCREENSHOTS}`, import.meta.url))
@@ -128,83 +126,6 @@ describe('web e2e: settings modal and General preferences', () => {
     await dialog.getByRole('button', { name: 'Models', exact: true }).click()
     await expect.poll(() => dialog.getByRole('button', { name: 'Models', exact: true }).getAttribute('aria-current'), { timeout: 5_000 }).toBe('true')
     expect(await dialog.getByRole('button', { name: 'General' }).getAttribute('aria-current')).toBeNull()
-    // System inspector: the read-only Plugin list, a projection of the same
-    // assembled Loader tree, shown as the section's one page; management and
-    // configuration live on the sidebar's Plugins panel (its own scenario files
-    // drive that page over a profile runtime). Capture one stable shipped row
-    // rather than the whole inventory so adding an unrelated plugin does not
-    // rewrite this surface's golden.
-    await dialog.getByRole('button', { name: 'System inspector', exact: true }).click()
-    await dialog.getByRole('heading', { name: 'System inspector', exact: true }).waitFor({ timeout: 10_000 })
-    // The preset group starts open under its display-only switcher; the global group starts folded.
-    const presetSwitcher = dialog.getByRole('button', { name: 'Choose the agent preset to inspect' })
-    await presetSwitcher.waitFor({ timeout: 10_000 })
-    expect(await presetSwitcher.textContent()).toBe('Standard mode（Default）')
-    const presetToggle = dialog.getByRole('button', { name: 'Session plugins', exact: true })
-    expect(await presetToggle.getAttribute('aria-expanded')).toBe('true')
-    expect(await dialog.locator('[data-plugin-scope="preset"] [data-plugin-entry]').count()).toBeGreaterThan(0)
-    const globalToggle = dialog.getByRole('button', { name: /^Global/ })
-    expect(await globalToggle.getAttribute('aria-expanded')).toBe('false')
-    await globalToggle.click()
-    const pluginRow = dialog.locator(PLUGIN_ROW_SELECTOR)
-    await pluginRow.waitFor({ timeout: 10_000 })
-    const expectedPluginCount = [...scaffold.ctx.loader.entries()]
-      .filter(entry => !entry.options.group)
-      .length
-    const pluginSearch = dialog.getByRole('searchbox', { name: 'Search plugins' })
-    expect(await pluginSearch.count()).toBe(1)
-    // Every Loader entry appears exactly once in the global group — rows the
-    // presets took over included, preset compositions excluded.
-    expect(await dialog.locator('[data-plugin-scope="global"] [data-plugin-entry]').count())
-      .toBe(expectedPluginCount)
-    // A plainly enabled row states its status only in its accessible name: it
-    // carries no tag, and an active fiber draws no dot, so no global row shows
-    // either. Guard the assertions against matching nothing because no row is enabled.
-    const enabledRows = dialog.locator('[data-plugin-scope="global"] [data-plugin-entry] button[aria-label$="Enabled"]')
-    expect(await enabledRows.count()).toBeGreaterThan(0)
-    expect(await enabledRows.getByText('Enabled', { exact: true }).count()).toBe(0)
-    expect(await dialog.locator('[data-plugin-scope="global"] [role="img"][aria-label="Running"]').count()).toBe(0)
-    expect(await dialog.locator('[data-plugin-count]').getAttribute('data-plugin-count'))
-      .toBe(String(expectedPluginCount))
-    expect(await dialog.getByRole('button', { name: 'System inspector', exact: true }).getAttribute('aria-current')).toBe('true')
-    // One contribution shows as the page itself, without a tab row.
-    expect(await dialog.getByRole('tab').count()).toBe(0)
-    expect(await dialog.getByRole('button', { name: 'Models', exact: true }).getAttribute('aria-current')).toBeNull()
-    const pluginsSnapshot = await captureStableAria(
-      page,
-      PLUGIN_ROW_SELECTOR,
-      scaffold.workspaceCwd,
-    )
-    await compareOrRefreshGolden(PLUGINS_EXPECTED, pluginsSnapshot, MODE)
-    await pluginSearch.fill('tool-subagent')
-    const instanceRows = [
-      ['tool-subagent', 'Enabled'],
-      ['tool-subagent-fork', 'Enabled'],
-    ] as const
-    for (const [entryId, status] of instanceRows) {
-      const row = dialog.locator(`[data-plugin-scope="preset"] [data-plugin-entry="${entryId}"]`)
-      const name = `子智能体委派工具, ${entryId}, ${status}`
-      const trigger = row.getByRole('button', { name, exact: true })
-      await trigger.waitFor({ timeout: 10_000 })
-      expect(await trigger.getAttribute('aria-expanded')).toBe('false')
-      const identity = row.locator('code')
-      expect(await identity.textContent()).toBe(entryId)
-      expect(await identity.getAttribute('title')).toBe(entryId)
-    }
-    expect(await dialog.locator('[data-plugin-entry="tool-subagent-codex"], [data-plugin-entry="tool-subagent-claude-code"]').count()).toBe(0)
-    const instancesSnapshot = await captureStableAria(
-      page,
-      '[data-plugin-scope="preset"] ul',
-      scaffold.workspaceCwd,
-    )
-    await compareOrRefreshGolden(PLUGIN_INSTANCES_EXPECTED, instancesSnapshot, MODE)
-    await dialog.getByRole('button', {
-      name: 'tool-subagent, tool-subagent-fork, Enabled',
-      exact: true,
-    }).click()
-    expect(await dialog.locator('[data-plugin-entry="tool-subagent-fork"] button')
-      .getAttribute('aria-expanded')).toBe('true')
-    await pluginSearch.fill('')
     // Close path 1: Escape.
     await page.keyboard.press('Escape')
     await expect.poll(() => page.getByRole('dialog', { name: 'Settings' }).count(), { timeout: 5_000 }).toBe(0)
@@ -215,6 +136,27 @@ describe('web e2e: settings modal and General preferences', () => {
     await expect.poll(() => page.getByRole('dialog', { name: 'Settings' }).count(), { timeout: 5_000 }).toBe(0)
     expect(tripwire.pageErrors).toEqual([])
   }, 60_000)
+
+  it('leaves Settings for the sidebar Plugins page from the Plugin management entry', async () => {
+    const linkPage = await browser.newPage({ viewport: { width: 1680, height: 1000 }, locale: EN_BROWSER_LOCALE })
+    onTestFinished(() => linkPage.close())
+    onTestFailed(() => saveSettingsFailureShot(linkPage, 'settings-plugins-link'))
+    const linkConsole = watchConsole(linkPage)
+    await linkPage.goto(scaffold.authenticatedUrl, { waitUntil: 'load' })
+    await openSettings(linkPage)
+    const dialog = linkPage.getByRole('dialog', { name: 'Settings', exact: true })
+    const sections = await dialog.getByRole('navigation').getByRole('button').allTextContents()
+    // The entry holds the position between Models and Agent presets.
+    expect(sections.indexOf('Plugins')).toBe(sections.indexOf('Models') + 1)
+    expect(sections.indexOf('Agent presets')).toBe(sections.indexOf('Plugins') + 1)
+    await dialog.getByRole('button', { name: 'Plugins', exact: true }).click()
+    await expect.poll(() => dialog.count(), { timeout: 5_000 }).toBe(0)
+    const pluginsEntry = linkPage.getByRole('navigation', { name: 'Global panels' }).getByRole('button', { name: 'Plugins', exact: true })
+    await expect.poll(() => pluginsEntry.getAttribute('aria-current'), { timeout: 10_000 }).toBe('page')
+    await linkPage.locator('[data-plugin-panel]').getByRole('heading', { name: 'Plugins', exact: true }).waitFor({ timeout: 10_000 })
+    expect(linkConsole.pageErrors).toEqual([])
+    expect(linkConsole.warnings).toEqual([])
+  })
 
   it('scrolls overflowing section navigation independently of the title and settings content', async () => {
     const overflowPage = await browser.newPage({ viewport: { width: 1280, height: 768 }, locale: EN_BROWSER_LOCALE })
@@ -355,7 +297,7 @@ describe('web e2e: settings modal and General preferences', () => {
   it('stores Permission as the default for future sessions without changing an existing session', async () => {
     onTestFailed(() => saveFailureShot(page, 'web-e2e-settings-permission'))
     const createSession = async (id: string) => {
-      const handle = await scaffold.ctx.agents.create({ sessionId: SessionId(id) })
+      const handle = await scaffold.ctx.agents.create({ sessionId: brandString<SessionId>(id) })
       onTestFinished(() => handle.dispose())
       return handle.agent.session
     }
@@ -747,7 +689,8 @@ describe('web e2e: settings modal and General preferences', () => {
       // and the unavailable notice a scaffold without a profile runtime shows.
       await enPage.keyboard.press('Escape')
       await expect.poll(() => enPage.getByRole('dialog', { name: 'Settings' }).count(), { timeout: 5_000 }).toBe(0)
-      await enPage.getByRole('navigation', { name: 'Global panels' }).getByRole('button', { name: 'Plugins', exact: true }).click()
+      await expect.poll(() => enPage.getByRole('navigation', { name: 'Global panels' })
+        .getByRole('button', { name: 'Plugins', exact: true }).getAttribute('aria-current'), { timeout: 10_000 }).toBe('page')
       await enPage.getByRole('button', { name: 'Add plugin', exact: true })
         .waitFor({ timeout: 10_000 })
       // This page has no closing inventory spec to sweep its console, so the
@@ -826,8 +769,6 @@ describe('web e2e: settings modal and General preferences', () => {
       'dialog.expected.md',
       'collapse-timing-light.expected.md',
       'collapse-timing-dark.expected.md',
-      'plugin-instances.expected.md',
-      'plugins.expected.md',
     ])
   })
 })

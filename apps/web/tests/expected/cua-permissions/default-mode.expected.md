@@ -1,4 +1,4 @@
 - group "Default mode for new sessions":
   - strong: Default mode for new sessions
-  - paragraph: Computer use is available only in PTC mode.
+  - paragraph: Computer use is available in Standard, Creator, and PTC modes. Choose PTC here to make it the default for new sessions.
   - button "Set to PTC"

@@ -7,12 +7,13 @@ import { LocaleRuntime } from '@deepseek-ai/dsh-client-locale/client'
 import { en as commonEn } from '@deepseek-ai/dsh-client-locale/src/locales/en.ts'
 import { es as commonEs } from '@deepseek-ai/dsh-client-locale/src/locales/es.ts'
 import { createSnapshotStore } from '@deepseek-ai/dsh-client-store'
-import { SessionId } from '@deepseek-ai/dsh-session/types'
+import type { SessionId } from '@deepseek-ai/dsh-session/types'
 import type { PropsRenderFactories, PropsRenderSlots } from '@deepseek-ai/dsh-client-ui-slots'
 import { en, es, NS } from '../src/client/locale.ts'
 import { derivePresentationPolicy, type CollapseTiming, type FoldedReplies } from '../src/client/presentation-policy.ts'
 import { registerChatNodeRenderers } from '../src/client/chat/register-node-renderers.ts'
 import type { PerformanceUsageMode, TranscriptViewMode } from '../src/chat-settings.ts'
+import { brandString } from '@deepseek-ai/dsh-brand'
 
 type RenderSeats = PropsRenderSlots<'conversation.chat.reasoning.body'> & PropsRenderFactories
 
@@ -52,7 +53,7 @@ export async function createReasoningRenderFixture(language = 'es') {
     },
   })
   await runtime.sessions.add({ id: 'reasoning-fixture' })
-  const session = runtime.sessions.retainFor(runtime.ctx, SessionId('reasoning-fixture'))
+  const session = runtime.sessions.retainFor(runtime.ctx, brandString<SessionId>('reasoning-fixture'))
   const view = runtime.renderRoot()
   const { seats, setContent } = captured
   if (seats === undefined || setContent === undefined) throw new Error('reasoning fixture root did not render')

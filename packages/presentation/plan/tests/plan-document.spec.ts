@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import type { ToolCallId } from '@deepseek-ai/dsh-llm/brand'
+import type { ToolCallId } from '@deepseek-ai/dsh-llm'
 import { loggedPlan, submittedPlan } from '../src/index.ts'
 
 const call = (callId: string, plan: unknown, type = 'tool/call') => ({

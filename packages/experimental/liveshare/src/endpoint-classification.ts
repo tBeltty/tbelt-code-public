@@ -42,13 +42,34 @@ export const VIEWER_ENDPOINT_CLASSES = {
   'llm/listProviders': 'reader-global-read', // the page lists providers
   'session/canOpenWorkspacePath': 'reader-global-read', // the page asks whether a path can be opened
   'session/modelCatalog': 'reader-global-read', // the page reads the model catalog
+  'pluginEvents/follow': 'reader-global-read', // the page follows the plugin graph; the Host sends a non-owner schema defaults, never configured values
+  'productAnalytics/enabled': 'reader-global-read', // the page asks whether this host accepts analytics
+  'productAnalytics/report': 'reader-global-read', // the page reports its own product events
+  'productAnalytics/watchPolicy': 'reader-global-read', // the page follows the analytics policy
+  'speech/cancelPreparation': 'reader-global-read', // the page cancels its recognizer preparation
+  'speech/catalog': 'reader-global-read', // the page reads recorder providers and limits
+  'speech/follow': 'reader-global-read', // the page follows recognizer readiness
+  'speech/prepare': 'reader-global-read', // the page prepares a recognizer for its own recording
+  'speech/transcribe': 'reader-global-read', // the page transcribes its own recording
 
   // ── reader-session-read ─────────────────────────────────────────────────────────────
   'commands/list': 'reader-session-read', // the page lists slash commands for a visible Session (also granted globally)
+  'fileReferences/list': 'reader-session-read', // the reader lists files of a Session workspace it can read
   'fileUploads/upload': 'reader-session-read', // the reader attaches a file to a Session it can see; visibility alone decides
   'session/control': 'reader-session-read', // the page follows a visible Session control stream (also granted globally)
   'session/list': 'reader-session-read', // the page lists Sessions (also granted globally)
   'goals/get': 'reader-session-read', // the page reads the goal of a visible Session
+  'goals/edit': 'reader-session-read', // the page edits the goal of a visible Session; visibility alone decides
+  'goals/clear': 'reader-session-read', // the page clears the goal of a visible Session
+  'goals/complete': 'reader-session-read', // the page completes the goal of a visible Session
+  'goals/create': 'reader-session-read', // the page creates a goal on a visible Session
+  'goals/pause': 'reader-session-read', // the page pauses the goal of a visible Session
+  'goals/resume': 'reader-session-read', // the page resumes the goal of a visible Session
+  'job/list': 'reader-session-read', // the page lists the background jobs of a visible Session
+  'job/follow': 'reader-session-read', // the page follows one background job of a visible Session
+  'sessionReferenceResolver/candidates': 'reader-session-read', // the page lists sessions for an @ reference
+  'userQuestions/answer': 'reader-session-read', // the page answers a pending question of a visible Session
+  'userQuestions/attachWait': 'reader-session-read', // the page joins a pending question of a visible Session
   'session/attachment': 'reader-session-read', // the page reads an attachment of a visible Session
   'session/follow': 'reader-session-read', // the page follows a visible Session
   'session/page': 'reader-session-read', // the page reads a visible Session page
@@ -82,16 +103,16 @@ export const VIEWER_ENDPOINT_CLASSES = {
   // No reader role names these and no plugin offers them today, so the conservative class is
   // owner-only. A plugin that intends to expose one reclassifies it as 'plugin-offered', which still
   // only makes it eligible for the declaration path; the owner's per-share selection is the grant.
-  'job/follow': 'owner-only', // owner background jobs
+  'commands/execute': 'owner-only', // owner executes a slash command
   'job/kill': 'owner-only', // owner background jobs
-  'job/list': 'owner-only', // owner background jobs
-  'fileReferences/list': 'owner-only', // owner composer reference search
   'session/create': 'owner-only', // owner creates a Session
   'session/openWorkspacePath': 'owner-only', // owner opens a Workspace path
   'session/search': 'owner-only', // owner searches across Sessions
   'session/selectModel': 'owner-only', // owner selects a Session model
   'session/updateQueue': 'owner-only', // owner edits queued input
   'session/workspacePathApplications': 'owner-only', // owner applies a Workspace path
+  'sessionStatus/follow': 'owner-only', // owner reading reminders
+  'sessionStatus/mark': 'owner-only', // owner reading reminders
   'credentials/describe': 'owner-only', // owner credentials; secrets never reach a reader
   'credentials/set': 'owner-only', // owner credentials; secrets never reach a reader
   'credentials/unset': 'owner-only', // owner credentials; secrets never reach a reader
@@ -108,6 +129,7 @@ export const VIEWER_ENDPOINT_CLASSES = {
   'terminal/rename': 'owner-only', // owner terminals
   'terminal/retain': 'owner-only', // owner terminals
   'terminal/shells': 'owner-only', // owner terminals
+  'terminal/watch': 'owner-only', // owner terminals
   'directoryPicker/createDirectory': 'owner-only', // owner filesystem picker
   'directoryPicker/list': 'owner-only', // owner filesystem picker
   'directoryPicker/pick': 'owner-only', // owner filesystem picker
@@ -122,10 +144,11 @@ export const VIEWER_ENDPOINT_CLASSES = {
   'workspace/unarchiveSession': 'owner-only', // owner unarchives a Session
   'workspace/unpinSession': 'owner-only', // owner unpins a Session
   'workspaceFiles/changes': 'owner-only', // owner Workspace file access
-  'workspaceFiles/list': 'owner-only', // owner Workspace file access
-  'workspaceFiles/read': 'owner-only', // owner Workspace file access
-  'workspaceFiles/readBytes': 'owner-only', // owner Workspace file access
-  'workspaceFiles/stat': 'owner-only', // owner Workspace file access
+  'workspaceFiles/list': 'owner-only', // owner Workspace file access'
+  'workspaceFiles/read': 'owner-only', // absolute paths reach files outside the Workspace, so no share offers it
+  'workspaceFiles/readBytes': 'owner-only', // absolute paths reach files outside the Workspace, so no share offers it
+  'workspaceFiles/search': 'owner-only', // owner Workspace file access
+  'workspaceFiles/stat': 'owner-only', // absolute paths reach files outside the Workspace, so no share offers it
   'pluginManager/cancelInstall': 'owner-only', // owner plugin management
   'pluginManager/inspect': 'owner-only', // owner plugin management
   'pluginManager/installBundle': 'owner-only', // owner plugin management
@@ -145,19 +168,13 @@ export const VIEWER_ENDPOINT_CLASSES = {
   'pluginMarket/readEntryDetail': 'owner-only', // owner plugin market
   'pluginMarket/search': 'owner-only', // owner plugin market
   'pluginMarket/setIndexes': 'owner-only', // owner plugin market
-  'productAnalytics/enabled': 'owner-only', // owner product analytics
-  'productAnalytics/report': 'owner-only', // owner product analytics
-  'productAnalytics/watchPolicy': 'owner-only', // owner product analytics
   'pluginRegistryProbe/fastest': 'owner-only', // owner plugin registry probe
-  'sessionReferenceResolver/candidates': 'owner-only', // owner composer reference resolution
-  'officeToPdf/generation': 'owner-only', // owner document export
-  'officeToPdf/render': 'owner-only', // owner document export
-  'speech/cancelPreparation': 'owner-only', // owner voice input
-  'speech/catalog': 'owner-only', // owner voice input
+  'connectorAccounts/cancel': 'owner-only', // owner connector accounts on the Plugins page
+  'connectorAccounts/start': 'owner-only', // owner connector accounts on the Plugins page
+  'connectorAccounts/watch': 'owner-only', // owner connector accounts on the Plugins page
+  'officeKit/generation': 'owner-only', // owner document export
+  'officeKit/render': 'owner-only', // owner document export
   'speech/configure': 'owner-only', // owner voice input
-  'speech/follow': 'owner-only', // owner voice input
-  'speech/prepare': 'owner-only', // owner voice input
-  'speech/transcribe': 'owner-only', // owner voice input
   'cuaAccess/applicationIcons': 'owner-only', // owner computer-use permissions
   'cuaAccess/applications': 'owner-only', // owner computer-use permissions
   'cuaAccess/enablePersistentPtc': 'owner-only', // owner computer-use permissions
@@ -183,18 +200,14 @@ export const VIEWER_ENDPOINT_CLASSES = {
   'messageFeedback/delete': 'owner-only', // owner message feedback
   'messageFeedback/list': 'owner-only', // owner message feedback
   'messageFeedback/put': 'owner-only', // owner message feedback
-  'goals/clear': 'owner-only', // owner clears the goal
-  'goals/complete': 'owner-only', // owner completes the goal
-  'goals/create': 'owner-only', // owner creates a goal
-  'goals/edit': 'owner-only', // owner edits a goal
-  'goals/pause': 'owner-only', // owner pauses a goal
-  'goals/resume': 'owner-only', // owner resumes a goal
   'pluginInventory/list': 'owner-only', // owner plugin inventory
-  'commands/execute': 'owner-only', // owner executes a slash command
+  'mcpManager/probe': 'owner-only', // owner MCP server management
+  'mcpManager/restart': 'owner-only', // owner MCP server management
+  'mcpManager/watch': 'owner-only', // owner MCP server management
   'permissionPresets/catalog': 'owner-only', // owner permission presets
-  'userQuestions/answer': 'owner-only', // owner answers a pending question
-  'userQuestions/attachWait': 'owner-only', // owner answers a pending question
+  'permissionPresets/set': 'owner-only', // owner switches the sandbox and approval preset; a viewer may not call it at any tier
   'llm/discoverModels': 'owner-only', // owner discovers models
+  'web/listProviders': 'owner-only', // owner web search and fetch settings
   'agentPresets/list': 'owner-only', // owner agent presets
   'agentPresets/read': 'owner-only', // owner agent presets
   'agentPresets/select': 'owner-only', // owner agent presets
@@ -221,6 +234,7 @@ export const VIEWER_ENDPOINT_CLASSES = {
   'workspace/inspectWorktree': 'owner-only', // owner worktrees
   'workspace/listWorktrees': 'owner-only', // owner worktrees
   'workspace/removeWorktree': 'owner-only', // owner worktrees
+  'agentTeams/setEnabled': 'owner-only', // owner Team mode
   'schedule/catalog': 'owner-only', // owner schedules
   'schedule/create': 'owner-only', // owner schedules
   'schedule/deliveryLimits': 'owner-only', // owner schedules
@@ -230,13 +244,14 @@ export const VIEWER_ENDPOINT_CLASSES = {
   'schedule/list': 'owner-only', // owner schedules
   'schedule/run': 'owner-only', // owner schedules
   'schedule/view': 'owner-only', // owner schedules
-  'subagents/interruptByParent': 'owner-only', // owner subagents
+  'subagents/interruptByUser': 'owner-only', // owner subagents
   'subagents/prompt': 'owner-only', // owner subagents
 
   // Owner share management stays on the owner's own page; a `share-viewer` Peer is refused first.
   'liveshareShares/audit': 'owner-only',
   'liveshareShares/capabilities': 'owner-only',
   'liveshareShares/create': 'owner-only',
+  'liveshareShares/addSessions': 'owner-only',
   'liveshareShares/identity': 'owner-only',
   'liveshareShares/list': 'owner-only',
   'liveshareShares/relay': 'owner-only',

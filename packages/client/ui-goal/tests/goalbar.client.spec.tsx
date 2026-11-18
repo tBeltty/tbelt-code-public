@@ -146,26 +146,36 @@ describe('GoalBar', () => {
     expect(screen.getByRole('textbox', { name: 'Meta del objetivo' })).toBeTruthy()
   })
 
-  it('active goal: the pause action pauses', () => {
+  it('active goal: the pause action follows edit and clear, and pauses', () => {
     const actions = makeActions()
     render(<GoalBar goal={makeGoal()} activation="armed" {...actions} t={t} />)
+    expect(screen.getAllByRole('button').map(b => b.getAttribute('aria-label'))).toEqual(['Editar objetivo', 'Borrar objetivo', 'Pausar objetivo'])
     fireEvent.click(screen.getByRole('button', { name: 'Pausar objetivo' }))
     expect(actions.onPause).toHaveBeenCalledTimes(1)
+  })
+
+  it('active goal with unknown activation: keeps a disabled pause after edit and clear', () => {
+    const actions = makeActions()
+    render(<GoalBar goal={makeGoal()} {...actions} t={t} />)
+    expect(screen.getAllByRole('button').map(b => b.getAttribute('aria-label'))).toEqual(['Editar objetivo', 'Borrar objetivo', 'Pausar objetivo'])
+    expect(screen.getByRole('button', { name: 'Pausar objetivo' }).hasAttribute('disabled')).toBe(true)
   })
 
   it('active disarmed goal: "Objetivo inactivo" with a resume action instead of pause', () => {
     const actions = makeActions()
     render(<GoalBar goal={makeGoal()} activation="disarmed" {...actions} t={t} />)
     expect(screen.getByText('Objetivo inactivo')).toBeTruthy()
+    expect(screen.queryByText('Objetivo en pausa')).toBeNull()
     fireEvent.click(screen.getByRole('button', { name: 'Reanudar objetivo' }))
     expect(actions.onResume).toHaveBeenCalledTimes(1)
     expect(screen.queryByRole('button', { name: 'Pausar objetivo' })).toBeNull()
   })
 
-  it('paused goal: "Objetivo en pausa" with a resume action before edit', () => {
+  it('paused goal: "Objetivo en pausa" with a resume action after edit and clear', () => {
     const actions = makeActions()
     render(<GoalBar goal={makeGoal({ phase: 'paused' })} {...actions} t={t} />)
     expect(screen.getByText('Objetivo en pausa')).toBeTruthy()
+    expect(screen.getAllByRole('button').map(b => b.getAttribute('aria-label'))).toEqual(['Editar objetivo', 'Borrar objetivo', 'Reanudar objetivo'])
     fireEvent.click(screen.getByRole('button', { name: 'Reanudar objetivo' }))
     expect(actions.onResume).toHaveBeenCalledTimes(1)
   })

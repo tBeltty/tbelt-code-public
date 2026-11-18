@@ -14,18 +14,20 @@ import AgentLoop from '@deepseek-ai/dsh-agent-loop'
 import SystemPrompt from '@deepseek-ai/dsh-system-prompt'
 import ToolRuntime from '@deepseek-ai/dsh-tools'
 import SessionProjectionRegistry from '@deepseek-ai/dsh-session-projection'
-import { AttachmentId } from '@deepseek-ai/dsh-attachment'
+import { brandString } from '@deepseek-ai/dsh-brand'
+import type { AttachmentId } from '@deepseek-ai/dsh-attachment/types'
 import Loader from '@deepseek-ai/cordis-plugin-loader'
 import Include from '@deepseek-ai/cordis-plugin-include'
-import LlmRuntime, { createAssistantMessage, createDeveloperMessage, createSystemMessage, createToolResultMessage, createUserMessage, ToolCallId } from '@deepseek-ai/dsh-llm'
+import LlmRuntime, { createAssistantMessage, createDeveloperMessage, createSystemMessage, createToolResultMessage, createUserMessage, LlmError, type ToolCallId } from '@deepseek-ai/dsh-llm'
 import type { Message } from '@deepseek-ai/dsh-llm'
 import { credentialRef } from '@deepseek-ai/dsh-credentials'
 import LocalCredentials from '@deepseek-ai/dsh-credentials-local'
 import { profileComposition } from '../../../settings/settings/tests/profile-composition.ts'
-import SessionStore, { SessionId } from '@deepseek-ai/dsh-session'
+import SessionStore, { type SessionId } from '@deepseek-ai/dsh-session'
 import { DeepSeekAdapter } from '../src/adapter.ts'
 import { object } from '../src/replay.ts'
 import { DeepSeekFileStore } from '../src/file-store.ts'
+import { resolveAdapterOptions } from '../src/config.ts'
 import * as Messages from '@deepseek-ai/dsh-llm-deepseek-api-key'
 import { adapter, assemble, chunks, MODEL, options, prepareExtensions, server, sse, textEvents, user, sourceModuleLoader } from './helpers.ts'
 
@@ -68,7 +70,7 @@ describe('direct Messages HTTP', () => {
     const notice = createUserMessage({ source: { kind: 'saved-notice' }, content: [
       { type: 'text', text: 'Background subagent finished.' },
       { type: 'reasoning', text: 'child reasoning' },
-      { type: 'tool-call', id: ToolCallId('child-call'), name: 'read', arguments: '{}' },
+      { type: 'tool-call', id: brandString<ToolCallId>('child-call'), name: 'read', arguments: '{}' },
       { type: 'text', text: 'Its closing message: answer.' },
     ] })
     const empty = createUserMessage({ source: { kind: 'user' }, content: [{ type: 'reasoning', text: 'no closing text' }] })
@@ -124,10 +126,25 @@ describe('direct Messages HTTP', () => {
     expect(http.requests[1]?.headers).not.toHaveProperty('anthropic-beta')
   })
 
+  it('surfaces provider rejection of an all-deferred request without adding tools', async () => {
+    const message = 'At least one tool must not be deferred'
+    const http = await endpoint((response) => {
+      response.statusCode = 400
+      response.end(JSON.stringify({ error: { type: 'invalid_request_error', message } }))
+    })
+    const tools = [{ name: 'search', description: 'Search', parameters: {}, deferLoading: true as const }]
+    await expect(chunks(adapter({ baseURL: http.url }).stream(options({ tools }))))
+      .rejects.toMatchObject({ code: 'INVALID_REQUEST', message, failure: { status: 400 } })
+    expect(http.requests).toHaveLength(1)
+    expect(http.requests[0]?.body.tools).toEqual([
+      { name: 'search', description: 'Search', input_schema: {}, defer_loading: true },
+    ])
+  })
+
   it('uses the Messages endpoint, authentication, attribution and final usage', async () => {
     const http = await endpoint()
     const llm = adapter({ baseURL: http.url })
-    const response = await assemble(llm.stream(options({ model: 'deepseek-flash', sessionId: SessionId('session-test'), purpose: 'compaction' })), 'deepseek-flash')
+    const response = await assemble(llm.stream(options({ model: 'deepseek-flash', sessionId: brandString<SessionId>('session-test'), purpose: 'compaction' })), 'deepseek-flash')
     expect(response.message.content).toEqual([{ type: 'text', text: 'Hello 世界' }])
     expect(response.message.source).toMatchObject({
       model: 'deepseek-flash', replayState: { response: { model: 'deepseek-flash' } },
@@ -179,7 +196,7 @@ describe('direct Messages HTTP', () => {
     const prepare = vi.fn(async () => ({ fields: {}, accept }))
     const files = new DeepSeekFileStore()
     const llm = new DeepSeekAdapter({
-      options: () => Messages.resolveAdapterOptions({ baseURL: source.url }),
+      options: () => resolveAdapterOptions({ baseURL: source.url }),
       resolveAuth: () => Promise.resolve({ headers: { 'x-api-key': 'test-key' } }), resolveUserId: () => 'test-user' as AnonymousUserId,
       resolveAttachments: () => undefined, resolveImageAccess: () => undefined, resolveFiles: () => files,
       prepareExtensions: prepare,
@@ -195,11 +212,11 @@ describe('direct Messages HTTP', () => {
 
   it('freezes endpoint and defaults for a prepared call while the next call sees new settings', async () => {
     const first = await endpoint(), second = await endpoint()
-    let config = Messages.resolveAdapterOptions({ baseURL: first.url, maxTokens: 10, models: [{ id: MODEL, systemPromptUpdate: 'in-history' }] })
+    let config = resolveAdapterOptions({ baseURL: first.url, maxTokens: 10, models: [{ id: MODEL, systemPromptUpdate: 'in-history' }] })
     const files = new DeepSeekFileStore()
     const llm = new DeepSeekAdapter({ options: () => config, resolveAuth: snapshot => Promise.resolve({ headers: { 'x-api-key': snapshot.maxTokens === 10 ? 'first' : 'second' } }), resolveUserId: () => 'user' as AnonymousUserId, resolveAttachments: () => undefined, resolveImageAccess: () => undefined, resolveFiles: () => files, prepareExtensions })
     const prepared = await llm.prepareCall('deepseek-official', MODEL)
-    config = Messages.resolveAdapterOptions({ baseURL: second.url, maxTokens: 20 })
+    config = resolveAdapterOptions({ baseURL: second.url, maxTokens: 20 })
     expect(prepared.model.systemPromptUpdate).toBe('in-history')
     expect((await llm.resolveModel('deepseek-official', MODEL)).systemPromptUpdate).toBeUndefined()
     await chunks(prepared.stream(options()))
@@ -219,6 +236,35 @@ describe('direct Messages HTTP', () => {
     expect((await stream.next()).value).toMatchObject({ type: 'block-start' })
     await stream.return!()
     await stopped
+  })
+
+  it('ends an open provider response when its credential is withdrawn and lets the provider name the failure', async () => {
+    const stopped = Promise.withResolvers<undefined>()
+    const http = await endpoint((response) => {
+      response.once('close', () => { stopped.resolve(undefined) })
+      response.write(sse(textEvents.slice(0, 3)))
+    })
+    const withdrawn = new AbortController()
+    const onRequestError = vi.fn(async (error: unknown) => new LlmError('credential withdrawn', 'ACCOUNT_SIGN_IN_REQUIRED', { cause: error }))
+    const stream = adapter({ baseURL: http.url }, {
+      resolveAuth: () => Promise.resolve({ headers: { 'x-api-key': 'test-key' }, revoked: withdrawn.signal, onRequestError }),
+    }).stream(options())[Symbol.asyncIterator]()
+    expect((await stream.next()).value).toMatchObject({ type: 'block-start' })
+    expect((await stream.next()).value).toMatchObject({ type: 'text-delta' })
+    const failed = expect(stream.next()).rejects.toMatchObject({ code: 'ACCOUNT_SIGN_IN_REQUIRED', message: 'credential withdrawn' })
+    withdrawn.abort()
+    await failed
+    await stopped.promise
+    expect(onRequestError).toHaveBeenCalledExactlyOnceWith(withdrawn.signal.reason)
+  })
+
+  it('reports a withdrawal the provider does not name as a transport failure, without contacting the provider', async () => {
+    const http = await endpoint()
+    const llm = adapter({ baseURL: http.url }, {
+      resolveAuth: () => Promise.resolve({ headers: { 'x-api-key': 'test-key' }, revoked: AbortSignal.abort() }),
+    })
+    await expect(chunks(llm.stream(options()))).rejects.toMatchObject({ code: 'TRANSPORT' })
+    expect(http.requests).toEqual([])
   })
 
   it('times out an idle HTTP response and closes the connection', async () => {
@@ -257,7 +303,7 @@ describe('direct Messages HTTP', () => {
   it('preserves the transport failure when a provider error callback rejects', async () => {
     vi.stubGlobal('fetch', async () => new Response('Unauthorized', { status: 401 }))
     const llm = new DeepSeekAdapter({
-      options: () => Messages.resolveAdapterOptions({}),
+      options: () => resolveAdapterOptions({}),
       resolveAuth: () => Promise.resolve({ headers: { 'x-api-key': 'fixture-key' },
         onRequestError: async () => { throw new Error('credential storage unavailable') },
       }),
@@ -274,6 +320,28 @@ describe('direct Messages HTTP', () => {
 })
 
 describe('Cordis provider composition', () => {
+  it('declares the replacement immediately after the last baseline tool is removed', async () => {
+    const { ctx, http } = await boot()
+    const baseline = { name: 'old_tool', description: 'Old tool', parameters: {} }
+    const added = { name: 'new_tool', description: 'New tool', parameters: {} }
+    const update = createDeveloperMessage({ source: { kind: 'tool-registry' }, content: [
+      { type: 'tool-removal', toolName: baseline.name }, { type: 'tool-addition', toolName: added.name },
+    ] })
+    const request = options({ model: 'deepseek-flash', messages: [user(), update], tools: [added],
+      toolHistory: { tools: [baseline], updates: [{ messageId: update.id, additions: [added] }] },
+    })
+    const saved = JSON.stringify(request)
+    const response = await assemble(ctx.llm.stream(request), 'deepseek-flash')
+    expect(response.assembler.finish.kind).toBe('stop')
+    expect(http.requests[0]?.body.tools).toEqual([
+      { name: added.name, description: added.description, input_schema: {} },
+    ])
+    expect(http.requests[0]?.body.messages).toEqual([
+      { role: 'user', content: [{ type: 'text', text: 'hello' }] },
+    ])
+    expect(JSON.stringify(request)).toBe(saved)
+  })
+
   it('resolves an attachment service loaded after the adapter and maps its read-only path', async () => {
     const http = await endpoint()
     const { ctx, home } = await context()
@@ -282,7 +350,7 @@ describe('Cordis provider composition', () => {
     await ctx.plugin(Messages, { baseURL: http.url })
     const model = 'deepseek-flash'
     const price = () => ctx.llm.imageRequestPricing('deepseek-official', model)!
-    const dummy = { attachmentId: AttachmentId(`sha256:${'a'.repeat(64)}`), width: 1, height: 1, bytes: 3, mediaType: 'image/png' as const }
+    const dummy = { attachmentId: brandString<AttachmentId>(`sha256:${'a'.repeat(64)}`), width: 1, height: 1, bytes: 3, mediaType: 'image/png' as const }
     expect(price().priceImages([{ type: 'image', attachment: dummy }])[0]?.text).toBeDefined()
     await ctx.plugin(LocalAttachments, { dshHome: home })
     const attachment = await ctx.attachments.saveImage({ data: await readFile(new URL('fixtures/red.png', import.meta.url)), mediaType: 'image/png' })
@@ -367,7 +435,7 @@ describe('Cordis provider composition', () => {
       ...await next(), sections: [{ name: 'test', text: prompt, order: 0 }],
     }))
     const agentOptions = { provider: 'deepseek-official', model }
-    const agent = await ctx.agentLoop.create(SessionId('prompt-update'), agentOptions)
+    const agent = await ctx.agentLoop.create(brandString<SessionId>('prompt-update'), agentOptions)
     await send(agent, 'first')
     prompt = 'second prompt'
     await send(agent, 'second')
@@ -376,7 +444,7 @@ describe('Cordis provider composition', () => {
     expect(agent.session.snapshotEvents().filter(event => event.type === 'system/message')).toHaveLength(count)
     prompt = ''
     await send(agent, 'clear')
-    const { agent: resumed } = await ctx.agents.create({ sessionId: SessionId('prompt-resume'), agentOptions,
+    const { agent: resumed } = await ctx.agents.create({ sessionId: brandString<SessionId>('prompt-resume'), agentOptions,
       seed: [...agent.session.snapshotEvents()] })
     await send(resumed, 'resume cleared')
     prompt = 'restored prompt'
@@ -404,7 +472,7 @@ describe('Cordis provider composition', () => {
       ...await next(), sections: [{ name: 'test', text: prompt, order: 0 }],
     }))
     const agentOptions = { provider: 'deepseek-official', model: MODEL }
-    const agent = await ctx.agentLoop.create(SessionId('capability-switch'), agentOptions)
+    const agent = await ctx.agentLoop.create(brandString<SessionId>('capability-switch'), agentOptions)
     await send(agent, 'first')
     prompt = 'current prompt'
     await send(agent, 'second')
@@ -413,7 +481,7 @@ describe('Cordis provider composition', () => {
     const saved = JSON.stringify(seed)
     await ctx.settings.update(Messages.name, { models: [{ id: MODEL, ...inHistory ? { systemPromptUpdate: 'in-history' } : {} }] })
     await send(agent, 'switch')
-    const { agent: resumed } = await ctx.agents.create({ sessionId: SessionId('switch-resume'), agentOptions: agentOptions, seed })
+    const { agent: resumed } = await ctx.agents.create({ sessionId: brandString<SessionId>('switch-resume'), agentOptions: agentOptions, seed })
     await send(resumed, 'resume')
     for (const request of http.requests.slice(2)) {
       expect(request.path).toBe('/anthropic/v1/messages')
@@ -462,7 +530,7 @@ describe('Cordis provider composition', () => {
       return { type: 'text' as const, text: block.text }
     })
     const result = createToolResultMessage({
-      callId: ToolCallId(releasedBlock.toolCallId), content, isError: releasedBlock.isError === true,
+      callId: brandString<ToolCallId>(releasedBlock.toolCallId), content, isError: releasedBlock.isError === true,
     })
     const saved = JSON.stringify([assistant, result])
     const response = await assemble(ctx.llm.stream(options({ messages: [user(), assistant, result] })))
@@ -525,5 +593,5 @@ describe('Cordis provider composition', () => {
 })
 
 it('rejects invalid catalog context windows at the options resolver', () => {
-  expect(() => Messages.resolveAdapterOptions({ models: [{ id: 'invalid-window', contextWindow: 0 }] })).toThrow('contextWindow must be a positive integer')
+  expect(() => resolveAdapterOptions({ models: [{ id: 'invalid-window', contextWindow: 0 }] })).toThrow('contextWindow must be a positive integer')
 })

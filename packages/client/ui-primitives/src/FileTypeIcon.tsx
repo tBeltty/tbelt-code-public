@@ -46,7 +46,9 @@ export type FileTypeIconProps = IconProps & (
   }
 )
 
-const EXTENSION_TYPES: Readonly<Record<string, ClassifiedFileType>> = {
+// Maps, not objects: a basename or extension equal to an `Object.prototype` key
+// (`constructor`, `__proto__`) must miss instead of resolving the inherited member.
+const EXTENSION_TYPES: ReadonlyMap<string, ClassifiedFileType> = new Map(Object.entries({
   scss: 'code',
   sass: 'code',
   less: 'code',
@@ -109,14 +111,14 @@ const EXTENSION_TYPES: Readonly<Record<string, ClassifiedFileType>> = {
   ots: 'excel',
   fods: 'excel',
   numbers: 'excel',
-}
+}))
 
-const NAME_TYPES: Readonly<Record<string, ClassifiedFileType>> = {
+const NAME_TYPES: ReadonlyMap<string, ClassifiedFileType> = new Map(Object.entries({
   changelog: 'markdown',
   contributing: 'markdown',
   license: 'text',
   readme: 'markdown',
-}
+}))
 
 function basename(path: string): string {
   return path.slice(Math.max(path.lastIndexOf('/'), path.lastIndexOf('\\')) + 1)
@@ -149,8 +151,8 @@ export function classifyFileType(
   const name = basename(path).toLowerCase()
   const extension = fileExtension(name).toLowerCase()
   return classifyCodeFileType(name, extension, context)
-    ?? NAME_TYPES[name]
-    ?? EXTENSION_TYPES[extension]
+    ?? NAME_TYPES.get(name)
+    ?? EXTENSION_TYPES.get(extension)
     ?? 'other'
 }
 

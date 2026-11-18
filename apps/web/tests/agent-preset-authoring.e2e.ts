@@ -43,6 +43,15 @@ describe('web e2e: preset roster guidance', () => {
   it('reads mode details and examples without changing the new-task default', async () => {
     onTestFailed(() => saveFailureShot(page, 'preset-roster-guide'))
     const settings = page.getByRole('dialog', { name: 'Settings' })
+    for (const name of ['Standard mode', 'Creator mode']) {
+      const sharedTrigger = settings.getByRole('button', { name: `Mode details: ${name}`, exact: true })
+      await sharedTrigger.click()
+      const sharedGuide = page.getByRole('dialog', { name, exact: true })
+      await sharedGuide.getByText(/read-only runtime inspection/).waitFor()
+      if (name === 'Creator mode') expect(await sharedGuide.innerText()).toContain('Creator mode focuses on customizing DSH')
+      await page.keyboard.press('Escape')
+      await sharedGuide.waitFor({ state: 'detached' })
+    }
     const trigger = settings.getByRole('button', { name: 'Mode details: PTC mode', exact: true })
     await trigger.click()
     const guide = page.getByRole('dialog', { name: 'PTC mode', exact: true })

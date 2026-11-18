@@ -5,6 +5,7 @@ export type SettingsKey = keyof typeof en
 
 /** English dictionary and key-set source of truth. */
 export const en = {
+  'desktop.update.configurationFailed': 'Could not apply update settings. Open the desktop update indicator for details.',
   'trigger': 'Settings',
   'shortcut.open': 'Open settings',
   'desktop.update.available': 'Update',
@@ -18,6 +19,9 @@ export const en = {
   'desktop.update.downloadDetail': 'Downloading update: {percent}%\nTarget version: {version}',
   'desktop.update.checkFailed': 'Could not check for updates. Please try again later.',
   'desktop.update.downloadFailed': 'Could not download the update. Please try again.',
+  'desktop.update.downloadSpaceFailed': 'Not enough disk space to download the update. Free up space, then retry.',
+  'desktop.update.downloadPermissionFailed': 'Cannot write the update files. Check the folder permissions and retry.',
+  'desktop.update.downloadBusyFailed': 'An update file is in use. Close the program using it, then retry.',
   'desktop.update.installFailed': 'Could not install the update. Please try again later.',
   'desktop.update.checkNetworkFailed': 'Could not check for updates. Check your connection and try again.',
   'desktop.update.downloadNetworkFailed': 'Could not download the update. Check your connection and try again.',
@@ -60,6 +64,7 @@ export const en = {
 export const es = {
   'trigger': 'Ajustes',
   'shortcut.open': 'Abrir ajustes',
+  'desktop.update.configurationFailed': 'No se pudo aplicar la configuración. Abre el indicador de actualización para ver los detalles.',
   'desktop.update.available': 'Actualizar',
   'desktop.update.checking': 'Buscando actualizaciones…',
   'desktop.update.progress': '{percent}%',
@@ -71,10 +76,13 @@ export const es = {
   'desktop.update.downloadDetail': 'Descargando la actualización: {percent}%\\nVersión de destino: {version}',
   'desktop.update.checkFailed': 'No se pudo buscar actualizaciones. Inténtalo más tarde.',
   'desktop.update.downloadFailed': 'No se pudo descargar la actualización. Inténtalo de nuevo.',
+  'desktop.update.downloadSpaceFailed': 'No hay espacio suficiente para descargar la actualización. Libera espacio y vuelve a intentarlo.',
   'desktop.update.installFailed': 'No se pudo instalar la actualización. Inténtalo más tarde.',
   'desktop.update.checkNetworkFailed': 'No se pudo buscar actualizaciones. Revisa tu conexión e inténtalo de nuevo.',
   'desktop.update.downloadNetworkFailed': 'No se pudo descargar la actualización. Revisa tu conexión e inténtalo de nuevo.',
   'desktop.update.installNetworkFailed': 'No se pudo instalar la actualización. Revisa tu conexión e inténtalo de nuevo.',
+  'desktop.update.downloadPermissionFailed': 'No se pueden escribir los archivos de actualización. Revisa los permisos de la carpeta y vuelve a intentarlo.',
+  'desktop.update.downloadBusyFailed': 'Un archivo de actualización está en uso. Cierra el programa que lo usa y vuelve a intentarlo.',
   'desktop.update.fullscreenTimeout': 'No se pudo salir de la pantalla completa. Salga de la pantalla completa y luego vuelva a intentar la actualización.',
   'desktop.update.stopFailed': 'No se pudieron detener las tareas con seguridad. La actualización no se instaló. Inténtalo más tarde.',
   'desktop.update.tasksChanged': 'Han empezado tareas nuevas. Confirma de nuevo para detener las tareas y actualizar.',
@@ -111,6 +119,10 @@ export const es = {
 
 /** Greek dictionary, checked complete against the English key set. */
 export const el = {
+  'desktop.update.configurationFailed': 'Δεν ήταν δυνατή η εφαρμογή των ρυθμίσεων ενημέρωσης. Ανοίξτε τον δείκτη ενημέρωσης της επιφάνειας εργασίας για λεπτομέρειες.',
+  'desktop.update.downloadSpaceFailed': 'Δεν υπάρχει αρκετός χώρος στον δίσκο για τη λήψη της ενημέρωσης. Ελευθερώστε χώρο και δοκιμάστε ξανά.',
+  'desktop.update.downloadPermissionFailed': 'Δεν είναι δυνατή η εγγραφή των αρχείων ενημέρωσης. Ελέγξτε τα δικαιώματα του φακέλου και δοκιμάστε ξανά.',
+  'desktop.update.downloadBusyFailed': 'Ένα αρχείο ενημέρωσης χρησιμοποιείται. Κλείστε το πρόγραμμα που το χρησιμοποιεί και δοκιμάστε ξανά.',
   'trigger': 'Ρυθμίσεις',
   'shortcut.open': 'Άνοιγμα ρυθμίσεων',
   'desktop.update.available': 'Ενημέρωση',
@@ -164,6 +176,7 @@ export const el = {
 
 /** French dictionary, checked against the English keys. */
 export const fr = {
+  'desktop.update.configurationFailed': 'Impossible d’appliquer les paramètres. Ouvrez l’indicateur de mise à jour pour plus de détails.',
   'trigger': 'Paramètres',
   'shortcut.open': 'Ouvrir les paramètres',
   'desktop.update.available': 'Mettre à jour',
@@ -177,8 +190,11 @@ export const fr = {
   'desktop.update.downloadDetail': 'Téléchargement de la mise à jour\u00a0: {percent} %\nVersion cible\u00a0: {version}',
   'desktop.update.checkFailed': 'Impossible de rechercher des mises à jour. Veuillez réessayer plus tard.',
   'desktop.update.downloadFailed': 'Impossible de télécharger la mise à jour. Veuillez réessayer.',
+  'desktop.update.downloadSpaceFailed': 'Espace disque insuffisant pour télécharger la mise à jour. Libérez de l’espace, puis réessayez.',
   'desktop.update.installFailed': 'Impossible d’installer la mise à jour. Veuillez réessayer plus tard.',
   'desktop.update.checkNetworkFailed': 'Impossible de rechercher des mises à jour. Vérifiez votre connexion et réessayez.',
+  'desktop.update.downloadPermissionFailed': 'Impossible d’écrire les fichiers de mise à jour. Vérifiez les autorisations du dossier, puis réessayez.',
+  'desktop.update.downloadBusyFailed': 'Un fichier de mise à jour est utilisé. Fermez le programme qui l’utilise, puis réessayez.',
   'desktop.update.downloadNetworkFailed': 'Impossible de télécharger la mise à jour. Vérifiez votre connexion et réessayez.',
   'desktop.update.installNetworkFailed': 'Impossible d’installer la mise à jour. Vérifiez votre connexion et réessayez.',
   'desktop.update.fullscreenTimeout': 'Impossible de quitter le mode plein écran. Quittez le mode plein écran, puis réessayez la mise à jour.',

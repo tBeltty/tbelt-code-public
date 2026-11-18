@@ -1,5 +1,18 @@
 # Proactive compaction with a bounded message budget.
 
+# Repo map and the memory and search_replace tools are outside this scenario's fixed token budget.
+- id: tool-search-replace
+  disabled: true
+
+- id: tool-remember
+  disabled: true
+
+- id: tool-recall-memory
+  disabled: true
+
+- id: repo-map
+  disabled: true
+
 - id: agent-instructions
   disabled: true
 
@@ -7,7 +20,7 @@
   config:
     models:
       - id: deepseek-v4-flash
-        contextWindow: 8622
+        contextWindow: 8792
         maxTokens: 1000
 
 - id: compaction-basic
@@ -19,3 +32,8 @@
 - insert:
     - id: compaction-working-directory
       name: '../../../packages/test-support/session-snapshot/tests/fixtures/compaction-working-directory.ts'
+
+# Fixed-budget compaction scenario: keep the recorded tool set, whose token counts the thresholds were tuned to.
+- id: tool-fs
+  config:
+    applyPatch: false

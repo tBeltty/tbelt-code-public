@@ -6,7 +6,7 @@
  */
 export { createStyle, stripAnsi, supportsColor } from './ansi.ts'
 export type { Style } from './ansi.ts'
-export type { ActiveAtToken } from '@deepseek-ai/dsh-file-reference/grammar'
+export type { ActiveAtToken } from '@deepseek-ai/dsh-file-reference'
 export { approvalKeyChoice, approvalPromptLines } from './approval.ts'
 export {
   completeToken, composerWithHistory, EMPTY_COMPOSER, reduceComposer, renderComposer,

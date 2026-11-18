@@ -13,6 +13,8 @@ import type {
   WebFetchProvider,
   WebFetchRequest,
   WebFetchResult,
+  WebProviderInfo,
+  WebProviderList,
   WebSearchKeyCheck,
   WebSearchProvider,
   WebSearchProviderInfo,
@@ -29,6 +31,8 @@ export type {
   WebFetchProvider,
   WebFetchRequest,
   WebFetchResult,
+  WebProviderInfo,
+  WebProviderList,
   WebSearchKeyCheck,
   WebSearchProvider,
   WebSearchProviderInfo,
@@ -74,7 +78,8 @@ export interface WebRuntimeConfig {
 }
 
 /**
- * The web access service. Registered as `ctx.web` (one instance per context).
+ * The web access service. Registered as `ctx.web` (one instance per context)
+ * and exposed to Clients as the `web` Remote namespace (`listProviders`).
  *
  * Selection semantics (resolved at execution time, never order-dependent):
  * - A configured id that is registered and `available()` → that provider.
@@ -124,9 +129,11 @@ export class WebRuntime extends TypertRemoteService {
   }
 
   /**
-   * Register a search provider. Throws {@link WebError} `WEB_DUPLICATE_PROVIDER`
-   * if its id is already registered for search. Returns a disposer; disposed
-   * with the calling fiber.
+   * Register a search provider. `listProviders()` lists it until the
+   * registration is disposed, which happens with the calling fiber or through
+   * the returned disposer; registration and disposal each emit
+   * `web/providers-changed`. Throws {@link WebError} `WEB_DUPLICATE_PROVIDER`
+   * if its id is already registered for search.
    * @param provider - the provider; its `id` is the registry key.
    * @returns the disposer that unregisters the provider.
    */
@@ -135,9 +142,9 @@ export class WebRuntime extends TypertRemoteService {
   }
 
   /**
-   * Register a fetch provider. Throws {@link WebError} `WEB_DUPLICATE_PROVIDER`
-   * if its id is already registered for fetch. Returns a disposer; disposed
-   * with the calling fiber.
+   * Register a fetch provider, with the listing, disposal, and event behavior
+   * of {@link WebRuntime.registerSearchProvider}. Throws {@link WebError}
+   * `WEB_DUPLICATE_PROVIDER` if its id is already registered for fetch.
    * @param provider - the provider; its `id` is the registry key.
    * @returns the disposer that unregisters the provider.
    */
@@ -149,13 +156,48 @@ export class WebRuntime extends TypertRemoteService {
     if (store.has(provider.id)) {
       throw new WebError(`a web provider with id "${provider.id}" is already registered`, 'WEB_DUPLICATE_PROVIDER')
     }
+    const emitChanged = (): void => { this.emitProvidersChanged() }
     const dispose = this.ctx.effect(function* () {
       store.set(provider.id, provider)
-      yield () => store.delete(provider.id)
+      emitChanged()
+      yield () => {
+        store.delete(provider.id)
+        emitChanged()
+      }
     }, 'web.registerProvider()')
     // ctx.effect's disposer returns Promise<void>; our disposer API is
     // synchronous fire-and-forget — discard the (always-resolved) promise.
     return () => void dispose()
+  }
+
+  /**
+   * List every registered search and fetch provider for provider pickers.
+   * Availability does not filter the lists.
+   * @returns detached `{ id, title, description }` entries per capability, in registration order.
+   */
+  @Remote
+  listProviders(): WebProviderList {
+    return {
+      search: [...this.searchProviders.values()].map(providerInfo),
+      fetch: [...this.fetchProviders.values()].map(providerInfo),
+    }
+  }
+
+  /** Emit `web/providers-changed`, containing each listener's failure so none vetoes the mutation. */
+  private emitProvidersChanged(): void {
+    for (const listener of this.ctx.events.dispatch('emit', ['web/providers-changed'])) {
+      try {
+        const returned: unknown = listener()
+        void Promise.resolve(returned).catch((error: unknown) => { this.warnListenerFailure(error) })
+      } catch (error: unknown) {
+        this.warnListenerFailure(error)
+      }
+    }
+  }
+
+  private warnListenerFailure(error: unknown): void {
+    this.ctx.logger.warn('web: a web/providers-changed listener failed')
+    this.ctx.logger.warn(error)
   }
 
   /**
@@ -270,6 +312,15 @@ export class WebRuntime extends TypertRemoteService {
       const reason = error.code === 'WEB_PROVIDER_AUTH' ? 'auth' : error.code === 'WEB_PROVIDER_QUOTA' ? 'quota' : 'error'
       return { ok: false, reason, message: error.message }
     }
+  }
+}
+
+/** Project one provider to its picker entry, omitting an absent title or description. */
+function providerInfo(provider: WebSearchProvider | WebFetchProvider): WebProviderInfo {
+  return {
+    id: provider.id,
+    ...provider.title === undefined ? {} : { title: provider.title },
+    ...provider.description === undefined ? {} : { description: provider.description },
   }
 }
 

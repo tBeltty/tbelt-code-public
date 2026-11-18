@@ -48,6 +48,7 @@ const TOOL_TITLES = {
   'tool.title.traceSession': 'Trace session',
   'tool.title.listModels': 'List models',
   'tool.title.subagent': 'Create subagent',
+  'tool.title.subagentFork': 'Fork subagent',
   'tool.title.listAgents': 'List subagents',
   'tool.title.sendMessage': 'Send message',
   'tool.title.interruptAgent': 'Interrupt agent',

@@ -12,7 +12,7 @@ import LlmRuntime from '@deepseek-ai/dsh-llm'
 import { APP_IDENTITY } from '@deepseek-ai/dsh-llm'
 import SessionProjectionRegistry from '@deepseek-ai/dsh-session-projection'
 import AgentRegistry from '@deepseek-ai/dsh-agent'
-import SessionStore, { SessionId } from '@deepseek-ai/dsh-session'
+import SessionStore, { type SessionId } from '@deepseek-ai/dsh-session'
 import { credentialRef } from '@deepseek-ai/dsh-credentials'
 import LocalCredentialProvider from '@deepseek-ai/dsh-credentials-local'
 import { profileComposition } from '../../../settings/settings/tests/profile-composition.ts'
@@ -24,6 +24,7 @@ import * as LlmDeepSeek from '@deepseek-ai/dsh-llm-deepseek-api-key'
 import { assemble } from './assemble.ts'
 import { closeMockServers, mockServer, textEvents } from './mock-server.ts'
 import { sourceModuleLoader } from './helpers.ts'
+import { brandString } from '@deepseek-ai/dsh-brand'
 
 declare module '@deepseek-ai/dsh-llm/types' {
   interface LlmRequestPurposeMap {
@@ -224,7 +225,7 @@ describe('llm-deepseek real dynamic composition', () => {
     vi.stubEnv('DEEPSEEK_API_KEY', 'entry-key')
     const server = await mockServer([{ kind: 'sse', events: textEvents }])
     const { ctx } = await loadComposition({ withDynamic: false, baseURL: server.url, enableSessionLog: false })
-    const session = ctx.sessions.create(SessionId('extension-composition'))
+    const session = ctx.sessions.create(brandString<SessionId>('extension-composition'))
     session.append('turn/start', { turn: 1 })
 
     await assemble(ctx, { model: 'deepseek-v4-flash', messages: [], sessionId: session.id })
@@ -246,7 +247,7 @@ describe('llm-deepseek real dynamic composition', () => {
       withDynamic: false,
       baseURL: server.url,
     })
-    const session = ctx.sessions.create(SessionId('extension-composition-enabled'))
+    const session = ctx.sessions.create(brandString<SessionId>('extension-composition-enabled'))
     session.append('turn/start', { turn: 1 })
 
     await assemble(ctx, { model: 'deepseek-v4-flash', messages: [], sessionId: session.id })
@@ -273,7 +274,7 @@ describe('llm-deepseek real dynamic composition', () => {
     vi.stubEnv('DEEPSEEK_API_KEY', 'entry-key')
     const server = await mockServer([{ kind: 'sse', events: textEvents }, { kind: 'sse', events: textEvents }])
     const { ctx } = await loadComposition({ withDynamic: false, baseURL: server.url, exclusionFirst })
-    const session = ctx.sessions.create(SessionId('excluded-composition'))
+    const session = ctx.sessions.create(brandString<SessionId>('excluded-composition'))
     session.append('turn/start', { turn: 1 })
 
     await assemble(ctx, { model: 'deepseek-v4-flash', messages: [], sessionId: session.id, purpose: 'test-upload-exclusion' })
@@ -314,6 +315,18 @@ describe('llm-deepseek real dynamic composition', () => {
     expect(serverB.headers[0]?.['x-api-key']).toBe('rotated-key')
   })
 
+  it('reports a provider refusal for a request without a safety check flag', async () => {
+    vi.stubEnv('DEEPSEEK_API_KEY', '')
+    const refusal = textEvents.map(event => event.replace('"end_turn"', '"refusal"'))
+    const server = await mockServer([{ kind: 'sse', events: refusal }])
+    const { ctx } = await loadComposition({ withDynamic: true, baseURL: server.url })
+
+    const refused = await assemble(ctx, { model: 'deepseek-v4-flash', messages: [] })
+    expect(server.requests).toHaveLength(1)
+    expect(server.requests[0]).not.toHaveProperty('safety_check')
+    expect(refused.finish).toMatchObject({ kind: 'error', failure: { code: 'CONTENT_REFUSED' } })
+  })
+
   it('keeps a stored key writable and rotatable across a real restart', async () => {
     // No ambient DEEPSEEK_API_KEY: the shipped surfaces do not hoist
     // the credentials document into process.env, so a stored key must stay file-sourced.
@@ -324,7 +337,7 @@ describe('llm-deepseek real dynamic composition', () => {
     const home = root!
     await boot.ctx.get('credentials')!.set(KEY_REF, 'stored-by-ui')
     expect(await boot.ctx.get('credentials')!.describe(KEY_REF))
-      .toEqual({ configured: true, source: 'file', writable: true })
+      .toEqual({ configured: true, source: 'file', writable: true, masked: '•'.repeat(12) })
     await assemble(boot.ctx, { model: 'deepseek-v4-flash', messages: [] })
     expect(first.headers[0]?.['x-api-key']).toBe('stored-by-ui')
     await boot.ctx.fiber.dispose()
@@ -336,9 +349,12 @@ describe('llm-deepseek real dynamic composition', () => {
     // The stored key is still the provider's own file entry — not a
     // launch-environment value, which is what hoisting it would have made it.
     expect(await credentials.resolve(KEY_REF)).toEqual({ value: 'stored-by-ui', source: 'file' })
-    expect(await credentials.describe(KEY_REF)).toEqual({ configured: true, source: 'file', writable: true })
+    expect(await credentials.describe(KEY_REF))
+      .toEqual({ configured: true, source: 'file', writable: true, masked: '•'.repeat(12) })
     // Rotation still works after the restart, and the next request uses it.
     await credentials.set(KEY_REF, 'rotated-after-restart')
+    expect(await credentials.describe(KEY_REF))
+      .toEqual({ configured: true, source: 'file', writable: true, masked: '•'.repeat(21) })
     await assemble(restarted.ctx, { model: 'deepseek-v4-flash', messages: [] })
     expect(second.headers[0]?.['x-api-key']).toBe('rotated-after-restart')
   })

@@ -45,13 +45,13 @@
             "maxTokens": true
           },
           "tools": [
+            "apply_patch",
             "ask_user_question",
             "create_goal",
             "edit",
             "get_goal",
             "glob",
             "grep",
-            "interrupt_agent",
             "job_kill",
             "job_list",
             "job_output",
@@ -70,10 +70,10 @@
             "subagent_fork",
             "todo_write",
             "update_goal",
+            "wait_agent",
             "web_fetch",
             "web_search",
             "workflow",
-            "working_directory",
             "write"
           ]
         },
@@ -107,13 +107,13 @@
             "maxTokens": true
           },
           "tools": [
+            "apply_patch",
             "ask_user_question",
             "create_goal",
             "edit",
             "get_goal",
             "glob",
             "grep",
-            "interrupt_agent",
             "job_kill",
             "job_list",
             "job_output",
@@ -133,10 +133,10 @@
             "subagent_fork",
             "todo_write",
             "update_goal",
+            "wait_agent",
             "web_fetch",
             "web_search",
             "workflow",
-            "working_directory",
             "write"
           ]
         },
@@ -184,13 +184,13 @@
             "maxTokens": true
           },
           "tools": [
+            "apply_patch",
             "ask_user_question",
             "create_goal",
             "edit",
             "get_goal",
             "glob",
             "grep",
-            "interrupt_agent",
             "job_kill",
             "job_list",
             "job_output",
@@ -209,10 +209,10 @@
             "subagent_fork",
             "todo_write",
             "update_goal",
+            "wait_agent",
             "web_fetch",
             "web_search",
             "workflow",
-            "working_directory",
             "write"
           ]
         },

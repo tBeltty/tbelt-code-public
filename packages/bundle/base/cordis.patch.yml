@@ -175,9 +175,6 @@
     - id: working-directory
       name: '@deepseek-ai/dsh-working-directory'
 
-    - id: tool-working-directory
-      name: '@deepseek-ai/dsh-tool-working-directory'
-
     - id: session-projection
       name: '@deepseek-ai/dsh-session-projection'
 
@@ -246,6 +243,11 @@
     - id: subprocess
       name: '@deepseek-ai/dsh-subprocess-local'
 
+    # CLI app plugins register their vendor CLI and account with this Service,
+    # which adds nothing to a composition until one registers.
+    - id: cli-account
+      name: '@deepseek-ai/dsh-cli-account'
+
     # Every shipped CLI mode starts with the same file-effect boundary.
     # The environment remains an explicit deployment override; otherwise fresh
     # sessions pin workspace-write + ask through the permission service below.
@@ -310,6 +312,7 @@
 
     - id: fs-observation-policy
       name: '@deepseek-ai/dsh-fs-observation-policy'
+      disabled: true
 
     - id: tool-search-replace
       name: '@deepseek-ai/dsh-tool-search-replace'
@@ -317,7 +320,7 @@
     - id: tool-fs
       name: '@deepseek-ai/dsh-tool-fs'
       config:
-        # Set true to add the apply_patch tool beside edit.
+        # Set false to drop the apply_patch tool beside edit.
         applyPatch: false
 
     - id: tool-fs-search
@@ -342,6 +345,11 @@
 
     - id: tool-skill
       name: '@deepseek-ai/dsh-tool-skill'
+
+    # CLI app plugins register their entry skill and its pinned upstream files
+    # with this Service, which downloads nothing until one registers.
+    - id: upstream-skills
+      name: '@deepseek-ai/dsh-upstream-skills'
 
     - id: commands
       name: '@deepseek-ai/dsh-commands'
@@ -440,6 +448,14 @@
     - id: subagent
       name: '@deepseek-ai/dsh-subagent'
 
+    - id: agent-team
+      name: '@deepseek-ai/dsh-agent-team'
+      config:
+        maxTasks: 256
+
+    - id: tool-agent-team
+      name: '@deepseek-ai/dsh-tool-agent-team'
+
     - id: subagent-spawn-in-process
       name: '@deepseek-ai/dsh-subagent-spawn-in-process'
       config:
@@ -454,6 +470,8 @@
     # separately loaded follow-up tool registers the one global `send_message`.
     - id: tool-subagent-control
       name: '@deepseek-ai/dsh-tool-subagent-control'
+      config:
+        interrupt: false
 
     - id: tool-subagent
       name: '@deepseek-ai/dsh-tool-subagent'
@@ -536,9 +554,14 @@
     # web-search-free (Exa's hosted endpoint, no account); a usable provider
     # with a key, or a pinned `searchProvider`, replaces them. The DeepSeek
     # search routes stay mounted but disabled, so a composition that wants one
-    # turns its row on and pins it. Anonymous fetch accepts only public HTTP(S)
-    # destinations, resolves and validates every destination, and pins every
-    # actual connection.
+    # turns its row on and pins it. The DeepSeek Search and Fetch APIs
+    # (deepseek-search-api, deepseek-fetch-api) send the API key of the
+    # DeepSeek API-key route to that route's origin. searchBaseURL / searchApiKeyEnv (fetch* for Fetch) pin one
+    # capability to its own endpoint and key instead. The Web search provider
+    # and Web fetch provider menus on the Web search and fetch settings page
+    # select a provider for each capability. Anonymous fetch accepts only
+    # public HTTP(S) destinations, resolves and validates every destination,
+    # and pins every actual connection.
     - id: web
       name: '@deepseek-ai/dsh-web'
       config:
@@ -556,8 +579,6 @@
     - id: web-deepseek-api
       name: '@deepseek-ai/dsh-web-deepseek-api'
       disabled: true
-      config:
-        apiKeyEnv: DEEPSEEK_API_KEY
 
     - id: web-fetch-http
       name: '@deepseek-ai/dsh-web-fetch-http'

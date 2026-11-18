@@ -6,7 +6,7 @@
  * @module @deepseek-ai/dsh-command-clear/types
  */
 
-import type { CommandId } from '@deepseek-ai/dsh-commands/brand'
+import type { CommandId } from '@deepseek-ai/dsh-commands'
 import type { SessionSeq } from '@deepseek-ai/dsh-session/types'
 import type { ClearId } from './brand.ts'
 

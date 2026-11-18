@@ -1,4 +1,8 @@
 # Keep job admission real while an asynchronous provider refuses every launch.
+# Repo map injection and its rg walk are outside this scenario's fixed budget or launch accounting.
+- id: repo-map
+  disabled: true
+
 - id: subprocess
   disabled: true
 

@@ -1,14 +1,15 @@
 /**
  * Typecheck Markdown `ts` fences against the workspace API. `ignore-check` fences are reported as
  * opt-outs; generated catalog fragments and source-equivalence blocks are skipped here because their
- * owning gates verify them. A build-coordinated mode consumes existing declarations without emit.
+ * owning gates verify them. Frozen upgrade guides retain their release-specific examples.
+ * A build-coordinated mode consumes existing declarations without emit.
  */
 
 import { execFileSync } from 'node:child_process'
 import { globSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
 import { join, relative, resolve } from 'node:path'
 import ts from 'typescript'
-import { builtDeclarationPath } from './doc-typecheck-paths.ts'
+import { builtDeclarationPath, isFrozenUpgradeGuidePath } from './doc-typecheck-paths.ts'
 import { markdownFences } from './markdown.ts'
 import { isArchivedAgentNotePath } from './repo-files.ts'
 
@@ -203,9 +204,11 @@ function remapBlockPaths(output: string, blocks: Block[]): string {
 const markdownGlobs = ['README.md', '.agents/notes/**/*.md', 'docs/**/*.md', 'packages/*/*.md', 'packages/*/*/*.md']
 
 const files: string[] = []
+const { version } = JSON.parse(readFileSync(join(root, 'package.json'), 'utf8')) as { version: string }
 for (const pattern of markdownGlobs) {
   for (const match of globSync(pattern, { cwd: root })) {
-    if (!isArchivedAgentNotePath(match)) files.push(resolve(root, match))
+    const file = match.replaceAll('\\', '/')
+    if (!isArchivedAgentNotePath(file) && !isFrozenUpgradeGuidePath(file, version)) files.push(resolve(root, file))
   }
 }
 files.sort()

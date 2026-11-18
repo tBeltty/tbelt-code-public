@@ -9,15 +9,15 @@ import type { Browser, Locator, Page } from 'playwright'
 import { chromium } from 'playwright'
 import { FiberState } from '@deepseek-ai/cordis'
 import { readProfileManifest } from '@deepseek-ai/dsh-app-boot'
-import { createUserMessage } from '@deepseek-ai/dsh-llm'
+import { HIDDEN_BUNDLES } from '@deepseek-ai/dsh-official-bundles'
 import { afterAll, beforeAll, describe, expect, it, onTestFailed, onTestFinished, vi } from 'vitest'
 import { join } from 'node:path'
 import {
   SCAFFOLD_DEFAULTS_BUNDLE, assertFixtureInventory, captureStableAria, compareOrRefreshGolden,
-  launchWebScaffold, watchConsole, webSnapshotMode, type WebScaffold,
+  launchWebScaffold, seedSession, watchConsole, webSnapshotMode, type WebScaffold,
 } from './scaffold.ts'
 import {
-  EN_BROWSER_LOCALE, connectFreshWorkspace, experimentalBundleDescription, PLUGIN_TOGGLE_SETTLE_MS, saveFailureShot,
+  EN_BROWSER_LOCALE, connectFreshWorkspace, experimentalBundleDescription, newEnglishPage, PLUGIN_TOGGLE_SETTLE_MS, saveFailureShot,
 } from './support.ts'
 
 const SNAPSHOT_DIR = fileURLToPath(new URL('./expected/plugin-manager', import.meta.url))
@@ -26,6 +26,9 @@ const LIVE_EXPECTED = join(SNAPSHOT_DIR, 'live-enabled.expected.md')
 const EXPORTS_EXPECTED = join(SNAPSHOT_DIR, 'exports.expected.md')
 const EXPORTS_EN_EXPECTED = join(SNAPSHOT_DIR, 'exports-en.expected.md')
 const FIXTURE_PLUGINS = fileURLToPath(new URL('./fixtures/plugins', import.meta.url))
+const { version: badgeVersion } = JSON.parse(await readFile(
+  new URL('../../../packages/experimental/badge-skill-bundle/package.json', import.meta.url), 'utf8',
+)) as { version: string }
 const MODE = webSnapshotMode()
 /** The profile manifest's bundles as the scaffold initializes them. */
 const SCAFFOLD_BUNDLES = ['@deepseek-ai/dsh-base', '@deepseek-ai/dsh-web-app', SCAFFOLD_DEFAULTS_BUNDLE]
@@ -701,12 +704,15 @@ describe('web e2e: plugin manager', () => {
     // the eligible installed optional-bundle list.
     expect(await panel.locator('[data-plugin-group="more"] [data-plugin-package="@deepseek-ai/dsh-experimental-liveshare"]').count()).toBe(0)
     expect(await panel.locator('[data-plugin-group="more"] [data-plugin-package]').count())
-      .toBe(bundles.filter(bundle => bundle.name !== '@deepseek-ai/dsh-experimental-terminal-bundle'
+      .toBe(bundles.filter(bundle => !HIDDEN_BUNDLES.has(bundle.name)
         && bundle.name !== '@deepseek-ai/dsh-experimental-liveshare'
         && bundle.official && (bundle.listedByDefault !== false || bundle.enabled || bundle.installed)).length)
+    // Computer Use ships with the installation and is listed only on the macOS Hosts it supports.
+    const cuaSupported = process.platform === 'darwin' || process.platform === 'win32'
     expect(bundles.find(bundle => bundle.name === '@deepseek-ai/dsh-cua-bundle'))
-      .toMatchObject({ enabled: false, optional: false, availability: 'missing', listedByDefault: false })
-    expect(await panel.locator('[data-plugin-package="@deepseek-ai/dsh-cua-bundle"]').count()).toBe(0)
+      .toMatchObject({ enabled: false, optional: true, availability: 'installation', ...cuaSupported ? {} : { listedByDefault: false } })
+    expect(await panel.locator('[data-plugin-group="more"] [data-plugin-package="@deepseek-ai/dsh-cua-bundle"]').count())
+      .toBe(cuaSupported ? 1 : 0)
     for (const name of ['@deepseek-ai/dsh-experimental-session-search', '@deepseek-ai/dsh-experimental-ralph-bundle']) {
       expect((await scaffold.ctx.pluginManager.listBundles()).find(bundle => bundle.name === name))
         .toMatchObject({ enabled: false, optional: true, availability: 'installation', listedByDefault: false })
@@ -717,16 +723,17 @@ describe('web e2e: plugin manager', () => {
       await card.getAttribute('data-plugin-package'),
       await card.getByText('Experimental', { exact: true }).count(),
     ]))).toEqual([
-      ['@deepseek-ai/dsh-experimental-agent-team-profile', 1],
       ['@deepseek-ai/dsh-experimental-voice-input-bundle', 1],
       ['@deepseek-ai/dsh-experimental-plugin-market-bundle', 1],
       ['@deepseek-ai/dsh-experimental-auto-review', 1],
       ['@deepseek-ai/dsh-experimental-forge-bundle', 1],
       ['@deepseek-ai/dsh-personalized-recommendations', 1],
       ['@deepseek-ai/dsh-experimental-inspector-profile', 1],
-      ['@deepseek-ai/dsh-experimental-tool-worktree', 1],
+      ...cuaSupported ? [['@deepseek-ai/dsh-cua-bundle', 1]] : [],
+      ['@deepseek-ai/dsh-timeline', 1],
       ['@deepseek-ai/dsh-experimental-session-titles-bundle', 1],
       ['@deepseek-ai/dsh-experimental-badge-skill-bundle', 1],
+      ['@deepseek-ai/dsh-deepseek-chat-import', 1],
       ['@deepseek-ai/dsh-subagent-codex', 0],
       ['@deepseek-ai/dsh-subagent-claude-code', 0],
     ])
@@ -745,6 +752,130 @@ describe('web e2e: plugin manager', () => {
     await compareOrRefreshGolden(MANAGER_EXPECTED, snapshot, MODE)
     expect(tripwire.pageErrors).toEqual([])
   }, 60_000)
+
+  it('authenticates Timeline edits and withdraws the channel when the plugin unloads', async () => {
+    const timeline = await launchWebScaffold({
+      profile: { packages: [], bundles: ['@deepseek-ai/dsh-timeline'] },
+    })
+    try {
+      const request = (method: string, payload: object | string): RequestInit => ({
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ type: 'client-request', rpcId: 'timeline-test', method, payload }),
+      })
+      const anonymous = await fetch(new URL('/timeline/edit', timeline.baseUrl), request('edit', {}))
+      expect(anonymous.status).toBe(401)
+      expect(anonymous.headers.get('cache-control')).toBe('no-store')
+      const locale = await timeline.hostFetch('/timeline/locale', request('locale', 'en'))
+      expect(locale.status).toBe(200)
+      expect(await locale.json()).toMatchObject({ result: { ok: true, value: null } })
+      const edit = () => timeline.hostFetch('/timeline/edit', request('edit', {}))
+      const response = await edit()
+      expect(response.status).toBe(200)
+      expect(await response.json()).toMatchObject({
+        type: 'server-response',
+        rpcId: 'timeline-test',
+        result: { ok: false, error: { code: 'timeline/request-failed' } },
+      })
+      const sessionId = await seedSession(timeline, await readFile(
+        new URL('../../../snapshots/session/timeline-plan/session.v4.jsonl', import.meta.url), 'utf8',
+      ), 'timeline-edit-target')
+      const content = await readFile(
+        new URL('../../../packages/experimental/timeline/tests/checkpoint.timeline.json', import.meta.url), 'utf8',
+      )
+      const imported = await timeline.hostFetch('/timeline/edit', request('edit', {
+        action: 'import', sessionId, id: 'import-via-web', content,
+      }))
+      expect(imported.status).toBe(200)
+      expect(await imported.json()).toMatchObject({
+        result: { ok: true, value: { action: 'import', reused: false, notified: false } },
+      })
+      const fiber = [...timeline.ctx.loader.entries()]
+        .find(entry => entry.options.id === 'timeline-experimental')?.fiber
+      expect(fiber?.state).toBe(FiberState.ACTIVE)
+      await fiber?.dispose()
+      const unavailable = await edit()
+      // The Web Host's fallback rejects POST when no route owns the path.
+      expect(unavailable.status).toBe(405)
+    } finally {
+      await timeline.close()
+    }
+  })
+
+  it('shows the automatic Timeline sidebar setting and saves an opt-out', async () => {
+    const timeline = await launchWebScaffold({
+      profile: { packages: [], bundles: ['@deepseek-ai/dsh-timeline'] },
+    })
+    try {
+      const probe = await newEnglishPage(browser)
+      try {
+        await probe.goto(timeline.authenticatedUrl)
+        await probe.getByRole('button', { name: 'Plugins', exact: true }).click()
+        const panel = probe.locator('[data-plugin-panel]')
+        await panel.getByRole('button', { name: 'More', exact: true }).click()
+        await panel.getByRole('button', { name: 'View Timeline', exact: true }).click()
+        const tracking = panel.getByRole('region', { name: 'Task tracking' })
+        const toggle = tracking.getByRole('switch', { name: 'Auto-open sidebar' })
+        const config = () => timeline.ctx.settings.describe().find(row => row.ns === 'timeline-experimental')?.value
+        await expect.poll(() => toggle.getAttribute('aria-checked')).toBe('true')
+        await toggle.click()
+        await panel.getByRole('button', { name: 'Save changes', exact: true }).click()
+        await expect.poll(config).toMatchObject({ autoOpenSidebar: false })
+        await panel.getByText('Saved', { exact: true }).waitFor()
+        expect(await toggle.getAttribute('aria-checked')).toBe('false')
+        await probe.getByRole('button', { name: 'Collapse sidebar', exact: true }).click()
+        await probe.setViewportSize({ width: 520, height: 850 })
+        expect(await tracking.evaluate(section => section.scrollWidth <= section.clientWidth)).toBe(true)
+        await toggle.click({ trial: true })
+        const snapshot = await captureStableAria(probe, '.timeline-settings [aria-label="Task tracking"]', timeline.workspaceCwd)
+        await compareOrRefreshGolden(join(SNAPSHOT_DIR, 'timeline-tracking.expected.md'), snapshot, MODE)
+      } finally {
+        await probe.close()
+      }
+    } finally {
+      await timeline.close()
+    }
+  })
+
+  it('opens the saved Timeline tree after forking a cold session from its sidebar row', async () => {
+    const fixture = await readFile(
+      new URL('../../../snapshots/session/timeline-plan/session.v4.jsonl', import.meta.url),
+      'utf8',
+    )
+    const timeline = await launchWebScaffold({
+      profile: { packages: [], bundles: ['@deepseek-ai/dsh-timeline'] },
+    })
+    try {
+      const source = await seedSession(timeline, fixture, 'timeline-fork-source')
+      const forkPage = await newEnglishPage(browser)
+      try {
+        await forkPage.goto(timeline.authenticatedUrl)
+        const row = forkPage.locator(`[data-row-key="session:${source}"]`)
+        const workspace = forkPage.getByRole('treeitem').first()
+        await workspace.waitFor()
+        if (await workspace.getAttribute('aria-expanded') === 'false') await workspace.click()
+        await row.hover()
+        await row.locator('button[aria-label^="Session actions for "]').click()
+        await forkPage.getByRole('menuitem', { name: 'Fork session', exact: true }).click()
+        await expect.poll(() => timeline.ctx.agents.list().some(agent => agent.session.header.isSeeded)).toBe(true)
+        const fork = timeline.ctx.agents.list().find(agent => agent.session.header.isSeeded)
+        if (fork === undefined) throw new Error('No fork was created')
+        expect(timeline.ctx.agents.get(source)).toBeUndefined()
+        await forkPage.locator(`[data-row-key="session:${fork.session.id}"]`).click()
+        const dock = forkPage.locator('.timeline-dock')
+        await dock.getByText('Release review', { exact: true }).waitFor()
+        expect(await dock.getByRole('progressbar').getAttribute('aria-valuenow')).toBe('50')
+        await dock.getByRole('button', { name: 'Open task tree' }).click()
+        const tree = forkPage.getByRole('tabpanel', { name: 'Task Tree' })
+        await tree.getByRole('button', { name: /Verify examples/ }).waitFor()
+        await tree.getByRole('button', { name: /Confirm release approval/ }).waitFor()
+      } finally {
+        await forkPage.close()
+      }
+    } finally {
+      await timeline.close()
+    }
+  })
 
   it('enables both default-hidden shipped bundles by name without adding a profile dependency', async () => {
     onTestFailed(() => saveFailureShot(page, 'web-e2e-plugin-manager-bundled-enable'))
@@ -802,7 +933,7 @@ describe('web e2e: plugin manager', () => {
     onTestFinished(closeSettings)
     const fixtureIcon = `data:image/svg+xml;base64,${(await readFile(join(FIXTURE_PLUGINS, 'fixture-bundle/icon.svg'))).toString('base64')}`
     const fallbackIcon = `data:image/svg+xml;base64,${(await readFile(join(FIXTURE_PLUGINS, 'fixture-bundle/fallback-icon.svg'))).toString('base64')}`
-    const teamIcon = `data:image/svg+xml;base64,${(await readFile(fileURLToPath(new URL('../../../packages/experimental/agent-team-profile/icon.svg', import.meta.url)))).toString('base64')}`
+    const voiceIcon = `data:image/svg+xml;base64,${(await readFile(fileURLToPath(new URL('../../../packages/experimental/voice-input-bundle/icon.svg', import.meta.url)))).toString('base64')}`
     const images: string[] = []
     const checkImage = async (selector: string, source: string, label: string) => {
       const image = panel.locator(`${selector} img`).first()
@@ -816,9 +947,9 @@ describe('web e2e: plugin manager', () => {
       images.push(`${label}: image, ${size.width}×${size.height}, decoded`)
     }
     await checkImage('[data-plugin-package="@fixture/bundle"]', fixtureIcon, 'Third-party bundle card')
-    const team = panel.locator('[data-plugin-package="@deepseek-ai/dsh-experimental-agent-team-profile"]')
+    const team = panel.locator('[data-plugin-package="@deepseek-ai/dsh-experimental-voice-input-bundle"]')
     expect(await team.getByRole('switch').getAttribute('aria-checked')).toBe('false')
-    await checkImage('[data-plugin-package="@deepseek-ai/dsh-experimental-agent-team-profile"]', teamIcon, 'Disabled Agent Teams card')
+    await checkImage('[data-plugin-package="@deepseek-ai/dsh-experimental-voice-input-bundle"]', voiceIcon, 'Disabled Voice Input card')
     try {
       for (const colorScheme of ['light', 'dark'] as const) {
         await page.emulateMedia({ colorScheme })
@@ -832,8 +963,8 @@ describe('web e2e: plugin manager', () => {
     } finally {
       await page.emulateMedia({ colorScheme: null })
     }
-    await panel.getByRole('button', { name: 'Inspect Agent Team', exact: true }).click()
-    await checkImage('[data-plugin-detail]', teamIcon, 'Agent Teams detail')
+    await panel.getByRole('button', { name: 'View Voice input', exact: true }).click()
+    await checkImage('[data-plugin-detail]', voiceIcon, 'Voice Input detail')
     await panel.getByRole('button', { name: 'Back to plugins' }).click()
     await panel.getByRole('button', { name: 'Inspect @fixture/bundle', exact: true }).click()
     await checkImage('[data-plugin-detail]', fixtureIcon, 'Third-party bundle detail')
@@ -843,6 +974,51 @@ describe('web e2e: plugin manager', () => {
     images.push('Independent review row: generic artwork')
     await compareOrRefreshGolden(join(SNAPSHOT_DIR, 'icons.expected.md'), images.join('\n'), MODE)
     await panel.getByRole('button', { name: 'Back to plugins' }).click()
+    expect(tripwire.pageErrors).toEqual([])
+  })
+
+  it('introduces code review and worktrees with localized artwork before activation', async () => {
+    onTestFailed(() => saveFailureShot(page, 'web-e2e-forge-preview'))
+    const panel = await openPluginsPanel()
+    await panel.getByRole('button', { name: 'View Change requests & worktrees', exact: true }).click()
+    const detail = panel.locator('[data-plugin-detail]')
+    expect(await detail.getByRole('switch').getAttribute('aria-checked')).toBe('false')
+    const sources: (string | null)[] = []
+    let spanish = false
+    try {
+      for (const [language, alt] of [
+        ['en', 'A conversation linked to a GitHub pull request, with checks, reviews, code diffs, and an isolated worktree'],
+        ['es', 'Una conversación vinculada a un pull request de GitHub, con comprobaciones, revisiones, diferencias de código y un árbol de trabajo aislado'],
+      ] as const) {
+        if (language === 'es') {
+          await setLanguage(language)
+          spanish = true
+        }
+        const document = detail.locator('[data-detail-document]')
+        const image = document.getByRole('img', { name: alt, exact: true })
+        await image.waitFor()
+        await image.evaluate(async (node: HTMLImageElement) => { await node.decode() })
+        expect(await image.evaluate((node: HTMLImageElement) => [node.naturalWidth, node.naturalHeight])).toEqual([640, 300])
+        sources.push(await image.getAttribute('src'))
+        for (const width of [1680, 390]) {
+          await page.setViewportSize({ width, height: 1000 })
+          expect(await image.evaluate((node: HTMLImageElement) => {
+            const bounds = node.getBoundingClientRect()
+            return bounds.width > 0 && bounds.left >= 0 && bounds.right <= window.innerWidth
+              && window.document.documentElement.scrollWidth <= window.innerWidth
+          })).toBe(true)
+        }
+        await page.setViewportSize({ width: 1680, height: 1000 })
+      }
+      expect(sources[0]).toBe(sources[1])
+    } finally {
+      await page.setViewportSize({ width: 1680, height: 1000 })
+      if (spanish) await setLanguage('en')
+    }
+    await compareOrRefreshGolden(join(SNAPSHOT_DIR, 'forge-preview.expected.md'),
+      await captureStableAria(page, '[data-plugin-panel]', scaffold.workspaceCwd, {
+        replacements: [[badgeVersion, '{{version}}']],
+      }), MODE)
     expect(tripwire.pageErrors).toEqual([])
   })
 
@@ -883,96 +1059,57 @@ describe('web e2e: plugin manager', () => {
     onTestFinished(closeSettings)
     onTestFailed(() => saveFailureShot(page, 'web-e2e-plugin-manager-locale'))
     const panel = await openPluginsPanel()
-    await panel.getByRole('button', { name: 'Inspect Agent Team', exact: true }).click()
+    await panel.getByRole('button', { name: 'View Voice input', exact: true }).click()
     const packageName = panel.locator('[data-plugin-name]')
-    expect(await packageName.textContent()).toBe('@deepseek-ai/dsh-experimental-agent-team-profile')
-    const child = panel.locator('[data-plugin-row]', { hasText: 'tool-agent-team' })
-    await panel.getByRole('heading', { name: 'Agent Teams', exact: true }).waitFor()
-    expect(await packageName.textContent()).toBe('@deepseek-ai/dsh-experimental-agent-team-profile')
-    expect(await panel.getByText(experimentalBundleDescription('agent-team-profile', 'en')).count()).toBe(1)
-    await child.getByText('Team Tools', { exact: true }).waitFor()
-    expect(await child.getByText('Give agents tools to coordinate members, exchange messages, and manage shared tasks.', { exact: true }).count()).toBe(1)
+    expect(await packageName.textContent()).toBe('@deepseek-ai/dsh-experimental-voice-input-bundle')
+    await panel.getByRole('heading', { name: 'Voice input', exact: true }).waitFor()
+    expect(await panel.getByText(experimentalBundleDescription('voice-input-bundle', 'en')).count()).toBe(1)
     try {
       await setLanguage('es')
-      await panel.getByRole('heading', { name: 'Equipos de agentes', exact: true }).waitFor()
-      expect(await panel.getByText(experimentalBundleDescription('agent-team-profile', 'es')).count()).toBe(1)
-      await child.getByText('Herramientas de equipo', { exact: true }).waitFor()
-      expect(await child.getByText('Da a los agentes herramientas para coordinar miembros, intercambiar mensajes y gestionar tareas compartidas.', { exact: true }).count()).toBe(1)
+      await panel.getByRole('heading', { name: 'Entrada de voz', exact: true }).waitFor()
+      expect(await packageName.textContent()).toBe('@deepseek-ai/dsh-experimental-voice-input-bundle')
+      expect(await panel.getByText(experimentalBundleDescription('voice-input-bundle', 'es')).count()).toBe(1)
     } finally {
       await setLanguage('en')
     }
     await panel.getByRole('button', { name: 'Back to plugins' }).click()
-    await panel.getByRole('button', { name: 'View Agent Teams', exact: true }).waitFor()
-    expect(await panel.getByRole('switch', { name: 'Enable Agent Teams', exact: true }).count()).toBe(1)
+    await panel.getByRole('button', { name: 'View Voice input', exact: true }).waitFor()
+    expect(await panel.getByRole('switch', { name: 'Enable Voice input', exact: true }).count()).toBe(1)
     // Schedule ships in the delivered composition, so no bundle card carries it in either language.
     expect(await panel.getByRole('button', { name: 'View Automation tasks', exact: true }).count()).toBe(0)
     // The official configuration pages follow the language too, from their own dictionary.
     for (const title of ['Shell', 'Agent loop', 'Subagent', 'Web search']) {
       await panel.getByRole('button', { name: `View ${title}`, exact: true }).waitFor()
     }
-    await panel.getByRole('button', { name: 'Inspect Agent Team', exact: true }).waitFor()
     expect(tripwire.pageErrors).toEqual([])
   }, 60_000)
 
-  it('enables the Team tools and browser plugin with one bundle switch', async () => {
+  it('provides Team mode per Session without an experimental plugin switch', async () => {
     onTestFailed(() => saveFailureShot(page, 'web-e2e-plugin-manager-team'))
+    onTestFinished(closeSettings)
     const panel = await openPluginsPanel()
-    const toggle = panel.getByRole('switch', { name: 'Enable Agent Team', exact: true })
-    const teamRows = () => [...scaffold.ctx.loader.entries()]
-      .filter(entry => ['agent-team', 'tool-agent-team', 'ui-agent-team'].includes(entry.options.id))
+    expect(await panel.getByRole('switch', { name: 'Enable Agent Teams', exact: true }).count()).toBe(0)
+    expect(await panel.locator('[data-plugin-package="@deepseek-ai/dsh-experimental-agent-team-profile"]').count()).toBe(0)
+    expect([...scaffold.ctx.loader.entries()].filter(entry =>
+      ['agent-team', 'tool-agent-team', 'ui-agent-team'].includes(entry.options.id)
+        && entry.fiber?.state === FiberState.ACTIVE)).toHaveLength(3)
     const teamPage = await browser.newPage({ viewport: { width: 1680, height: 1000 }, locale: EN_BROWSER_LOCALE })
     const teamTripwire = watchConsole(teamPage)
     try {
       await teamPage.goto(scaffold.authenticatedUrl, { waitUntil: 'load' })
       await connectFreshWorkspace(teamPage, scaffold.workspaceCwd)
-      const agent = scaffold.ctx.agents.list()[0]
-      if (agent === undefined) throw new Error('connected Team workspace did not create an Agent')
-      // Session actions render only after the conversation leaves its blank state.
-      agent.session.append('turn/start', { turn: 1 })
-      agent.session.append('user/message', createUserMessage({
-        content: [{ type: 'text', text: 'Team UI lifecycle' }], source: { kind: 'user' },
-      }), { surfaceOp: 'append' })
-      agent.session.append('turn/end', { turn: 1, reason: { kind: 'completed' } })
-      await scaffold.ctx.sessions.flush(agent.session)
-      // The current crumb renders as plain text inside the zh-labeled hierarchy nav.
-      await teamPage.getByRole('navigation', { name: 'Session hierarchy' })
-        .getByText('Team UI lifecycle', { exact: true }).waitFor()
-      const action = teamPage.locator('[data-team-action]')
-      expect(await action.count()).toBe(0)
-      await toggle.click()
-      try {
-        await expect.poll(() => teamRows().filter(entry => entry.fiber?.state === FiberState.ACTIVE).length, { timeout: 20_000 }).toBe(3)
-        await expect.poll(() => toggle.getAttribute('aria-checked'), { timeout: PLUGIN_TOGGLE_SETTLE_MS }).toBe('true')
-        await action.waitFor({ timeout: 20_000 })
-        await action.getByRole('button', { name: 'Agent Team', exact: true }).click()
-        const teamPanel = teamPage.getByRole('dialog', { name: 'Agent Team', exact: true })
-        await teamPanel.getByText('Team is unavailable', { exact: true }).waitFor()
-        await teamPage.reload({ waitUntil: 'load' })
-        await action.getByRole('button', { name: 'Agent Team', exact: true }).click()
-        await teamPanel.getByText('No shared tasks yet. Create them through the conversation.').waitFor()
-        await teamPanel.getByText('lead', { exact: true }).waitFor()
-        const manifest = JSON.parse(await homeFile('profiles', 'scaffold', 'package.json')) as {
-          dsh: { profile: { bundles: string[] } }
-        }
-        expect(manifest.dsh.profile.bundles).toEqual([...SCAFFOLD_BUNDLES, '@deepseek-ai/dsh-experimental-agent-team-profile'])
-        await panel.getByRole('button', { name: 'Inspect Agent Team', exact: true }).click()
-        for (const id of ['agent-team', 'tool-agent-team', 'ui-agent-team']) {
-          await panel.locator('[data-plugin-row]', { hasText: id }).first().waitFor()
-        }
-        await panel.getByRole('button', { name: 'Back to plugins' }).click()
-      } finally {
-        const back = panel.getByRole('button', { name: 'Back to plugins' })
-        if (await back.count() > 0) await back.click()
-        if (await toggle.getAttribute('aria-checked') === 'true') await toggle.click()
-        await expect.poll(() => teamRows().filter(entry => entry.fiber?.state === FiberState.ACTIVE).length, { timeout: 20_000 }).toBe(0)
-        await expect.poll(() => action.count(), { timeout: 20_000 }).toBe(0)
-      }
+      await teamPage.getByRole('button', { name: /^Select model/u }).click()
+      await teamPage.getByRole('menuitem', { name: 'Agent teamwork Off', exact: true }).click()
+      const mode = teamPage.getByRole('switch', { name: 'Enable agent teamwork', exact: true })
+      await mode.waitFor()
+      expect(await mode.getAttribute('aria-checked')).toBe('false')
+      await mode.click()
+      await expect.poll(() => mode.getAttribute('aria-checked')).toBe('true')
       expect(teamTripwire.pageErrors).toEqual([])
       expect(teamTripwire.warnings).toEqual([])
     } finally {
       await teamPage.close()
     }
-    expect(tripwire.pageErrors).toEqual([])
   }, 60_000)
 
   it('mounts the delivered Automation tasks rows without a bundle switch', async () => {
@@ -1029,6 +1166,19 @@ describe('web e2e: plugin manager', () => {
           const registryToggle = dialog.getByRole('button', { name: /^Registry/ })
           await registryToggle.click()
           const registry = probe.locator('[data-install-registry]')
+          await registry.waitFor()
+          for (const width of [390, 800, 1680]) {
+            await probe.setViewportSize({ width, height: 1000 })
+            await probe.clock.runFor(300)
+            await expect.poll(async () => {
+              const rect = await registry.boundingBox()
+              const anchor = await registryToggle.boundingBox()
+              return rect !== null && anchor !== null
+                && rect.x >= 11 && rect.x + rect.width <= width - 11
+                && rect.y >= 11 && rect.y + rect.height <= 989
+                && Math.abs(rect.x - Math.max(12, Math.min(anchor.x + anchor.width - rect.width, width - rect.width - 12))) <= 1
+            }).toBe(true)
+          }
           const offered = registry.getByRole('radio', { name: 'Official npm registry registry.npmjs.org', exact: true })
           const custom = registry.getByRole('radio', { name: 'Custom address', exact: true })
           field = registry.getByRole('textbox', { name: 'Custom address', exact: true })
@@ -1241,8 +1391,8 @@ describe('web e2e: plugin manager', () => {
       // on, so writing the patch file recomposes the running loader; each step first waits for that
       // recomposition and then re-reads the Host bundle list through the page's own Refresh.
       const patchFile = join(visibilityScaffold.harnessHome, 'profiles', 'scaffold', 'cordis.patch.yml')
-      const declarationsRow = (): boolean => [...visibilityScaffold.ctx.loader.entries()]
-        .some(entry => entry.options.id === 'liveshare-viewer-declarations')
+      const shareHostRow = (): boolean => [...visibilityScaffold.ctx.loader.entries()]
+        .some(entry => entry.options.id === 'liveshare-share-host')
       const refresh = panel.getByRole('button', { name: 'Refresh', exact: true })
 
       // Default install: the package ships, but no row it declares runs, so neither list offers it.
@@ -1260,12 +1410,12 @@ describe('web e2e: plugin manager', () => {
       // selects no such bundle: the card joins the experimental list.
       await writeFile(patchFile, [
         '- insert:',
-        '    - id: liveshare-viewer-declarations',
-        "      name: '@deepseek-ai/dsh-experimental-liveshare/viewer-declarations'",
+        '    - id: liveshare-share-host',
+        "      name: '@deepseek-ai/dsh-experimental-liveshare'",
         '',
       ].join('\n'))
-      await expect.poll(declarationsRow, {
-        timeout: 30_000, message: 'the profile patch did not compose the LiveShare declarations row',
+      await expect.poll(shareHostRow, {
+        timeout: 30_000, message: 'the profile patch did not compose the LiveShare share-host row',
       }).toBe(true)
       await refresh.click()
       await expect.poll(() => card.count(), {
@@ -1274,8 +1424,8 @@ describe('web e2e: plugin manager', () => {
 
       // Removing the row stops it: the card leaves both lists again.
       await writeFile(patchFile, '[]\n')
-      await expect.poll(declarationsRow, {
-        timeout: 30_000, message: 'the profile patch did not remove the LiveShare declarations row',
+      await expect.poll(shareHostRow, {
+        timeout: 30_000, message: 'the profile patch did not remove the LiveShare share-host row',
       }).toBe(false)
       await refresh.click()
       await expect.poll(() => card.count(), {
@@ -1297,8 +1447,8 @@ describe('web e2e: plugin manager', () => {
     expect(tripwire.warnings).toEqual([])
     await assertFixtureInventory(SNAPSHOT_DIR, [
       'manager.expected.md', 'live-enabled.expected.md', 'missing-bundle.expected.md', 'exports.expected.md', 'exports-en.expected.md', 'icons.expected.md', 'loading.expected.md', 'refresh.expected.md',
-      'ime-enter.expected.md', 'header-natural-motion.expected.md',
-      'touch-tooltips.expected.md',
+      'ime-enter.expected.md', 'header-responsive.expected.md', 'header-natural-motion.expected.md', 'preview.expected.md',
+      'touch-tooltips.expected.md', 'forge-preview.expected.md', 'timeline-tracking.expected.md',
     ])
   })
 })

@@ -2,7 +2,7 @@
 import { afterEach, describe, expect, it } from 'vitest'
 import { cleanup, fireEvent, render } from '@testing-library/react'
 import { makeTranslate } from '@deepseek-ai/dsh-client-test-runtime'
-import { IconClockOutlineRegular } from '@deepseek-ai/dsh-client-ui-primitives'
+import { IconClockOutlineRegular, IconUsersOutlineRegular } from '@deepseek-ai/dsh-client-ui-primitives'
 import type { ChatNode } from '../src/client/contract/chat-nodes.ts'
 import { TurnTriggerNodeView } from '../src/client/chat/TurnTriggerNodeView.tsx'
 import { turnTriggerDetails } from '../src/client/chat/turn-trigger.ts'
@@ -25,6 +25,20 @@ function trigger(source: unknown): ChatNode<'turn-trigger'> {
 
 describe('Turn trigger notices', () => {
   it.each([
+    [en, 'Requested to continue generation'],
+    [es, 'Se ha solicitado continuar la generación'],
+  ])('shows an empty retry as a compact continuation receipt', (locale, title) => {
+    const node = trigger({ kind: 'retry' })
+    node.data.content = []
+    expect(turnTriggerDetails(node.data)).toEqual({ title: 'message.continuation.requested', icon: 'continue', compact: true })
+    const view = render(<TurnTriggerNodeView node={node} t={makeTranslate(locale)} />)
+    expect(view.getByText(title)).toBeDefined()
+    expect(view.queryByRole('button')).toBeNull()
+    expect(view.container.querySelector('[data-generation-continuation] svg')).not.toBeNull()
+    expect(view.container.querySelector('time')).toBeNull()
+  })
+
+  it.each([
     [{ kind: 'schedule' }, 'schedule', 'Automation task'],
     [{ kind: 'tool-jobs' }, 'job', 'Background task updated'],
     [{ kind: 'cordis-host-runner' }, 'plugin', 'Plugin status updated'],
@@ -35,6 +49,7 @@ describe('Turn trigger notices', () => {
     [{ kind: 'webhook', provider: 'github' }, 'github', 'GitHub event received'],
     [{ kind: 'webhook', provider: 'custom' }, 'webhook', 'External event received'],
     [{ kind: 'custom-extension' }, 'request', 'Execution requested'],
+    [{ kind: 'retry' }, 'request', 'Execution requested'],
   ] as const)('presents the recorded %j source', (source, icon, title) => {
     const node = trigger(source)
     const details = turnTriggerDetails(node.data)
@@ -70,6 +85,37 @@ describe('Turn trigger notices', () => {
     expect(view.getByRole('button').querySelector('svg')?.outerHTML)
       .toBe(reference.container.querySelector('svg')?.outerHTML)
     expect(node.data.source).toEqual({ kind: 'schedule' })
+  })
+
+  it.each([
+    ['completed', 'Subagent run completed', 'Ejecución del subagente completada'],
+    ['aborted', 'Subagent run stopped', 'Ejecución del subagente detenida'],
+    ['error', 'Subagent run failed', 'La ejecución del subagente falló'],
+    ['max-tokens', 'Subagent reached the token limit', 'El subagente alcanzó el límite de tokens'],
+    ['refusal', 'Subagent declined the task', 'El subagente rechazó la tarea'],
+    ['backend-specific', 'Subagent run ended unexpectedly', 'La ejecución del subagente terminó de forma inesperada'],
+  ])('presents only the recorded %s outcome in both locales', (stopReason, english, spanish) => {
+    const source = { kind: 'subagent-settled', stopReason, senderSessionId: 'child-1' }
+    const node = trigger(source)
+    const view = render(<TurnTriggerNodeView node={node} t={makeTranslate(en)} />)
+    expect(view.getByRole('button').textContent).toContain(english)
+    expect(view.getByRole('button').textContent).not.toContain(' · ')
+    const reference = render(<IconUsersOutlineRegular size={14} />)
+    expect(view.getByRole('button').querySelector('svg')?.outerHTML)
+      .toBe(reference.container.querySelector('svg')?.outerHTML)
+    view.rerender(<TurnTriggerNodeView node={node} t={makeTranslate(es)} />)
+    expect(view.getByRole('button').textContent).toContain(spanish)
+    expect(view.getByRole('button').textContent).not.toContain(' · ')
+    fireEvent.click(view.getByRole('button'))
+    expect(view.container.querySelector('[data-context-text]')?.textContent)
+      .toBe('Recorded notification\nwith its original body.')
+    expect(node.data.source).toEqual(source)
+  })
+
+  it.each([undefined, null, false, 12, {}, '', []])('does not infer an absent or malformed outcome %j from English text', (stopReason) => {
+    const node = trigger({ kind: 'subagent-settled', stopReason, summary: 'Background subagent child-1 finished.' })
+    node.data.content = [{ type: 'text', text: 'Background subagent child-1 finished.' }]
+    expect(turnTriggerDetails(node.data)).toEqual({ title: 'message.trigger.subagent', icon: 'subagent' })
   })
 
   it('opens the recorded notice body and closes it independently of the Turn', () => {

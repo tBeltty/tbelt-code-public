@@ -1,13 +1,14 @@
 /** API-key authentication, credential-gated discovery, and the official model listing for the official DeepSeek route. */
 import type { Context } from '@deepseek-ai/cordis'
-import { APP_IDENTITY, assertUsableApiKey, LlmError } from '@deepseek-ai/dsh-llm'
+import { APP_IDENTITY, LlmError } from '@deepseek-ai/dsh-llm'
 import type { LlmModelBadge } from '@deepseek-ai/dsh-llm'
 import type {} from '@deepseek-ai/cordis-plugin-loader'
 import { launchEnvironmentOf } from '@deepseek-ai/dsh-launch-environment'
 import {
-  catalogModelInfo, createModelListingCache, refuseListedModel, registerDeepSeekProvider, requestModelListing, resolveListedCatalog,
+  catalogModelInfo, createModelListingCache, refuseListedModel, registerDeepSeekProvider, resolveListedCatalog,
+  resolveDeepSeekApiKey,
 } from '@deepseek-ai/dsh-llm-deepseek'
-import type { CatalogRefusal, DeepSeekCatalogModel, ListingView, ModelListing } from '@deepseek-ai/dsh-llm-deepseek'
+import type { CatalogRefusal, DeepSeekCatalogModel, DeepSeekRequestAuth, ListingView, ModelListing } from '@deepseek-ai/dsh-llm-deepseek'
 import { Config, plainOptions, resolveAdapterOptions } from './config.ts'
 import type { ResolvedDeepSeekOptions } from './config.ts'
 
@@ -33,34 +34,22 @@ interface OfficialConnection extends ResolvedDeepSeekOptions {
 export function apply(ctx: Context, config: Config): void {
   const options = () => resolveAdapterOptions(plainOptions(config), launchEnvironmentOf(ctx))
   options()
-  const resolveApiKey = async (connection: ResolvedDeepSeekOptions): Promise<string> => {
-    const ref = connection.apiKeyEnv
-    const credentials = ctx.get('credentials')
-    if (credentials !== undefined) {
-      const hit = await credentials.resolve(ref)
-      if (hit !== undefined) return assertUsableApiKey(hit.value, 'llm-deepseek', ref)
-    } else {
-      const ambient = launchEnvironmentOf(ctx).get(ref)
-      if (ambient !== undefined && ambient.value.length > 0) return assertUsableApiKey(ambient.value, 'llm-deepseek', ref)
-    }
-    throw new LlmError(
-      `llm-deepseek: no API key for provider route "${PROVIDER}"; store ${ref} through the credentials`
-      + ` service (the web Models page writes it), or export ${ref} in the launching environment`,
-      'MISSING_CREDENTIAL',
-    )
+  /**
+   * The API key of this route's reference as the Messages header, or `undefined` when none is configured; an unusable
+   * key fails as `INVALID_CREDENTIAL` and store failures propagate.
+   */
+  const resolveAuth = async (connection: ResolvedDeepSeekOptions): Promise<DeepSeekRequestAuth | undefined> => {
+    const key = await resolveDeepSeekApiKey(ctx, connection.apiKeyEnv)
+    return key === undefined ? undefined : { headers: { 'x-api-key': key } }
   }
-  /** The API key, or `undefined` when none is configured; other credential failures propagate. */
-  const presentApiKey = async (connection: ResolvedDeepSeekOptions): Promise<string | undefined> => {
-    try { return await resolveApiKey(connection) }
-    catch (error) {
-      if (error instanceof LlmError && error.code === 'MISSING_CREDENTIAL') return undefined
-      throw error
-    }
-  }
+  const missingCredential = (connection: ResolvedDeepSeekOptions) => new LlmError(
+    `llm-deepseek: no API key for provider route "${PROVIDER}"; store ${connection.apiKeyEnv} through the credentials`
+    + ` service (the web Models page writes it), or export ${connection.apiKeyEnv} in the launching environment`,
+    'MISSING_CREDENTIAL',
+  )
   const listings = createModelListingCache(ctx, name, PROVIDER, {
     settings: () => options().listing,
-    credential: async () => presentApiKey(options()),
-    load: (url, apiKey, signal) => requestModelListing(url, { 'x-api-key': apiKey }, signal),
+    credential: async () => (await resolveAuth(options()))?.headers,
   })
   let reportedListing: ModelListing | undefined
   /** Resolve the catalog, reporting each listing's hidden entries and dropped badges once. */
@@ -101,12 +90,13 @@ export function apply(ctx: Context, config: Config): void {
       }
       return connectionOf(connection, view)
     },
-    resolveAuth: async connection => ({ headers: { 'x-api-key': await resolveApiKey(connection) } }),
+    resolveAuth,
+    missingCredential,
     admit: (connection, model) => { refuseListedModel(model, connection.refusals.get(model)) },
     discoverModels: async (provider) => {
       const connection = options()
       if (connection.listing === undefined) {
-        if (await presentApiKey(connection) === undefined) return []
+        if (await resolveAuth(connection) === undefined) return []
         return connection.models.map(model => catalogModelInfo(provider, model))
       }
       const view = await listings.view(connection.listing)

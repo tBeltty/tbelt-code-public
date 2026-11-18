@@ -17,7 +17,7 @@ const SECTION_ORDER_NAMES = [
   'HARNESS_IDENTITY', 'DEPLOYMENT_PERSONA_PREFIX',
   'PLAN_POLICY', 'TEAM_POLICY', 'PTC_ONLY', 'FILE_REFERENCE', 'TOOL_BASH',
   'TOOL_PWSH', 'TOOL_READ', 'TOOL_WRITE', 'TOOL_EDIT', 'TOOL_APPLY_PATCH', 'TOOL_GLOB',
-  'TOOL_GREP', 'TOOL_JOBS', 'TOOL_PTY', 'TOOL_WEB_SEARCH', 'TOOL_WEB_FETCH',
+  'TOOL_GREP', 'TOOL_JOBS', 'TOOL_PTY', 'TOOL_PTY_PANEL', 'TOOL_WEB_SEARCH', 'TOOL_WEB_FETCH',
   'TOOL_LSP', 'TOOL_SESSION_QUERY', 'TOOL_GOAL', 'TOOL_SCHEDULE', 'TOOL_WORKFLOW',
   'TOOL_RALPH', 'TOOL_SUBAGENT', 'TOOL_REPORT', 'TOOL_GROUPS', 'TOOLS_SDK',
   'DELIVERABLE_FILE_REFERENCES', 'STRUCTURED_OUTPUT',
@@ -25,14 +25,28 @@ const SECTION_ORDER_NAMES = [
 ] as const satisfies readonly PromptSectionOrderName[]
 const CONTEXT_ORDER_NAMES = [
   'WORKING_DIRECTORY',
-  'SANDBOX_POLICY', 'APPROVAL_POLICY', 'SUBAGENT_DELEGATION', 'TEAM_IDENTITY',
-  'HARNESS_SOURCE', 'WEB_SURFACE',
+  'SANDBOX_POLICY', 'APPROVAL_POLICY', 'SUBAGENT_DELEGATION',
+  'HARNESS_SOURCE', 'WEB_SURFACE', 'PLUGIN_CLIS',
 ] as const satisfies readonly PromptContextOrderName[]
 function contributed(assembly: PromptAssembly): PromptAssembly['sections'] {
   return assembly.sections.filter(section => !BUILT_IN.includes(section.name))
 }
 
 describe('SystemPrompt', () => {
+  it('orders contexts with equal order by name whatever the registration order', async () => {
+    const ctx = new Context()
+    try {
+      await ctx.plugin(SystemPrompt)
+      ctx.systemPrompt.context({ name: 'b-second', order: 5, text: 'second' })
+      ctx.systemPrompt.context({ name: 'a-first', order: 5, text: 'first' })
+      ctx.systemPrompt.context({ name: 'c-last', order: 6, text: 'last' })
+      const assembly = await ctx.systemPrompt.assemble()
+      expect(assembly.contexts.map(entry => entry.name)).toEqual(['a-first', 'b-second', 'c-last'])
+    } finally {
+      await ctx.fiber.dispose()
+    }
+  })
+
   it('retains required user context when optional context is suppressed', async () => {
     const ctx = new Context()
     try {

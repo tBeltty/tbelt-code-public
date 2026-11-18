@@ -150,6 +150,7 @@ const SECTION_ORDERS = {
   TOOL_GREP: 1500,
   TOOL_JOBS: 1600,
   TOOL_PTY: 1700,
+  TOOL_PTY_PANEL: 1710,
   TOOL_WEB_SEARCH: 2000,
   TOOL_WEB_FETCH: 2100,
   TOOL_LSP: 2200,
@@ -181,10 +182,11 @@ const CONTEXT_ORDERS = {
   SANDBOX_POLICY: 110,
   APPROVAL_POLICY: 115,
   SUBAGENT_DELEGATION: 120,
-  TEAM_IDENTITY: 125,
+  SUBAGENT_CHILD_RULES: 125,
   // Process-specific paths and endpoints stay out of the cached system prompt.
   HARNESS_SOURCE: 200,
   WEB_SURFACE: 210,
+  PLUGIN_CLIS: 220,
 } as const
 
 /** Name of a centrally allocated runtime-context position. */
@@ -679,7 +681,8 @@ export class SystemPrompt extends Service {
       sections,
       contexts: [...contextByName.values()]
         .filter(entry => !runtimeContextSuppressed || entry.required === true)
-        .sort((a, b) => a.order - b.order)
+        // Equal orders fall back to the name: plugin activation order is not stable across runs.
+        .sort((a, b) => a.order - b.order || compareNames(a.name, b.name))
         .map(entry => resolveContext(entry, context)),
       variables,
     }

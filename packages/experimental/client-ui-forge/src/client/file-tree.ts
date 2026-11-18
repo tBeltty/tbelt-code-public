@@ -1,4 +1,5 @@
 /** Directory navigation derived only from the files in one loaded diff. */
+import { assertNever } from '@deepseek-ai/dsh-util-values'
 import type { ForgeDiffFile } from '../types.ts'
 
 /** A changed file or a compacted chain of directories containing changed files. */
@@ -50,6 +51,51 @@ export function changedFileTree(files: readonly ForgeDiffFile[]): readonly Chang
     directory.files.push(file)
   }
   return childrenOf(root)
+}
+
+/**
+ * Read every file in the tree's depth-first display order, independent of navigation folds and filtering.
+ * @param nodes - the complete directory-first tree.
+ * @returns the original file objects in display order.
+ */
+export function filesInTreeOrder(nodes: readonly ChangedFileNode[]): readonly ForgeDiffFile[] {
+  return nodes.flatMap((node): readonly ForgeDiffFile[] => {
+    switch (node.kind) {
+      case 'file': return [node.file]
+      case 'directory': return filesInTreeOrder(node.children)
+      /* v8 ignore next -- closed ChangedFileNode union exhaustiveness guard */
+      default: return assertNever(node, 'ChangedFileNode')
+    }
+  })
+}
+
+/**
+ * Find the viewed files and the directories whose every file is viewed, which the tree draws subdued.
+ * @param nodes - the complete directory-first tree.
+ * @param viewed - paths of the files marked viewed at their current change.
+ * @returns the paths of those files and directories.
+ */
+export function viewedNodes(nodes: readonly ChangedFileNode[], viewed: ReadonlySet<string>): ReadonlySet<string> {
+  const done = new Set<string>()
+  const visit = (node: ChangedFileNode): boolean => {
+    switch (node.kind) {
+      case 'file':
+        if (!viewed.has(node.path)) return false
+        break
+      case 'directory': {
+        // Every child is visited, so viewed files below an unviewed sibling still count.
+        const children = node.children.map(visit)
+        if (!children.every(Boolean)) return false
+        break
+      }
+      /* v8 ignore next -- closed ChangedFileNode union exhaustiveness guard */
+      default: return assertNever(node, 'ChangedFileNode')
+    }
+    done.add(node.path)
+    return true
+  }
+  for (const node of nodes) visit(node)
+  return done
 }
 
 /**

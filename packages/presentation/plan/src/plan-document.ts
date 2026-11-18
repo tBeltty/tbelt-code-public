@@ -3,7 +3,7 @@
  * client. Input is untrusted Session history; malformed data yields no plan.
  * @module @deepseek-ai/dsh-presentation-plan/plan-document
  */
-import type { ToolCallId } from '@deepseek-ai/dsh-llm/brand'
+import type { ToolCallId } from '@deepseek-ai/dsh-llm'
 
 /** Complete Markdown and the heading displayed by a plan preview. */
 export interface PlanDocument {

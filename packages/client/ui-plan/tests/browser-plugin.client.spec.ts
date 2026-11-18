@@ -22,7 +22,7 @@ import { PlanPreview, PlanTitle, type PlanPreviewInjected } from '../src/client/
 import {
   PlanCommentChip, PlanReviewDecision, type PlanCommentChipInjected, type PlanReviewDecisionInjected,
 } from '../src/client/PlanCommentControls.tsx'
-import type { ToolCallId } from '@deepseek-ai/dsh-llm/brand'
+import type { ToolCallId } from '@deepseek-ai/dsh-llm'
 import { submittedPlan } from '../src/client/plan.ts'
 import type { PlanChipInjected } from '../src/client/index.ts'
 import { apply, inject } from '../src/client/index.ts'

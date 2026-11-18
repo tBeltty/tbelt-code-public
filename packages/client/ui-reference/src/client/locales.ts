@@ -17,6 +17,8 @@ declare module '@deepseek-ai/dsh-client-ui-slots' {
 
 /** English dictionary and key-set source of truth. */
 export const en = {
+  'menu.addToChat': 'Add to chat',
+  'menu.addToChatFailed': 'Couldn’t add file. Return to the chat and try again.',
   'section.files': 'Files & folders',
   'section.subagents': 'Subagents',
   'section.sessions': 'Sessions',
@@ -36,6 +38,8 @@ export const en = {
 
 /** Spanish dictionary, checked against the English keys. */
 export const es = {
+  'menu.addToChat': 'Añadir al chat',
+  'menu.addToChatFailed': 'No se pudo añadir el archivo. Vuelve al chat e inténtalo de nuevo.',
   'section.files': 'Archivos y carpetas',
   'section.subagents': 'Subagentes',
   'section.sessions': 'Sesiones',
@@ -55,6 +59,8 @@ export const es = {
 
 /** Greek dictionary, checked complete against the English key set. */
 export const el = {
+  'menu.addToChat': 'Προσθήκη στη συνομιλία',
+  'menu.addToChatFailed': 'Δεν ήταν δυνατή η προσθήκη του αρχείου. Επιστρέψτε στη συνομιλία και δοκιμάστε ξανά.',
   'section.files': 'Αρχεία και φάκελοι',
   'section.subagents': 'Υποπράκτορες',
   'section.sessions': 'Συνεδρίες',
@@ -74,6 +80,8 @@ export const el = {
 
 /** French dictionary, checked against the English keys. */
 export const fr = {
+  'menu.addToChat': 'Ajouter au chat',
+  'menu.addToChatFailed': 'Impossible d’ajouter le fichier. Revenez au chat et réessayez.',
   'section.files': 'Fichiers et dossiers',
   'section.subagents': 'Sous-agents',
   'section.sessions': 'Sessions',

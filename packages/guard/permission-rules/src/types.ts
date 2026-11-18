@@ -7,7 +7,7 @@
  * @module @deepseek-ai/dsh-permission-rules/types
  */
 
-import type { ToolCallId } from '@deepseek-ai/dsh-llm/brand'
+import type { ToolCallId } from '@deepseek-ai/dsh-llm'
 import type { RuleOutcome } from './schema.ts'
 
 /** What produced one `permission/decision` event: an explicit rule, or the always-on destructive-command classifier. */

@@ -11,7 +11,7 @@
 - text: 只回复 MESSAGES_WEB_READY，不调用工具。 {{clock}}
 - button "Copy"
 - status: Completed
-- button "Completed in {{duration}}" [disabled]
+- button "Completed in {{duration}}"
 - paragraph: MESSAGES_WEB_READY
 - button "Copy"
 - button "Good response"

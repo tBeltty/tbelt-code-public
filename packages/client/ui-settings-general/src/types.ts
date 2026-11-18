@@ -2,10 +2,14 @@
 
 /** Classified failure copy selected by the Web locale without exposing raw updater diagnostics. */
 export type DesktopUpdateFailureKind =
+  | 'configuration'
   | 'check'
   | 'check-network'
   | 'download'
   | 'download-network'
+  | 'download-space'
+  | 'download-permission'
+  | 'download-busy'
   | 'install'
   | 'install-network'
   | 'stop-failed'

@@ -1,20 +1,15 @@
 /**
  * Authentication and redirect-rejecting transport shared by the Search and
- * Fetch API providers in this package. Credential resolution and its readiness
- * check, the dispatch call, and the cancellation helpers deliberately repeat
- * `dsh-web-search-deepseek`, so neither plugin depends on the other; the
- * `jscpd:ignore` regions mark those repeats
+ * Fetch API providers in this package
  * ([rationale](../../../../.agents/notes/implemented/feature/2026-10-15-deepseek-search-fetch-api.md)).
  * @module @deepseek-ai/dsh-web-deepseek-api/transport
  */
-import type { Context } from '@deepseek-ai/cordis'
-import { credentialRef, type CredentialRef } from '@deepseek-ai/dsh-credentials'
-import { launchEnvironmentOf } from '@deepseek-ai/dsh-launch-environment'
+import type { CredentialRef } from '@deepseek-ai/dsh-credentials'
 import { WebError } from '@deepseek-ai/dsh-web'
 
 const USER_AGENT = 'deepseek-harness/0.0.1'
 
-/** Authentication and endpoint values resolved once for an operation. */
+/** Authentication values resolved once for an operation. */
 export interface DeepSeekWebAuth {
   /** Literal API key; takes precedence over the credential resolver. */
   apiKey?: string
@@ -22,6 +17,20 @@ export interface DeepSeekWebAuth {
   resolveApiKey?: () => Promise<string | undefined>
   /** Credential reference named by missing-key diagnostics. */
   apiKeyEnv?: CredentialRef
+  /** Model-facing diagnostic thrown when no API key resolves; the generic one names {@link apiKeyEnv}. */
+  missingKeyMessage?: string
+  /**
+   * The mounted API-key model route the operation depends on, whose settings do not resolve. The operation fails with
+   * `WEB_PROVIDER_MISCONFIGURED` and {@link DeepSeekWebInvalidRoute.message} before resolving its credential or
+   * sending anything.
+   */
+  invalidRoute?: DeepSeekWebInvalidRoute
+}
+
+/** A model route whose settings do not resolve. */
+interface DeepSeekWebInvalidRoute {
+  /** Model-facing diagnostic naming the route and its recoveries. */
+  message: string
 }
 
 /** User-owned endpoint settings named by dispatch failures. */
@@ -30,23 +39,25 @@ export interface DeepSeekWebGuidance {
   subject: 'Search' | 'Fetch'
   /** Plugin configuration namespace. */
   plugin: string
-  /** Endpoint configuration field. */
-  field: string
-  /** Local settings label. */
-  label: string
-  /** Built-in settings page title. */
-  page: string
+  /** Whether the endpoint is the capability's own base URL rather than one derived from a model route. */
+  custom: boolean
+  /** Configuration field of the capability's own base URL. */
+  baseURLField: string
+  /** Configuration field of the capability's own credential reference. */
+  apiKeyEnvField: string
 }
 
 /** One fully resolved web API request. */
 interface DeepSeekWebRequest<T> {
-  /** Absolute dispatch URL. */
-  endpoint: string
+  /** API base the API key is sent to, including its path prefix. */
+  baseURL: string
+  /** Operation path appended to the base of the credential sent, such as `/search`. */
+  path: string
   /** JSON request body. */
   body: object
   /** Protocol headers without credentials. */
   headers?: Readonly<Record<string, string>>
-  /** Additional API-key headers; not applied to account tokens. */
+  /** Additional API-key headers. */
   apiKeyHeaders?: (key: string) => Readonly<Record<string, string>>
   /** Validate and project the response. */
   decode: (payload: unknown) => T
@@ -54,54 +65,9 @@ interface DeepSeekWebRequest<T> {
   guidance: DeepSeekWebGuidance
   /** Record model input before dispatch; a throw prevents dispatch. */
   recordRequest?: (endpoint: string) => void
+  /** Wait for permission to send after credentials resolve; a rejection prevents dispatch. */
+  waitToSend?: (signal?: AbortSignal) => Promise<void>
 }
-
-/* jscpd:ignore-start */
-/**
- * Resolve credential sources for one operation without retaining secret values.
- * @param ctx - Provider context with request routing and credential services.
- * @param config - Literal key and credential reference from the settings snapshot.
- * @returns Authentication sources for one operation.
- */
-export function deepSeekWebAuth(ctx: Context, config: { apiKey: string | undefined; apiKeyEnv: string }): DeepSeekWebAuth {
-  const apiKeyEnv = credentialRef(config.apiKeyEnv)
-  const literalApiKey = config.apiKey !== undefined && config.apiKey.length > 0
-    ? config.apiKey
-    : undefined
-  return {
-    ...literalApiKey === undefined ? {} : { apiKey: literalApiKey },
-    resolveApiKey: async () => {
-      const credentials = ctx.get('credentials')
-      if (credentials !== undefined) return (await credentials.resolve(apiKeyEnv))?.value
-      // Without the seam the environment is the whole credential plane.
-      const ambient = launchEnvironmentOf(ctx).get(apiKeyEnv)
-      return ambient !== undefined && ambient.value.length > 0 ? ambient.value : undefined
-    },
-    apiKeyEnv,
-  }
-}
-
-/**
- * Whether an operation has an API key. Only presence is checked: the key's value is not read and the
- * endpoint is not contacted, so a wrong key still counts as configured.
- * @param ctx - Provider context with the credential and environment planes.
- * @param config - Literal key and credential reference from the settings snapshot.
- * @returns Whether an API key is available to that operation.
- */
-export async function deepSeekWebCredentialReady(
-  ctx: Context, config: { apiKey: string | undefined; apiKeyEnv: string },
-): Promise<boolean> {
-  if (config.apiKey !== undefined && config.apiKey.length > 0) return true
-  const apiKeyEnv = credentialRef(config.apiKeyEnv)
-  const credentials = ctx.get('credentials')
-  if (credentials === undefined) {
-    const ambient = launchEnvironmentOf(ctx).get(apiKeyEnv)
-    return ambient !== undefined && ambient.value.length > 0
-  }
-  try { return (await credentials.describe(apiKeyEnv)).configured }
-  catch (_unreadableStore) { return false /* A store that cannot be read supplies no key to the operation either. */ }
-}
-/* jscpd:ignore-end */
 
 /**
  * Check whether an authentication source exists; does not resolve credentials.
@@ -127,8 +93,10 @@ export function invalidResponse(): WebError {
   return new WebError('DeepSeek returned an invalid response body', 'WEB_PROVIDER_ERROR')
 }
 
-/** Authentication headers for one operation. */
+/** Authentication headers and endpoint for one operation. */
 interface SearchAuth {
+  /** Absolute dispatch URL under the base of the credential. */
+  readonly endpoint: string
   /** Headers carrying the credential. */
   readonly headers: Readonly<Record<string, string>>
 }
@@ -142,8 +110,10 @@ interface SearchAuth {
 export async function dispatchDeepSeekWeb<T>(
   options: DeepSeekWebAuth, request: DeepSeekWebRequest<T>, signal?: AbortSignal,
 ): Promise<T> {
-  const { endpoint, body, decode, recordRequest, guidance } = request
+  const { body, decode, recordRequest, guidance } = request
   const auth = await authHeaders(options, request, signal)
+  const { endpoint } = auth
+  await request.waitToSend?.(signal)
   throwIfSearchAborted(signal)
   recordRequest?.(endpoint)
   throwIfSearchAborted(signal)
@@ -172,11 +142,11 @@ export async function dispatchDeepSeekWeb<T>(
       error,
     )
   }
-  /* jscpd:ignore-end */
 
   if (!response.ok) {
     const status = response.status
     let message = `DeepSeek API error (HTTP ${status})`
+    let aborted: WebError | undefined
     try {
       const parsed: unknown = await response.json()
       if (isRecord(parsed)) {
@@ -188,13 +158,15 @@ export async function dispatchDeepSeekWeb<T>(
       // An abort fired mid-body must surface as WEB_ABORTED, not be swallowed
       // into a generic HTTP-error message — cancellation is not a provider
       // error (the seam's cancellation contract).
-      if (signal?.aborted === true || isAbortError(error)) throw searchAborted(signal, error)
+      if (signal?.aborted === true || isAbortError(error)) aborted = searchAborted(signal, error)
       // Otherwise: the HTTP status is already captured in `message` above; a
       // malformed/non-JSON error body (normal for gateway 5xx/429s) can only
       // cost a richer provider message, never the real error.
     }
+    if (aborted !== undefined) throw aborted
     throw searchEndpointError(guidance, endpoint, message)
   }
+  /* jscpd:ignore-end */
 
   try {
     const payload: unknown = await response.json()
@@ -211,7 +183,7 @@ export async function dispatchDeepSeekWeb<T>(
 
 /**
  * Add endpoint recovery instructions to failures that occur after request dispatch begins.
- * @param options - the plugin, settings field, and settings page the guidance names.
+ * @param options - the plugin and settings fields the guidance names.
  * @param endpoint - the dispatched endpoint.
  * @param message - the failure description.
  * @param cause - the underlying failure, when one exists.
@@ -220,12 +192,18 @@ export async function dispatchDeepSeekWeb<T>(
 function searchEndpointError(
   options: DeepSeekWebGuidance, endpoint: string, message: string, cause?: unknown,
 ): WebError {
+  const { subject, plugin } = options
+  const baseURLField = `${plugin}.${options.baseURLField}`, apiKeyEnvField = `${plugin}.${options.apiKeyEnvField}`
+  const recovery = options.custom
+    ? `${subject} sends the API key under ${apiKeyEnvField} to ${baseURLField}. If that endpoint is not intended, guide the`
+      + ` user to correct ${baseURLField} and ${apiKeyEnvField}, or to remove both so ${subject} uses the DeepSeek`
+      + ' credential of the conversation.'
+    : `${subject} derives this endpoint from the base URL of the DeepSeek model provider whose credential it uses. If that`
+      + ' endpoint is not intended, guide the user to check that provider\'s base URL on the Models page, or to set'
+      + ` ${baseURLField} to a trusted DeepSeek endpoint and ${apiKeyEnvField} to the credential reference of its API key.`
   return new WebError(
-    `${message}\n\nThe web request used endpoint ${JSON.stringify(endpoint)}. `
-    + `${options.subject} endpoint configuration is separate from chat. If that endpoint is not intended, `
-    + `guide the user to Plugins > Built-in plugin settings > ${options.page}, where they can `
-    + `change and save ${options.label}. If that settings page is unavailable, the user can set `
-    + `${options.plugin}.${options.field} to a trusted DeepSeek endpoint. Only the user should choose or change the endpoint.`,
+    `${message}\n\nThe web request used endpoint ${JSON.stringify(endpoint)}. ${recovery} Only the user should choose or`
+    + ' change the endpoint.',
     'WEB_PROVIDER_ERROR',
     cause === undefined ? undefined : { cause },
   )
@@ -236,37 +214,44 @@ function searchEndpointError(
  * @param options - the caller's snapshot, so the credential and the endpoint it is sent to come from one section.
  * @param request - the resolved request.
  * @param signal - abort signal for the surrounding operation.
- * @returns the API-key headers.
+ * @returns the API-key headers and the request's endpoint.
  */
 async function authHeaders(
   options: DeepSeekWebAuth, request: DeepSeekWebRequest<unknown>, signal?: AbortSignal,
 ): Promise<SearchAuth> {
-  const apiKey = await resolveApiKey(options, request.guidance.plugin, signal)
-  return { headers: {
+  if (options.invalidRoute !== undefined) throw routeMisconfigured(options.invalidRoute)
+  const apiKey = await resolveApiKey(options, signal)
+  return { endpoint: joinPath(request.baseURL, request.path), headers: {
     ...request.apiKeyHeaders?.(apiKey),
     'authorization': `Bearer ${apiKey}`,
   } }
+}
+
+/** The failure of an operation that would use a model route whose settings do not resolve. */
+function routeMisconfigured(route: DeepSeekWebInvalidRoute): WebError {
+  return new WebError(route.message, 'WEB_PROVIDER_MISCONFIGURED')
+}
+
+/** Append an operation path to an API base, without doubling a trailing slash. */
+function joinPath(baseURL: string, path: string): string {
+  return `${baseURL.replace(/\/+$/u, '')}${path}`
 }
 
 /* jscpd:ignore-start */
 /**
  * Resolve one operation's API key without retaining it on the provider.
  * @param options - the caller's snapshot, so the key and the endpoint it is sent to come from one section.
- * @param plugin - configuration namespace named by the missing-key diagnostic.
  * @param signal - abort signal for the surrounding operation.
  * @returns the resolved key.
  */
-async function resolveApiKey(options: DeepSeekWebAuth, plugin: string, signal?: AbortSignal): Promise<string> {
+async function resolveApiKey(options: DeepSeekWebAuth, signal?: AbortSignal): Promise<string> {
   throwIfSearchAborted(signal)
   if (options.apiKey !== undefined && options.apiKey.length > 0) return options.apiKey
   const { resolveApiKey } = options
   const resolved = resolveApiKey === undefined ? undefined : await resolveCredential(resolveApiKey, signal)
   if (resolved !== undefined && resolved.length > 0) return resolved
-  const ref = options.apiKeyEnv ?? 'DEEPSEEK_API_KEY'
   throw new WebError(
-    `DeepSeek web access has no API key for "${ref}"; store it through the credentials service`
-      + ' (the web Models page writes it), export it in the launching environment, or set a literal'
-      + ` "apiKey" in the ${plugin} config`,
+    options.missingKeyMessage ?? `DeepSeek web access has no API key for "${options.apiKeyEnv ?? 'DEEPSEEK_API_KEY'}"`,
     'WEB_PROVIDER_CREDENTIAL_MISSING',
   )
 }
@@ -302,7 +287,12 @@ async function resolveCredential(
  */
 function abortable<T>(operation: Promise<T>, signal?: AbortSignal): Promise<T> {
   if (signal === undefined) return operation
-  if (signal.aborted) return Promise.reject(searchAborted(signal))
+  if (signal.aborted) {
+    // The operation began before this check and can still reject: a credential read that cancels its caller, then
+    // fails. Observing it keeps that rejection from being unhandled.
+    void operation.catch(() => {})
+    return Promise.reject(searchAborted(signal))
+  }
   return new Promise<T>((resolve, reject) => {
     const onAbort = (): void => { reject(searchAborted(signal)) }
     signal.addEventListener('abort', onAbort, { once: true })
@@ -313,7 +303,7 @@ function abortable<T>(operation: Promise<T>, signal?: AbortSignal): Promise<T> {
       },
       (error: unknown) => {
         signal.removeEventListener('abort', onAbort)
-        reject(new Error(String(error).replace(/^Error: /u, ''), { cause: error }))
+        reject(error instanceof Error ? error : new Error(String(error), { cause: error }))
       },
     )
   })
@@ -324,8 +314,13 @@ function throwIfSearchAborted(signal?: AbortSignal): void {
   if (signal?.aborted === true) throw searchAborted(signal)
 }
 
-/** Build the provider's stable cancellation error while retaining the caller's reason. */
-function searchAborted(signal?: AbortSignal, fallback?: unknown): WebError {
+/**
+ * Build the provider's stable cancellation error while retaining the caller's reason.
+ * @param signal - the aborted caller signal; its reason becomes the cause.
+ * @param fallback - the cause when the signal has not aborted, such as a fetch `AbortError`.
+ * @returns a `WEB_ABORTED` error.
+ */
+export function searchAborted(signal?: AbortSignal, fallback?: unknown): WebError {
   return new WebError('DeepSeek web request aborted', 'WEB_ABORTED', {
     cause: signal?.aborted === true ? signal.reason : fallback,
   })

@@ -39,6 +39,8 @@ interface ModelRowProps {
   maxTokens: CapacityInput
   /** Levels the row's `reasoningEfforts` may declare; absent or empty shows no reasoning control. */
   reasoningLevels?: readonly string[] | undefined
+  /** Whether the route's protocol accepts only {@link reasoningLevels}, each sent under its own name. */
+  reasoningLevelsOnly?: boolean | undefined
   /** List-price inputs; absent on an adapter whose models take no configured price. */
   pricing?: Readonly<Record<PriceField, CapacityInput>> | undefined
   onFieldChange: (field: 'id' | 'name', value: string | undefined) => void
@@ -208,7 +210,8 @@ export function ModelRow(props: ModelRowProps): ReactNode {
               {props.reasoningLevels !== undefined && props.reasoningLevels.length > 0
                 ? (
                   <ModelReasoningEfforts
-                    model={model} levels={props.reasoningLevels} position={position} disabled={disabled} t={t} onChange={props.onChange}
+                    model={model} levels={props.reasoningLevels} levelsOnly={props.reasoningLevelsOnly === true}
+                    position={position} disabled={disabled} t={t} onChange={props.onChange}
                   />
                 )
                 : null}

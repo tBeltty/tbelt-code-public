@@ -9,13 +9,14 @@ import { readFile } from 'node:fs/promises'
 import { fileURLToPath } from 'node:url'
 import type { Browser, Locator, Page } from 'playwright'
 import { chromium } from 'playwright'
-import { afterAll, beforeAll, describe, expect, it, onTestFailed } from 'vitest'
+import { HIDDEN_BUNDLES } from '@deepseek-ai/dsh-official-bundles'
+import { afterAll, beforeAll, describe, expect, it, onTestFailed, onTestFinished } from 'vitest'
 import { join } from 'node:path'
 import {
   assertFixtureInventory, captureStableAria, compareOrRefreshGolden,
   launchWebScaffold, watchConsole, webSnapshotMode, type WebScaffold,
 } from './scaffold.ts'
-import { EN_BROWSER_LOCALE, saveFailureShot } from './support.ts'
+import { EN_BROWSER_LOCALE, openSettings, saveFailureShot } from './support.ts'
 
 const SNAPSHOT_DIR = fileURLToPath(new URL('./expected/plugin-config', import.meta.url))
 const OFFICIAL_EXPECTED = join(SNAPSHOT_DIR, 'official.expected.md')
@@ -23,6 +24,7 @@ const ROW_EXPECTED = join(SNAPSHOT_DIR, 'row.expected.md')
 const BUNDLE_EXPECTED = join(SNAPSHOT_DIR, 'bundle.expected.md')
 const FIXTURE_PLUGINS = fileURLToPath(new URL('./fixtures/plugins', import.meta.url))
 const MODE = webSnapshotMode()
+const UNUSED_KEY_ENV = 'DSH_PLUGIN_CONFIG_E2E_UNUSED_KEY'
 
 describe('web e2e: plugin configuration pages', () => {
   let scaffold: WebScaffold
@@ -33,9 +35,11 @@ describe('web e2e: plugin configuration pages', () => {
   beforeAll(async () => {
     // The live-client fixture is a bundle with a browser half; switched on
     // below, that half registers its row's configuration into the page.
+    // Legacy Messages search names an unset credential so the goldens show the
+    // unconfigured key whatever keys the host environment carries.
     scaffold = await launchWebScaffold({
       extraOverlayPath: fileURLToPath(new URL('./pin-browse-picker.overlay.yml', import.meta.url)),
-      deepSeekSearch: { apiKeyEnv: 'DSH_PLUGIN_CONFIG_E2E_UNUSED_KEY' },
+      deepSeekSearch: { apiKeyEnv: UNUSED_KEY_ENV },
       profile: { packages: [{ dir: join(FIXTURE_PLUGINS, 'fixture-live-client') }] },
     })
     browser = await chromium.launch()
@@ -112,12 +116,9 @@ describe('web e2e: plugin configuration pages', () => {
     // The More list omits the shipped bundles whose own rows do not run (the visibility rule lives in
     // ui-plugin-manager), so it holds fewer cards than the installed optional-bundle list.
     const bundles = await scaffold.ctx.pluginManager.listBundles()
-    const hiddenBundles = new Set([
-      '@deepseek-ai/dsh-experimental-terminal-bundle',
-      '@deepseek-ai/dsh-experimental-liveshare',
-    ])
     expect(await panel.locator('[data-plugin-group="more"] [data-plugin-package]').count())
-      .toBe(bundles.filter(bundle => !hiddenBundles.has(bundle.name)
+      .toBe(bundles.filter(bundle => !HIDDEN_BUNDLES.has(bundle.name)
+        && bundle.name !== '@deepseek-ai/dsh-experimental-liveshare'
         && bundle.official && (bundle.listedByDefault !== false || bundle.enabled || bundle.installed)).length)
     expect(await basic.count()).toBe(0)
     expect(await extensions.count()).toBe(0)
@@ -448,6 +449,46 @@ describe('web e2e: plugin configuration pages', () => {
     expect(tripwire.warnings).toEqual([])
     await assertFixtureInventory(SNAPSHOT_DIR, ['bundle.expected.md', 'official.expected.md', 'row.expected.md', 'subagent.expected.md', 'web-search.expected.md'])
   })
+})
 
+describe('web e2e: a community plugin settings page', () => {
+  it('shows a settings.section entry in Settings and on its bundle row', async () => {
+    const scaffold = await launchWebScaffold({
+      profile: { packages: [{ dir: join(FIXTURE_PLUGINS, 'fixture-settings-section') }] },
+    })
+    onTestFinished(() => scaffold.close())
+    const browser = await chromium.launch()
+    onTestFinished(() => browser.close())
+    const page = await browser.newPage({ viewport: { width: 1680, height: 1000 }, locale: EN_BROWSER_LOCALE })
+    const console = watchConsole(page)
+    onTestFailed(() => saveFailureShot(page, 'web-e2e-plugin-config-settings-section'))
+    await page.goto(scaffold.authenticatedUrl, { waitUntil: 'load' })
+    await page.getByRole('navigation', { name: 'Global panels' }).getByRole('button', { name: 'Plugins', exact: true }).click()
+    const panel = page.locator('[data-plugin-panel]')
+    await panel.getByRole('button', { name: 'View @fixture/settings-section', exact: true }).click({ timeout: 20_000 })
+    const row = panel.locator('[data-plugin-row]', { hasText: 'fixture-settings-section' })
+    await row.waitFor({ timeout: 10_000 })
+    const configure = panel.getByRole('button', { name: 'Configure @fixture/settings-section' })
+    expect(await configure.count()).toBe(0)
 
+    // Switched on, the browser half mounts and its settings page claims the row.
+    await panel.getByRole('switch', { name: 'Enable @fixture/settings-section' }).click()
+    await configure.waitFor({ timeout: 30_000 })
+    await configure.click()
+    const rowPage = panel.locator('[data-plugin-row-detail="@fixture/settings-section#fixture-settings-section"]')
+    await rowPage.waitFor({ timeout: 10_000 })
+    await rowPage.getByRole('region', { name: 'Fixture settings', exact: true })
+      .getByText('Settings content from the fixture', { exact: true }).waitFor({ timeout: 10_000 })
+
+    // Settings keeps the same page in its navigation.
+    await openSettings(page)
+    const dialog = page.getByRole('dialog', { name: 'Settings', exact: true })
+    await dialog.getByRole('navigation').getByRole('button', { name: 'Fixture settings', exact: true }).click()
+    await dialog.getByRole('region', { name: 'Fixture settings', exact: true })
+      .getByText('Settings content from the fixture', { exact: true }).waitFor({ timeout: 10_000 })
+    await page.keyboard.press('Escape')
+    await expect.poll(() => dialog.count(), { timeout: 5_000 }).toBe(0)
+    expect(console.pageErrors).toEqual([])
+    expect(console.warnings).toEqual([])
+  }, 90_000)
 })

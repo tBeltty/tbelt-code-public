@@ -64,4 +64,15 @@ describe('web-search-deepseek settings section', () => {
     await bench.ctx.fiber.dispose()
   })
 
+  it('lists the provider with its description for the Search menu', async () => {
+    const bench = await boot()
+    const [listed] = bench.ctx.web.listProviders().search
+    expect(listed).toMatchObject({ id: 'deepseek-official' })
+    expect(listed).not.toHaveProperty('title')
+    expect(listed?.description).toMatchObject({
+      en: 'Slower, and every search uses extra model tokens. Requires a DeepSeek API key.',
+      es: 'Más lenta, y cada búsqueda consume tokens adicionales del modelo. Requiere una clave de API de DeepSeek.',
+    })
+    await bench.ctx.fiber.dispose()
+  })
 })

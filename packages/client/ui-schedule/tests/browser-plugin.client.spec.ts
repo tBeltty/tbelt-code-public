@@ -28,6 +28,7 @@ import { SessionScheduleHover } from '../src/client/SessionScheduleHover.tsx'
 import { SessionScheduleMark } from '../src/client/SessionScheduleMark.tsx'
 import { ScheduleTurnCard, type ScheduleTurnCardInjected } from '../src/client/ScheduleTurnCard.tsx'
 import { en, NS, es } from '../src/client/locales.ts'
+import * as managerLocales from '../src/client/task-manager-locales.ts'
 
 const Empty = () => null
 
@@ -425,12 +426,67 @@ describe('ui-schedule browser half', () => {
       expect(chip.taskBindings).toBe(body.taskBindings)
       expect(chip.hooks.catalog).toBe(body.hooks.catalog)
       const panel = injectedFace(ctx.slots.entries('main')[0]!, undefined as never) as TaskManagerInjected
-      panel.onNewTask()
-      expect(startSession).toHaveBeenCalledOnce()
+      expect(Object.keys(managerLocales).sort()).toEqual(['el', 'en', 'es', 'fr'])
+      for (const [language, dictionary] of Object.entries(managerLocales)) {
+        expect(dictionary['host.createPrompt']).not.toContain('\n')
+        ctx.locale.setLocale(language)
+        panel.onNewTask()
+        expect(startSession).toHaveBeenLastCalledWith(undefined, {
+          prompt: dictionary['host.createPrompt'], whenDraftExists: 'append',
+        })
+      }
+      expect(startSession).toHaveBeenCalledTimes(4)
     } finally {
       await fiber.dispose()
       owner()
       await ctx.fiber.dispose()
+    }
+  })
+
+  it('starts each recommendation in a new conversation with its single-line request in every language', async () => {
+    const sidebar = sidebarStubs()
+    const ctx = await baseContext(undefined, sidebar)
+    const owner = ctx.slots.register({
+      name: 'root',
+      children: {
+        'sidebar.right.pane.tab': { kind: 'keyed', scope: 'session' },
+        'sidebar.right.pane.tab.title': { kind: 'keyed', scope: 'session' },
+        main: { kind: 'keyed', scope: 'root' },
+      },
+    } as never, Empty)
+    const startSession = vi.spyOn(ctx.uiWorkspace, 'startSession')
+    const fiber = ctx.plugin({ inject: [...inject], apply })
+    await fiber.await()
+    try {
+      const panel = injectedFace(ctx.slots.entries('main')[0]!, undefined as never) as TaskManagerInjected
+      for (const dictionary of Object.values(managerLocales)) {
+        const prompts = Object.entries(dictionary).filter(([key]) => key.startsWith('recommend.') && key.endsWith('.prompt'))
+        expect(prompts).toHaveLength(8)
+        for (const [, prompt] of prompts) {
+          expect(prompt).not.toContain('\n')
+          panel.onUseRecommendation(prompt)
+          expect(startSession).toHaveBeenLastCalledWith(undefined, { prompt, whenDraftExists: 'append' })
+        }
+      }
+      expect(startSession).toHaveBeenCalledTimes(32)
+    } finally {
+      await fiber.dispose()
+      owner()
+      await ctx.fiber.dispose()
+    }
+  })
+
+  it('states each recommendation\'s shown run time in its request in every language', () => {
+    for (const dictionary of Object.values(managerLocales)) {
+      const schedules = Object.entries(dictionary).filter(([key]) => key.startsWith('recommend.') && key.endsWith('.schedule'))
+      expect(schedules).toHaveLength(8)
+      for (const [key, schedule] of schedules) {
+        const times = schedule.match(/\d{1,2}:\d{2}/g)
+        expect(times).toHaveLength(1)
+        // A digit boundary keeps 0:00 from matching inside 20:00.
+        expect(dictionary[key.replace(/schedule$/, 'prompt') as keyof typeof dictionary])
+          .toMatch(new RegExp(`(?<!\\d)${times![0]}(?!\\d)`))
+      }
     }
   })
 

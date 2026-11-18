@@ -4,6 +4,26 @@ Notable changes to tBelt Code, newest first. The format follows [Keep a Changelo
 
 ## [Unreleased]
 
+## [0.2.2-rc.4.20261118] - 2026-11-18
+
+### Added
+
+- When the agent hands work to subagents, each one has a name, and the agent and the task list refer to them by that name.
+- The agent can hand a task to a helper that already knows the conversation so far, and the conversation shows that handoff on its own row.
+- In a conversation, the right-click menu on a file link can add that file to the message you are writing.
+- On the automation page, the app suggests a weekly review task that covers only your own work.
+- With the optional chat import plugin switched on, you can bring in the chats you exported from a chat website as conversations, once you have saved that service's API key under Models.
+
+### Changed
+
+- The agent no longer has to read a file before it writes or edits it.
+- A single web search can run up to 10 queries and returns 10 sources by default.
+- When a conversation holds more than 50 images, the oldest ones are left out of the next request to the model.
+- Agent teams are off in new conversations, and you turn them on for one conversation from its menu.
+- When you open the plugins list to manage Git worktrees, they sit in the same entry as change requests instead of a card of their own.
+- Export dialogs stay open when you switch to another conversation.
+- Lists of background jobs, subagents and shared team tasks show the first five rows and fold the rest, with running ones first.
+
 ## [0.2.2-alpha.2.20261117.2] - 2026-11-17
 
 ### Added
@@ -438,7 +458,8 @@ Notable changes to tBelt Code, newest first. The format follows [Keep a Changelo
 - Downloads no longer return an older installer.
 - A key that ran out of credit or hit its spending limit is reported as a quota problem instead of an invalid API key.
 
-[Unreleased]: https://github.com/tBeltty/tbelt-code-public/compare/v0.2.2-alpha.2.20261117.2...HEAD
+[Unreleased]: https://github.com/tBeltty/tbelt-code-public/compare/v0.2.2-rc.4.20261118...HEAD
+[0.2.2-rc.4.20261118]: https://github.com/tBeltty/tbelt-code-public/releases/tag/v0.2.2-rc.4.20261118
 [0.2.2-alpha.2.20261117.2]: https://github.com/tBeltty/tbelt-code-public/releases/tag/v0.2.2-alpha.2.20261117.2
 [0.2.2-alpha.2.20261117]: https://github.com/tBeltty/tbelt-code-public/releases/tag/v0.2.2-alpha.2.20261117
 [0.2.2-alpha.2.20261106]: https://github.com/tBeltty/tbelt-code-public/releases/tag/v0.2.2-alpha.2.20261106

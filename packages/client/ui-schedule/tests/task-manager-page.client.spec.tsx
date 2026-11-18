@@ -13,6 +13,7 @@ import type {
 } from '@deepseek-ai/dsh-schedule/client'
 import type { SessionId } from '@deepseek-ai/dsh-session/types'
 import { TaskManagerPage, type TaskManagerPageProps } from '../src/client/TaskManagerPage.tsx'
+import { createEditorStore } from '../src/client/editor-store.ts'
 import { TaskManagerIcon } from '../src/client/TaskManagerIcon.tsx'
 import type { HostTaskActions } from '../src/client/TaskDetail.tsx'
 import { createCatalogSource, type CatalogDeleteOutcome, type CatalogSnapshot } from '../src/client/catalog-source.ts'
@@ -153,10 +154,12 @@ function mount(
   overrides: Partial<TaskManagerPageProps> = {},
   options: { startAtAll?: boolean } = {},
 ) {
+  const editor = createEditorStore().create()
   let snapshot: CatalogSnapshot<Entry> = {
     records, status: 'ready', deleting: [], settled: true, readRequest: 0, readSettled: 0, ...initial,
   }
   const props: TaskManagerPageProps = {
+    useStore: bindSnapshotSelector(editor), actions: editor.actions,
     useCatalog: select => select(snapshot),
     useSessions: select => select(sessions),
     useWorkspaces: select => select(workspaces),
@@ -169,6 +172,7 @@ function mount(
     onDelete: vi.fn<TaskManagerPageProps['onDelete']>(async () => 'deleted'),
     onRetry: vi.fn(async () => {}),
     onNewTask: vi.fn(),
+    onUseRecommendation: vi.fn(),
     onClearEnded: vi.fn(async () => {}),
     onCreateTask: vi.fn<TaskManagerPageProps['onCreateTask']>(async () => ({ created: at })),
     onOpenSession: vi.fn(),
@@ -301,9 +305,9 @@ function deliveryText(scheduledAt: string, dictionary: Dictionary): string {
   return formatScheduleNextRun(scheduledAt, dictionary['time.locale'], 'UTC')
 }
 
-/** The detail's read-only instruction text, or undefined when the view shows none. */
-function readonlyPrompt(root: HTMLElement): string | null | undefined {
-  return root.querySelector<HTMLElement>(`.${css.readonlyPrompt}`)?.textContent
+/** The editor's instruction text, or undefined while delivery records are shown. */
+function editorPrompt(root: HTMLElement): string | undefined {
+  return root.querySelector<HTMLTextAreaElement>('textarea')?.value
 }
 
 /**
@@ -326,7 +330,7 @@ function expectDetailOrder(detail: HTMLElement, dictionary: Dictionary, name: st
   expect(body.firstElementChild).toBe(heading)
   expect(heading?.contains(title)).toBe(true)
   expect(follows(title, nextRun)).toBe(true)
-  expect(follows(nextRun, body.querySelector(`.${css.readonlyPrompt}`)!)).toBe(true)
+  expect(follows(nextRun, body.querySelector('textarea')!)).toBe(true)
 }
 
 /** Open the detail's overflow menu and return it. */
@@ -348,9 +352,8 @@ function openDelete(dictionary: Dictionary = en): HTMLElement {
 }
 
 /** Open one task's detail and enter its edit form. */
-function openEditor(name: string, dictionary: Dictionary = en): void {
+function openEditor(name: string): void {
   fireEvent.click(screen.getByRole('button', { name }))
-  fireEvent.click(screen.getByRole('button', { name: dictionary['host.edit'] }))
 }
 
 // The triggers are scoped to the rule card: an open panel carries the row's own
@@ -502,10 +505,10 @@ describe('Task manager catalog', () => {
     expect(screen.queryByRole('dialog')).toBeNull()
     fireEvent.click(method)
     fireEvent.click(screen.getByRole('menuitem', { name: en['host.manualCreate'] }))
-    const dialog = screen.getByRole('dialog', { name: en['host.manualCreate'] })
+    const dialog = screen.getByRole('complementary')
     expect(h.props.onNewTask).toHaveBeenCalledTimes(2)
     fireEvent.click(within(dialog).getByRole('button', { name: en['host.closeCreate'] }))
-    expect(screen.queryByRole('dialog')).toBeNull()
+    expect(screen.queryByRole('complementary')).toBeNull()
     expect(h.props.onCreateTask).not.toHaveBeenCalled()
   })
 
@@ -573,18 +576,19 @@ describe('Task manager catalog', () => {
     const detail = screen.getByRole('complementary')
     // The detail names the task in its own heading, not through the list row's label.
     expect(within(detail).getByRole('heading', { level: 2 }).textContent).toBe('Release review')
-    // The read-only view still shows the complete stored instruction.
-    expect(readonlyPrompt(detail)).toBe(named.prompt)
+    // The editable field still shows the complete stored instruction.
+    expect(editorPrompt(detail)).toBe(named.prompt)
   })
 
-  it('uses shared exact frequency units in the list and selected detail', () => {
+  it('uses exact frequency units in the list and matching editable controls in the detail', () => {
     const hourly = { ...every, rrule: 'DTSTART;TZID=UTC:20261001T093000\nRRULE:FREQ=HOURLY;INTERVAL=1' }
     const h = mount({ records: [hourly] })
     expect(screen.getByText('Every 1 hour')).toBeDefined()
     fireEvent.click(screen.getByRole('button', { name: 'Check metrics' }))
-    expect(within(screen.getByRole('complementary')).getByText('Every 1 hour')).toBeDefined()
+    expect(within(screen.getByRole('complementary')).getByRole('button', { name: `${en['rule.repeat']} ${en['rule.everyHours']}` })).toBeDefined()
+    expect(within(screen.getByRole('complementary')).getByRole('spinbutton', { name: en['host.interval'] }).getAttribute('value')).toBe('1')
     h.view.rerender(<TaskManagerPage {...h.props} t={makeTranslate(es)} />)
-    expect(within(screen.getByRole('complementary')).getByText(frequencyText(hourly, es))).toBeDefined()
+    expect(within(screen.getByRole('complementary')).getByRole('button', { name: `${es['rule.repeat']} ${es['rule.everyHours']}` })).toBeDefined()
   })
 
   it('describes row frequency and next time without exposing its Session', () => {
@@ -703,6 +707,11 @@ describe('Task manager catalog', () => {
     expect(taskNames()).toEqual([])
     fireEvent.change(input, { target: { value: 'numbers' } })
     expect(taskNames()).toEqual(['Quarterly report'])
+    // Names match fuzzily; the long instruction matches only contiguous text.
+    fireEvent.change(input, { target: { value: 'qrtly' } })
+    expect(taskNames()).toEqual(['Quarterly report'])
+    fireEvent.change(input, { target: { value: 'sndnum' } })
+    expect(taskNames()).toEqual([])
   })
 
   it('combines search with the status filter and keeps both behind the empty state action', () => {
@@ -718,10 +727,10 @@ describe('Task manager catalog', () => {
     // The empty state's action opens manual creation instead of resetting the
     // filters the reader chose; closing the form leaves both in place.
     fireEvent.click(emptyNewTaskButton())
-    const dialog = screen.getByRole('dialog', { name: en['host.manualCreate'] })
+    const dialog = screen.getByRole('complementary')
     expect(h.props.onNewTask).not.toHaveBeenCalled()
     fireEvent.click(within(dialog).getByRole('button', { name: en['host.closeCreate'] }))
-    expect(screen.queryByRole('dialog')).toBeNull()
+    expect(screen.queryByRole('complementary')).toBeNull()
     expect(taskNames()).toEqual([])
     expect(screen.getByRole<HTMLInputElement>('searchbox').value).toBe('release')
     expect(within(statuses).getByRole('button', { name: en['status.ended'] }).getAttribute('aria-pressed')).toBe('true')
@@ -791,7 +800,8 @@ describe('Task manager catalog', () => {
     expect(dailyRow.textContent).toContain(frequency)
     fireEvent.click(dailyRow)
     const detail = screen.getByRole('complementary', { name: dictionary['detail.label'] })
-    expect(within(detail).getByText(frequency, { exact: true })).toBeDefined()
+    expect(within(detail).getByRole('button', { name: `${dictionary['rule.repeat']} ${dictionary['rule.daily']}` })).toBeDefined()
+    expect(within(detail).getByRole('button', { name: dictionary['timing.time'] }).textContent).toBe('23:00:00')
     expect(within(detail).queryByText(dictionary['frequency.once'], { exact: true })).toBeNull()
   })
 
@@ -828,6 +838,70 @@ describe('Task manager catalog', () => {
     expect(paths?.[17]?.getAttribute('fill')).toBe('var(--dsw-alias-illustration-detail)')
     expect(paths?.[18]?.getAttribute('fill')).toBe('var(--dsw-alias-illustration-inset)')
     expect(emptyNewTaskButton().textContent).toBe(en['empty.action'])
+  })
+
+  const RECOMMENDATION_IDS = ['dailyBrief', 'weeklyReview', 'issueScan', 'pluginCompat', 'topicTracking',
+    'branchCleanup', 'weather', 'workout'] as const
+
+  function recommendations(dictionary: Dictionary = en): HTMLElement | null {
+    return screen.queryByRole('region', { name: dictionary['recommend.heading'] })
+  }
+
+  it('lists the built-in recommendations under the empty Enabled view and prefills each request', () => {
+    const h = mount({ records: [] }, en, {}, { startAtAll: false })
+    const buttons = within(recommendations()!).getAllByRole('button')
+    expect(buttons.map(button => button.getAttribute('aria-label')))
+      .toEqual(RECOMMENDATION_IDS.map(id => en[`recommend.${id}.title`]))
+    for (const [index, id] of RECOMMENDATION_IDS.entries()) {
+      const button = buttons[index]!
+      // The description and the run time are separate references, so a screen reader pauses between them.
+      expect(button.getAttribute('aria-describedby')!.split(' ').map(ref => document.getElementById(ref)?.textContent))
+        .toEqual([en[`recommend.${id}.description`], en[`recommend.${id}.schedule`]])
+      expect(button.querySelectorAll('svg[aria-hidden="true"]')).toHaveLength(3)
+      fireEvent.click(button)
+      expect(h.props.onUseRecommendation).toHaveBeenLastCalledWith(en[`recommend.${id}.prompt`])
+    }
+    expect(h.props.onUseRecommendation).toHaveBeenCalledTimes(RECOMMENDATION_IDS.length)
+    expect(h.props.onNewTask).not.toHaveBeenCalled()
+    expect(emptyNewTaskButton().textContent).toBe(en['empty.action'])
+  })
+
+  it('shows the recommendations under the empty All view in the active language', () => {
+    mount({ records: [] }, es)
+    const section = recommendations(es)!
+    expect(within(section).getByRole('button', { name: es['recommend.weather.title'] })).toBeDefined()
+    expect(section.textContent).toContain(es['recommend.weather.schedule'])
+  })
+
+  it.each([
+    ['paused', 'list.emptyPaused'],
+    ['ended', 'list.emptyInactive'],
+  ] as const)('omits the recommendations from the empty %s view', (status, title) => {
+    mount({ records: [] })
+    const statuses = screen.getByRole('group', { name: en['statusFilter.label'] })
+    fireEvent.click(within(statuses).getByRole('button', { name: en[`status.${status}`] }))
+    expect(screen.getByRole('status').textContent).toContain(en[title])
+    expect(recommendations()).toBeNull()
+  })
+
+  it('omits the recommendations while rows are listed, a search matches nothing, or the catalog loads', () => {
+    const h = mount({ records })
+    expect(recommendations()).toBeNull()
+    fireEvent.change(screen.getByRole('searchbox', { name: en['search.label'] }), { target: { value: 'no such task' } })
+    expect(screen.getByRole('status').textContent).toContain(en['list.noMatches'])
+    expect(recommendations()).toBeNull()
+    h.view.unmount()
+    mount({ records: [], status: 'loading' })
+    expect(recommendations()).toBeNull()
+  })
+
+  it('lists every recommendation under the empty Enabled view while paused and ended tasks use their titles', () => {
+    mount({ records: [
+      { ...paused, title: en['recommend.dailyBrief.title'] },
+      { ...ended, title: en['recommend.weather.title'] },
+    ] }, en, {}, { startAtAll: false })
+    expect(within(recommendations()!).getAllByRole('button').map(button => button.getAttribute('aria-label')))
+      .toEqual(RECOMMENDATION_IDS.map(id => en[`recommend.${id}.title`]))
   })
 
   it('distinguishes an empty catalog, loading, and a failed read', () => {
@@ -1081,15 +1155,15 @@ describe.each([['English', en], ['Spanish', es]] as const)('task detail views in
     expectDetailOrder(detail, dictionary, 'Review release')
     const rules = expectDetailView(dictionary, 'rules')
     expect(h.props.loadHistory).not.toHaveBeenCalled()
-    expect(readonlyPrompt(rules)).toBe(at.prompt)
+    expect(editorPrompt(rules)).toBe(at.prompt)
     // One compact next-run line leads the scrolling area under the task name.
     expect(nextRunTime(detail)?.dateTime).toBe(at.scheduledAt)
     expect(nextRunTime(detail)?.textContent).toBe(absoluteNextRun(at.scheduledAt, dictionary))
     expect(relativeText(detail)).toBe(relativeNextRun(at.scheduledAt, dictionary))
     // The rule card names the recurrence and the conversation each run uses;
     // the status and the task ID stay out of the detail.
-    const card = rules.querySelector<HTMLElement>(`.${css.ruleCard}`)!
-    const ruleTexts = [dictionary['rule.repeat'], dictionary['frequency.once'], dictionary['host.target'], dictionary['host.currentConversation']]
+    const card = rules.querySelector<HTMLFieldSetElement>('fieldset')!
+    const ruleTexts = [dictionary['rule.repeat'], dictionary['rule.once'], dictionary['host.target'], dictionary['host.currentConversation']]
     for (const text of ruleTexts) {
       expect(visibleText(card, text)).toHaveLength(1)
     }
@@ -1127,7 +1201,7 @@ describe.each([['English', en], ['Spanish', es]] as const)('task detail views in
     expect(visibleText(detail, dictionary['detail.nextRun'])).toHaveLength(0)
     expect(detail.querySelector(`.${css.readonlyName}`)).toBeNull()
     expect(detail.querySelector(`.${css.nextRun}`)).toBeNull()
-    expect(readonlyPrompt(detail)).toBeUndefined()
+    expect(editorPrompt(detail)).toBeUndefined()
     expect(recordPanel.textContent).not.toContain(at.prompt)
     expect(recordPanel.querySelectorAll('time')).toHaveLength(1)
     // The linked-Session footer stays under both views.
@@ -1138,7 +1212,7 @@ describe.each([['English', en], ['Spanish', es]] as const)('task detail views in
     expectDetailView(dictionary, 'rules')
     expect(within(detail).queryByRole('region', { name: dictionary['delivery.label'] })).toBeNull()
     expect(visibleText(detail, delivery.messageId)).toHaveLength(0)
-    expect(readonlyPrompt(detail)).toBe(at.prompt)
+    expect(editorPrompt(detail)).toBe(at.prompt)
   })
 
   it('drops the task name and next-run line on Records and restores them on Rules', async () => {
@@ -1238,10 +1312,10 @@ describe.each([['English', en], ['Spanish', es]] as const)('task detail views in
     fireEvent.click(screen.getByRole('tab', { name: labels.records }))
     expectDetailView(dictionary, 'records')
     fireEvent.click(screen.getByRole('button', { name: 'Check metrics' }))
-    expect(readonlyPrompt(expectDetailView(dictionary, 'rules'))).toBe(every.prompt)
+    expect(editorPrompt(expectDetailView(dictionary, 'rules'))).toBe(every.prompt)
     fireEvent.click(screen.getByRole('tab', { name: labels.records }))
     fireEvent.click(screen.getByRole('button', { name: 'Review release' }))
-    expect(readonlyPrompt(expectDetailView(dictionary, 'rules'))).toBe(at.prompt)
+    expect(editorPrompt(expectDetailView(dictionary, 'rules'))).toBe(at.prompt)
     for (const close of ['button', 'Escape'] as const) {
       fireEvent.click(screen.getByRole('tab', { name: labels.records }))
       if (close === 'button') fireEvent.click(screen.getByRole('button', { name: dictionary['detail.close'] }))
@@ -1473,7 +1547,7 @@ describe('Task manager details', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Check metrics' }))
     const detail = screen.getByRole('complementary')
     const rules = expectDetailView(dictionary, 'rules')
-    const ruleCard = (root: HTMLElement): HTMLElement => root.querySelector<HTMLElement>(`.${css.ruleCard}`)!
+    const ruleCard = (root: HTMLElement): HTMLElement => within(root).getByRole('region', { name: dictionary['rule.title'] })
     expect(nextRunTime(detail)?.dateTime).toBe(every.scheduledAt)
     expect(visibleText(ruleCard(rules), dictionary['rule.repeat'])).toHaveLength(1)
     fireEvent.click(within(detail).getByRole('tab', { name: labels.records }))
@@ -1603,7 +1677,7 @@ describe('Task manager details', () => {
     expect(row.getAttribute('aria-controls')).toBe(detail.id)
     // The panel takes focus so the keyboard lands inside it.
     expect(document.activeElement).toBe(detail)
-    expect(readonlyPrompt(detail)).toBe(at.prompt)
+    expect(editorPrompt(detail)).toBe(at.prompt)
     const link = within(detail).getByRole('button', { name: en['detail.openSession'] })
     expect(link.textContent).toContain(alpha)
     expect(nextRunTime(detail)?.dateTime).toBe(at.scheduledAt)
@@ -1655,7 +1729,7 @@ describe('Task manager details', () => {
     mount()
     fireEvent.click(screen.getByRole('button', { name: 'Review release' }))
     fireEvent.change(screen.getByRole('searchbox'), { target: { value: 'metrics' } })
-    expect(readonlyPrompt(screen.getByRole('complementary'))).toBe(at.prompt)
+    expect(editorPrompt(screen.getByRole('complementary'))).toBe(at.prompt)
     fireEvent.click(screen.getByRole('button', { name: en['detail.close'] }))
     expect(document.activeElement).toBe(screen.getByRole('heading', { level: 1 }))
   })
@@ -1668,7 +1742,8 @@ describe('Task manager details', () => {
     expect(within(statuses).getAllByRole('button')[0]?.textContent).toBe('Activada')
     fireEvent.click(screen.getByRole('button', { name: 'Check metrics' }))
     const detail = screen.getByRole('complementary', { name: 'Detalles de la tarea' })
-    expect(within(detail).getByText(frequencyText(every, es))).toBeDefined()
+    expect(within(detail).getByRole('button', { name: `${es['rule.repeat']} ${es['rule.everyMinutes']}` })).toBeDefined()
+    expect(within(detail).getByRole('spinbutton', { name: es['host.interval'] }).getAttribute('value')).toBe('5')
     expect(nextRunTime(detail)?.textContent).toBe(absoluteNextRun(every.scheduledAt, es))
     expect(relativeText(detail)).toBe(relativeNextRun(every.scheduledAt, es))
     chooseDelete(es)
@@ -1713,7 +1788,8 @@ describe('Task manager details', () => {
     // The rule keeps stating its own zone where the zone belongs.
     const frequency = frequencyText(stored, en)
     expect(frequency).toContain(zoneLabel('America/New_York', makeTranslate(en)))
-    expect(visibleText(detail, frequency)).toHaveLength(1)
+    expect(within(detail).getByRole('button', { name: new RegExp('^' + en['timing.zone'] + ' ') }).textContent)
+      .toContain(zoneLabel('America/New_York', makeTranslate(en)))
   })
 
   /**
@@ -1785,13 +1861,13 @@ describe('Task detail metrics', () => {
     expect(instruction).toMatch(/field-sizing:\s*content;/)
     expect(instruction).toMatch(/padding:\s*12px;/)
     expect(instruction).toMatch(/border:\s*0\.5px solid var\(--dsw-alias-border-l3\);/)
-    expect(instruction).toMatch(/border-radius:\s*16px;/)
+    expect(instruction).toMatch(/border-radius:\s*var\(--dsw-radius-lg\);/)
     // The mock inherits the instruction's 14px text and pins its own 24px leading.
     expect(instruction).toMatch(/font-size:\s*14px;/)
     expect(instruction).toMatch(/line-height:\s*24px;/)
     expect(stylesheet).toMatch(/\.instruction:hover\s*\{[^}]*border-color:\s*var\(--dsw-alias-border-l2\);/)
     expect(stylesheet).toMatch(/\.instruction:focus\s*\{[^}]*border-color:\s*var\(--dsw-alias-state-business-primary\);/)
-    expect(stylesheet).toMatch(/\.ruleRows\s*\{[^}]*border-radius:\s*16px;/)
+    expect(stylesheet).toMatch(/\.ruleRows\s*\{[^}]*border-radius:\s*var\(--dsw-radius-lg\);/)
   })
 })
 
@@ -1814,7 +1890,7 @@ describe('Mock detail metrics shared with the task list', () => {
     expect(notice).toMatch(/gap:\s*9px;/)
     expect(notice).toMatch(/align-items:\s*flex-start;/)
     expect(notice).toMatch(/background:\s*var\(--dsw-specific-sidebar-fill\);/)
-    expect(notice).toMatch(/border-radius:\s*10px;/)
+    expect(notice).toMatch(/border-radius:\s*var\(--dsw-radius-lg\);/)
     expect(notice).toMatch(/margin:\s*0 0 20px;/)
     // The notice keeps the colour this box had before it took the mock's
     // surface fill; the retired deletion-failure variant leaves no rule behind.
@@ -1855,7 +1931,7 @@ describe('Mock detail metrics shared with the task list', () => {
     // jsdom computes no layout, so the values are read from the applied
     // stylesheet the way the detail-metric assertions above read it.
     expect(rule('pageScroll')).toMatch(/overflow:\s*auto;/)
-    expect(rule('pageContent')).toMatch(/max-width:\s*960px;/)
+    expect(rule('pageContent')).toMatch(/max-width:\s*calc\(960px \+ 2 \* clamp\(24px, 4vw, 48px\)\);/)
     expect(rule('pageContent')).toMatch(/margin:\s*0 auto;/)
     // The Plugins page's own column inset, shared by both first-level pages:
     // inline and bottom only, because the heading row owns the top inset.
@@ -1883,7 +1959,7 @@ describe('Mock detail metrics shared with the task list', () => {
     expect(headerAction).toMatch(/height:\s*32px;/)
     expect(headerAction).toMatch(/font-size:\s*13px;/)
     expect(headerAction).toMatch(/padding:\s*0 12px;/)
-    expect(headerAction).toMatch(/border-radius:\s*16px;/)
+    expect(headerAction).toMatch(/border-radius:\s*var\(--dsw-radius-md\);/)
     const headingTitle = /\.pageHeading h1\s*\{([^}]*)\}/.exec(stylesheet)?.[1] ?? ''
     // The first-level title step is the Plugins page's `pageTitle`, not the
     // mock's larger page heading; the equality case below pins that pair.
@@ -1895,7 +1971,7 @@ describe('Mock detail metrics shared with the task list', () => {
     const tab = rule('filterTab')
     expect(tab).toMatch(/height:\s*28px;/)
     expect(tab).toMatch(/padding:\s*0 10px;/)
-    expect(tab).toMatch(/border-radius:\s*14px;/)
+    expect(tab).toMatch(/border-radius:\s*var\(--dsw-radius-sm\);/)
     expect(tab).toMatch(/font-size:\s*14px;/)
     // The selected chip keeps the chip's own weight; only the fill marks it.
     expect(rule('filterTabActive')).not.toMatch(/font-weight/)
@@ -1909,12 +1985,12 @@ describe('Mock detail metrics shared with the task list', () => {
     expect(field).toMatch(/height:\s*var\(--task-search-height\);/)
     expect(field).toMatch(/padding:\s*0 10px;/)
     expect(field).toMatch(/border:\s*0\.5px solid var\(--dsw-alias-border-l3\);/)
-    expect(field).toMatch(/border-radius:\s*12px;/)
+    expect(field).toMatch(/border-radius:\s*var\(--dsw-radius-md\);/)
     expect(stylesheet).toMatch(/\.searchField:hover\s*\{[^}]*border-color:\s*var\(--dsw-alias-border-l2\);/)
     expect(stylesheet)
       .toMatch(/\.searchField:focus-within\s*\{[^}]*border-color:\s*var\(--dsw-alias-state-business-primary\);/)
     expect(stylesheet).toMatch(/\.searchField > :first-child svg\s*\{[^}]*width:\s*14px;/)
-    expect(stylesheet).toMatch(/\.searchField input::placeholder\s*\{[^}]*color:\s*var\(--dsw-alias-label-caption\);/)
+    expect(stylesheet).toMatch(/\.searchField input::placeholder\s*\{[^}]*color:\s*var\(--dsw-alias-label-tertiary\);/)
     expect(stylesheet).toMatch(/\.searchField input::-webkit-search-cancel-button\s*\{[^}]*display:\s*none;/)
     expect(rule('searchClear')).toMatch(/margin-right:\s*-6px;/)
     expect(rule('searchClear')).toMatch(/color:\s*var\(--dsw-alias-label-tertiary\);/)
@@ -1928,7 +2004,7 @@ describe('Mock detail metrics shared with the task list', () => {
     expect(row).toMatch(/width:\s*100%;/)
     expect(row).not.toMatch(/margin:/)
     expect(row).toMatch(/padding:\s*8px;/)
-    expect(row).toMatch(/border-radius:\s*12px;/)
+    expect(row).toMatch(/border-radius:\s*var\(--dsw-radius-lg\);/)
     expect(row).not.toMatch(/border(?:-(?!radius)|:)/)
     expect(stylesheet)
       .toMatch(/\.row:hover\s*\{[^}]*background:\s*var\(--dsw-alias-interactive-bg-hover\);/)
@@ -2000,10 +2076,9 @@ describe('Mock detail metrics shared with the task list', () => {
     expect(stylesheet).toMatch(/@media \(max-width: 1100px\)\s*\{\s*\.detail\s*\{[^}]*--detail-gutter:\s*20px;/)
     expect(stylesheet).toMatch(/@media \(max-width: 400px\)\s*\{\s*\.detail\s*\{[^}]*--detail-gutter:\s*16px;/)
     expect(stylesheet).not.toMatch(/--detail-gutter:\s*18px;/)
-    // The staged-save bar and its failure line consume the stepped gutter
-    // instead of a literal, so the panel edge stays one column.
+    // The footer uses the stepped gutter; feedback inherits the scroller's inset.
     expect(rule('saveFooter')).toMatch(/padding:\s*20px var\(--detail-gutter\);/)
-    expect(rule('saveFailure')).toMatch(/padding:\s*12px var\(--detail-gutter\) 0;/)
+    expect(rule('saveFailure')).toMatch(/padding:\s*12px 0 0;/)
     // The mock's `.automation-detail .detail-titlebar` narrows the strip's gap
     // at this width and closes the actions' group gap, while the strip above
     // the breakpoint keeps its 20px.
@@ -2037,6 +2112,9 @@ describe('Task manager deletion', () => {
     expect(taskNames()).toEqual([])
     expect(screen.getByRole('status').textContent).toContain(en['list.empty'])
     expect(screen.getByRole('heading', { level: 2, name: 'Review release' })).toBeDefined()
+    const detail = screen.getByRole('complementary')
+    expect(within(detail).getByRole('textbox', { name: en['detail.name'] }).closest('fieldset')!.disabled).toBe(true)
+    expect(within(detail).getByRole('button', { name: en['detail.close'] }).hasAttribute('disabled')).toBe(true)
     await act(async () => {
       pending.resolve('deleted')
       await pending.promise
@@ -2049,7 +2127,7 @@ describe('Task manager deletion', () => {
     const dialog = openDelete()
     const cancel = within(dialog).getByRole('button', { name: en['delete.cancel'] })
     const confirm = within(dialog).getByRole('button', { name: en['delete.confirm'] })
-    const content = dialog.querySelector(`.${css.confirmContent}`)!
+    const content = dialog.querySelector<HTMLElement>(`.${css.confirmContent}`)!
     expect(dialog.classList.contains(css.confirmDialog!)).toBe(true)
     expect(content.textContent).toContain(at.prompt)
     expect(content.contains(cancel)).toBe(false)
@@ -2062,9 +2140,16 @@ describe('Task manager deletion', () => {
     // installed. The dialog's cap must follow the padding of the Modal layer
     // that holds it, and the scrolling content must sit inside that cap instead
     // of pinning a number that a wrong layer padding could not contradict.
-    installStyles({ confirmDialog: css.confirmDialog, confirmContent: css.confirmContent })
+    installStyles({ confirmDialog: css.confirmDialog, confirmContent: css.confirmContent, confirmPrompt: css.confirmPrompt })
     expect(getComputedStyle(dialog).maxHeight).toBe(`calc(100dvh - ${MODAL_LAYER_PADDING * 2}px)`)
     expect(getComputedStyle(content).overflowY).toBe('auto')
+    // The instruction is a three-line excerpt, so a long one cannot stretch the dialog.
+    const prompt = within(content).getByText(/^Review release/)
+    const clamp = getComputedStyle(prompt)
+    expect(clamp.display).toBe('-webkit-box')
+    expect(clamp.getPropertyValue('-webkit-box-orient')).toBe('vertical')
+    expect(clamp.overflow).toBe('hidden')
+    expect(clamp.getPropertyValue('-webkit-line-clamp')).toBe('3')
     const footer = dialog.lastElementChild as HTMLElement
     expect(getComputedStyle(footer).flexShrink).toBe('0')
     fireEvent.click(confirm)
@@ -2275,9 +2360,8 @@ describe('timing pickers', () => {
       patch: { timing: { kind: 'rrule', rrule: 'DTSTART;TZID=UTC:20261001T090030\nRRULE:FREQ=DAILY;COUNT=1' } },
     })
     await act(async () => {})
-    // The saved form gives way to the read-only view, and its Edit button takes the focus back.
-    expect(screen.queryByRole('region', { name: en['rule.title'] })).toBeNull()
-    expect(document.activeElement).toBe(screen.getByRole('button', { name: en['host.edit'] }))
+    expect(screen.getByRole('region', { name: en['rule.title'] })).toBeDefined()
+    expect(screen.getByRole('button', { name: en['rule.save'] }).hasAttribute('disabled')).toBe(true)
   })
 
   it('offers hours and minutes only for a daily rule and saves the picked minute', async () => {
@@ -2398,7 +2482,8 @@ describe('timing pickers', () => {
       pending.resolve('saved')
       await pending.promise
     })
-    expect(screen.queryByRole('region', { name: en['rule.title'] })).toBeNull()
+    expect(screen.getByRole('region', { name: en['rule.title'] })).toBeDefined()
+    expect(screen.getByRole('button', { name: en['rule.save'] }).hasAttribute('disabled')).toBe(true)
   })
 
   it('opens the month grid on the stored day, marks today, and stages a picked day', () => {
@@ -2472,7 +2557,7 @@ describe('timing pickers', () => {
 
   it.each([en, es])('names every picker part in %s', (dictionary) => {
     mount({ records: [at] }, dictionary)
-    openEditor('Review release', dictionary)
+    openEditor('Review release')
     fireEvent.click(timeButton(dictionary))
     expect(screen.getByRole('dialog', { name: dictionary['timing.time'] })).toBeDefined()
     for (const key of ['timing.hour', 'timing.minute', 'timing.second'] as const) {

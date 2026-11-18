@@ -1,6 +1,6 @@
 /** Runtime plugin trees shared by Agents selecting one preset revision. */
 import { Context, type Fiber } from '@deepseek-ai/cordis'
-import { EntryTree, type EntryOptions } from '@deepseek-ai/cordis-plugin-loader'
+import { EntryTree, type EntryChange, type EntryOptions } from '@deepseek-ai/cordis-plugin-loader'
 import { prepareProfileEntries } from '@deepseek-ai/dsh-app-boot'
 import type { PresetDefinition } from './definition.ts'
 import { scopeOf, type ScopeKey } from '@deepseek-ai/dsh-scope'
@@ -20,7 +20,7 @@ class PresetTree extends EntryTree {
     }
   }
 
-  override write(): void {}
+  override commit(_change: EntryChange): void {}
 }
 
 /** One live revision shared by Agents and scoped readers. */
@@ -68,7 +68,7 @@ function withinFiber(fiber: Fiber, root: Fiber): boolean {
  */
 export function leakedServices(ctx: Context, mount: Fiber): string[] {
   const store = ctx.reflect.store
-  const rootIsolate = ctx.root[Context.isolate]
+  const rootIsolate = ctx[Context.root][Context.isolate]
   const leaked: string[] = []
   for (const key of Object.getOwnPropertySymbols(store)) {
     const impl = store[key]

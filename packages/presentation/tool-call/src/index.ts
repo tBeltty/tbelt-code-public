@@ -9,8 +9,9 @@ export { parsedToolCall, singleResultText } from './raw-tool-call.ts'
 export { recordedAbsolutePath } from './recorded-path.ts'
 export type { ParsedToolCall } from './raw-tool-call.ts'
 export {
-  VARIANT_TITLE_KEYS, classifyTool, formatToolBody, resultText, toolRowModel, toolTitleKey,
+  FILE_TARGET_MOVE, FILE_TARGET_SEPARATOR, VARIANT_TITLE_KEYS, classifyTool, formatToolBody, resultText,
+  toolRowModel, toolTitleKey,
 } from './tool-row.ts'
 export type {
-  AutoReviewDenial, ToolRowModel, ToolRowState, ToolRowVariant, ToolTitleKey,
+  AutoReviewDenial, ToolRowFileTarget, ToolRowModel, ToolRowState, ToolRowVariant, ToolTitleKey,
 } from './tool-row.ts'

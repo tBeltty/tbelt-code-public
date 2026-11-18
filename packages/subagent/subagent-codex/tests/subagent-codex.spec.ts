@@ -7,7 +7,7 @@ import { PassThrough } from 'node:stream'
 import { fileURLToPath } from 'node:url'
 import { Context } from '@deepseek-ai/cordis'
 import Loader from '@deepseek-ai/cordis-plugin-loader'
-import * as yaml from 'js-yaml'
+import { parseEntryYaml } from '@deepseek-ai/cordis-plugin-include'
 import { describe, expect, it, vi } from 'vitest'
 import type { Agent } from '@deepseek-ai/dsh-agent'
 import { APP_IDENTITY } from '@deepseek-ai/dsh-llm'
@@ -406,7 +406,7 @@ describe('task admission and package contracts', () => {
       )
     }
 
-    const parsed = yaml.load(readFileSync(resolve(root, manifest.dsh!.bundle!.patch!), 'utf8'))
+    const parsed = parseEntryYaml(readFileSync(resolve(root, manifest.dsh!.bundle!.patch!), 'utf8'))
     expect(parsed).toEqual([{ insert: [
       { id: 'subagent-codex', name: '@deepseek-ai/dsh-subagent-codex' },
       { id: 'tool-subagent-codex', name: '@deepseek-ai/dsh-tool-subagent', config: {
@@ -445,9 +445,9 @@ describe('task admission and package contracts', () => {
       },
       inheritsParentContext: false,
     })
-    expect(ctx.subagents.list()).toEqual(['codex'])
+    expect(ctx.subagents.getProvider('codex')).toBeDefined()
     await fiber.dispose()
-    expect(ctx.subagents.list()).toEqual([])
+    expect(ctx.subagents.getProvider('codex')).toBeUndefined()
 
     for (const disposeGraceMs of [0, -1, Number.NaN, Number.POSITIVE_INFINITY]) {
       await expect(ctx.plugin(codex, { disposeGraceMs }))
@@ -495,7 +495,8 @@ describe('task admission and package contracts', () => {
       permissionMode: 'dangerously-bypass-approvals-and-sandbox',
       disposeGraceMs: 29,
     })
-    expect(ctx.subagents.list()).toEqual(['codex-safe', 'codex-bypass'])
+    expect(ctx.subagents.getProvider('codex-safe')).toBeDefined()
+    expect(ctx.subagents.getProvider('codex-bypass')).toBeDefined()
     expect(added).toEqual(['codex-safe', 'codex-bypass'])
 
     const safeController = new AbortController()
@@ -522,7 +523,8 @@ describe('task admission and package contracts', () => {
       bypassStarting,
     ])
     await safeFiber.dispose()
-    expect(ctx.subagents.list()).toEqual(['codex-bypass'])
+    expect(ctx.subagents.getProvider('codex-bypass')).toBeDefined()
+    expect(ctx.subagents.getProvider('codex-safe')).toBeUndefined()
     expect(removed).toEqual(['codex-safe'])
     await expect(startExternalActivation(ctx, 'codex-safe', request()))
       .rejects.toMatchObject({ code: 'NO_PROVIDER' })
@@ -577,7 +579,6 @@ describe('task admission and package contracts', () => {
       permissionMode: 'dangerously-bypass-approvals-and-sandbox',
     })).rejects.toMatchObject({ code: 'DUPLICATE_PROVIDER' })
     expect(ctx.subagents.getProvider('codex-duplicate')).toBe(first)
-    expect(ctx.subagents.list()).toEqual(['codex-duplicate'])
     await firstFiber.dispose()
     await ctx.fiber.dispose()
   })

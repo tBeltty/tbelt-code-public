@@ -5,7 +5,7 @@ import { useSyncExternalStore } from 'react'
 import { makeTranslate } from '@deepseek-ai/dsh-client-test-runtime'
 import { en as commonEn } from '@deepseek-ai/dsh-client-locale/src/locales/en.ts'
 import type { SessionId } from '@deepseek-ai/dsh-session/types'
-import type { ToolCallId } from '@deepseek-ai/dsh-llm/brand'
+import type { ToolCallId } from '@deepseek-ai/dsh-llm'
 import { en } from '../src/client/locales.ts'
 import { anchorRange, blockAnchor, selectionAnchor } from '../src/client/anchor.ts'
 import {

@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import type { SessionListState, SessionSummary } from '@deepseek-ai/dsh-api-session-controller/client'
 import type { WorkspaceId, WorkspaceView } from '@deepseek-ai/dsh-api-workspace-controller/client'
-import type { SessionStatus, SessionStatusSnapshot } from '@deepseek-ai/dsh-client-ui-session/client'
+import type { SessionStatus, SessionStatusSnapshot } from '@deepseek-ai/dsh-client-ui-session-status/client'
 import type { SessionId } from '@deepseek-ai/dsh-session/types'
 import { awaitsUser, sessionBucket, tallyBuckets } from '../src/client/attention.ts'
 import { countAwaitingUser, deriveFlat, deriveGroups } from '../src/client/tree.ts'
@@ -19,7 +19,7 @@ const workspace = (id: string, sessionIds: string[]): WorkspaceView => ({
   workspaceId: id as WorkspaceId, path: `/projects/${id}`, title: id,
   sessionIds: sessionIds.map(sid), createdAt: '2026-01-01T00:00:00.000Z', updatedAt: '2026-01-01T00:00:00.000Z',
 })
-const quiet: SessionStatus = { running: undefined, pendingInteraction: undefined, completionUnread: false }
+const quiet: SessionStatus = { running: undefined, pendingInteraction: undefined, completionUnread: false, completionFailed: false }
 const rows = (attentionOnly: boolean) => ({
   pinnedSessionIds: [], archivedSessionIds: [], archivedFilter: 'default' as const, attentionOnly,
 })

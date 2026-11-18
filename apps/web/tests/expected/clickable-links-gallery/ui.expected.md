@@ -1,6 +1,7 @@
 - banner:
   - navigation "Session hierarchy": Clickable links gallery
   - button "Show this session’s artifacts"
+  - button "Session panel"
   - button "More actions"
   - button "Open right sidebar"
   - tablist:

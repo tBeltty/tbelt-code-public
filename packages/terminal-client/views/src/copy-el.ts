@@ -42,6 +42,7 @@ export const COPY_EL: Readonly<Record<CopyKey, string>> = {
   'tool.title.traceSession': 'Ανίχνευση συνεδρίας',
   'tool.title.listModels': 'Λίστα μοντέλων',
   'tool.title.subagent': 'Δημιουργία υποπράκτορα',
+  'tool.title.subagentFork': 'Δημιουργία υποπράκτορα (κληρονομεί το πλαίσιο)',
   'tool.title.listAgents': 'Λίστα υποπρακτόρων',
   'tool.title.sendMessage': 'Αποστολή μηνύματος',
   'tool.title.interruptAgent': 'Διακοπή πράκτορα',

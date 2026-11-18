@@ -51,7 +51,7 @@
           - id: tool-fs
             name: '@deepseek-ai/dsh-tool-fs'
             config:
-              # Set true to add the apply_patch tool beside edit.
+              # Set false to drop the apply_patch tool beside edit.
               applyPatch: false
           - id: tool-fs-search
             name: '@deepseek-ai/dsh-tool-fs-search'
@@ -72,6 +72,8 @@
             name: '@deepseek-ai/dsh-skill-filesystem'
             config:
               agentsHome: !!js process.env.DSH_AGENTS_HOME ?? `${process.env.HOME ?? process.env.USERPROFILE}/.dsh/agents`
+              customSkillDirs:
+                - !!js process.getBuiltinModule('node:path').join(process.getBuiltinModule('node:path').dirname(process.getBuiltinModule('node:module').createRequire(baseUrl).resolve('@deepseek-ai/dsh-agent-preset/package.json')), 'skills')
           - id: tool-skill
             name: '@deepseek-ai/dsh-tool-skill'
           - id: command-goal
@@ -126,6 +128,8 @@
             config:
               - id: tool-subagent-control
                 name: '@deepseek-ai/dsh-tool-subagent-control'
+                config:
+                  interrupt: false
               - id: tool-subagent
                 name: '@deepseek-ai/dsh-tool-subagent'
                 config:
@@ -184,8 +188,12 @@
             config:
               fetch: true
               searchTimeoutMs: 60000
+          - id: tool-cordis
+            name: '@deepseek-ai/dsh-tool-cordis'
           - id: present
             name: '@deepseek-ai/dsh-tool-present'
+          - id: tool-office
+            name: '@deepseek-ai/dsh-tool-office'
           - id: tool-plugin-manager
             name: '@deepseek-ai/dsh-plugin-manager/tools'
             disabled: !!js "!ctx.get('profileContext')"

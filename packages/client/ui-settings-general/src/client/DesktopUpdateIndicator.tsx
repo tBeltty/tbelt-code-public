@@ -28,9 +28,13 @@ function updateCopy(state: DesktopUpdatePresentation, t: SettingsTranslate): { l
   }
   if (state.phase === 'error') {
     const failures: Readonly<Record<DesktopUpdateFailureKind, string>> = {
+      configuration: t('desktop.update.configurationFailed'),
       check: t('desktop.update.checkFailed'),
       'check-network': t('desktop.update.checkNetworkFailed'),
       download: t('desktop.update.downloadFailed'),
+      'download-space': t('desktop.update.downloadSpaceFailed'),
+      'download-permission': t('desktop.update.downloadPermissionFailed'),
+      'download-busy': t('desktop.update.downloadBusyFailed'),
       'download-network': t('desktop.update.downloadNetworkFailed'),
       install: t('desktop.update.installFailed'),
       'install-network': t('desktop.update.installNetworkFailed'),
@@ -68,14 +72,15 @@ export function DesktopUpdateIndicator({ wide, hidden, t, view, onOpen }: {
   const label = failed ? retryLabel : copy.label
   const error = failed || state?.phase === 'error'
   const busy = opening || (state !== undefined && BUSY_PHASES.has(state.phase))
+  const disabled = opening || (busy && state?.phase !== 'downloading')
   return <Tooltip label={failed ? retryLabel : copy.detail} side="top">
     <button type="button" className={css.indicator}
-      aria-label={label} aria-disabled={busy} onClick={() => { if (!busy) onOpen() }}>
+      aria-label={label} aria-disabled={disabled} onClick={() => { if (!disabled) onOpen() }}>
       <span className={css.icon} aria-hidden="true">
         {error ? <span className={css.errorDot} />
           : busy ? <IconLoadingOutlineRegular className={css.spinner} size={14} /> : <IconDownloadOutlineRegular size={14} />}
       </span>
-      <span>{label}</span>
+      <span className={!error && state?.phase === 'downloading' ? css.progress : undefined}>{label}</span>
     </button>
   </Tooltip>
 }

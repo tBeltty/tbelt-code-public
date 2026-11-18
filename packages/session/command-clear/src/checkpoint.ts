@@ -7,7 +7,7 @@
  */
 
 import type { MessageSource } from '@deepseek-ai/dsh-llm/message'
-import type { CommandId } from '@deepseek-ai/dsh-commands/brand'
+import type { CommandId } from '@deepseek-ai/dsh-commands'
 import type { ClearId } from './brand.ts'
 
 const CLEAR_CHECKPOINT_MARKER = Object.freeze({ kind: 'clear-checkpoint' } as const)

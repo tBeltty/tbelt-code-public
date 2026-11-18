@@ -9,20 +9,21 @@
 import type { Context } from '@deepseek-ai/cordis'
 import z from '@deepseek-ai/schemastery'
 import type {} from '@deepseek-ai/dsh-agent-preset-registry'
-import { defineTool } from '@deepseek-ai/dsh-tools'
+import { defineTool, ToolContextUnavailableError } from '@deepseek-ai/dsh-tools'
 import type { ToolDefinition } from '@deepseek-ai/dsh-tools'
 import type { AgentOptions } from '@deepseek-ai/dsh-agent'
-import { ReasoningEffortId } from '@deepseek-ai/dsh-llm'
+import type { ReasoningEffortId } from '@deepseek-ai/dsh-llm/types'
 import type { ContentBlock } from '@deepseek-ai/dsh-llm'
 import {
   assertSubagentMaxDepth,
   delegationDepthOf,
   parentAgentOptionsForDelegation,
+  SubagentError,
 } from '@deepseek-ai/dsh-subagent'
 import type { SubagentProvider } from '@deepseek-ai/dsh-subagent'
 import {
-  assertAllowedModelSelection,
   assertDeclaredRouteAllowed,
+  delegationModelRequest,
   hasConfiguredLlmSelection,
   hasDelegationModelRequest,
   preflightChildLlmRoute,
@@ -37,13 +38,12 @@ import {
   type PresetSelectionConfig,
   type PresetSelectionRequest,
 } from './preset-selection.ts'
-import {
-  subagentModelSelectionProjectionDefinition,
-  subagentModelSelectionPolicy,
-} from './model-selection-state.ts'
+// Retains the released Session event declaration in emitted declarations.
+import './model-selection-state.ts'
+import type {} from './model-selection-settings.ts'
 
 export const name = 'tool-subagent'
-export const inject = ['tools', 'subagents', 'systemPrompt', 'sessionProjections']
+export const inject = ['tools', 'subagents', 'systemPrompt']
 
 // Definition identity keeps shared guidance scoped to the actual visible tools,
 // including scoped overrides and independently loaded tool registries.
@@ -60,8 +60,8 @@ export interface Config extends PresetSelectionConfig {
   toolName?: string
   /**
    * Expose optional child `provider`, `model`, and `reasoning_effort` fields.
-   * Requires provider `agentOptions` support. Execution enforces the Session
-   * policy, or restricts explicit selection to the current parent route.
+   * Requires provider `agentOptions` support. Each call enforces the current
+   * Host setting, or restricts explicit selection to the current parent route.
    */
   modelSelection?: boolean
   /**
@@ -96,12 +96,12 @@ export const Config: z<Config> = z.object({
   agentOptions: z.object({
     provider: z.string(),
     model: z.string(),
-    reasoningEffort: z.string().min(1) as z<ReturnType<typeof ReasoningEffortId> | undefined>,
+    reasoningEffort: z.string().min(1) as z<ReasoningEffortId | undefined>,
     maxTokens: z.number().step(1).min(1).max(Number.MAX_SAFE_INTEGER),
   }).default(undefined as unknown as {
     provider: string
     model: string
-    reasoningEffort: ReturnType<typeof ReasoningEffortId>
+    reasoningEffort: ReasoningEffortId
     maxTokens: number
   }),
   agentPreset: z.string().min(1),
@@ -167,9 +167,8 @@ function agentFileChoicesOf(ctx: Context): AgentFileChoice[] {
  * The owning composition shares its registrations across Agents; child startup resolves the selected preset.
  * @param ctx - Context that owns the registrations.
  * @param config - delegation-tool configuration.
- * @returns when the plugin is ready.
  */
-export async function apply(ctx: Context, config: Config): Promise<void> {
+export function apply(ctx: Context, config: Config): void {
   for (const field of ['persona', 'toolFilter']) {
     if (Object.hasOwn(config, field)) {
       throw new Error(`tool-subagent: ${field} is no longer supported; configure persona and tool plugins in an Agent Preset and select it with agentPreset (spawn only)`)
@@ -185,7 +184,6 @@ export async function apply(ctx: Context, config: Config): Promise<void> {
   const toolName = config.toolName ?? 'subagent'
 
   const modelSelectionEnabled = config.modelSelection === true
-  const subagentModelSelectionProjectionHandle = await ctx.sessionProjections.register(subagentModelSelectionProjectionDefinition)
 
   const assertSubagentProviderConfiguration = (subagentProvider: SubagentProvider): void => {
     presets.assertProvider(subagentProvider)
@@ -215,7 +213,7 @@ export async function apply(ctx: Context, config: Config): Promise<void> {
   const initialProvider = ctx.subagents.getProvider(config.provider)
   if (initialProvider !== undefined) assertSubagentProviderConfiguration(initialProvider)
 
-  if (config.modelDiscovery === true) registerListSubagentModels(ctx, subagentModelSelectionProjectionHandle)
+  if (config.modelDiscovery === true) registerListSubagentModels(ctx)
 
   // Load order and HMR replacement can change provider availability while
   // this fiber remains active.
@@ -225,29 +223,32 @@ export async function apply(ctx: Context, config: Config): Promise<void> {
     const wording = providerWording(subagentProvider.inheritsParentContext)
     const providerRouteDefaults = subagentProvider.agentRouteDefaults
     const agentChoices = presets.choicesFor(subagentProvider)
-    const selectionDescription = providerRouteDefaults !== undefined
-      ? ' Supply `provider` and `model` together. Omitted values use child defaults, falling back to this backend\'s route defaults. When the effective route changes, an omitted `reasoning_effort` uses the model\'s default.'
-      : ' Supply `provider` and `model` together. Omitted values use child defaults, falling back to compatible parent values. When the effective route changes, an omitted `reasoning_effort` uses the model\'s default.'
+    const defaultRoute = providerRouteDefaults !== undefined || hasConfiguredLlmSelection(config.agentOptions)
+      ? 'the default model configured for this tool'
+      : 'your current model and reasoning effort'
+    // Discovery visibility is per Agent; only a same-instance owner is known to exist at mount.
+    const providerSource = config.modelDiscovery === true ? ' Use a provider id listed by `list_subagent_models`.' : ''
     const definition = defineTool({
       name: toolName,
       description: wording.description
-        + ' This tool starts an independently managed subagent and immediately returns its id. The runtime notifies you when it finishes.'
+        + ' This tool starts an independently managed subagent and immediately returns its name. If you are still online when it finishes, the runtime automatically delivers its completion notice. The notice includes the final answer unless the child sent you a message just before finishing.'
         + (subagentProvider.prepareContinuable !== undefined
-          ? ' The child reports results with `send_message`; use `send_message` to steer it while running or continue its conversation after it finishes.'
-          : ' The completion notice includes its final answer. This backend does not accept follow-up messages.')
-        + (modelSelectionEnabled ? selectionDescription : '')
+          ? ' Use `send_message` to steer it while running or continue its conversation after it finishes.'
+          : ' This backend does not accept follow-up messages.')
         + (modelSelectionEnabled && subagentProvider.inheritsParentContext
           ? ' Changing the route can prevent provider-side reuse of the inherited conversation prefix.'
           : ''),
       parameters: {
-        cwd: {
-          type: 'string',
-          description: 'Initial child working directory. Relative paths use your current directory; omitted inherits it. Later directory changes in either agent are independent.',
-        },
         description: {
           type: 'string',
           required: true,
-          description: 'A short (3-5 word) description of the delegated task, for display.',
+          description: 'A short (3-5 word) description of the delegated task, for display. '
+            + "Use the language of the user's current request.",
+        },
+        name: {
+          type: 'string',
+          description: 'Optional short name for the subagent, unique among the subagents you create: lower-case letters, '
+            + 'digits, and hyphens, starting with a letter, at most 32 characters; lead is reserved for the root agent. Omitted names default to agent-1, agent-2, and so on.',
         },
         prompt: {
           type: 'string',
@@ -264,15 +265,16 @@ export async function apply(ctx: Context, config: Config): Promise<void> {
         ...modelSelectionEnabled ? {
           provider: {
             type: 'string' as const,
-            description: 'Child LLM provider id.',
+            description: 'LLM provider id for the subagent; requires `model`. Set only when the task needs a different model; '
+              + `omit \`provider\`, \`model\`, and \`reasoning_effort\` to run the subagent on ${defaultRoute}.${providerSource}`,
           },
           model: {
             type: 'string' as const,
-            description: 'Model id within that provider.',
+            description: 'Model id within that provider; requires `provider`.',
           },
           reasoning_effort: {
             type: 'string' as const,
-            description: 'Model-specific reasoning effort id.',
+            description: 'Reasoning effort id; requires `provider` and `model`. Omit to use that model\'s default effort.',
           },
         } : {},
       },
@@ -282,26 +284,31 @@ export async function apply(ctx: Context, config: Config): Promise<void> {
           additionalProperties: false,
           properties: {
             kind: { type: 'string', required: true, const: 'activation' },
-            subagentId: { type: 'string', required: true },
+            name: { type: 'string', required: true },
           },
         },
-        render: (_args, value) => [{ type: 'text', text: `started subagent ${value.subagentId}` }],
+        render: (_args, value) => [{ type: 'text', text: `started subagent ${value.name}` }],
+        presentationMeta: (_args, value) => ({ kind: value.kind, name: value.name }),
       },
       isConcurrencySafe: () => true,
       async execute(args, exec) {
         const parent = exec.agent
         if (!parent) {
           // Non-agent callers provide no parent for delegation ownership.
-          throw new Error('subagent tool requires a calling agent (exec.agent was undefined)')
+          throw new ToolContextUnavailableError('subagent tool requires a calling agent (exec.agent was undefined)')
         }
 
-        const routes = subagentModelSelectionPolicy(subagentModelSelectionProjectionHandle, parent.session)
-        const modelSelectionPolicy = routes === undefined ? undefined : { routes }
         const agentPreset = presets.resolve(args as PresetSelectionRequest, subagentProvider)
         const declared = agentPreset === undefined
           ? undefined
           : ctx.get('agentPresets')?.definitionOf(agentPreset)
         const declaredRoute = declared?.agentRoute
+        const modelRequest = delegationModelRequest(args as DelegationModelRequest)
+        // A declared preset route is checked against the allowlist even when the call selects no route itself.
+        const routes = (modelSelectionEnabled && hasDelegationModelRequest(modelRequest)) || declaredRoute !== undefined
+          ? ctx.get('subagentModelSelection')?.allowedRoutes()
+          : undefined
+        const modelSelectionPolicy = routes === undefined ? undefined : { routes }
         if (declaredRoute !== undefined) {
           if (!subagentProvider.capabilities.agentOptions) {
             throw new Error(
@@ -311,7 +318,6 @@ export async function apply(ctx: Context, config: Config): Promise<void> {
           // A user's agent file authorizes its own route; the allowlist covers other declared routes.
           if (declared?.origin !== 'agent-file') assertDeclaredRouteAllowed(modelSelectionPolicy, declaredRoute)
         }
-        const modelRequest = args as DelegationModelRequest
         const parentOptions = parentAgentOptionsForDelegation(parent)
         const requiresRoutePreflight = hasDelegationModelRequest(modelRequest)
           || hasConfiguredLlmSelection(config.agentOptions)
@@ -322,37 +328,36 @@ export async function apply(ctx: Context, config: Config): Promise<void> {
             ? { ...providerRouteDefaults, ...config.agentOptions }
             : config.agentOptions
         const requestedChildAgentOptions = requestedAgentOptions(
-          parentOptions,
           configuredChildAgentOptions,
           modelRequest,
           modelSelectionEnabled,
-        )
-        assertAllowedModelSelection(
           modelSelectionPolicy,
           parentOptions,
-          requestedChildAgentOptions,
-          modelRequest,
+          ctx.tools.get('list_subagent_models', parent, exec.toolSet) !== undefined,
         )
         if (requiresRoutePreflight) {
           const llm = ctx.get('llm')
           if (llm === undefined) {
-            throw new Error('cannot resolve the selected child LLM route because the `llm` service is unavailable')
+            throw new ToolContextUnavailableError('cannot resolve the selected child LLM route because the `llm` service is unavailable')
           }
+          const inheritParentReasoningEffort = providerRouteDefaults === undefined && !hasDelegationModelRequest(modelRequest)
           await preflightChildLlmRoute(
             llm,
             parentOptions,
             requestedChildAgentOptions,
             exec.signal,
-            providerRouteDefaults === undefined,
+            inheritParentReasoningEffort,
           )
           if (ctx.subagents.getProvider(config.provider) !== subagentProvider) {
-            throw new Error(`subagent provider "${config.provider}" changed while resolving the child LLM route; retry the delegation`)
+            throw new SubagentError(
+              `subagent provider "${config.provider}" changed while resolving the child LLM route; retry the delegation`,
+              'PROVIDER_CHANGED',
+            )
           }
         }
         exec.signal.throwIfAborted()
         const maxDepth = ctx.subagents.resolveMaxDepth(config.maxDepth)
         const request = {
-          ...args.cwd === undefined ? {} : { cwd: args.cwd },
           prompt: [{ type: 'text', text: args.prompt }] as ContentBlock[],
           parent,
           ...agentPreset === undefined ? {} : { agentPreset },
@@ -364,11 +369,12 @@ export async function apply(ctx: Context, config: Config): Promise<void> {
         const started = await ctx.subagents.startActivation({
           provider: config.provider,
           label: args.description,
-          request,
+          ...args.name === undefined ? {} : { name: args.name },
+          ...request,
           signal: exec.signal,
           delivery: 'parent',
         })
-        return { kind: 'activation' as const, subagentId: started.childId }
+        return { kind: 'activation' as const, name: started.name }
       },
     })
     const disposeTool = ctx.effect(() => {
@@ -379,7 +385,6 @@ export async function apply(ctx: Context, config: Config): Promise<void> {
         unregister()
       }
     })
-    // oxlint-disable-next-line typescript/no-misused-promises -- Tool and guidance disposal are synchronous.
     mounted = { subagentProvider, definition, disposeTool }
   }
 
@@ -418,7 +423,7 @@ export async function apply(ctx: Context, config: Config): Promise<void> {
         .sort()
       if (visible[0] !== toolName) return ''
       const names = visible.map(name => `\`${name}\``).join(' or ')
-      return `Start independent delegations with ${names} together in one assistant message and continue useful work while they run. When only waiting for their results remains, end your turn instead of sleeping or polling; the next result starts a new turn.`
+      return `Start independent delegations with ${names} together in one assistant message and continue useful work while they run. When only waiting for their results remains, end your turn instead of sleeping or polling; the next result starts a new turn. Collect the subagent results required to complete the task before giving the user a final answer.\n\nBash, formatters, code generators, and scripts can overwrite concurrent edits without conflict detection; coordinate their changes explicitly. The agent integrating the work must review the final diff and run relevant tests.`
     },
   })
   ctx.systemPrompt.context({

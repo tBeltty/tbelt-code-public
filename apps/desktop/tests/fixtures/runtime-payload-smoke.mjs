@@ -154,15 +154,31 @@ function checkHtml() {
   assert.match(markdown, /\| x\s+\| 7\s+\|/u)
 }
 
+/** Run one check and, on failure, print its name, exit status and captured output before rethrowing. */
+async function step(name, check) {
+  try {
+    await check()
+  } catch (error) {
+    const detail = error instanceof Error ? error : new Error(String(error))
+    console.error(`runtime payload smoke: ${name} failed (status ${detail.status ?? 'none'}, signal ${detail.signal ?? 'none'})`)
+    console.error(detail.stack ?? detail.message)
+    for (const stream of ['stdout', 'stderr']) {
+      if (detail[stream]) console.error(`--- ${name} ${stream} ---\n${detail[stream]}`)
+    }
+    throw error
+  }
+}
+
 try {
   const builtin = requireRuntime('node-addon-require-builtin')
-  assert.equal(typeof builtin.requireBuiltin('internal/modules/esm/loader').getOrInitializeCascadedLoader, 'function')
-  checkPnpm()
-  checkKoffi()
-  await checkSharp()
-  checkHtml()
-  await checkPty()
-  await checkSearch()
+  await step('internal loader', () => assert.equal(
+    typeof builtin.requireBuiltin('internal/modules/esm/loader').getOrInitializeCascadedLoader, 'function'))
+  await step('pnpm', checkPnpm)
+  await step('koffi', checkKoffi)
+  await step('sharp', checkSharp)
+  await step('html', checkHtml)
+  await step('pty', checkPty)
+  await step('search', checkSearch)
 } finally {
   // This private tree contains only fixture files; Windows may release handles after terminal exit.
   await rm(scratch, { recursive: true, force: true, maxRetries: 20, retryDelay: 50 })

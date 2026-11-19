@@ -158,6 +158,7 @@ function checkHtml() {
 async function step(name, check) {
   try {
     await check()
+    console.error(`runtime payload smoke: ${name} ok`)
   } catch (error) {
     const detail = error instanceof Error ? error : new Error(String(error))
     console.error(`runtime payload smoke: ${name} failed (status ${detail.status ?? 'none'}, signal ${detail.signal ?? 'none'})`)

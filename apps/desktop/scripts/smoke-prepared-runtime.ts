@@ -28,11 +28,18 @@ export async function smokePreparedRuntime(
   try {
     const archive = runtimeArchivePath(root)
     if (archive !== undefined) await verifyRuntimeArchive(archive, descriptor)
-    const { stdout } = await promisify(execFile)(node, [
-      '--expose-internals', resolve(import.meta.dirname, '../tests/fixtures/runtime-payload-smoke.mjs'), root, resourcesRuntime,
-    ], { timeout: 120_000, windowsHide: true,
-      env: desktopNodeEnvironment(node, join(resourcesRuntime, 'bin'), environment) })
-    process.stdout.write(stdout)
+    try {
+      const { stdout } = await promisify(execFile)(node, [
+        '--expose-internals', resolve(import.meta.dirname, '../tests/fixtures/runtime-payload-smoke.mjs'), root, resourcesRuntime,
+      ], { timeout: 120_000, windowsHide: true,
+        env: desktopNodeEnvironment(node, join(resourcesRuntime, 'bin'), environment) })
+      process.stdout.write(stdout)
+    } catch (error) {
+      const failure = error as { code?: unknown, signal?: unknown, killed?: unknown, stdout?: unknown, stderr?: unknown }
+      console.error(`runtime payload smoke exited with code ${String(failure.code)}, signal ${String(failure.signal)}, killed ${String(failure.killed)}`)
+      console.error(`--- stdout ---\n${String(failure.stdout ?? '')}\n--- stderr ---\n${String(failure.stderr ?? '')}`)
+      throw error
+    }
     await smokeDesktopRuntime(root, node, descriptor, environment, resourcesRuntime)
   } finally {
     await rm(cache, { recursive: true, force: true })

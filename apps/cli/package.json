@@ -25,8 +25,8 @@
     "src"
   ],
   "scripts": {
-    "prepack": "tsx ../../scripts/stage-dsh-docs.ts",
-    "postpack": "tsx ../../scripts/stage-dsh-docs.ts --clean"
+    "prepack": "node ../../scripts/run-docs-staging.mjs",
+    "postpack": "node ../../scripts/run-docs-staging.mjs --clean"
   },
   "license": "MIT",
   "dependencies": {
